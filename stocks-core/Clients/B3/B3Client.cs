@@ -71,6 +71,7 @@ namespace stocks.Services.B3
 
             var assets = JsonConvert.DeserializeObject<Movement.Root>(responseContentStream);
 
+            // TODO: corrigir o multithreading
             await Task.Run(async () =>
             {
                 await GetAccountMovementsInAllPages(assets);

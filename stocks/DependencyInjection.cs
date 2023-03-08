@@ -58,7 +58,6 @@ namespace stocks
             var handler = new HttpClientHandler();
             AddCertificate(handler);
 
-            // TODO: get base address from AppSettings
             services.AddHttpClient("B3", c => c.BaseAddress = new Uri("https://apib3i-cert.b3.com.br:2443/api/"))
                 .ConfigurePrimaryHttpMessageHandler(() => handler);
 
@@ -70,7 +69,6 @@ namespace stocks
         {
             handler.ClientCertificateOptions = ClientCertificateOption.Manual;
             handler.SslProtocols = SslProtocols.Tls12;
-            // TODO: store password into a .gitignore file
 
             // C:\Users\Biscoitinho\Documents\Certificates
             // /home/dickmann/Documents/certificates/31788887000158.pfx

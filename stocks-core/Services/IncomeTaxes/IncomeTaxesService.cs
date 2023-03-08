@@ -16,7 +16,6 @@ public class IncomeTaxesService : IIncomeTaxesService
     private IIncomeTaxesCalculation _incomeTaxCalculator;
 
     private const string SellOperation = "Transfer�ncia";
-    private const string BuyOperation = "Compra";
 
     public IncomeTaxesService(IGenericRepository<Account> genericRepositoryAccount, IB3Client b3Client, IIncomeTaxesCalculation calculator)
     {

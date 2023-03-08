@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Query;
+using Microsoft.Extensions.Logging;
 using stocks.Clients.B3;
 using stocks.Models;
 using stocks.Repositories;
@@ -6,8 +8,11 @@ using stocks_core.Constants;
 using stocks_core.DTOs.AverageTradedPrice;
 using stocks_core.DTOs.B3;
 using stocks_infrastructure.Repositories.AverageTradedPrice;
+using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using System.Xml;
 
 [assembly: InternalsVisibleTo("stocks-unit-tests")]
 namespace stocks_core.Services.AverageTradedPrice
@@ -45,18 +50,29 @@ namespace stocks_core.Services.AverageTradedPrice
                 Movement.Root? response = await _client.GetAccountMovement("97188167044", minimumAllowedStartDateByB3, referenceEndDate)!;
 
                 var buyOperations = response.Data.EquitiesPeriods.EquitiesMovements
-                    .Where(x => x.MovementType == B3ServicesConstants.Buy);
+                    .Where(x => x.MovementType == "Transferência");
 
                 var sellOperations = response.Data.EquitiesPeriods.EquitiesMovements
                     .Where(x => x.MovementType == B3ServicesConstants.Sell);
-
-                // Ao calcular as compras e vendas, é necessário identificar caso tenha havido 
-                // desdobramento das ações. Caso não seja identificado, uma ação pode passar a ter um número maior de
-                // papéis e o cálculo do preço médio estará incorreto.
+                
                 var splitsOperations = response.Data.EquitiesPeriods.EquitiesMovements
                     .Where(x => x.MovementType == B3ServicesConstants.Split);
 
-                Dictionary<string, AverageTradedPriceCalculator> averageTradedPrices = CalculateAverageTradedPrice(buyOperations, sellOperations);
+                Dictionary<string, AverageTradedPriceCalculator> averageTradedPrices = CalculateAverageTradedPrice(buyOperations, sellOperations, splitsOperations);
+                List<stocks_infrastructure.Models.AverageTradedPrice> mappedAverageTradedPrices = new();
+
+                foreach (KeyValuePair<string, AverageTradedPriceCalculator> entry in averageTradedPrices)
+                {
+                    mappedAverageTradedPrices.Add(new stocks_infrastructure.Models.AverageTradedPrice
+                    {
+                        Ticker = entry.Key,
+                        AveragePrice = entry.Value.AverageTradedPrice,
+                        AccountId = accountId,
+                        UpdatedAt = DateTime.UtcNow
+                    });
+                }
+
+                _averageTradedPriceRepository.InsertAll(mappedAverageTradedPrices);
             }
             catch (Exception e)
             {
@@ -68,12 +84,22 @@ namespace stocks_core.Services.AverageTradedPrice
 
         internal static Dictionary<string, AverageTradedPriceCalculator> CalculateAverageTradedPrice(
             IEnumerable<Movement.EquitMovement> buyOperations,
-            IEnumerable<Movement.EquitMovement> sellOperations
+            IEnumerable<Movement.EquitMovement> sellOperations,
+            IEnumerable<Movement.EquitMovement> splitsOperations
         )
         {
             Dictionary<string, AverageTradedPriceCalculator> total = new();
 
-            // TODO: calcular desdobramento
+            // TODO: calcular os desdobramentos
+
+            // É necessário verificar quando houve desdobramentos, pois caso não faça,
+            // a quantidade de papéis de um ativo pode aumentar e a relação de preço/quantidade
+            // estará incorreta.
+
+            foreach (var split in splitsOperations)
+            {
+
+            }
 
             foreach (var movement in buyOperations)
             {

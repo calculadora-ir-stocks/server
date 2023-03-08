@@ -45,7 +45,10 @@ namespace stocks_unit_tests.AverageTradedPrice
             var sellOperations = clientResponse.Data.EquitiesPeriods.EquitiesMovements
                 .Where(x => x.MovementType == B3ServicesConstants.Sell);
 
-            var response = AverageTradedPriceService.CalculateAverageTradedPrice(buyOperations, sellOperations);
+            var splitsOperations = clientResponse.Data.EquitiesPeriods.EquitiesMovements
+                    .Where(x => x.MovementType == B3ServicesConstants.Split);
+
+            var response = AverageTradedPriceService.CalculateAverageTradedPrice(buyOperations, sellOperations, splitsOperations);
 
             Assert.Equal(averageTradedPrice, response["PETR4"].AverageTradedPrice);
         }
@@ -79,7 +82,10 @@ namespace stocks_unit_tests.AverageTradedPrice
             var sellOperations = clientResponse.Data.EquitiesPeriods.EquitiesMovements
                 .Where(x => x.MovementType == B3ServicesConstants.Buy);
 
-            var response = AverageTradedPriceService.CalculateAverageTradedPrice(buyOperations, sellOperations);
+            var splitsOperations = clientResponse.Data.EquitiesPeriods.EquitiesMovements
+                    .Where(x => x.MovementType == B3ServicesConstants.Split);
+
+            var response = AverageTradedPriceService.CalculateAverageTradedPrice(buyOperations, sellOperations, splitsOperations);
 
             Assert.Equal(averageTradedPricePETR4, response["PETR4"].AverageTradedPrice);
             Assert.Equal(averageTradedPriceGOOGL34, response["GOOGL34"].AverageTradedPrice);
@@ -110,7 +116,10 @@ namespace stocks_unit_tests.AverageTradedPrice
             var sellOperations = clientResponse.Data.EquitiesPeriods.EquitiesMovements
                 .Where(x => x.MovementType == B3ServicesConstants.Sell);
 
-            var response = AverageTradedPriceService.CalculateAverageTradedPrice(buyOperations, sellOperations);
+            var splitsOperations = clientResponse.Data.EquitiesPeriods.EquitiesMovements
+                    .Where(x => x.MovementType == B3ServicesConstants.Split);
+
+            var response = AverageTradedPriceService.CalculateAverageTradedPrice(buyOperations, sellOperations, splitsOperations);
 
             Assert.Empty(response);
         }
@@ -140,7 +149,10 @@ namespace stocks_unit_tests.AverageTradedPrice
             var sellOperations = clientResponse.Data.EquitiesPeriods.EquitiesMovements
                 .Where(x => x.MovementType == B3ServicesConstants.Sell);
 
-            var response = AverageTradedPriceService.CalculateAverageTradedPrice(buyOperations, sellOperations);
+            var splitsOperations = clientResponse.Data.EquitiesPeriods.EquitiesMovements
+                    .Where(x => x.MovementType == B3ServicesConstants.Split);
+
+            var response = AverageTradedPriceService.CalculateAverageTradedPrice(buyOperations, sellOperations, splitsOperations);
 
             Assert.Empty(response);
         }

@@ -13,11 +13,11 @@ namespace stocks_infrastructure.Models
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.None)]
         public Guid Id { get; protected set; } = Guid.NewGuid();
-        public string Ticker { get; protected set; }
-        public double AveragePrice { get; protected set; }
-        public Account Account { get; protected set; }
-        public Guid AccountId { get; protected set; }
-        public DateTime UpdatedAt { get; protected set; } = DateTime.UtcNow;
+        public string Ticker { get; set; }
+        public double AveragePrice { get; set; }
+        public Account Account { get; set; }
+        public Guid AccountId { get; set; }
+        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
         
     }
 }
