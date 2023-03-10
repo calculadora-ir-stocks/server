@@ -8,7 +8,7 @@ namespace stocks_core.Business
         /// <summary>
         /// Adiciona no objeto CalculateAssetsIncomeTaxesResponse os ativos e seus respectivos impostos de renda a serem pagos.
         /// </summary>
-        Task<CalculateAssetsIncomeTaxesResponse?> AddAllIncomeTaxesToObject(CalculateAssetsIncomeTaxesResponse? response,
-            Movement.EquitMovement? movement);
+        Task AddAllIncomeTaxesToObject(CalculateAssetsIncomeTaxesResponse? response,
+            IEnumerable<Movement.EquitMovement> movements, Guid accountId);
     }
 }

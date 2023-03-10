@@ -5,33 +5,39 @@ using stocks_core.Business;
 using stocks_core.DTOs.B3;
 using stocks_core.Enums;
 using stocks_core.Response;
+using stocks_infrastructure.Repositories.AverageTradedPrice;
 
 namespace stocks.Services.IncomeTaxes;
 
 public class IncomeTaxesService : IIncomeTaxesService
 {
     private readonly IGenericRepository<Account> _genericRepositoryAccount;
+    private static IAverageTradedPriceRepostory _averageTradedPriceRepository;
+
     private readonly IB3Client _client;
 
     private IIncomeTaxesCalculation _incomeTaxCalculator;
 
     private const string SellOperation = "Transfer�ncia";
 
-    public IncomeTaxesService(IGenericRepository<Account> genericRepositoryAccount, IB3Client b3Client, IIncomeTaxesCalculation calculator)
+    public IncomeTaxesService(IGenericRepository<Account> genericRepositoryAccount,
+        IAverageTradedPriceRepostory averageTradedPriceRepository,
+        IB3Client b3Client, IIncomeTaxesCalculation calculator)
     {
         _genericRepositoryAccount = genericRepositoryAccount;
+        _averageTradedPriceRepository = averageTradedPriceRepository;
         _client = b3Client;
         _incomeTaxCalculator = calculator;
     }
 
-    public async Task<CalculateAssetsIncomeTaxesResponse?> CalculateAssetsIncomeTaxes(Guid accountId, string? referenceStartDate, string? referenceEndDate)
+    public async Task<CalculateAssetsIncomeTaxesResponse?> CalculateAssetsIncomeTaxes(Guid accountId)
     {
         string mockedCpf = "97188167044";
 
-        // A consulta da B3 apenas funciona em D-1, ou seja, as consultas sempre s�o feitas com base
+        // A consulta da B3 apenas funciona em D-1, ou seja, as consultas sempre são feitas com base
         // no dia anterior.
-        referenceStartDate ??= DateTime.Now.ToString("yyyy-MM-01");
-        referenceEndDate ??= DateTime.Now.AddDays(-1).ToString("yyyy-MM-dd");
+        var referenceStartDate = DateTime.Now.ToString("yyyy-MM-01");
+        var referenceEndDate = DateTime.Now.AddDays(-1).ToString("yyyy-MM-dd");
 
         try
         {
@@ -41,7 +47,7 @@ public class IncomeTaxesService : IIncomeTaxesService
 
             if (InvestorSoldAnyAsset(httpClientResponse))
             {
-                await AddAllRequiredIncomeTaxesToObject(httpClientResponse, response);
+                await AddAllRequiredIncomeTaxesToObject(httpClientResponse, response, accountId);
             }
 
             return response;
@@ -52,60 +58,40 @@ public class IncomeTaxesService : IIncomeTaxesService
         }
     }
 
-    private async Task AddAllRequiredIncomeTaxesToObject(Movement.Root httpClientResponse, CalculateAssetsIncomeTaxesResponse? response)
+    private async Task AddAllRequiredIncomeTaxesToObject(Movement.Root httpClientResponse, CalculateAssetsIncomeTaxesResponse? response, Guid accountId)
     {
         var movements = httpClientResponse.Data.EquitiesPeriods.EquitiesMovements;
 
-        foreach (var movement in movements.Where(movement => movement.AssetType.Equals("ETF - Exchange Traded Fund")))
-        {
-            switch (movement.AssetType)
-            {
-                case AssetMovementTypes.Stocks:
-                    _incomeTaxCalculator = new StocksIncomeTaxes();
-                    await _incomeTaxCalculator.AddAllIncomeTaxesToObject(response, movement);
-                    break;
-                case AssetMovementTypes.ETFs:
-                    _incomeTaxCalculator = new ETFsIncomeTaxes();
-                    await _incomeTaxCalculator.AddAllIncomeTaxesToObject(response, movement);
-                    break;
-                case AssetMovementTypes.Gold:
-                    //_incomeTaxCalculator = new GoldIncomeTaxes();
-                    await _incomeTaxCalculator.AddAllIncomeTaxesToObject(response, movement);
-                    break;
-                case AssetMovementTypes.FundInvestments:
-                    //_incomeTaxCalculator = new FundInvestmentsIncomeTaxes();
-                    await _incomeTaxCalculator.AddAllIncomeTaxesToObject(response, movement);
-                    break;
-                case AssetMovementTypes.FIIs:
-                    //_incomeTaxCalculator = new FIIsIncomeTaxes();
-                    await _incomeTaxCalculator.AddAllIncomeTaxesToObject(response, movement);
-                    break;
-                case AssetMovementTypes.BDRs:
-                    //_incomeTaxCalculator = new StocksIncomeTaxes();
-                    await _incomeTaxCalculator.AddAllIncomeTaxesToObject(response, movement);
-                    break;
-            }
-        }
-        if (InvestorSoldAnyStock(httpClientResponse))
-        {
-            
-        }
-    }
+        var stocks = movements.Where(x => x.AssetType.Equals(AssetMovementTypes.Stocks));
+        var etfs = movements.Where(x => x.AssetType.Equals(AssetMovementTypes.ETFs));
+        var fiis = movements.Where(x => x.AssetType.Equals(AssetMovementTypes.FIIs));
+        var bdrs = movements.Where(x => x.AssetType.Equals(AssetMovementTypes.BDRs));
+        var gold = movements.Where(x => x.AssetType.Equals(AssetMovementTypes.Gold));
+        var fundInvestments = movements.Where(x => x.AssetType.Equals(AssetMovementTypes.FundInvestments));
 
-    private static bool InvestorSoldAnyStock(Movement.Root httpClientResponse)
-    {
-        var allMovements = httpClientResponse.Data.EquitiesPeriods.EquitiesMovements;
-        var soldStock = httpClientResponse.Data.EquitiesPeriods.EquitiesMovements.Where(
-            asset => asset.MovementType.Equals(SellOperation) && asset.AssetType.Equals(AssetMovementTypes.Stocks)).FirstOrDefault();
+        _incomeTaxCalculator = new StocksIncomeTaxes(_averageTradedPriceRepository);
+        await _incomeTaxCalculator.AddAllIncomeTaxesToObject(response, stocks, accountId);
 
-        var investorSoldAnyStock = allMovements.Contains(soldStock!);
+        _incomeTaxCalculator = new ETFsIncomeTaxes();
+        await _incomeTaxCalculator.AddAllIncomeTaxesToObject(response, etfs, accountId);
 
-        return investorSoldAnyStock;
+        // _incomeTaxCalculator = new FIIsIncomeTaxes();
+        await _incomeTaxCalculator.AddAllIncomeTaxesToObject(response, fiis, accountId);
+
+        // _incomeTaxCalculator = new BDRsIncomeTaxes();
+        await _incomeTaxCalculator.AddAllIncomeTaxesToObject(response, bdrs, accountId);
+
+        // _incomeTaxCalculator = new GoldIncomeTaxes();
+        await _incomeTaxCalculator.AddAllIncomeTaxesToObject(response, gold, accountId);
+
+        // _incomeTaxCalculator = new FundInvestmentsIncomeTaxes();
+        await _incomeTaxCalculator.AddAllIncomeTaxesToObject(response, fundInvestments, accountId);
     }
 
     private static bool InvestorSoldAnyAsset(Movement.Root httpClientResponse)
     {
         var allMovements = httpClientResponse.Data.EquitiesPeriods.EquitiesMovements;
+
         var sellOperationMovements = httpClientResponse.Data.EquitiesPeriods.EquitiesMovements.Where(
             asset => asset.MovementType.Equals(SellOperation)).FirstOrDefault();
 

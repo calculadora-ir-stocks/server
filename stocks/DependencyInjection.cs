@@ -38,8 +38,8 @@ namespace stocks
             services.AddScoped<NotificationContext>();
 
             // Classes responsáveis pelos algoritmos para cálculo de imposto de renda
-            services.AddSingleton<IIncomeTaxesCalculation, StocksIncomeTaxes>();
-            services.AddSingleton<IIncomeTaxesCalculation, ETFsIncomeTaxes>();
+            services.AddScoped<IIncomeTaxesCalculation, StocksIncomeTaxes>();
+            services.AddScoped<IIncomeTaxesCalculation, ETFsIncomeTaxes>();
 
             services.AddTransient<IJwtCommon, JwtCommon>();
 
@@ -79,7 +79,7 @@ namespace stocks
         {
             services.AddTransient(typeof(IGenericRepository<>), typeof(GenericRepository<>));
             services.AddTransient<IAccountRepository, AccountRepository>();
-            services.AddTransient<IAverageTradedPriceRepository, AverageTradedPriceRepository>();
+            services.AddTransient<IAverageTradedPriceRepostory, AverageTradedPriceRepository>();
         }
 
         public static void AddJwtAuthentications(this IServiceCollection services, WebApplicationBuilder builder)
@@ -126,8 +126,7 @@ namespace stocks
                 options.SwaggerDoc("v1", new OpenApiInfo
                 {
                     Version = "v1",
-                    Title = "Stocks - plataforma para pagamento de IR.",
-                    Description = "Endpoints do Stocks, uma plataforma para reunir o valor total a ser pago de IR na bolsa de valores de um CPF.",
+                    Title = "Stocks - plataforma para pagamento e declaração de IR.",
                 });
 
                 options.AddSecurityDefinition(jwtSecurityScheme.Reference.Id, jwtSecurityScheme);

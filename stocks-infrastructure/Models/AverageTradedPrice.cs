@@ -15,9 +15,9 @@ namespace stocks_infrastructure.Models
         public Guid Id { get; protected set; } = Guid.NewGuid();
         public string Ticker { get; set; }
         public double AveragePrice { get; set; }
+        public int Quantity { get; set; }
         public Account Account { get; set; }
         public Guid AccountId { get; set; }
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
-        
     }
 }

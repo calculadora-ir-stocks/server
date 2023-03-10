@@ -1,6 +1,4 @@
-﻿using stocks.Enums;
-
-namespace stocks_core.Response
+﻿namespace stocks_core.Response
 {
     public class CalculateAssetsIncomeTaxesResponse
     {

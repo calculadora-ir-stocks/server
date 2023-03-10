@@ -22,9 +22,9 @@ public class IncomeTaxesController : BaseController
     /// </summary>
     [HttpGet("assets")]
     [AllowAnonymous]
-    public IActionResult CalculateAssetsIncomeTaxes(/** Guid accountId,*/ string? referenceStartDate, string? referenceEndDate) {
-        _service.CalculateAssetsIncomeTaxes(new Guid(), referenceStartDate, referenceEndDate);
-        return Ok();
+    public IActionResult CalculateCurrentMonthAssetsIncomeTaxes(Guid accountId) {
+        var response = _service.CalculateAssetsIncomeTaxes(accountId);
+        return Ok(response);
     }
 
     /// <summary>

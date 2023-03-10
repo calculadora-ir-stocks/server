@@ -10,12 +10,12 @@ namespace stocks_unit_tests.AverageTradedPrice
 {
     public class AverageTradedPriceServiceTests
     {
-        private readonly Mock<IAverageTradedPriceRepository> _repository;
+        private readonly Mock<IAverageTradedPriceRepostory> _repository;
         private readonly Mock<IB3Client> _client;
 
         public AverageTradedPriceServiceTests()
         {
-            _repository = new Mock<IAverageTradedPriceRepository>();
+            _repository = new Mock<IAverageTradedPriceRepostory>();
             _client = new Mock<IB3Client>();
         }
 

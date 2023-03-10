@@ -1,11 +1,9 @@
-﻿using stocks.Database;
-using stocks_core.DTOs.AverageTradedPrice;
-using stocks_infrastructure.Enums;
-using System.Reflection;
+﻿using Microsoft.AspNetCore.Authentication;
+using stocks.Database;
 
 namespace stocks_infrastructure.Repositories.AverageTradedPrice
 {
-    public class AverageTradedPriceRepository : IAverageTradedPriceRepository
+    public class AverageTradedPriceRepository : IAverageTradedPriceRepostory
     {
         private readonly StocksContext _context;
 
@@ -17,6 +15,11 @@ namespace stocks_infrastructure.Repositories.AverageTradedPrice
         public bool AccountAlreadyHasAverageTradedPrice(Guid accountId)
         {
             return _context.AverageTradedPrices.Where(x => x.AccountId.Equals(accountId)).FirstOrDefault() != null;
+        }
+
+        public Models.AverageTradedPrice GetAverageTradedPrice(string ticker, Guid accountId)
+        {
+            return _context.AverageTradedPrices.Where(x => x.Ticker == ticker && x.AccountId == accountId).First();
         }
 
         public void InsertAll(IEnumerable<Models.AverageTradedPrice> averageTradedPrices)

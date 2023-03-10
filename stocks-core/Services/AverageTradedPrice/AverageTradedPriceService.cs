@@ -8,26 +8,21 @@ using stocks_core.Constants;
 using stocks_core.DTOs.AverageTradedPrice;
 using stocks_core.DTOs.B3;
 using stocks_infrastructure.Repositories.AverageTradedPrice;
-using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using System.Xml;
 
-[assembly: InternalsVisibleTo("stocks-unit-tests")]
 namespace stocks_core.Services.AverageTradedPrice
 {
     public class AverageTradedPriceService : IAverageTradedPriceService
     {
         private readonly IGenericRepository<Account> _genericAccountRepository;
-        private readonly IAverageTradedPriceRepository _averageTradedPriceRepository;
+        private readonly IAverageTradedPriceRepostory _averageTradedPriceRepository;
 
         private readonly IB3Client _client;
 
         private readonly ILogger<AverageTradedPriceService> _logger;
 
         public AverageTradedPriceService(IGenericRepository<Account> genericAccountRepository,
-            IAverageTradedPriceRepository averageTradedPriceRepository,
+            IAverageTradedPriceRepostory averageTradedPriceRepository,
             IB3Client client,
             ILogger<AverageTradedPriceService> logger)
         {
@@ -50,7 +45,7 @@ namespace stocks_core.Services.AverageTradedPrice
                 Movement.Root? response = await _client.GetAccountMovement("97188167044", minimumAllowedStartDateByB3, referenceEndDate)!;
 
                 var buyOperations = response.Data.EquitiesPeriods.EquitiesMovements
-                    .Where(x => x.MovementType == "Transferência");
+                    .Where(x => x.MovementType == "Compra");
 
                 var sellOperations = response.Data.EquitiesPeriods.EquitiesMovements
                     .Where(x => x.MovementType == B3ServicesConstants.Sell);
@@ -67,8 +62,9 @@ namespace stocks_core.Services.AverageTradedPrice
                     {
                         Ticker = entry.Key,
                         AveragePrice = entry.Value.AverageTradedPrice,
+                        Quantity = (int)entry.Value.CurrentQuantity,
                         AccountId = accountId,
-                        UpdatedAt = DateTime.UtcNow
+                        UpdatedAt = DateTime.UtcNow,
                     });
                 }
 
@@ -82,7 +78,7 @@ namespace stocks_core.Services.AverageTradedPrice
             }
         }
 
-        internal static Dictionary<string, AverageTradedPriceCalculator> CalculateAverageTradedPrice(
+        public static Dictionary<string, AverageTradedPriceCalculator> CalculateAverageTradedPrice(
             IEnumerable<Movement.EquitMovement> buyOperations,
             IEnumerable<Movement.EquitMovement> sellOperations,
             IEnumerable<Movement.EquitMovement> splitsOperations
@@ -133,10 +129,15 @@ namespace stocks_core.Services.AverageTradedPrice
                 var totalSpent = movement.Value.CurrentPrice;
                 var assetQuantity = movement.Value.CurrentQuantity;
 
-                movement.Value.AverageTradedPrice = Math.Round(totalSpent / assetQuantity, 2, MidpointRounding.AwayFromZero);
+                movement.Value.AverageTradedPrice = FormatToTwoDecimalPlaces(totalSpent / assetQuantity);
             }
 
             return total;
+        }
+
+        private static double FormatToTwoDecimalPlaces(double value)
+        {
+            return Math.Truncate((100 * (value))) / 100;
         }
 
         private bool AccountAlreadyHasAverageTradedPrice(Guid accountId)
