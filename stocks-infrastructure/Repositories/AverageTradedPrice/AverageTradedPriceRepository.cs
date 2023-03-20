@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Authentication;
-using stocks.Database;
+﻿using stocks.Database;
 
 namespace stocks_infrastructure.Repositories.AverageTradedPrice
 {
@@ -26,6 +25,17 @@ namespace stocks_infrastructure.Repositories.AverageTradedPrice
         {
             _context.AverageTradedPrices.AddRange(averageTradedPrices);
             _context.SaveChanges();
+        }
+
+        public void Update(Guid id, string ticker)
+        {
+            DateTime lastUpdated = 
+                _context.AverageTradedPrices.Where(x => x.AccountId == id && x.Ticker == ticker).First().UpdatedAt;
+
+            string lastUpdatedFormatted = lastUpdated.ToString("yyyy-MM-dd");
+            string referenceEndDate = DateTime.Now.AddDays(-1).ToString("yyyy-MM-dd");
+
+
         }
     }
 }

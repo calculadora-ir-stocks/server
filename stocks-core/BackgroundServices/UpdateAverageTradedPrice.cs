@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Hosting;
+using stocks_infrastructure.Repositories.AverageTradedPrice;
 
 namespace stocks_core.BackgroundServices
 {
@@ -25,6 +26,11 @@ namespace stocks_core.BackgroundServices
                 await Task.Delay(TimeSpan.FromHours(numberOfHours), stoppingToken);
             }
             while (!stoppingToken.IsCancellationRequested);
+        }
+
+        public static void Update(IAverageTradedPriceRepostory averageTradedPriceRepostory, string ticker, Guid id)
+        {
+            averageTradedPriceRepostory.Update(id, ticker);
         }
     }
 }

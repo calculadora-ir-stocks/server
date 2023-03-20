@@ -36,5 +36,15 @@
         /// Alíquota para o pagamento de imposto de renda sob Brazilian Depositary Receipts (BDRs).
         /// </summary>
         public const int IncomeTaxesForBDRs = 15;
+
+        /// <summary>
+        /// Alíquota do IRRF - comumente chamado de dedo-duro - sob operações swing trade.
+        /// </summary>
+        public const double IRRFSwingTrade = 0.005;
+
+        /// <summary>
+        /// Alíquota do IRRF - comumente chamado de dedo-duro - sob operações day-trade.
+        /// </summary>
+        public const int IRRFDayTrade = 1;
     }
 }

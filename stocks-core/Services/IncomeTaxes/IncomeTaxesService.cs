@@ -41,7 +41,38 @@ public class IncomeTaxesService : IIncomeTaxesService
 
         try
         {
-            Movement.Root? httpClientResponse = await _client.GetAccountMovement(mockedCpf, "2022-01-01", "2022-02-20")!;
+            // Movement.Root? httpClientResponse = await _client.GetAccountMovement(mockedCpf, "2022-01-01", "2022-02-20")!;
+            Movement.Root? httpClientResponse = new();
+            httpClientResponse.Data = new();
+            httpClientResponse.Data.EquitiesPeriods = new();
+            httpClientResponse.Data.EquitiesPeriods.EquitiesMovements = new();
+
+            httpClientResponse.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
+            {
+                AssetType = "Ações",
+                TickerSymbol = "PETR4",
+                MovementType = "Venda",
+                OperationValue = 10.43,
+                EquitiesQuantity = 2,
+            });
+
+            httpClientResponse.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
+            {
+                AssetType = "Ações",
+                TickerSymbol = "PETR4",
+                MovementType = "Venda",
+                OperationValue = 13.12,
+                EquitiesQuantity = 5,
+            });
+
+            httpClientResponse.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
+            {
+                AssetType = "Ações",
+                TickerSymbol = "PETR4",
+                MovementType = "Venda",
+                OperationValue = 9.32,
+                EquitiesQuantity = 3,
+            });
 
             CalculateAssetsIncomeTaxesResponse? response = null;
 

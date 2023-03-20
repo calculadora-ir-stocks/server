@@ -1,6 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Query;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using stocks.Clients.B3;
 using stocks.Models;
 using stocks.Repositories;
@@ -8,7 +6,6 @@ using stocks_core.Constants;
 using stocks_core.DTOs.AverageTradedPrice;
 using stocks_core.DTOs.B3;
 using stocks_infrastructure.Repositories.AverageTradedPrice;
-using System.Runtime.CompilerServices;
 
 namespace stocks_core.Services.AverageTradedPrice
 {
@@ -42,7 +39,38 @@ namespace stocks_core.Services.AverageTradedPrice
                 string minimumAllowedStartDateByB3 = "2019-11-01";
                 string referenceEndDate = DateTime.Now.AddDays(-1).ToString("yyyy-MM-dd");
 
-                Movement.Root? response = await _client.GetAccountMovement("97188167044", minimumAllowedStartDateByB3, referenceEndDate)!;
+                // Movement.Root? response = await _client.GetAccountMovement("97188167044", minimumAllowedStartDateByB3, referenceEndDate)!;
+                Movement.Root? response = new();
+                response.Data = new();
+                response.Data.EquitiesPeriods = new();
+                response.Data.EquitiesPeriods.EquitiesMovements = new();
+
+                response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
+                {
+                    AssetType = "Ações",
+                    TickerSymbol = "PETR4",
+                    MovementType = "Compra",
+                    OperationValue = 10.43,
+                    EquitiesQuantity = 2,
+                });
+
+                response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
+                {
+                    AssetType = "Ações",
+                    TickerSymbol = "PETR4",
+                    MovementType = "Compra",
+                    OperationValue = 13.12,
+                    EquitiesQuantity = 5,
+                });
+
+                response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
+                {
+                    AssetType = "Ações",
+                    TickerSymbol = "PETR4",
+                    MovementType = "Venda",
+                    OperationValue = 9.32,
+                    EquitiesQuantity = 3,
+                });
 
                 var buyOperations = response.Data.EquitiesPeriods.EquitiesMovements
                     .Where(x => x.MovementType == "Compra");
@@ -91,6 +119,8 @@ namespace stocks_core.Services.AverageTradedPrice
             // É necessário verificar quando houve desdobramentos, pois caso não faça,
             // a quantidade de papéis de um ativo pode aumentar e a relação de preço/quantidade
             // estará incorreta.
+
+            // TODO: calcular bonificações
 
             foreach (var split in splitsOperations)
             {

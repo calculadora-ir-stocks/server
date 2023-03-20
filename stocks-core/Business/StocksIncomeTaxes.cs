@@ -8,7 +8,6 @@ namespace stocks_core.Business
 {
     public class StocksIncomeTaxes : IIncomeTaxesCalculation
     {
-        private static double totalSoldInStocks = 0.00;
         private static IAverageTradedPriceRepostory _averageTradedPriceRepository;
 
         public StocksIncomeTaxes(IAverageTradedPriceRepostory averageTradedPriceRepository)
@@ -24,7 +23,7 @@ namespace stocks_core.Business
         {
             var sells = movements.Where(x => x.MovementType.Equals(B3ServicesConstants.Sell));
 
-            foreach(var movement in sells) totalSoldInStocks += movement.OperationValue;
+            double totalSoldInStocks = sells.Sum(stock => stock.OperationValue);
 
             if (totalSoldInStocks > IncomeTaxesConstants.LimitForStocksSelling) return;
 
@@ -48,11 +47,10 @@ namespace stocks_core.Business
                     x.MovementType.Equals(B3ServicesConstants.Split)
                 );
 
-                var operationsAverageTradedPrice = AverageTradedPriceService.CalculateAverageTradedPrice(assetBuys, assetSells, assetSplits);
-                var averageTradedPrice = _averageTradedPriceRepository.GetAverageTradedPrice(movement.TickerSymbol, accountId);
+                var averageTradedPrice = AverageTradedPriceService.CalculateAverageTradedPrice(assetBuys, assetSells, assetSplits);
+                var currentTickerAverageTradedPrice = _averageTradedPriceRepository.GetAverageTradedPrice(movement.TickerSymbol, accountId);
 
-                var profit = operationsAverageTradedPrice[movement.TickerSymbol].AverageTradedPrice - averageTradedPrice.AveragePrice;
-                var incomeTaxesToBePaid = ((double) profit / 100) * IncomeTaxesConstants.IncomeTaxesForStocks;
+                double profit = averageTradedPrice[movement.TickerSymbol].AverageTradedPrice - currentTickerAverageTradedPrice.AveragePrice;
             }
         }
     }

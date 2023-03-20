@@ -5,5 +5,6 @@
         bool AccountAlreadyHasAverageTradedPrice(Guid accountId);
         void InsertAll(IEnumerable<Models.AverageTradedPrice> averageTradedPrices);
         Models.AverageTradedPrice GetAverageTradedPrice(string ticker, Guid accountId);
+        void Update(Guid id, string ticker);
     }
 }

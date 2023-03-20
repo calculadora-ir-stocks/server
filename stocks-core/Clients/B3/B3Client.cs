@@ -54,7 +54,7 @@ namespace stocks.Services.B3
             HttpRequestMessage request = new(HttpMethod.Get, $"movement/v2/equities/investors/{cpf}?referenceStartDate={referenceStartDate}&referenceEndDate={referenceEndDate}");
 
             // O nextUrl é um parâmetro retornado pelos endpoints da B3 que representa a próxima página do response.
-            // Quando um endpoint é consumido, os dados são separados entre várias páginas para evitar um processamento de dados pesado.
+            // Quando um endpoint é consumido, os dados são separados entre várias páginas para evitar muito processamento de dados.
             if (nextUrl != null)
             {
                 request = new(HttpMethod.Get, nextUrl);
