@@ -1,33 +1,45 @@
+using Microsoft.Extensions.Logging;
 using stocks.Clients.B3;
 using stocks.Models;
 using stocks.Repositories;
+using stocks.Requests;
 using stocks_core.Business;
+using stocks_core.Constants;
+using stocks_core.DTOs.AverageTradedPrice;
 using stocks_core.DTOs.B3;
 using stocks_core.Enums;
 using stocks_core.Response;
+using stocks_core.Services.AverageTradedPrice;
 using stocks_infrastructure.Repositories.AverageTradedPrice;
 
 namespace stocks.Services.IncomeTaxes;
 
 public class IncomeTaxesService : IIncomeTaxesService
 {
+    private readonly IAverageTradedPriceService _averageTradedPriceService;
+
     private readonly IGenericRepository<Account> _genericRepositoryAccount;
-    private static IAverageTradedPriceRepostory _averageTradedPriceRepository;
+    private readonly IAverageTradedPriceRepostory _averageTradedPriceRepository;
 
     private readonly IB3Client _client;
 
     private IIncomeTaxesCalculation _incomeTaxCalculator;
 
-    private const string SellOperation = "Transfer�ncia";
+    private ILogger<IncomeTaxesService> _logger;
 
-    public IncomeTaxesService(IGenericRepository<Account> genericRepositoryAccount,
+    public IncomeTaxesService(IAverageTradedPriceService averageTradedPriceService, 
+        IGenericRepository<Account> genericRepositoryAccount,
         IAverageTradedPriceRepostory averageTradedPriceRepository,
-        IB3Client b3Client, IIncomeTaxesCalculation calculator)
+        IB3Client b3Client, IIncomeTaxesCalculation calculator,
+        ILogger<IncomeTaxesService> logger
+        )
     {
+        _averageTradedPriceService = averageTradedPriceService;
         _genericRepositoryAccount = genericRepositoryAccount;
         _averageTradedPriceRepository = averageTradedPriceRepository;
         _client = b3Client;
         _incomeTaxCalculator = calculator;
+        _logger = logger;
     }
 
     public async Task<CalculateAssetsIncomeTaxesResponse?> CalculateAssetsIncomeTaxes(Guid accountId)
@@ -100,7 +112,7 @@ public class IncomeTaxesService : IIncomeTaxesService
         var gold = movements.Where(x => x.AssetType.Equals(AssetMovementTypes.Gold));
         var fundInvestments = movements.Where(x => x.AssetType.Equals(AssetMovementTypes.FundInvestments));
 
-        _incomeTaxCalculator = new StocksIncomeTaxes(_averageTradedPriceRepository);
+        _incomeTaxCalculator = new StocksIncomeTaxes(_averageTradedPriceRepository, _averageTradedPriceService);
         await _incomeTaxCalculator.AddAllIncomeTaxesToObject(response, stocks, accountId);
 
         _incomeTaxCalculator = new ETFsIncomeTaxes();
@@ -124,7 +136,7 @@ public class IncomeTaxesService : IIncomeTaxesService
         var allMovements = httpClientResponse.Data.EquitiesPeriods.EquitiesMovements;
 
         var sellOperationMovements = httpClientResponse.Data.EquitiesPeriods.EquitiesMovements.Where(
-            asset => asset.MovementType.Equals(SellOperation)).FirstOrDefault();
+            asset => asset.MovementType.Equals(B3ServicesConstants.Sell)).FirstOrDefault();
 
         bool investorSoldAnyAsset = allMovements.Contains(sellOperationMovements!);
 
@@ -133,13 +145,92 @@ public class IncomeTaxesService : IIncomeTaxesService
         return true;
     }
 
-    public class Asset
+    public async Task CalculateIncomeTaxesForEveryMonth(Guid accountId, List<CalculateIncomeTaxesForEveryMonthRequest> request)
     {
-        public string Ticker { get; set; }
-        public int TradeQuantity { get; set; }
-        public double GrossAmount { get; set; }
-        public DateTime TradeDateTime { get; set; }
+        try
+        {
+            if (AccountAlreadyHasAverageTradedPrice(accountId)) return;
 
-        public double Total { get; set; }
+            string minimumAllowedStartDateByB3 = "2019-11-01";
+            string referenceEndDate = DateTime.Now.AddDays(-1).ToString("yyyy-MM-dd");
+
+            // Movement.Root? response = await _client.GetAccountMovement("97188167044", minimumAllowedStartDateByB3, referenceEndDate)!;
+            Movement.Root? response = new();
+            response.Data = new();
+            response.Data.EquitiesPeriods = new();
+            response.Data.EquitiesPeriods.EquitiesMovements = new();
+
+            response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
+            {
+                AssetType = "Ações",
+                TickerSymbol = "PETR4",
+                MovementType = "Compra",
+                OperationValue = 10.43,
+                EquitiesQuantity = 2,
+            });
+
+            response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
+            {
+                AssetType = "Ações",
+                TickerSymbol = "PETR4",
+                MovementType = "Compra",
+                OperationValue = 13.12,
+                EquitiesQuantity = 5,
+            });
+
+            response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
+            {
+                AssetType = "Ações",
+                TickerSymbol = "PETR4",
+                MovementType = "Venda",
+                OperationValue = 9.32,
+                EquitiesQuantity = 3,
+            });
+
+            var buyOperations = response.Data.EquitiesPeriods.EquitiesMovements
+                .Where(x => x.MovementType == B3ServicesConstants.Buy);
+
+            var sellOperations = response.Data.EquitiesPeriods.EquitiesMovements
+                .Where(x => x.MovementType == B3ServicesConstants.Sell);
+
+            var splitsOperations = response.Data.EquitiesPeriods.EquitiesMovements
+                .Where(x => x.MovementType == B3ServicesConstants.Split);
+
+            var bonusShares = response.Data.EquitiesPeriods.EquitiesMovements
+                .Where(x => x.MovementType == B3ServicesConstants.BonusShare);
+
+            CalculateAssetsIncomeTaxesResponse? test = null;
+
+            await CalculateIncomeTaxesForEveryMonth(response, test, accountId);
+        }
+        catch (Exception e)
+        {
+            _logger.LogError("Uma exceção ocorreu ao executar o método {1}, classe {2}. Exceção: {3}",
+                nameof(CalculateIncomeTaxesForEveryMonth), nameof(AverageTradedPriceService), e.Message);
+            throw;
+        }
+
+        bool AccountAlreadyHasAverageTradedPrice(Guid accountId)
+        {
+            return _averageTradedPriceRepository.AccountAlreadyHasAverageTradedPrice(accountId);
+        }
+    }
+
+    private async Task CalculateIncomeTaxesForEveryMonth(Movement.Root response, CalculateAssetsIncomeTaxesResponse? test, Guid accountId)
+    {
+        var movements = response.Data.EquitiesPeriods.EquitiesMovements;
+        if (movements is null) return;
+
+        string currentMonth = movements[0].ReferenceDate.ToString("MM");
+
+        foreach (var movement in movements)
+        {
+            string movementReferenceDate = movement.ReferenceDate.ToString("MM");
+
+            while (currentMonth != movementReferenceDate)
+            {
+
+            }
+        }
     }
 }

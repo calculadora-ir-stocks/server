@@ -25,7 +25,9 @@ namespace stocks.Models
         public string Email { get; protected set; }
         public string Password { get; protected set; }
         public string CPF { get; protected set; }
-        public AverageTradedPrice? AverageTradedPrice { get; protected set; }
+        public IList<AverageTradedPrice>? AverageTradedPrices { get; protected set; }
+        public IList<IncomeTaxes> IncomeTaxes { get; protected set; }
+        public IList<CompensateLoss> CompesateLosses { get; protected set; }
         public Plan Plan { get; protected set; } = Plan.Default;
 
         public void HashPassword(string password)
@@ -36,12 +38,12 @@ namespace stocks.Models
 
     public partial class AccountValidator : AbstractValidator<Account>
     {
-        private Regex hasNumber = new Regex("[0-9]+");
-        private Regex hasUpperChar = new Regex("[A-Z]+");
-        private Regex hasLowerChar = new Regex("[a-z]+");
-        private Regex hasMinMaxChars = new Regex(".{8,60}");
-        private Regex isValidEmail = new Regex(@"^([\w\.\-]+)@([\w\-]+)((\.(\w){2,3})+)$");
-        private Regex isValidCPF = new Regex(@"(^\d{3}\.\d{3}\.\d{3}\-\d{2}$)");
+        private readonly Regex hasNumber = new("[0-9]+");
+        private readonly Regex hasUpperChar = new("[A-Z]+");
+        private readonly Regex hasLowerChar = new("[a-z]+");
+        private readonly Regex hasMinMaxChars = new(".{8,60}");
+        private readonly Regex isValidEmail = new(@"^([\w\.\-]+)@([\w\-]+)((\.(\w){2,3})+)$");
+        private readonly Regex isValidCPF = new(@"(^\d{3}\.\d{3}\.\d{3}\-\d{2}$)");
 
         public AccountValidator()
         {

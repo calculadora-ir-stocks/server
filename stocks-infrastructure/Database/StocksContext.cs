@@ -9,6 +9,8 @@ namespace stocks.Database
     {
         public DbSet<Account> Accounts { get; set; } = null!;
         public DbSet<AverageTradedPrice> AverageTradedPrices { get; set; } = null!;
+        public DbSet<CompensateLoss> CompesateLosses { get; set; } = null!;
+        public DbSet<IncomeTaxes> IncomeTaxes { get; set; } = null!;
 
         public StocksContext()
         {
@@ -38,10 +40,20 @@ namespace stocks.Database
         {
             modelBuilder.Ignore<BaseEntity>();
 
-            modelBuilder.Entity<Account>()
-                .HasOne(ap => ap.AverageTradedPrice)
-                .WithOne(ap => ap.Account)
-                .HasForeignKey<AverageTradedPrice>(ap => ap.AccountId);
+            modelBuilder.Entity<AverageTradedPrice>()
+                .HasOne(ap => ap.Account)
+                .WithMany(ap => ap.AverageTradedPrices)
+                .HasForeignKey(ap => ap.AccountId);
+
+            modelBuilder.Entity<CompensateLoss>()
+                .HasOne(ap => ap.Account)
+                .WithMany(ap => ap.CompesateLosses)
+                .HasForeignKey(ap => ap.AccountId);
+
+            modelBuilder.Entity<IncomeTaxes>()
+                .HasOne(ap => ap.Account)
+                .WithMany(ap => ap.IncomeTaxes)
+                .HasForeignKey(ap => ap.AccountId);
         }
     }
 }

@@ -9,10 +9,12 @@ namespace stocks_core.Business
     public class StocksIncomeTaxes : IIncomeTaxesCalculation
     {
         private static IAverageTradedPriceRepostory _averageTradedPriceRepository;
+        private static IAverageTradedPriceService _averageTradedPriceService;
 
-        public StocksIncomeTaxes(IAverageTradedPriceRepostory averageTradedPriceRepository)
+        public StocksIncomeTaxes(IAverageTradedPriceRepostory averageTradedPriceRepository, IAverageTradedPriceService averageTradedPriceService)
         {
             _averageTradedPriceRepository = averageTradedPriceRepository;
+            _averageTradedPriceService = averageTradedPriceService;
         }
 
         /// <summary>
@@ -47,7 +49,12 @@ namespace stocks_core.Business
                     x.MovementType.Equals(B3ServicesConstants.Split)
                 );
 
-                var averageTradedPrice = AverageTradedPriceService.CalculateAverageTradedPrice(assetBuys, assetSells, assetSplits);
+                var bonusShares = movements.Where(x =>
+                    x.TickerSymbol.Equals(movement.TickerSymbol) &&
+                    x.MovementType.Equals(B3ServicesConstants.BonusShare)
+                );
+
+                var averageTradedPrice = _averageTradedPriceService.CalculateAverageTradedPrice(assetBuys, assetSells, assetSplits, bonusShares);
                 var currentTickerAverageTradedPrice = _averageTradedPriceRepository.GetAverageTradedPrice(movement.TickerSymbol, accountId);
 
                 double profit = averageTradedPrice[movement.TickerSymbol].AverageTradedPrice - currentTickerAverageTradedPrice.AveragePrice;

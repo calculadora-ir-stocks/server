@@ -1,4 +1,5 @@
-﻿using stocks.Models;
+﻿using stocks_core.DTOs.AverageTradedPrice;
+using stocks_core.DTOs.B3;
 
 namespace stocks_core.Services.AverageTradedPrice
 {
@@ -10,6 +11,11 @@ namespace stocks_core.Services.AverageTradedPrice
         /// 
         /// Deve ser rodado apenas na primeira vez que o usuário acessa a plataforma.
         /// </summary>
-        Task Insert(Guid accountId);
+        public Dictionary<string, AverageTradedPriceCalculator> CalculateAverageTradedPrice(
+            IEnumerable<Movement.EquitMovement> buyOperations,
+            IEnumerable<Movement.EquitMovement> sellOperations,
+            IEnumerable<Movement.EquitMovement> splitsOperations,
+            IEnumerable<Movement.EquitMovement> bonusSharesOperations
+        );
     }
 }
