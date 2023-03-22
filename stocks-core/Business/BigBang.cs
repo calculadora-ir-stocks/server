@@ -1,4 +1,5 @@
 ﻿using stocks_core.DTOs.B3;
+using stocks_core.Enums;
 using stocks_core.Response;
 
 namespace stocks_core.Business
@@ -35,11 +36,38 @@ namespace stocks_core.Business
 
         private static void CalculateAndSaveIntoDatabase(List<MonthMovement> monthMovements, IIncomeTaxesCalculator calculator, Guid accountId)
         {
-            CalculateAssetsIncomeTaxesResponse? response = null;
 
             foreach (var monthMovement in monthMovements)
             {
-                calculator.AddAllIncomeTaxesToObject(response, monthMovement.Movements, accountId);
+                // Month and income taxes to be paid.
+                Dictionary<int, CalculateAssetsIncomeTaxesResponse> response = new();
+                
+                //var movements = monthMovement.Movements;
+
+                //var stocks = movements.Where(x => x.AssetType.Equals(AssetMovementTypes.Stocks));
+                //var etfs = movements.Where(x => x.AssetType.Equals(AssetMovementTypes.ETFs));
+                //var fiis = movements.Where(x => x.AssetType.Equals(AssetMovementTypes.FIIs));
+                //var bdrs = movements.Where(x => x.AssetType.Equals(AssetMovementTypes.BDRs));
+                //var gold = movements.Where(x => x.AssetType.Equals(AssetMovementTypes.Gold));
+                //var fundInvestments = movements.Where(x => x.AssetType.Equals(AssetMovementTypes.FundInvestments));
+
+                //calculator = new StocksIncomeTaxes(_averageTradedPriceRepository, _averageTradedPriceService);
+                //await _incomeTaxCalculator.AddAllIncomeTaxesToObject(response, stocks, accountId);
+
+                //_incomeTaxCalculator = new ETFsIncomeTaxes();
+                //await _incomeTaxCalculator.AddAllIncomeTaxesToObject(response, etfs, accountId);
+
+                //// _incomeTaxCalculator = new FIIsIncomeTaxes();
+                //await _incomeTaxCalculator.AddAllIncomeTaxesToObject(response, fiis, accountId);
+
+                //// _incomeTaxCalculator = new BDRsIncomeTaxes();
+                //await _incomeTaxCalculator.AddAllIncomeTaxesToObject(response, bdrs, accountId);
+
+                //// _incomeTaxCalculator = new GoldIncomeTaxes();
+                //await _incomeTaxCalculator.AddAllIncomeTaxesToObject(response, gold, accountId);
+
+                //// _incomeTaxCalculator = new FundInvestmentsIncomeTaxes();
+                //await _incomeTaxCalculator.AddAllIncomeTaxesToObject(response, fundInvestments, accountId);
             }
         }
 

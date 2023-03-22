@@ -30,14 +30,14 @@ namespace stocks_core.Services.AverageTradedPrice
             _logger = logger;
         }
 
-        public Dictionary<string, AverageTradedPriceCalculator> CalculateAverageTradedPrice(
+        public Dictionary<string, AverageTradedPriceCalculatorResponse> CalculateAverageTradedPrice(
             IEnumerable<Movement.EquitMovement> buyOperations,
             IEnumerable<Movement.EquitMovement> sellOperations,
             IEnumerable<Movement.EquitMovement> splitsOperations,
             IEnumerable<Movement.EquitMovement> bonusSharesOperations
         )
         {
-            Dictionary<string, AverageTradedPriceCalculator> total = new();
+            Dictionary<string, AverageTradedPriceCalculatorResponse> total = new();
 
             // TODO: calcular os desdobramentos
 
@@ -62,7 +62,7 @@ namespace stocks_core.Services.AverageTradedPrice
                     asset.CurrentQuantity += movement.EquitiesQuantity;
                 } else
                 {
-                    total.Add(movement.TickerSymbol, new AverageTradedPriceCalculator(movement.OperationValue, movement.EquitiesQuantity));
+                    total.Add(movement.TickerSymbol, new AverageTradedPriceCalculatorResponse(movement.OperationValue, movement.EquitiesQuantity));
                 }
             }
 

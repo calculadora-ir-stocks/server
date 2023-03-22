@@ -27,6 +27,7 @@ namespace stocks_core.Business
 
             double totalSoldInStocks = sells.Sum(stock => stock.OperationValue);
 
+            // TO-DO: change operator
             if (totalSoldInStocks > IncomeTaxesConstants.LimitForStocksSelling) return;
 
             foreach(var movement in movements)
@@ -34,27 +35,27 @@ namespace stocks_core.Business
                 // TODO: calculate day-trade.
                 // if user day-traded this ticker, pays 20%
 
-                var assetBuys = movements.Where(x =>
+                var stockBuys = movements.Where(x =>
                     x.TickerSymbol.Equals(movement.TickerSymbol) &&
                     x.MovementType.Equals(B3ServicesConstants.Buy)
                 );
 
-                var assetSells = movements.Where(x =>
+                var stockSells = movements.Where(x =>
                     x.TickerSymbol.Equals(movement.TickerSymbol) &&
                     x.MovementType.Equals(B3ServicesConstants.Sell)
                 );
 
-                var assetSplits = movements.Where(x =>
+                var stockSplits = movements.Where(x =>
                     x.TickerSymbol.Equals(movement.TickerSymbol) &&
                     x.MovementType.Equals(B3ServicesConstants.Split)
                 );
 
-                var bonusShares = movements.Where(x =>
+                var stockBonusShares = movements.Where(x =>
                     x.TickerSymbol.Equals(movement.TickerSymbol) &&
                     x.MovementType.Equals(B3ServicesConstants.BonusShare)
                 );
 
-                var averageTradedPrice = _averageTradedPriceService.CalculateAverageTradedPrice(assetBuys, assetSells, assetSplits, bonusShares);
+                var averageTradedPrice = _averageTradedPriceService.CalculateAverageTradedPrice(stockBuys, stockSells, stockSplits, stockBonusShares);
                 var currentTickerAverageTradedPrice = _averageTradedPriceRepository.GetAverageTradedPrice(movement.TickerSymbol, accountId);
 
                 double profit = averageTradedPrice[movement.TickerSymbol].AverageTradedPrice - currentTickerAverageTradedPrice.AveragePrice;

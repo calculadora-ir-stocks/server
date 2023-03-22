@@ -11,7 +11,7 @@ namespace stocks_core.Services.AverageTradedPrice
         /// 
         /// Deve ser rodado apenas na primeira vez que o usuário acessa a plataforma.
         /// </summary>
-        public Dictionary<string, AverageTradedPriceCalculator> CalculateAverageTradedPrice(
+        public Dictionary<string, AverageTradedPriceCalculatorResponse> CalculateAverageTradedPrice(
             IEnumerable<Movement.EquitMovement> buyOperations,
             IEnumerable<Movement.EquitMovement> sellOperations,
             IEnumerable<Movement.EquitMovement> splitsOperations,

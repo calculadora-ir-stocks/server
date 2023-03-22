@@ -1,8 +1,8 @@
 ﻿namespace stocks_core.DTOs.AverageTradedPrice
 {
-    public class AverageTradedPriceCalculator
+    public class AverageTradedPriceCalculatorResponse
     {
-        public AverageTradedPriceCalculator(double currentPrice, double currentQuantity)
+        public AverageTradedPriceCalculatorResponse(double currentPrice, double currentQuantity)
         {
             CurrentPrice = currentPrice;
             CurrentQuantity = currentQuantity;

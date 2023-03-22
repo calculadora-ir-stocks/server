@@ -24,7 +24,7 @@ public class IncomeTaxesService : IIncomeTaxesService
 
     private IIncomeTaxesCalculator _incomeTaxCalculator;
 
-    private ILogger<IncomeTaxesService> _logger;
+    private readonly ILogger<IncomeTaxesService> _logger;
 
     public IncomeTaxesService(IAverageTradedPriceService averageTradedPriceService, 
         IGenericRepository<Account> genericRepositoryAccount,
@@ -63,7 +63,7 @@ public class IncomeTaxesService : IIncomeTaxesService
             {
                 AssetType = "Ações",
                 TickerSymbol = "PETR4",
-                MovementType = "Venda",
+                MovementType = "Compra",
                 OperationValue = 10.43,
                 EquitiesQuantity = 2,
             });
@@ -140,8 +140,8 @@ public class IncomeTaxesService : IIncomeTaxesService
 
         bool investorSoldAnyAsset = allMovements.Contains(sellOperationMovements!);
 
-        // Mockado por enquanto porque a B3 nao possui movimentos de venda em ambiente
-        // de certificacao. 
+        // Mockado por enquanto porque a B3 não possui movimentos de venda em ambiente
+        // de certificação.
         return true;
     }
     #endregion
