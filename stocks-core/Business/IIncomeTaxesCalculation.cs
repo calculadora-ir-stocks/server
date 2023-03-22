@@ -3,7 +3,7 @@ using stocks_core.Response;
 
 namespace stocks_core.Business
 {
-    public interface IIncomeTaxesCalculation
+    public interface IIncomeTaxesCalculator
     {
         /// <summary>
         /// Adiciona no objeto CalculateAssetsIncomeTaxesResponse os ativos e seus respectivos impostos de renda a serem pagos.

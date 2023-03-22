@@ -4,7 +4,7 @@ using stocks_core.Response;
 
 namespace stocks_core.Business
 {
-    public class ETFsIncomeTaxes : IIncomeTaxesCalculation
+    public class ETFsIncomeTaxes : IIncomeTaxesCalculator
     {
         public static List<Movement.EquitMovement> etfs = new();
 

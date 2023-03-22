@@ -5,7 +5,6 @@ using stocks.Repositories;
 using stocks.Requests;
 using stocks_core.Business;
 using stocks_core.Constants;
-using stocks_core.DTOs.AverageTradedPrice;
 using stocks_core.DTOs.B3;
 using stocks_core.Enums;
 using stocks_core.Response;
@@ -23,14 +22,14 @@ public class IncomeTaxesService : IIncomeTaxesService
 
     private readonly IB3Client _client;
 
-    private IIncomeTaxesCalculation _incomeTaxCalculator;
+    private IIncomeTaxesCalculator _incomeTaxCalculator;
 
     private ILogger<IncomeTaxesService> _logger;
 
     public IncomeTaxesService(IAverageTradedPriceService averageTradedPriceService, 
         IGenericRepository<Account> genericRepositoryAccount,
         IAverageTradedPriceRepostory averageTradedPriceRepository,
-        IB3Client b3Client, IIncomeTaxesCalculation calculator,
+        IB3Client b3Client, IIncomeTaxesCalculator calculator,
         ILogger<IncomeTaxesService> logger
         )
     {
@@ -42,7 +41,8 @@ public class IncomeTaxesService : IIncomeTaxesService
         _logger = logger;
     }
 
-    public async Task<CalculateAssetsIncomeTaxesResponse?> CalculateAssetsIncomeTaxes(Guid accountId)
+    #region Calcula o imposto de renda a ser pago no mês atual
+    public async Task<CalculateAssetsIncomeTaxesResponse?> CalculateCurrentMonthAssetsIncomeTaxes(Guid accountId)
     {
         string mockedCpf = "97188167044";
 
@@ -144,11 +144,14 @@ public class IncomeTaxesService : IIncomeTaxesService
         // de certificacao. 
         return true;
     }
+    #endregion
 
+    #region Calcula o imposto de renda a ser pago de 01/11/2019 até D-1.
     public async Task CalculateIncomeTaxesForEveryMonth(Guid accountId, List<CalculateIncomeTaxesForEveryMonthRequest> request)
     {
         try
         {
+            // TODO: calculate runtime
             if (AccountAlreadyHasAverageTradedPrice(accountId)) return;
 
             string minimumAllowedStartDateByB3 = "2019-11-01";
@@ -167,8 +170,8 @@ public class IncomeTaxesService : IIncomeTaxesService
                 MovementType = "Compra",
                 OperationValue = 10.43,
                 EquitiesQuantity = 2,
+                ReferenceDate = new DateTime(2023, 01, 20)
             });
-
             response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
             {
                 AssetType = "Ações",
@@ -176,8 +179,8 @@ public class IncomeTaxesService : IIncomeTaxesService
                 MovementType = "Compra",
                 OperationValue = 13.12,
                 EquitiesQuantity = 5,
+                ReferenceDate = new DateTime(2023, 01, 16)
             });
-
             response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
             {
                 AssetType = "Ações",
@@ -185,23 +188,19 @@ public class IncomeTaxesService : IIncomeTaxesService
                 MovementType = "Venda",
                 OperationValue = 9.32,
                 EquitiesQuantity = 3,
+                ReferenceDate = new DateTime(2023, 02, 20)
+            });
+            response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
+            {
+                AssetType = "Ações",
+                TickerSymbol = "ABEV4",
+                MovementType = "Compra",
+                OperationValue = 9.32,
+                EquitiesQuantity = 3,
+                ReferenceDate = new DateTime(2023, 02, 20)
             });
 
-            var buyOperations = response.Data.EquitiesPeriods.EquitiesMovements
-                .Where(x => x.MovementType == B3ServicesConstants.Buy);
-
-            var sellOperations = response.Data.EquitiesPeriods.EquitiesMovements
-                .Where(x => x.MovementType == B3ServicesConstants.Sell);
-
-            var splitsOperations = response.Data.EquitiesPeriods.EquitiesMovements
-                .Where(x => x.MovementType == B3ServicesConstants.Split);
-
-            var bonusShares = response.Data.EquitiesPeriods.EquitiesMovements
-                .Where(x => x.MovementType == B3ServicesConstants.BonusShare);
-
-            CalculateAssetsIncomeTaxesResponse? test = null;
-
-            await CalculateIncomeTaxesForEveryMonth(response, test, accountId);
+            await BigBang.Calculate(response, _incomeTaxCalculator, accountId);
         }
         catch (Exception e)
         {
@@ -215,22 +214,5 @@ public class IncomeTaxesService : IIncomeTaxesService
             return _averageTradedPriceRepository.AccountAlreadyHasAverageTradedPrice(accountId);
         }
     }
-
-    private async Task CalculateIncomeTaxesForEveryMonth(Movement.Root response, CalculateAssetsIncomeTaxesResponse? test, Guid accountId)
-    {
-        var movements = response.Data.EquitiesPeriods.EquitiesMovements;
-        if (movements is null) return;
-
-        string currentMonth = movements[0].ReferenceDate.ToString("MM");
-
-        foreach (var movement in movements)
-        {
-            string movementReferenceDate = movement.ReferenceDate.ToString("MM");
-
-            while (currentMonth != movementReferenceDate)
-            {
-
-            }
-        }
-    }
+    #endregion
 }

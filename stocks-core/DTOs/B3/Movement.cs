@@ -42,8 +42,19 @@ namespace stocks_core.DTOs.B3
 
         public class EquitMovement
         {
+            public EquitMovement(string tickerSymbol, string assetType, string movementType, double operationValue, double quantity)
+            {
+                TickerSymbol = tickerSymbol;
+                AssetType = assetType;
+                MovementType = movementType;
+                OperationValue = operationValue;
+                EquitiesQuantity = quantity;
+            }
+
+            public EquitMovement() {}
+
             [JsonProperty("referenceDate")]
-            public DateOnly ReferenceDate { get; set; }
+            public DateTime ReferenceDate { get; set; }
 
             [JsonProperty("productTypeName")]
             public string AssetType { get; set; }

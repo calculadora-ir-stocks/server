@@ -24,7 +24,7 @@ public class IncomeTaxesController : BaseController
     [HttpGet("assets")]
     [AllowAnonymous]
     public IActionResult CalculateCurrentMonthAssetsIncomeTaxes(Guid accountId) {
-        var response = _service.CalculateAssetsIncomeTaxes(accountId);
+        var response = _service.CalculateCurrentMonthAssetsIncomeTaxes(accountId);
         return Ok(response);
     }
 

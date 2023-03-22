@@ -38,8 +38,8 @@ namespace stocks
             services.AddScoped<NotificationContext>();
 
             // Classes responsáveis pelos algoritmos para cálculo de imposto de renda
-            services.AddScoped<IIncomeTaxesCalculation, StocksIncomeTaxes>();
-            services.AddScoped<IIncomeTaxesCalculation, ETFsIncomeTaxes>();
+            services.AddScoped<IIncomeTaxesCalculator, StocksIncomeTaxes>();
+            services.AddScoped<IIncomeTaxesCalculator, ETFsIncomeTaxes>();
 
             services.AddTransient<IJwtCommon, JwtCommon>();
 

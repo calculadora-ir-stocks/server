@@ -6,10 +6,10 @@ using stocks_infrastructure.Repositories.AverageTradedPrice;
 
 namespace stocks_core.Business
 {
-    public class StocksIncomeTaxes : IIncomeTaxesCalculation
+    public class StocksIncomeTaxes : IIncomeTaxesCalculator
     {
-        private static IAverageTradedPriceRepostory _averageTradedPriceRepository;
-        private static IAverageTradedPriceService _averageTradedPriceService;
+        private readonly IAverageTradedPriceRepostory _averageTradedPriceRepository;
+        private readonly IAverageTradedPriceService _averageTradedPriceService;
 
         public StocksIncomeTaxes(IAverageTradedPriceRepostory averageTradedPriceRepository, IAverageTradedPriceService averageTradedPriceService)
         {
