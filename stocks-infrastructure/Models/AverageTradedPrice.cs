@@ -10,6 +10,20 @@ namespace stocks_infrastructure.Models
     /// </summary>
     public class AverageTradedPrice
     {
+        public AverageTradedPrice(string ticker, double averagePrice, int quantity, Account account, Guid accountId, DateTime updatedAt)
+        {
+            Ticker = ticker;
+            AveragePrice = averagePrice;
+            Quantity = quantity;
+            Account = account;
+            AccountId = accountId;
+            UpdatedAt = updatedAt;
+        }
+
+        public AverageTradedPrice()
+        {
+        }
+
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.None)]
         public Guid Id { get; protected set; } = Guid.NewGuid();

@@ -13,5 +13,10 @@ namespace stocks_core.Business
         {
             throw new NotImplementedException();
         }
+
+        public Task CalculateIncomeTaxesForTheFirstTimeAndSaveAverageTradedPrice(CalculateAssetsIncomeTaxesResponse? response, IEnumerable<Movement.EquitMovement> movements, Guid accountId)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

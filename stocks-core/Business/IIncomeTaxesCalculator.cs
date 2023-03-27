@@ -10,5 +10,13 @@ namespace stocks_core.Business
         /// </summary>
         Task AddAllIncomeTaxesToObject(CalculateAssetsIncomeTaxesResponse? response,
             IEnumerable<Movement.EquitMovement> movements, Guid accountId);
+
+        /// <summary>
+        /// Calcula o imposto de renda a ser pago em ativos que ainda não possuem o preço médio salvo na base de dados.
+        /// Após calcular o imposto de renda, salva na base de dados o preço médio dos respectivos ativos.
+        /// Deve ser executado uma única vez quando o usuário cadastrar-se na plataforma.
+        /// </summary>
+        Task CalculateIncomeTaxesForTheFirstTimeAndSaveAverageTradedPrice(CalculateAssetsIncomeTaxesResponse response,
+            IEnumerable<Movement.EquitMovement> movements, Guid accountId);
     }
 }

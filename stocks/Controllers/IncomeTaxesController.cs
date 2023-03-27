@@ -33,12 +33,12 @@ public class IncomeTaxesController : BaseController
     /// Também calcula e armazena o preço médio de todos os ativos.
     /// Deve ser executado uma única vez quando um usuário cadastrar-se na plataforma.
     /// </summary>
-    [HttpPost("big-bang")]
+    [HttpPost("big-bang/{id}")]
     [AllowAnonymous]
-    public async Task<IActionResult> CalculateIncomeTaxesForEveryMonth([FromRoute] Guid accountId,
+    public async Task<IActionResult> CalculateIncomeTaxesForEveryMonth(Guid id,
         [FromBody] List<CalculateIncomeTaxesForEveryMonthRequest> request)
     {
-        await _service.CalculateIncomeTaxesForEveryMonth(accountId, request);
+        await _service.CalculateIncomeTaxesForEveryMonth(id, request);
         return Ok("Preço médio calculado e armazenado com sucesso.");
     }
 

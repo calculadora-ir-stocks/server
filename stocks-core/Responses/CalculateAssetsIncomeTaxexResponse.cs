@@ -11,9 +11,18 @@
 
     public class Asset
     {
+        public Asset(string ticker, int tradeQuantity, DateTime tradeDateTime, double totalIncomeTaxesValue)
+        {
+            Ticker = ticker;
+            TradeQuantity = tradeQuantity;
+            TradeDateTime = tradeDateTime;
+            TotalIncomeTaxesValue = totalIncomeTaxesValue;
+        }
+
+        public Asset() { }
+
         public string Ticker { get; set; }
         public int TradeQuantity { get; set; }
-        public double GrossAmount { get; set; }
         public DateTime TradeDateTime { get; set; }
 
         /// <summary>

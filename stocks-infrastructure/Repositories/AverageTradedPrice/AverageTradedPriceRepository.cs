@@ -16,9 +16,15 @@ namespace stocks_infrastructure.Repositories.AverageTradedPrice
             return _context.AverageTradedPrices.Where(x => x.AccountId.Equals(accountId)).FirstOrDefault() != null;
         }
 
-        public Models.AverageTradedPrice GetAverageTradedPrice(string ticker, Guid accountId)
+        public Models.AverageTradedPrice? GetAverageTradedPrice(string ticker, Guid accountId)
         {
-            return _context.AverageTradedPrices.Where(x => x.Ticker == ticker && x.AccountId == accountId).First();
+            return _context.AverageTradedPrices.Where(x => x.Ticker == ticker && x.AccountId == accountId).FirstOrDefault();
+        }
+
+        public async Task Insert(Models.AverageTradedPrice averageTradedPrice)
+        {
+            await _context.AverageTradedPrices.AddAsync(averageTradedPrice);
+            _context.SaveChanges();
         }
 
         public void InsertAll(IEnumerable<Models.AverageTradedPrice> averageTradedPrices)

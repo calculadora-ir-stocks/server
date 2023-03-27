@@ -199,8 +199,18 @@ public class IncomeTaxesService : IIncomeTaxesService
                 EquitiesQuantity = 3,
                 ReferenceDate = new DateTime(2023, 02, 20)
             });
+            response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
+            {
+                AssetType = "Ações",
+                TickerSymbol = "ABEV4",
+                MovementType = "Compra",
+                OperationValue = 9.32,
+                EquitiesQuantity = 3,
+                ReferenceDate = new DateTime(2024, 01, 20)
+            });
 
-            await BigBang.Calculate(response, _incomeTaxCalculator, accountId);
+            BigBang bigBang = new(_averageTradedPriceRepository, _averageTradedPriceService);
+            await bigBang.Calculate(response, _incomeTaxCalculator, accountId);
         }
         catch (Exception e)
         {

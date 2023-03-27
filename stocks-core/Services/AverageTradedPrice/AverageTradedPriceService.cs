@@ -50,7 +50,7 @@ namespace stocks_core.Services.AverageTradedPrice
             foreach (var split in splitsOperations)
             {
 
-            }
+            }  
 
             foreach (var movement in buyOperations)
             {
@@ -58,11 +58,11 @@ namespace stocks_core.Services.AverageTradedPrice
                 {
                     var asset = total[movement.TickerSymbol];
 
-                    asset.CurrentPrice += movement.OperationValue;
+                    asset.CurrentPrice += movement.OperationValue * movement.EquitiesQuantity;
                     asset.CurrentQuantity += movement.EquitiesQuantity;
                 } else
                 {
-                    total.Add(movement.TickerSymbol, new AverageTradedPriceCalculatorResponse(movement.OperationValue, movement.EquitiesQuantity));
+                    total.Add(movement.TickerSymbol, new AverageTradedPriceCalculatorResponse(movement.OperationValue * movement.EquitiesQuantity, movement.EquitiesQuantity));
                 }
             }
 
@@ -72,19 +72,19 @@ namespace stocks_core.Services.AverageTradedPrice
                 {
                     var asset = total[movement.TickerSymbol];
 
-                    asset.CurrentPrice -= movement.OperationValue;
+                    asset.CurrentPrice -= movement.OperationValue * movement.EquitiesQuantity;
                     asset.CurrentQuantity -= movement.EquitiesQuantity;
-
-                    if (asset.CurrentQuantity == 0) total.Remove(movement.TickerSymbol);
                 }
             }
 
-            foreach(var movement in total)
+            foreach (var movement in total)
             {
                 var totalSpent = movement.Value.CurrentPrice;
                 var assetQuantity = movement.Value.CurrentQuantity;
 
-                movement.Value.AverageTradedPrice = FormatToTwoDecimalPlaces(totalSpent / assetQuantity);
+                var averageTradedPrice = totalSpent / assetQuantity;
+
+                movement.Value.AverageTradedPrice = FormatToTwoDecimalPlaces(averageTradedPrice);
             }
 
             return total;
