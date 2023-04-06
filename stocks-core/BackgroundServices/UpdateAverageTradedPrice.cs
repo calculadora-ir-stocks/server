@@ -1,12 +1,12 @@
 ﻿using Microsoft.Extensions.Hosting;
-using stocks.Models;
+using stocks_infrastructure.Repositories.AverageTradedPrice;
 
 namespace stocks_core.BackgroundServices
 {
     /// <summary>
     /// Background Service que roda todos os dias meia-noite para obter
-    /// todas as movimentações do dia do investidor e, caso uma compra tenha sido feita,
-    /// atualiza o preço médio do determinado ativo.
+    /// todas as movimentações do dia do investidor e, caso uma compra ou venda tenha sido realizada,
+    /// atualiza o preço médio do determinado ativo. 
     /// </summary>
     public class UpdateAverageTradedPrice : BackgroundService
     {
@@ -26,6 +26,11 @@ namespace stocks_core.BackgroundServices
                 await Task.Delay(TimeSpan.FromHours(numberOfHours), stoppingToken);
             }
             while (!stoppingToken.IsCancellationRequested);
+        }
+
+        public static void Update(IAverageTradedPriceRepostory averageTradedPriceRepostory, string ticker, Guid id)
+        {
+            averageTradedPriceRepostory.Update(id, ticker);
         }
     }
 }

@@ -17,5 +17,4 @@ public class StockExchangeStatementController : BaseController
     public IActionResult SearchForPendingStatements() {
         return Ok();
     }
-
 }

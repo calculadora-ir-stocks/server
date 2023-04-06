@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using stocks.Requests;
 using stocks.Services.IncomeTaxes;
 
 namespace stocks.Controllers;
@@ -22,9 +23,23 @@ public class IncomeTaxesController : BaseController
     /// </summary>
     [HttpGet("assets")]
     [AllowAnonymous]
-    public IActionResult CalculateAssetsIncomeTaxes(/** Guid accountId,*/ string? referenceStartDate, string? referenceEndDate) {
-        _service.CalculateAssetsIncomeTaxes(new Guid(), referenceStartDate, referenceEndDate);
-        return Ok();
+    public IActionResult CalculateCurrentMonthAssetsIncomeTaxes(Guid accountId) {
+        var response = _service.CalculateCurrentMonthAssetsIncomeTaxes(accountId);
+        return Ok(response);
+    }
+
+    /// <summary>
+    /// Calcula e armazena o imposto de renda a ser pago em todos os meses desde 01/11/2019 até D-1.
+    /// Também calcula e armazena o preço médio de todos os ativos até a data atual.
+    /// Deve ser executado uma única vez quando um usuário cadastrar-se na plataforma.
+    /// </summary>
+    [HttpPost("big-bang/{id}")]
+    [AllowAnonymous]
+    public async Task<IActionResult> CalculateIncomeTaxesForEveryMonth(Guid id,
+        [FromBody] List<CalculateIncomeTaxesForEveryMonthRequest> request)
+    {
+        await _service.CalculateIncomeTaxesForEveryMonth(id, request);
+        return Ok("Preço médio calculado e armazenado com sucesso.");
     }
 
     /// <summary>

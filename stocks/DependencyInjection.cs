@@ -38,8 +38,8 @@ namespace stocks
             services.AddScoped<NotificationContext>();
 
             // Classes responsáveis pelos algoritmos para cálculo de imposto de renda
-            services.AddSingleton<IIncomeTaxesCalculation, StocksIncomeTaxes>();
-            services.AddSingleton<IIncomeTaxesCalculation, ETFsIncomeTaxes>();
+            services.AddScoped<IIncomeTaxesCalculator, StocksIncomeTaxes>();
+            services.AddScoped<IIncomeTaxesCalculator, ETFsIncomeTaxes>();
 
             services.AddTransient<IJwtCommon, JwtCommon>();
 
@@ -58,7 +58,6 @@ namespace stocks
             var handler = new HttpClientHandler();
             AddCertificate(handler);
 
-            // TODO: get base address from AppSettings
             services.AddHttpClient("B3", c => c.BaseAddress = new Uri("https://apib3i-cert.b3.com.br:2443/api/"))
                 .ConfigurePrimaryHttpMessageHandler(() => handler);
 
@@ -70,7 +69,6 @@ namespace stocks
         {
             handler.ClientCertificateOptions = ClientCertificateOption.Manual;
             handler.SslProtocols = SslProtocols.Tls12;
-            // TODO: store password into a .gitignore file
 
             // C:\Users\Biscoitinho\Documents\Certificates
             // /home/dickmann/Documents/certificates/31788887000158.pfx
@@ -81,7 +79,7 @@ namespace stocks
         {
             services.AddTransient(typeof(IGenericRepository<>), typeof(GenericRepository<>));
             services.AddTransient<IAccountRepository, AccountRepository>();
-            services.AddTransient<IAverageTradedPriceRepository, AverageTradedPriceRepository>();
+            services.AddTransient<IAverageTradedPriceRepostory, AverageTradedPriceRepository>();
         }
 
         public static void AddJwtAuthentications(this IServiceCollection services, WebApplicationBuilder builder)
@@ -128,8 +126,7 @@ namespace stocks
                 options.SwaggerDoc("v1", new OpenApiInfo
                 {
                     Version = "v1",
-                    Title = "Stocks - plataforma para pagamento de IR.",
-                    Description = "Endpoints do Stocks, uma plataforma para reunir o valor total a ser pago de IR na bolsa de valores de um CPF.",
+                    Title = "Stocks - plataforma para pagamento e declaração de IR.",
                 });
 
                 options.AddSecurityDefinition(jwtSecurityScheme.Reference.Id, jwtSecurityScheme);
