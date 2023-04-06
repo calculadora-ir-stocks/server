@@ -5,13 +5,13 @@
         /// <summary>
         /// Total a ser pago em imposto de renda.
         /// </summary>
-        public double TotalIncomeTaxesValue { get; set; }
-        public List<Asset> Assets { get; set; }
+        public double TotalIncomeTaxesValue { get; set; } = 0;
+        public IEnumerable<Asset> Assets { get; set; } = Array.Empty<Asset>();
     }
 
     public class Asset
     {
-        public Asset(string ticker, int tradeQuantity, DateTime tradeDateTime, double totalIncomeTaxesValue)
+        public Asset(string ticker, int tradeQuantity, string tradeDateTime, double totalIncomeTaxesValue)
         {
             Ticker = ticker;
             TradeQuantity = tradeQuantity;
@@ -23,7 +23,7 @@
 
         public string Ticker { get; set; }
         public int TradeQuantity { get; set; }
-        public DateTime TradeDateTime { get; set; }
+        public string TradeDateTime { get; set; }
 
         /// <summary>
         /// Total a ser pago em imposto de renda (referente a um ativo).

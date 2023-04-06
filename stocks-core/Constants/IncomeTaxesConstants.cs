@@ -10,7 +10,7 @@
         /// <summary>
         /// Alíquota para o pagamento de imposto de renda sob ações.
         /// </summary>
-        public const int IncomeTaxesForStocks = 15;
+        public const decimal IncomeTaxesForStocks = 15;
 
         /// <summary>
         /// Alíquota para o pagamento de imposto de renda sob operações daytrade.

@@ -25,6 +25,8 @@ namespace stocks_core.Business
             var movements = response.Data.EquitiesPeriods.EquitiesMovements;
             if (movements is null) return;
 
+            movements = movements.OrderBy(x => x.ReferenceDate).ToList();
+
             var month = movements[0].ReferenceDate.ToString("MM/yyyy");
             List<MonthMovement> monthMovements = new();
 
@@ -44,7 +46,7 @@ namespace stocks_core.Business
 
             await CalculateAndSaveIntoDatabase(monthMovements, calculator, accountId);
         }
-
+         
         private async Task CalculateAndSaveIntoDatabase(List<MonthMovement> monthMovements, IIncomeTaxesCalculator calculator, Guid accountId)
         {
             foreach (var monthMovement in monthMovements)
@@ -64,7 +66,7 @@ namespace stocks_core.Business
                 if (stocks.Any())
                 {
                     calculator = new StocksIncomeTaxes(_averageTradedPriceRepository, _averageTradedPriceService);
-                    await calculator.CalculateIncomeTaxesForTheFirstTimeAndSaveAverageTradedPrice(response[monthMovement.Month], stocks, accountId);
+                    calculator.CalculateIncomeTaxesForTheFirstTimeAndSaveAverageTradedPrice(response[monthMovement.Month], stocks, accountId);
                 }
 
                 if (etfs.Any())
@@ -115,7 +117,8 @@ namespace stocks_core.Business
                     movement.AssetType,
                     movement.MovementType,
                     movement.OperationValue,
-                    movement.EquitiesQuantity)
+                    movement.EquitiesQuantity,
+                    movement.UnitPrice)
                 );
 
                 monthMovements.Add(monthMovement);
@@ -126,7 +129,8 @@ namespace stocks_core.Business
                     movement.AssetType,
                     movement.MovementType,
                     movement.OperationValue,
-                    movement.EquitiesQuantity)
+                    movement.EquitiesQuantity,
+                    movement.UnitPrice)
                 );
             }
         }

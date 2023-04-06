@@ -1,4 +1,4 @@
-﻿using stocks_core.DTOs.AverageTradedPrice;
+﻿using stocks_common.DTOs.AverageTradedPrice;
 using stocks_core.DTOs.B3;
 
 namespace stocks_core.Services.AverageTradedPrice

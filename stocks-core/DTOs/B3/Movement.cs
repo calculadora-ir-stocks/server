@@ -42,13 +42,14 @@ namespace stocks_core.DTOs.B3
 
         public class EquitMovement
         {
-            public EquitMovement(string tickerSymbol, string assetType, string movementType, double operationValue, double quantity)
+            public EquitMovement(string tickerSymbol, string assetType, string movementType, double operationValue, double quantity, double unitPrice)
             {
                 TickerSymbol = tickerSymbol;
                 AssetType = assetType;
                 MovementType = movementType;
                 OperationValue = operationValue;
                 EquitiesQuantity = quantity;
+                UnitPrice = unitPrice;
             }
 
             public EquitMovement() {}
@@ -69,7 +70,9 @@ namespace stocks_core.DTOs.B3
             public double OperationValue { get; set; }
 
             [JsonProperty("equitiesQuantity")]
-            public double EquitiesQuantity { get; set; } 
+            public double EquitiesQuantity { get; set; }
+            [JsonProperty("unitPrice")]
+            public double UnitPrice { get; set; }
         }
     }
 }

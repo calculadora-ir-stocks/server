@@ -30,7 +30,7 @@ public class IncomeTaxesController : BaseController
 
     /// <summary>
     /// Calcula e armazena o imposto de renda a ser pago em todos os meses desde 01/11/2019 até D-1.
-    /// Também calcula e armazena o preço médio de todos os ativos.
+    /// Também calcula e armazena o preço médio de todos os ativos até a data atual.
     /// Deve ser executado uma única vez quando um usuário cadastrar-se na plataforma.
     /// </summary>
     [HttpPost("big-bang/{id}")]

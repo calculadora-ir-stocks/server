@@ -1,35 +1,12 @@
-﻿using Microsoft.Extensions.Logging;
-using stocks.Clients.B3;
-using stocks.Models;
-using stocks.Repositories;
+﻿using stocks_common.DTOs.AverageTradedPrice;
 using stocks_core.Constants;
-using stocks_core.DTOs.AverageTradedPrice;
 using stocks_core.DTOs.B3;
-using stocks_infrastructure.Repositories.AverageTradedPrice;
 
 namespace stocks_core.Services.AverageTradedPrice
 {
+    // TODO: change to static class
     public class AverageTradedPriceService : IAverageTradedPriceService
     {
-        private readonly IGenericRepository<Account> _genericAccountRepository;
-        private readonly IAverageTradedPriceRepostory _averageTradedPriceRepository;
-
-        private readonly IB3Client _client;
-
-        private readonly ILogger<AverageTradedPriceService> _logger;
-
-        public AverageTradedPriceService(IGenericRepository<Account> genericAccountRepository,
-            IAverageTradedPriceRepostory averageTradedPriceRepository,
-            IB3Client client,
-            ILogger<AverageTradedPriceService> logger)
-        {
-            _genericAccountRepository = genericAccountRepository;
-            _averageTradedPriceRepository = averageTradedPriceRepository;
-            _client = client;
-
-            _logger = logger;
-        }
-
         public Dictionary<string, AverageTradedPriceCalculatorResponse> CalculateAverageTradedPrice(
             IEnumerable<Movement.EquitMovement> buyOperations,
             IEnumerable<Movement.EquitMovement> sellOperations,
@@ -39,41 +16,57 @@ namespace stocks_core.Services.AverageTradedPrice
         {
             Dictionary<string, AverageTradedPriceCalculatorResponse> total = new();
 
-            // TODO: calcular os desdobramentos
+            IEnumerable<Movement.EquitMovement> allMovements = buyOperations.Concat(sellOperations).Concat(splitsOperations).Concat(bonusSharesOperations);
+            allMovements = allMovements.OrderBy(x => x.ReferenceDate).ToList();
 
-            // É necessário verificar quando houve desdobramentos, pois caso não faça,
-            // a quantidade de papéis de um ativo pode aumentar e a relação de preço/quantidade
-            // estará incorreta.
-
-            // TODO: calcular bonificações
-
-            foreach (var split in splitsOperations)
+            foreach (var movement in allMovements)
             {
-
-            }  
-
-            foreach (var movement in buyOperations)
-            {
-                if (total.ContainsKey(movement.TickerSymbol))
+                if (movement.MovementType.Equals(B3ServicesConstants.Buy))
                 {
-                    var asset = total[movement.TickerSymbol];
+                    if (total.ContainsKey(movement.TickerSymbol))
+                    {
+                        var asset = total[movement.TickerSymbol];
 
-                    asset.CurrentPrice += movement.OperationValue * movement.EquitiesQuantity;
-                    asset.CurrentQuantity += movement.EquitiesQuantity;
-                } else
-                {
-                    total.Add(movement.TickerSymbol, new AverageTradedPriceCalculatorResponse(movement.OperationValue * movement.EquitiesQuantity, movement.EquitiesQuantity));
+                        // TODO: calcular taxas de corretagem + taxas da fonte
+                        asset.CurrentPrice += movement.OperationValue;
+                        asset.CurrentQuantity += movement.EquitiesQuantity;
+                    }
+                    else
+                    {
+                        total.Add(movement.TickerSymbol, new AverageTradedPriceCalculatorResponse(
+                            movement.OperationValue,
+                            movement.EquitiesQuantity,
+                            movement.TickerSymbol,
+                            movement.ReferenceDate.ToString("yyyy-MM")
+                        ));
+                    }
                 }
-            }
-
-            foreach (var movement in sellOperations)
-            {
-                if (total.ContainsKey(movement.TickerSymbol))
+                if (movement.MovementType.Equals(B3ServicesConstants.Sell))
                 {
-                    var asset = total[movement.TickerSymbol];
+                    if (total.ContainsKey(movement.TickerSymbol))
+                    {
+                        var asset = total[movement.TickerSymbol];
+                    }
+                    else
+                    {
+                        // Primeira vez que um ticker aparece é em uma operação de venda e o usuário não especificou ela no body do método.
+                        // Se sim, o ticker foi comprado antes de 01/11/2019. Se não foi especificado pelo usuário, pode apenas retornar
+                        // uma exceção para o client que o preço médio desse ativo é necessário.
+                    }
+                }
+                // TODO: calcular os desdobramentos
 
-                    asset.CurrentPrice -= movement.OperationValue * movement.EquitiesQuantity;
-                    asset.CurrentQuantity -= movement.EquitiesQuantity;
+                // É necessário verificar quando houve desdobramentos, pois caso não faça,
+                // a quantidade de papéis de um ativo pode aumentar e a relação de preço/quantidade
+                // estará incorreta.
+                if (movement.MovementType.Equals(B3ServicesConstants.Split))
+                {
+
+                }
+                // TODO: calcular bonificações
+                if (movement.MovementType.Equals(B3ServicesConstants.BonusShare))
+                {
+
                 }
             }
 

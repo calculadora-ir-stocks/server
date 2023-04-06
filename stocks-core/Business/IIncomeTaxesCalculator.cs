@@ -16,7 +16,7 @@ namespace stocks_core.Business
         /// Após calcular o imposto de renda, salva na base de dados o preço médio dos respectivos ativos.
         /// Deve ser executado uma única vez quando o usuário cadastrar-se na plataforma.
         /// </summary>
-        Task CalculateIncomeTaxesForTheFirstTimeAndSaveAverageTradedPrice(CalculateAssetsIncomeTaxesResponse response,
+        void CalculateIncomeTaxesForTheFirstTimeAndSaveAverageTradedPrice(CalculateAssetsIncomeTaxesResponse response,
             IEnumerable<Movement.EquitMovement> movements, Guid accountId);
     }
 }
