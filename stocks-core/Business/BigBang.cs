@@ -25,14 +25,14 @@ namespace stocks_core.Business
             var movements = response.Data.EquitiesPeriods.EquitiesMovements;
             if (movements is null) return;
 
-            movements = movements.OrderBy(x => x.ReferenceDate).ToList();
+            movements = movements.OrderBy(x => x.ReferenceDate).OrderBy(x => x.MovementType).ToList();
 
             var month = movements[0].ReferenceDate.ToString("MM/yyyy");
             List<MonthMovement> monthMovements = new();
 
             foreach(var movement in movements)
             {
-                var currentMovementMonth = movement.ReferenceDate.ToString("MM/YYYY");
+                var currentMovementMonth = movement.ReferenceDate.ToString("MM/yyyy");
 
                 if (currentMovementMonth == month)
                 {
@@ -49,9 +49,10 @@ namespace stocks_core.Business
          
         private async Task CalculateAndSaveIntoDatabase(List<MonthMovement> monthMovements, IIncomeTaxesCalculator calculator, Guid accountId)
         {
+            Dictionary<string, CalculateAssetsIncomeTaxesResponse> response = new();
+
             foreach (var monthMovement in monthMovements)
             {
-                Dictionary<string, CalculateAssetsIncomeTaxesResponse> response = new();
                 response.Add(monthMovement.Month, new CalculateAssetsIncomeTaxesResponse());
 
                 var movements = monthMovement.Movements;
@@ -66,13 +67,13 @@ namespace stocks_core.Business
                 if (stocks.Any())
                 {
                     calculator = new StocksIncomeTaxes(_averageTradedPriceRepository, _averageTradedPriceService);
-                    calculator.CalculateIncomeTaxesForTheFirstTimeAndSaveAverageTradedPrice(response[monthMovement.Month], stocks, accountId);
+                    calculator.CalculateIncomeTaxesForAllMonths(response[monthMovement.Month], stocks, accountId);
                 }
 
                 if (etfs.Any())
                 {
                     calculator = new ETFsIncomeTaxes();
-                    await calculator.AddAllIncomeTaxesToObject(response[monthMovement.Month], etfs, accountId);
+                    await calculator.CalculateCurrentMonthIncomeTaxes(response[monthMovement.Month], etfs, accountId);
                 }
 
                 if (fiis.Any())
@@ -118,7 +119,8 @@ namespace stocks_core.Business
                     movement.MovementType,
                     movement.OperationValue,
                     movement.EquitiesQuantity,
-                    movement.UnitPrice)
+                    movement.UnitPrice,
+                    movement.ReferenceDate)
                 );
 
                 monthMovements.Add(monthMovement);
@@ -130,7 +132,8 @@ namespace stocks_core.Business
                     movement.MovementType,
                     movement.OperationValue,
                     movement.EquitiesQuantity,
-                    movement.UnitPrice)
+                    movement.UnitPrice,
+                    movement.ReferenceDate)
                 );
             }
         }

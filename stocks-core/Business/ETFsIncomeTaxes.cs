@@ -8,13 +8,13 @@ namespace stocks_core.Business
     {
         public static List<Movement.EquitMovement> etfs = new();
 
-        public Task AddAllIncomeTaxesToObject(CalculateAssetsIncomeTaxesResponse? response,
+        public Task CalculateCurrentMonthIncomeTaxes(CalculateAssetsIncomeTaxesResponse? response,
             IEnumerable<Movement.EquitMovement> movement, Guid accountId)
         {
             throw new NotImplementedException();
         }
 
-        void IIncomeTaxesCalculator.CalculateIncomeTaxesForTheFirstTimeAndSaveAverageTradedPrice(CalculateAssetsIncomeTaxesResponse response, IEnumerable<Movement.EquitMovement> movements, Guid accountId)
+        void IIncomeTaxesCalculator.CalculateIncomeTaxesForAllMonths(CalculateAssetsIncomeTaxesResponse response, IEnumerable<Movement.EquitMovement> movements, Guid accountId)
         {
             throw new NotImplementedException();
         }
