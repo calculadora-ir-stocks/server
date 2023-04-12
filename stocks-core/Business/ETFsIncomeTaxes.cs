@@ -6,15 +6,13 @@ namespace stocks_core.Business
 {
     public class ETFsIncomeTaxes : IIncomeTaxesCalculator
     {
-        public static List<Movement.EquitMovement> etfs = new();
-
         public Task CalculateCurrentMonthIncomeTaxes(CalculateAssetsIncomeTaxesResponse? response,
             IEnumerable<Movement.EquitMovement> movement, Guid accountId)
         {
             throw new NotImplementedException();
         }
 
-        void IIncomeTaxesCalculator.CalculateIncomeTaxesForAllMonths(CalculateAssetsIncomeTaxesResponse response, IEnumerable<Movement.EquitMovement> movements, Guid accountId)
+        public void CalculateIncomeTaxesForAllMonths(CalculateAssetsIncomeTaxesResponse response, IEnumerable<Movement.EquitMovement> movements)
         {
             throw new NotImplementedException();
         }

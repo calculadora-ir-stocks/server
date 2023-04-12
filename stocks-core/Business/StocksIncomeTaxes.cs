@@ -1,6 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore.ValueGeneration;
-using Microsoft.IdentityModel.Tokens;
-using stocks_common.Models;
+﻿using stocks_common.Models;
 using stocks_core.Constants;
 using stocks_core.DTOs.B3;
 using stocks_core.Response;
@@ -61,11 +59,11 @@ namespace stocks_core.Business
             }
         }
 
-        public void CalculateIncomeTaxesForAllMonths(CalculateAssetsIncomeTaxesResponse response, IEnumerable<Movement.EquitMovement> stocksMovements, Guid accountId)
+        public void CalculateIncomeTaxesForAllMonths(CalculateAssetsIncomeTaxesResponse response, IEnumerable<Movement.EquitMovement> movements)
         {            
             Dictionary<string, CalculateIncomeTaxesForTheFirstTime> total = new();
 
-            foreach (var movement in stocksMovements)
+            foreach (var movement in movements)
             {
                 switch (movement.MovementType)
                 {
@@ -73,7 +71,7 @@ namespace stocks_core.Business
                         CalculateBuyOperations(total, movement);
                         break;
                     case B3ServicesConstants.Sell:
-                        CalculateSellOperations(total, movement, stocksMovements);
+                        CalculateSellOperations(total, movement, movements);
                         break;
                     case B3ServicesConstants.Split:
                         CalculateSplitOperations(total, movement);
@@ -82,18 +80,18 @@ namespace stocks_core.Business
                         CalculateReverseSplit(total, movement);
                         break;
                     case B3ServicesConstants.BonusShare:
-                        CalculateBonusSharesOperations(total, movement, stocksMovements);
+                        CalculateBonusSharesOperations(total, movement, movements);
                         break;
                 }
             }
 
-            var sells = stocksMovements.Where(x => x.MovementType.Equals(B3ServicesConstants.Sell));
+            var sells = movements.Where(x => x.MovementType.Equals(B3ServicesConstants.Sell));
             double totalSoldInStocks = sells.Sum(stock => stock.OperationValue);
 
             bool sellsSuperiorThan20000 = totalSoldInStocks >= IncomeTaxesConstants.LimitForStocksSelling;
 
             double totalProfit = total.Select(x => x.Value.Profit).Sum();
-            bool dayTraded = InvestorDayTraded(stocksMovements);
+            bool dayTraded = InvestorDayTraded(movements);
 
             bool paysIncomeTaxes = (sellsSuperiorThan20000 && totalProfit > 0) || (dayTraded && totalProfit > 0);
 

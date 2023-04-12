@@ -18,7 +18,6 @@ namespace stocks_core.Business
         /// O método deve ser executado uma única vez quando o usuário registrar-se na plataforma - tendo visto
         /// que o preço médio atual estará atualizado.
         /// </summary>
-        void CalculateIncomeTaxesForAllMonths(CalculateAssetsIncomeTaxesResponse response,
-            IEnumerable<Movement.EquitMovement> movements, Guid accountId);
+        void CalculateIncomeTaxesForAllMonths(CalculateAssetsIncomeTaxesResponse response, IEnumerable<Movement.EquitMovement> movements);
     }
 }

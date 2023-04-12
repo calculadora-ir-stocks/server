@@ -56,19 +56,17 @@ namespace stocks_core.Business
             {
                 response.Add(monthMovement.Month, new CalculateAssetsIncomeTaxesResponse());
 
-                var movements = monthMovement.Movements;
-
-                var stocks = movements.Where(x => x.AssetType.Equals(AssetMovementTypes.Stocks));
-                var etfs = movements.Where(x => x.AssetType.Equals(AssetMovementTypes.ETFs));
-                var fiis = movements.Where(x => x.AssetType.Equals(AssetMovementTypes.FIIs));
-                var bdrs = movements.Where(x => x.AssetType.Equals(AssetMovementTypes.BDRs));
-                var gold = movements.Where(x => x.AssetType.Equals(AssetMovementTypes.Gold));
-                var fundInvestments = movements.Where(x => x.AssetType.Equals(AssetMovementTypes.FundInvestments));
+                var stocks = monthMovement.Movements.Where(x => x.AssetType.Equals(AssetMovementTypes.Stocks));
+                var etfs = monthMovement.Movements.Where(x => x.AssetType.Equals(AssetMovementTypes.ETFs));
+                var fiis = monthMovement.Movements.Where(x => x.AssetType.Equals(AssetMovementTypes.FIIs));
+                var bdrs = monthMovement.Movements.Where(x => x.AssetType.Equals(AssetMovementTypes.BDRs));
+                var gold = monthMovement.Movements.Where(x => x.AssetType.Equals(AssetMovementTypes.Gold));
+                var fundInvestments = monthMovement.Movements.Where(x => x.AssetType.Equals(AssetMovementTypes.FundInvestments));
 
                 if (stocks.Any())
                 {
                     calculator = new StocksIncomeTaxes(_averageTradedPriceRepository, _averageTradedPriceService);
-                    calculator.CalculateIncomeTaxesForAllMonths(response[monthMovement.Month], stocks, accountId);
+                    calculator.CalculateIncomeTaxesForAllMonths(response[monthMovement.Month], stocks);
                 }
 
                 if (etfs.Any())
