@@ -10,6 +10,13 @@ namespace stocks_infrastructure.Models
     /// </summary>
     public class CompensateLoss
     {
+        public CompensateLoss(double total, int month, Guid accountId)
+        {
+            Total = total;
+            Month = month;
+            AccountId = accountId;
+        }
+
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.None)]
         public Guid Id { get; protected set; } = Guid.NewGuid();

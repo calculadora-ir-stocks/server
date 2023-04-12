@@ -168,8 +168,8 @@ public class IncomeTaxesService : IIncomeTaxesService
                 AssetType = "Ações",
                 TickerSymbol = "PETR4",
                 MovementType = "Compra",
-                OperationValue = 10.43,
-                EquitiesQuantity = 2,
+                OperationValue = 10,
+                EquitiesQuantity = 1,
                 ReferenceDate = new DateTime(2023, 01, 16),
             });
             response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
@@ -177,39 +177,12 @@ public class IncomeTaxesService : IIncomeTaxesService
                 AssetType = "Ações",
                 TickerSymbol = "PETR4",
                 MovementType = "Venda",
-                OperationValue = 8.11,
-                EquitiesQuantity = 2,
-                ReferenceDate = new DateTime(2023, 01, 18),
-                UnitPrice = 4.05
+                OperationValue = 12,
+                EquitiesQuantity = 1,
+                ReferenceDate = new DateTime(2023, 01, 16),
+                UnitPrice = 12
             });
-            response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
-            {
-                AssetType = "Ações",
-                TickerSymbol = "PETR4",
-                MovementType = "Compra",
-                OperationValue = 13.12,
-                EquitiesQuantity = 5,
-                ReferenceDate = new DateTime(2023, 01, 17)
-            });
-            response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
-            {
-                AssetType = "Ações",
-                TickerSymbol = "PETR4",
-                MovementType = "Venda",
-                OperationValue = 6.08,
-                EquitiesQuantity = 5,
-                ReferenceDate = new DateTime(2023, 02, 01),
-                UnitPrice = 1.21
-            });
-            response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
-            {
-                AssetType = "Ações",
-                TickerSymbol = "PETR4",
-                MovementType = "Compra",
-                OperationValue = 10.02,
-                EquitiesQuantity = 2,
-                ReferenceDate = new DateTime(2023, 02, 01)
-            });
+            
 
             BigBang bigBang = new(_averageTradedPriceRepository, _averageTradedPriceService);
             await bigBang.Calculate(response, _incomeTaxCalculator, accountId);

@@ -2,6 +2,7 @@
 using stocks_core.Enums;
 using stocks_core.Response;
 using stocks_core.Services.AverageTradedPrice;
+using stocks_infrastructure.Models;
 using stocks_infrastructure.Repositories.AverageTradedPrice;
 
 namespace stocks_core.Business
@@ -25,7 +26,7 @@ namespace stocks_core.Business
             var movements = response.Data.EquitiesPeriods.EquitiesMovements;
             if (movements is null) return;
 
-            movements = movements.OrderBy(x => x.ReferenceDate).OrderBy(x => x.MovementType).ToList();
+            movements = movements.OrderBy(x => x.ReferenceDate).ToList();
 
             var month = movements[0].ReferenceDate.ToString("MM/yyyy");
             List<MonthMovement> monthMovements = new();
@@ -100,6 +101,15 @@ namespace stocks_core.Business
                     //await calculator.AddAllIncomeTaxesToObject(response, fundInvestments, accountId);
                 }
             }
+
+            foreach (var item in response.Values)
+            {
+            }
+        }
+
+        private static bool MonthTradeIsLoss(double totalIncomeTaxesValue)
+        {
+            return totalIncomeTaxesValue <= 0;
         }
 
         private static void AddMovementsForEachMonth(Movement.EquitMovement movement, List<MonthMovement> monthMovements)

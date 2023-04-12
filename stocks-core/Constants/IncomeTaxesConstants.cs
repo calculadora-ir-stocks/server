@@ -5,7 +5,7 @@
         /// <summary>
         /// Teto de vendas para se isentar do pagamento do imposto de renda de ações.
         /// </summary>
-        public const double LimitForStocksSelling = 20000;
+       public const double LimitForStocksSelling = 20000;
 
         /// <summary>
         /// Alíquota para o pagamento de imposto de renda sob ações.

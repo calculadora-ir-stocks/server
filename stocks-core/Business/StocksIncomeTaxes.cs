@@ -62,73 +62,84 @@ namespace stocks_core.Business
         }
 
         public void CalculateIncomeTaxesForAllMonths(CalculateAssetsIncomeTaxesResponse response, IEnumerable<Movement.EquitMovement> stocksMovements, Guid accountId)
-        {
-            var sells = stocksMovements.Where(x => x.MovementType.Equals(B3ServicesConstants.Sell));
-            double totalSoldInStocks = sells.Sum(stock => stock.OperationValue);
-
-            bool paysIncomeTaxes = true;
-            if (totalSoldInStocks >= IncomeTaxesConstants.LimitForStocksSelling) paysIncomeTaxes = true;
-
+        {            
             Dictionary<string, CalculateIncomeTaxesForTheFirstTime> total = new();
 
             foreach (var movement in stocksMovements)
             {
-                if (movement.MovementType.Equals(B3ServicesConstants.Buy))
+                switch (movement.MovementType)
                 {
-                    CalculateBuyOperations(total, movement);
-                }
-                if (movement.MovementType.Equals(B3ServicesConstants.Sell))
-                {
-                    CalculateSellOperations(total, movement, stocksMovements);
-                }
-                if (movement.MovementType.Equals(B3ServicesConstants.Split))
-                {
-                    CalculateSplitOperations(total, movement);
-                }
-                if (movement.MovementType.Equals(B3ServicesConstants.ReverseSplit))
-                {
-                    CalculateReverseSplit(total, movement);
-                }
-                if (movement.MovementType.Equals(B3ServicesConstants.BonusShare))
-                {
-                    CalculateBonusSharesOperations(total, movement, stocksMovements);
+                    case B3ServicesConstants.Buy:
+                        CalculateBuyOperations(total, movement);
+                        break;
+                    case B3ServicesConstants.Sell:
+                        CalculateSellOperations(total, movement, stocksMovements);
+                        break;
+                    case B3ServicesConstants.Split:
+                        CalculateSplitOperations(total, movement);
+                        break;
+                    case B3ServicesConstants.ReverseSplit:
+                        CalculateReverseSplit(total, movement);
+                        break;
+                    case B3ServicesConstants.BonusShare:
+                        CalculateBonusSharesOperations(total, movement, stocksMovements);
+                        break;
                 }
             }
 
+            var sells = stocksMovements.Where(x => x.MovementType.Equals(B3ServicesConstants.Sell));
+            double totalSoldInStocks = sells.Sum(stock => stock.OperationValue);
+
+            bool sellsSuperiorThan20000 = totalSoldInStocks >= IncomeTaxesConstants.LimitForStocksSelling;
+
+            double totalProfit = total.Select(x => x.Value.Profit).Sum();
+            bool dayTraded = InvestorDayTraded(stocksMovements);
+
+            bool paysIncomeTaxes = (sellsSuperiorThan20000 && totalProfit > 0) || (dayTraded && totalProfit > 0);
+
             if (paysIncomeTaxes)
             {
-                response.TotalIncomeTaxesValue = total.Select(x => x.Value.IncomeTaxes).Sum();
+                response.TotalIncomeTaxesValue = (double)CalculateStocksIncomeTaxes(totalProfit, dayTraded);
             }
+
+            double totalLoss = total.Select(x => x.Value.Profit).Where(x => x < 0).Sum();
+            response.CompensateLoss = totalLoss;
 
             response.Assets = DictionaryToList(total);
         }
 
-        private static bool IsMovementDayTrade(Movement.EquitMovement movement, IEnumerable<Movement.EquitMovement> stocksMovements)
+        private static bool InvestorDayTraded(IEnumerable<Movement.EquitMovement> stocksMovements)
         {
-            var referenceDateOperation = movement.ReferenceDate;
-
             var buys = stocksMovements.Where(x =>
-                x.MovementType == B3ServicesConstants.Buy &&
-                x.TickerSymbol == movement.TickerSymbol
+                x.MovementType == B3ServicesConstants.Buy
+            );
+            var sells = stocksMovements.Where(x =>
+                x.MovementType == B3ServicesConstants.Sell
             );
 
-            if (buys.Select(x => x.ReferenceDate).Contains(referenceDateOperation))
-                return true;
-            else
-                return false;
+            var dayTradeTransactions = buys.Where(b => sells.Any(s => 
+                s.ReferenceDate == b.ReferenceDate && 
+                s.TickerSymbol == b.TickerSymbol
+            ));
+
+            return dayTradeTransactions.Any();
         }
 
-        private void CalculateReverseSplit(Dictionary<string, CalculateIncomeTaxesForTheFirstTime> total, Movement.EquitMovement movement)
-        {
-            throw new NotImplementedException();
-        }
-
-        private static void CalculateBonusSharesOperations(Dictionary<string, CalculateIncomeTaxesForTheFirstTime> total, Movement.EquitMovement movement, IEnumerable<Movement.EquitMovement> stocksMovements)
+        private static void CalculateReverseSplit(Dictionary<string, CalculateIncomeTaxesForTheFirstTime> total, Movement.EquitMovement movement)
         {
             // É necessário calcular os agrupamentos de um ativo pois a sua relação de preço/quantidade alteram. Caso elas se alterem,
             // o cálculo do preço médio pode ser afetado.
 
             // TODO: entrar em contato com a B3 e tirar a dúvida de como funciona o response de agrupamento.
+            throw new NotImplementedException();
+        }
+
+        private static void CalculateBonusSharesOperations(Dictionary<string, CalculateIncomeTaxesForTheFirstTime> total, Movement.EquitMovement movement, IEnumerable<Movement.EquitMovement> stocksMovements)
+        {
+            // É necessário calcular as bonificações de um ativo pois a sua relação de preço/quantidade alteram. Caso elas se alterem,
+            // o cálculo do preço médio pode ser afetado.
+
+            // TODO: entrar em contato com a B3 e tirar a dúvida de como funciona o response de bonificação.
             throw new NotImplementedException();
         }
 
@@ -148,22 +159,15 @@ namespace stocks_core.Business
             {
                 var asset = total[movement.TickerSymbol];
 
-                bool dayTradedTicker = IsMovementDayTrade(movement, stocksMovements);
-
-                if (dayTradedTicker)
-                {
-                    asset.DayTraded = true;
-                    asset.ValueToBeCompensated += +1;
-                }
-                else
-                {
-                    asset.ValueToBeCompensated += 0.005;
-                }
-
                 double profitPerShare = movement.UnitPrice - asset.AverageTradedPrice;
+                double totalProfit = profitPerShare * movement.EquitiesQuantity;
 
-                asset.Profit += profitPerShare * movement.EquitiesQuantity;
-                asset.IncomeTaxes = (double)CalculateStocksIncomeTaxes(asset);
+                if (totalProfit > 0)
+                {
+                    // TODO: calcular IRRFs (e.g dedo-duro).
+                }
+
+                asset.Profit += totalProfit;
             }
             else
             {
@@ -214,23 +218,21 @@ namespace stocks_core.Business
             foreach(var asset in total.Values)
             {
                 yield return new Asset
-                {
-                    Ticker = asset.TickerSymbol,
-                    TradeQuantity = (int)asset.Quantity,
-                    TradeDateTime = asset.TradeDateTime,
-                    TotalIncomeTaxesValue = asset.IncomeTaxes
-                };
+                (
+                    asset.TickerSymbol,
+                    asset.AverageTradedPrice
+                );
             }
         }
 
-        private static decimal CalculateStocksIncomeTaxes(CalculateIncomeTaxesForTheFirstTime asset)
+        private static decimal CalculateStocksIncomeTaxes(double value, bool dayTraded)
         {
-            double totalTaxesPorcentage = IncomeTaxesConstants.IncomeTaxesForStocks - asset.ValueToBeCompensated;
+            double totalTaxesPorcentage = IncomeTaxesConstants.IncomeTaxesForStocks;
 
-            if (asset.DayTraded)
-                totalTaxesPorcentage = IncomeTaxesConstants.IncomeTaxesForDayTrade - asset.ValueToBeCompensated;
+            if (dayTraded)
+                totalTaxesPorcentage = IncomeTaxesConstants.IncomeTaxesForDayTrade;
 
-            return ((decimal)totalTaxesPorcentage / 100m) * (decimal)asset.Profit;
+            return ((decimal)totalTaxesPorcentage / 100m) * (decimal)value;
         }
     }    
 }
