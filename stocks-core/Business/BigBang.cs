@@ -1,9 +1,11 @@
-﻿using stocks_core.DTOs.B3;
+﻿using Microsoft.IdentityModel.Tokens;
+using stocks.Models;
+using stocks.Repositories;
+using stocks_core.Constants;
+using stocks_core.DTOs.B3;
 using stocks_core.Enums;
 using stocks_core.Response;
-using stocks_core.Services.AverageTradedPrice;
 using stocks_infrastructure.Models;
-using stocks_infrastructure.Repositories.AverageTradedPrice;
 
 namespace stocks_core.Business
 {
@@ -12,21 +14,21 @@ namespace stocks_core.Business
     /// </summary>
     public class BigBang
     {
-        private readonly IAverageTradedPriceRepostory _averageTradedPriceRepository;
-        private readonly IAverageTradedPriceService _averageTradedPriceService;
+        private readonly IGenericRepository<IncomeTaxes> _genericRepositoryIncomeTaxes;
+        private readonly IGenericRepository<Account> _genericRepositoryAccount;
 
-        public BigBang(IAverageTradedPriceRepostory averageTradedPriceRepository, IAverageTradedPriceService averageTradedPriceService)
+        public BigBang(IGenericRepository<IncomeTaxes> genericRepositoryIncomeTaxes, IGenericRepository<Account> genericRepositoryAccount)
         {
-            _averageTradedPriceRepository = averageTradedPriceRepository;
-            _averageTradedPriceService = averageTradedPriceService;
+            _genericRepositoryIncomeTaxes = genericRepositoryIncomeTaxes;
+            _genericRepositoryAccount = genericRepositoryAccount;
         }
 
         public async Task Calculate(Movement.Root response, IIncomeTaxesCalculator calculator, Guid accountId)
         {
-            var movements = response.Data.EquitiesPeriods.EquitiesMovements;
-            if (movements is null) return;
+            var movements = GetAllMovements(response);
+            if (movements.IsNullOrEmpty()) return;
 
-            movements = movements.OrderBy(x => x.ReferenceDate).ToList();
+            movements = OrderMovements(movements);
 
             var month = movements[0].ReferenceDate.ToString("MM/yyyy");
             List<MonthMovement> monthMovements = new();
@@ -45,10 +47,30 @@ namespace stocks_core.Business
                 }
             }
 
-            await CalculateAndSaveIntoDatabase(monthMovements, calculator, accountId);
+            await CalculateEachMonth(monthMovements, calculator, accountId);
         }
-         
-        private async Task CalculateAndSaveIntoDatabase(List<MonthMovement> monthMovements, IIncomeTaxesCalculator calculator, Guid accountId)
+
+        private static List<Movement.EquitMovement> GetAllMovements(Movement.Root response)
+        {
+            return response.Data.EquitiesPeriods.EquitiesMovements
+                .Where(x => 
+                    x.MovementType.Equals(B3ServicesConstants.Buy) ||
+                    x.MovementType.Equals(B3ServicesConstants.Sell) ||
+                    x.MovementType.Equals(B3ServicesConstants.Split) ||
+                    x.MovementType.Equals(B3ServicesConstants.ReverseSplit) ||
+                    x.MovementType.Equals(B3ServicesConstants.BonusShare)).ToList();
+        }
+
+        /// <summary>
+        /// Ordena as operações por ordem crescente através da data - a B3 retorna em ordem decrescente - e
+        /// ordena operações de compra antes das operações de venda em operações day trade.
+        /// </summary>
+        private static List<Movement.EquitMovement> OrderMovements(IList<Movement.EquitMovement> movements)
+        {
+            return movements.OrderBy(x => x.MovementType).OrderBy(x => x.ReferenceDate).ToList();
+        }
+
+        private async Task CalculateEachMonth(List<MonthMovement> monthMovements, IIncomeTaxesCalculator calculator, Guid accountId)
         {
             Dictionary<string, CalculateAssetsIncomeTaxesResponse> response = new();
 
@@ -65,14 +87,14 @@ namespace stocks_core.Business
 
                 if (stocks.Any())
                 {
-                    calculator = new StocksIncomeTaxes(_averageTradedPriceRepository, _averageTradedPriceService);
+                    calculator = new StocksIncomeTaxes();
                     calculator.CalculateIncomeTaxesForAllMonths(response[monthMovement.Month], stocks);
                 }
 
                 if (etfs.Any())
                 {
                     calculator = new ETFsIncomeTaxes();
-                    await calculator.CalculateCurrentMonthIncomeTaxes(response[monthMovement.Month], etfs, accountId);
+                    calculator.CalculateCurrentMonthIncomeTaxes(response[monthMovement.Month], etfs, accountId);
                 }
 
                 if (fiis.Any())
@@ -100,14 +122,30 @@ namespace stocks_core.Business
                 }
             }
 
-            foreach (var item in response.Values)
-            {
-            }
+            await SaveIntoDatabase(response, accountId);
         }
 
-        private static bool MonthTradeIsLoss(double totalIncomeTaxesValue)
+        private async Task SaveIntoDatabase(Dictionary<string, CalculateAssetsIncomeTaxesResponse> response, Guid accountId)
         {
-            return totalIncomeTaxesValue <= 0;
+            Account account = _genericRepositoryAccount.GetById(accountId);
+
+            foreach (var item in response.Values)
+            {
+                IncomeTaxes incomeTaxes = new
+                (
+                    month: "a",
+                    totalTaxes: item.TotalIncomeTaxesValue,
+                    totalSold: item.TotalSold,
+                    totalProfit: item.TotalProfit,
+                    dayTraded: item.DayTraded,
+                    tradedAssets: item.Assets!,
+                    compesatedLoss: item.TotalProfit < 0 ? false : null,
+                    accountId: accountId,
+                    account: account
+                );
+
+                await _genericRepositoryIncomeTaxes.AddAsync(incomeTaxes);
+            }
         }
 
         private static void AddMovementsForEachMonth(Movement.EquitMovement movement, List<MonthMovement> monthMovements)
@@ -117,12 +155,11 @@ namespace stocks_core.Business
 
             if (monthAlreadyExists is null)
             {
-                MonthMovement monthMovement = new();
-
-                monthMovement.Month = movement.ReferenceDate.ToString("MM/yyyy");
+                MonthMovement monthMovement = new(movement.ReferenceDate.ToString("MM/yyyy"));
 
                 monthMovement.Movements.Add(new Movement.EquitMovement(
                     movement.TickerSymbol,
+                    movement.CorporationName,
                     movement.AssetType,
                     movement.MovementType,
                     movement.OperationValue,
@@ -136,6 +173,7 @@ namespace stocks_core.Business
             {
                 monthAlreadyExists.Movements.Add(new Movement.EquitMovement(
                     movement.TickerSymbol,
+                    movement.CorporationName,
                     movement.AssetType,
                     movement.MovementType,
                     movement.OperationValue,
@@ -151,6 +189,11 @@ namespace stocks_core.Business
         /// </summary>
         private class MonthMovement
         {
+            public MonthMovement(string month)
+            {
+                Month = month;
+            }
+
             public string Month;
             public List<Movement.EquitMovement> Movements = new();
         }

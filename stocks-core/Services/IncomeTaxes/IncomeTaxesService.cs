@@ -9,27 +9,31 @@ using stocks_core.DTOs.B3;
 using stocks_core.Enums;
 using stocks_core.Response;
 using stocks_core.Services.AverageTradedPrice;
+using stocks_infrastructure.Models;
 using stocks_infrastructure.Repositories.AverageTradedPrice;
 
 namespace stocks.Services.IncomeTaxes;
 
 public class IncomeTaxesService : IIncomeTaxesService
 {
+
     private readonly IAverageTradedPriceService _averageTradedPriceService;
+    private IIncomeTaxesCalculator _incomeTaxCalculator;
 
     private readonly IGenericRepository<Account> _genericRepositoryAccount;
+    private readonly IGenericRepository<stocks_infrastructure.Models.IncomeTaxes> _genericRepositoryIncomeTaxes;
     private readonly IAverageTradedPriceRepostory _averageTradedPriceRepository;
 
     private readonly IB3Client _client;
 
-    private IIncomeTaxesCalculator _incomeTaxCalculator;
-
     private readonly ILogger<IncomeTaxesService> _logger;
 
-    public IncomeTaxesService(IAverageTradedPriceService averageTradedPriceService, 
+    public IncomeTaxesService(IAverageTradedPriceService averageTradedPriceService,
+         IIncomeTaxesCalculator calculator,
         IGenericRepository<Account> genericRepositoryAccount,
+        IGenericRepository<stocks_infrastructure.Models.IncomeTaxes> genericRepositoryIncomeTaxes,
         IAverageTradedPriceRepostory averageTradedPriceRepository,
-        IB3Client b3Client, IIncomeTaxesCalculator calculator,
+        IB3Client b3Client,
         ILogger<IncomeTaxesService> logger
         )
     {
@@ -112,23 +116,23 @@ public class IncomeTaxesService : IIncomeTaxesService
         var gold = movements.Where(x => x.AssetType.Equals(AssetMovementTypes.Gold));
         var fundInvestments = movements.Where(x => x.AssetType.Equals(AssetMovementTypes.FundInvestments));
 
-        _incomeTaxCalculator = new StocksIncomeTaxes(_averageTradedPriceRepository, _averageTradedPriceService);
-        await _incomeTaxCalculator.CalculateCurrentMonthIncomeTaxes(response, stocks, accountId);
+        _incomeTaxCalculator = new StocksIncomeTaxes();
+        _incomeTaxCalculator.CalculateCurrentMonthIncomeTaxes(response, stocks, accountId);
 
         _incomeTaxCalculator = new ETFsIncomeTaxes();
-        await _incomeTaxCalculator.CalculateCurrentMonthIncomeTaxes(response, etfs, accountId);
+        _incomeTaxCalculator.CalculateCurrentMonthIncomeTaxes(response, etfs, accountId);
 
         // _incomeTaxCalculator = new FIIsIncomeTaxes();
-        await _incomeTaxCalculator.CalculateCurrentMonthIncomeTaxes(response, fiis, accountId);
+        _incomeTaxCalculator.CalculateCurrentMonthIncomeTaxes(response, fiis, accountId);
 
         // _incomeTaxCalculator = new BDRsIncomeTaxes();
-        await _incomeTaxCalculator.CalculateCurrentMonthIncomeTaxes(response, bdrs, accountId);
+        _incomeTaxCalculator.CalculateCurrentMonthIncomeTaxes(response, bdrs, accountId);
 
         // _incomeTaxCalculator = new GoldIncomeTaxes();
-        await _incomeTaxCalculator.CalculateCurrentMonthIncomeTaxes(response, gold, accountId);
+        _incomeTaxCalculator.CalculateCurrentMonthIncomeTaxes(response, gold, accountId);
 
         // _incomeTaxCalculator = new FundInvestmentsIncomeTaxes();
-        await _incomeTaxCalculator.CalculateCurrentMonthIncomeTaxes(response, fundInvestments, accountId);
+        _incomeTaxCalculator.CalculateCurrentMonthIncomeTaxes(response, fundInvestments, accountId);
     }
 
     private static bool InvestorSoldAnyAsset(Movement.Root httpClientResponse)
@@ -167,24 +171,47 @@ public class IncomeTaxesService : IIncomeTaxesService
             {
                 AssetType = "Ações",
                 TickerSymbol = "PETR4",
+                CorporationName = "Petróleo Brasileiro S.A.",
                 MovementType = "Compra",
-                OperationValue = 10,
-                EquitiesQuantity = 1,
-                ReferenceDate = new DateTime(2023, 01, 16),
-            });
-            response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
-            {
-                AssetType = "Ações",
-                TickerSymbol = "PETR4",
-                MovementType = "Venda",
                 OperationValue = 12,
                 EquitiesQuantity = 1,
                 ReferenceDate = new DateTime(2023, 01, 16),
                 UnitPrice = 12
             });
-            
+            response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
+            {
+                AssetType = "Ações",
+                TickerSymbol = "PETR4",
+                CorporationName = "Petróleo Brasileiro S.A.",
+                MovementType = "Venda",
+                OperationValue = 10,
+                EquitiesQuantity = 1,
+                ReferenceDate = new DateTime(2023, 01, 17),
+                UnitPrice = 10
+            });
+            response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
+            {
+                AssetType = "Ações",
+                TickerSymbol = "VALE3",
+                CorporationName = "Vale S.A.",
+                MovementType = "Venda",
+                OperationValue = 12,
+                EquitiesQuantity = 1,
+                ReferenceDate = new DateTime(2023, 02, 17),
+                UnitPrice = 12
+            });
+            response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
+            {
+                AssetType = "Ações",
+                TickerSymbol = "VALE3",
+                CorporationName = "Vale S.A.",
+                MovementType = "Compra",
+                OperationValue = 10,
+                EquitiesQuantity = 1,
+                ReferenceDate = new DateTime(2023, 02, 17),
+            });
 
-            BigBang bigBang = new(_averageTradedPriceRepository, _averageTradedPriceService);
+            BigBang bigBang = new(_genericRepositoryIncomeTaxes, _genericRepositoryAccount);
             await bigBang.Calculate(response, _incomeTaxCalculator, accountId);
         }
         catch (Exception e)

@@ -1,24 +1,19 @@
-﻿using stocks_common.Models;
+﻿using Newtonsoft.Json;
+using stocks_common.Models;
 using stocks_core.Constants;
 using stocks_core.DTOs.B3;
 using stocks_core.Response;
-using stocks_core.Services.AverageTradedPrice;
-using stocks_infrastructure.Repositories.AverageTradedPrice;
+using stocks_infrastructure.Models;
 
 namespace stocks_core.Business
 {
     public class StocksIncomeTaxes : IIncomeTaxesCalculator
     {
-        private readonly IAverageTradedPriceRepostory _averageTradedPriceRepository;
-        private readonly IAverageTradedPriceService _averageTradedPriceService;
-
-        public StocksIncomeTaxes(IAverageTradedPriceRepostory averageTradedPriceRepository, IAverageTradedPriceService averageTradedPriceService)
+        public StocksIncomeTaxes()
         {
-            _averageTradedPriceRepository = averageTradedPriceRepository;
-            _averageTradedPriceService = averageTradedPriceService;
         }
 
-        public async Task CalculateCurrentMonthIncomeTaxes(CalculateAssetsIncomeTaxesResponse? response,
+        public void CalculateCurrentMonthIncomeTaxes(CalculateAssetsIncomeTaxesResponse? response,
             IEnumerable<Movement.EquitMovement> stocksMovements, Guid accountId)
         {
             var sells = stocksMovements.Where(x => x.MovementType.Equals(B3ServicesConstants.Sell));
@@ -51,11 +46,6 @@ namespace stocks_core.Business
                     x.TickerSymbol.Equals(movement.TickerSymbol) &&
                     x.MovementType.Equals(B3ServicesConstants.BonusShare)
                 );
-
-                var averageTradedPrice = _averageTradedPriceService.CalculateAverageTradedPrice(stockBuys, stockSells, stockSplits, stockBonusShares);
-                var currentTickerAverageTradedPrice = _averageTradedPriceRepository.GetAverageTradedPrice(movement.TickerSymbol, accountId)!;
-
-                double profit = averageTradedPrice[movement.TickerSymbol].AverageTradedPrice - currentTickerAverageTradedPrice.AveragePrice;
             }
         }
 
@@ -100,10 +90,10 @@ namespace stocks_core.Business
                 response.TotalIncomeTaxesValue = (double)CalculateStocksIncomeTaxes(totalProfit, dayTraded);
             }
 
-            double totalLoss = total.Select(x => x.Value.Profit).Where(x => x < 0).Sum();
-            response.CompensateLoss = totalLoss;
-
-            response.Assets = DictionaryToList(total);
+            response.DayTraded = dayTraded;
+            response.TotalProfit = totalProfit;
+            response.TotalSold = totalSoldInStocks;
+            response.Assets = JsonConvert.SerializeObject(DictionaryToList(total));
         }
 
         private static bool InvestorDayTraded(IEnumerable<Movement.EquitMovement> stocksMovements)
@@ -175,6 +165,7 @@ namespace stocks_core.Business
                     movement.OperationValue,
                     movement.EquitiesQuantity,
                     movement.TickerSymbol,
+                    movement.CorporationName,
                     movement.ReferenceDate.ToString("MM-yyyy"),
                     averageTradedPrice: 0,
                     tickerBoughtBeforeB3DateRange: true
@@ -194,6 +185,7 @@ namespace stocks_core.Business
                     movement.OperationValue,
                     movement.EquitiesQuantity,
                     movement.TickerSymbol,
+                    movement.CorporationName,
                     movement.ReferenceDate.ToString("MM-yyyy"),
                     averageTradedPrice
                 );
@@ -211,15 +203,11 @@ namespace stocks_core.Business
             }
         }
 
-        private static IEnumerable<Asset> DictionaryToList(Dictionary<string, CalculateIncomeTaxesForTheFirstTime> total)
+        private static IEnumerable<(string, string)> DictionaryToList(Dictionary<string, CalculateIncomeTaxesForTheFirstTime> total)
         {
             foreach(var asset in total.Values)
             {
-                yield return new Asset
-                (
-                    asset.TickerSymbol,
-                    asset.AverageTradedPrice
-                );
+                yield return (asset.TickerSymbol, asset.CorporationName);
             }
         }
 
@@ -232,5 +220,5 @@ namespace stocks_core.Business
 
             return ((decimal)totalTaxesPorcentage / 100m) * (decimal)value;
         }
-    }    
+    }
 }

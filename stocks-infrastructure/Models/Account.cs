@@ -19,15 +19,16 @@ namespace stocks.Models
             Validate(this, new AccountValidator());
         }
 
-        private Account() {}
+#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
+        private Account() { }
+#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
 
         public string Name { get; protected set; }
         public string Email { get; protected set; }
         public string Password { get; protected set; }
         public string CPF { get; protected set; }
         public IList<AverageTradedPrice>? AverageTradedPrices { get; protected set; }
-        public IList<IncomeTaxes> IncomeTaxes { get; protected set; }
-        public IList<CompensateLoss> CompesateLosses { get; protected set; }
+        public IList<IncomeTaxes>? IncomeTaxes { get; protected set; }
         public Plan Plan { get; protected set; } = Plan.Default;
 
         public void HashPassword(string password)

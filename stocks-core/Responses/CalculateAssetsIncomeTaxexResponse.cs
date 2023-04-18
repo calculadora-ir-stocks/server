@@ -7,21 +7,14 @@
         /// </summary>
         public double TotalIncomeTaxesValue { get; set; } = 0;
         /// <summary>
-        /// Total de prejuízos a serem compensados nos meses seguintes.
+        /// Total de ativos vendidos.
         /// </summary>
-        public double CompensateLoss { get; set; } = 0;
-        public IEnumerable<Asset> Assets { get; set; } = Array.Empty<Asset>();
-    }
-
-    public class Asset
-    {
-        public Asset(string ticker, double averageTradedPrice)
-        {
-            Ticker = ticker;
-            AverageTradedPrice = averageTradedPrice;
-        }
-
-        public string Ticker { get; set; }
-        public double AverageTradedPrice { get; set; }
+        public double TotalSold { get; set; } = 0;
+        public double TotalProfit { get; set; } = 0;
+        public bool DayTraded { get; set; } = false;
+        /// <summary>
+        /// Uma lista em formato JSON que representa os ativos negociados.
+        /// </summary>
+        public string? Assets { get; set; }
     }
 }
