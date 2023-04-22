@@ -3,7 +3,6 @@ using stocks.Models;
 using stocks.Repositories;
 using stocks_core.Constants;
 using stocks_core.DTOs.B3;
-using stocks_core.Enums;
 using stocks_core.Response;
 using stocks_infrastructure.Models;
 
@@ -72,11 +71,11 @@ namespace stocks_core.Business
 
         private async Task CalculateEachMonth(List<MonthMovement> monthMovements, IIncomeTaxesCalculator calculator, Guid accountId)
         {
-            Dictionary<string, CalculateAssetsIncomeTaxesResponse> response = new();
+            Dictionary<string, List<AssetIncomeTaxes>> response = new();
 
             foreach (var monthMovement in monthMovements)
             {
-                response.Add(monthMovement.Month, new CalculateAssetsIncomeTaxesResponse());
+                response.Add(monthMovement.Month, new List<AssetIncomeTaxes>());
 
                 var stocks = monthMovement.Movements.Where(x => x.AssetType.Equals(AssetMovementTypes.Stocks));
                 var etfs = monthMovement.Movements.Where(x => x.AssetType.Equals(AssetMovementTypes.ETFs));
@@ -94,7 +93,7 @@ namespace stocks_core.Business
                 if (etfs.Any())
                 {
                     calculator = new ETFsIncomeTaxes();
-                    calculator.CalculateCurrentMonthIncomeTaxes(response[monthMovement.Month], etfs, accountId);
+                    calculator.CalculateIncomeTaxesForAllMonths(response[monthMovement.Month], etfs);
                 }
 
                 if (fiis.Any())
@@ -125,27 +124,42 @@ namespace stocks_core.Business
             await SaveIntoDatabase(response, accountId);
         }
 
-        private async Task SaveIntoDatabase(Dictionary<string, CalculateAssetsIncomeTaxesResponse> response, Guid accountId)
+        private async Task SaveIntoDatabase(Dictionary<string, List<AssetIncomeTaxes>> response, Guid accountId)
         {
             Account account = _genericRepositoryAccount.GetById(accountId);
 
-            foreach (var item in response.Values)
-            {
-                IncomeTaxes incomeTaxes = new
-                (
+            IncomeTaxes incomeTaxes = new
+            (
                     month: "a",
-                    totalTaxes: item.TotalIncomeTaxesValue,
-                    totalSold: item.TotalSold,
-                    totalProfit: item.TotalProfit,
-                    dayTraded: item.DayTraded,
-                    tradedAssets: item.Assets!,
-                    compesatedLoss: item.TotalProfit < 0 ? false : null,
-                    accountId: accountId,
-                    account: account
-                );
+                    totalTaxes: 2,
+                    totalSold: 2,
+                    totalProfit: 2,
+                    dayTraded: false,
+                    tradedAssets: "json",
+                    compesatedLoss: false,
+                    account: account,
+                    assetId: 1
+            );
 
-                await _genericRepositoryIncomeTaxes.AddAsync(incomeTaxes);
-            }
+            await _genericRepositoryIncomeTaxes.AddAsync(incomeTaxes);
+
+            //foreach (var item in response.Values)
+            //{
+            //    IncomeTaxes incomeTaxes = new
+            //    (
+            //        month: "a",
+            //        totalTaxes: item.TotalTaxes,
+            //        totalSold: item.TotalSold,
+            //        totalProfit: item.TotalProfit,
+            //        dayTraded: item.DayTraded,
+            //        tradedAssets: item.TradedAssets!,
+            //        compesatedLoss: item.TotalProfit < 0 ? false : null,
+            //        account: account,
+            //        accountId: accountId
+            //    );
+
+            //    await _genericRepositoryIncomeTaxes.AddAsync(incomeTaxes);
+            //}
         }
 
         private static void AddMovementsForEachMonth(Movement.EquitMovement movement, List<MonthMovement> monthMovements)

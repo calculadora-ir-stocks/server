@@ -1,5 +1,5 @@
-﻿using stocks_core.DTOs.B3;
-using stocks_core.Enums;
+﻿using stocks_core.Constants;
+using stocks_core.DTOs.B3;
 
 namespace stocks_unit_tests.Builders
 {

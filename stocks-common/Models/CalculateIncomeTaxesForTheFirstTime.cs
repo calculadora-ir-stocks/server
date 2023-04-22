@@ -22,8 +22,5 @@
         public double AverageTradedPrice { get; set; } = 0;
         public double Profit { get; set; } = 0;
         public bool TickerBoughtBeforeB3DateRange { get; set; } = false;
-        /// <summary>
-        /// Valor a ser compensado no total a ser pago de imposto de renda. Esse valor refere-se as taxas de IRRF (ex.: dedo-duro).
-        /// </summary>
     }
 }

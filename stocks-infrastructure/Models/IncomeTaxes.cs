@@ -10,7 +10,7 @@ namespace stocks_infrastructure.Models
     public class IncomeTaxes
     {
         public IncomeTaxes(string month, double totalTaxes, double totalSold, double totalProfit, bool dayTraded,
-            string tradedAssets, bool? compesatedLoss, Account account, Guid accountId)
+            string tradedAssets, bool? compesatedLoss, Account account, int assetId)
         {
             Month = month;
             TotalTaxes = totalTaxes;
@@ -20,7 +20,7 @@ namespace stocks_infrastructure.Models
             TradedAssets = tradedAssets;
             CompesatedLoss = compesatedLoss;
             Account = account;
-            AccountId = accountId;
+            AssetId = assetId;
         }
 
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
@@ -44,6 +44,9 @@ namespace stocks_infrastructure.Models
         /// o investidor não tenha tido prejuízo no mês.
         public bool? CompesatedLoss { get; set; }
         public Account Account { get; set; }
-        public Guid AccountId { get; set; }
+        /// <summary>
+        /// Id do ativo que foi negociado no mês.
+        /// </summary>
+        public int AssetId { get; set; }
     }
 }

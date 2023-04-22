@@ -1,4 +1,4 @@
-﻿namespace stocks_core.Enums
+﻿namespace stocks_core.Constants
 {
     /// <summary>
     /// Classe responsável por armazenar os diferentes tipos de valores que a propriedade 'productTypeName', obtido como response através da API 

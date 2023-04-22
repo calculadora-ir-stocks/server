@@ -6,7 +6,6 @@ using stocks.Requests;
 using stocks_core.Business;
 using stocks_core.Constants;
 using stocks_core.DTOs.B3;
-using stocks_core.Enums;
 using stocks_core.Response;
 using stocks_core.Services.AverageTradedPrice;
 using stocks_infrastructure.Models;
@@ -46,7 +45,7 @@ public class IncomeTaxesService : IIncomeTaxesService
     }
 
     #region Calcula o imposto de renda a ser pago no mês atual
-    public async Task<CalculateAssetsIncomeTaxesResponse?> CalculateCurrentMonthAssetsIncomeTaxes(Guid accountId)
+    public async Task<AssetIncomeTaxes?> CalculateCurrentMonthAssetsIncomeTaxes(Guid accountId)
     {
         string mockedCpf = "97188167044";
 
@@ -90,7 +89,7 @@ public class IncomeTaxesService : IIncomeTaxesService
                 EquitiesQuantity = 3,
             });
 
-            CalculateAssetsIncomeTaxesResponse? response = null;
+            AssetIncomeTaxes? response = null;
 
             if (InvestorSoldAnyAsset(httpClientResponse))
             {
@@ -105,7 +104,7 @@ public class IncomeTaxesService : IIncomeTaxesService
         }
     }
 
-    private async Task AddAllRequiredIncomeTaxesToObject(Movement.Root httpClientResponse, CalculateAssetsIncomeTaxesResponse? response, Guid accountId)
+    private async Task AddAllRequiredIncomeTaxesToObject(Movement.Root httpClientResponse, AssetIncomeTaxes? response, Guid accountId)
     {
         var movements = httpClientResponse.Data.EquitiesPeriods.EquitiesMovements;
 
@@ -173,10 +172,10 @@ public class IncomeTaxesService : IIncomeTaxesService
                 TickerSymbol = "PETR4",
                 CorporationName = "Petróleo Brasileiro S.A.",
                 MovementType = "Compra",
-                OperationValue = 12,
+                OperationValue = 22000,
                 EquitiesQuantity = 1,
                 ReferenceDate = new DateTime(2023, 01, 16),
-                UnitPrice = 12
+                UnitPrice = 220000
             });
             response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
             {
@@ -184,10 +183,10 @@ public class IncomeTaxesService : IIncomeTaxesService
                 TickerSymbol = "PETR4",
                 CorporationName = "Petróleo Brasileiro S.A.",
                 MovementType = "Venda",
-                OperationValue = 10,
+                OperationValue = 20000,
                 EquitiesQuantity = 1,
                 ReferenceDate = new DateTime(2023, 01, 17),
-                UnitPrice = 10
+                UnitPrice = 20000
             });
             response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
             {

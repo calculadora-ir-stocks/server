@@ -5,13 +5,13 @@ namespace stocks_core.Business
 {
     public class ETFsIncomeTaxes : IIncomeTaxesCalculator
     {
-        public void CalculateCurrentMonthIncomeTaxes(CalculateAssetsIncomeTaxesResponse? response,
+        public void CalculateCurrentMonthIncomeTaxes(AssetIncomeTaxes? response,
             IEnumerable<Movement.EquitMovement> movement, Guid accountId)
         {
             throw new NotImplementedException();
         }
 
-        public void CalculateIncomeTaxesForAllMonths(CalculateAssetsIncomeTaxesResponse response, IEnumerable<Movement.EquitMovement> movements)
+        public void CalculateIncomeTaxesForAllMonths(List<AssetIncomeTaxes> response, IEnumerable<Movement.EquitMovement> movements)
         {
             throw new NotImplementedException();
         }
