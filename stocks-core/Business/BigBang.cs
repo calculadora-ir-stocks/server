@@ -86,7 +86,7 @@ namespace stocks_core.Business
 
                 if (stocks.Any())
                 {
-                    calculator = new StocksIncomeTaxes();
+                    calculator ??= new StocksIncomeTaxes();
                     calculator.CalculateIncomeTaxesForAllMonths(response[monthMovement.Month], stocks);
                 }
 

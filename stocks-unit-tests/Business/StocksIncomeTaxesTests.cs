@@ -114,7 +114,7 @@ namespace stocks_unit_tests.Business
 
             Assert.Equal(0, response[0].TotalTaxes);
             // Prejuízo de R$1.000
-            Assert.Equal(-1000, response[0].TotalProfit);
+            Assert.Equal(-1000, response[0].TotalProfitOrLoss);
         }
 
         [Fact(DisplayName = "Caso o investidor tenha feito day-trade, mas houveram prejuízos, o investidor não terá que pagar imposto de renda.")]
@@ -124,15 +124,15 @@ namespace stocks_unit_tests.Business
 
             List<Movement.EquitMovement> movements = new()
             {
-                new Movement.EquitMovement("PETR4", "Petróleo Brasileiro S/A", "Ações", "Compra", 20000, 1, 20000, new DateTime(2023, 01, 01)),
-                new Movement.EquitMovement("PETR4", "Petróleo Brasileiro S/A", "Ações", "Venda", 21000, 1, 21000, new DateTime(2023, 01, 02))
+                new Movement.EquitMovement("PETR4", "Petróleo Brasileiro S/A", "Ações", "Compra", 21000, 1, 21000, new DateTime(2023, 01, 01)),
+                new Movement.EquitMovement("PETR4", "Petróleo Brasileiro S/A", "Ações", "Venda", 20000, 1, 20000, new DateTime(2023, 01, 02))
             };
 
             _stocksCalculator.CalculateIncomeTaxesForAllMonths(response, movements);
 
             Assert.Equal(0, response[0].TotalTaxes);
             // Prejuízo de R$1.000
-            Assert.Equal(-1000, response[0].TotalProfit);
+            Assert.Equal(-1000, response[0].TotalProfitOrLoss);
         }
 
         [Fact(DisplayName = "Caso o investidor tenha vendido duas ações diferentes em um mês e tenha ultrapassado o limite de R$20.000," +
@@ -157,7 +157,6 @@ namespace stocks_unit_tests.Business
             var totalProfit = petr4Profit + vale3Profit;
             decimal tax = ((decimal)IncomeTaxesConstants.IncomeTaxesForStocks / 100m) * (decimal)totalProfit;
 
-            // Prejuízo de R$1.000
             Assert.Equal((double)tax, response[0].TotalTaxes);
         }
     }

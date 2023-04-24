@@ -23,7 +23,7 @@ namespace stocks_unit_tests.AverageTradedPrice
 
         [Fact(DisplayName ="Deve calcular o preço médio de um ativo.")]
         public async void Should_calculate_average_traded_price_of_one_asset_correctly()
-        {            
+        {
             _repository.Setup(r => r.AccountAlreadyHasAverageTradedPrice(It.IsAny<Guid>())).Returns(false);
 
             Movement.Root movements = new MovementBuilder()

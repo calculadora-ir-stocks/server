@@ -7,15 +7,18 @@
         /// </summary>
         public double TotalTaxes { get; set; } = 0;
         /// <summary>
-        /// Total de ativos vendidos.
+        /// Total vendido (real) do ativo.
         /// </summary>
         public double TotalSold { get; set; } = 0;
-        public double TotalProfit { get; set; } = 0;
+        /// <summary>
+        /// O total de lucro ou prejuízo de um determinado ativo.
+        /// </summary>
+        public double TotalProfitOrLoss { get; set; } = 0;
         public bool DayTraded { get; set; } = false;
         /// <summary>
         /// Uma lista em formato JSON que representa os ativos negociados.
         /// </summary>
-        public string? TradedAssets { get; set; }
+        public string TradedAssets { get; set; } = String.Empty;
         /// <summary>
         /// O id do tipo do ativo sendo negociado.
         /// </summary>

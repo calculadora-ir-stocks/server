@@ -172,10 +172,10 @@ public class IncomeTaxesService : IIncomeTaxesService
                 TickerSymbol = "PETR4",
                 CorporationName = "Petróleo Brasileiro S.A.",
                 MovementType = "Compra",
-                OperationValue = 22000,
+                OperationValue = 10,
                 EquitiesQuantity = 1,
                 ReferenceDate = new DateTime(2023, 01, 16),
-                UnitPrice = 220000
+                UnitPrice = 10
             });
             response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
             {
@@ -183,17 +183,17 @@ public class IncomeTaxesService : IIncomeTaxesService
                 TickerSymbol = "PETR4",
                 CorporationName = "Petróleo Brasileiro S.A.",
                 MovementType = "Venda",
-                OperationValue = 20000,
+                OperationValue = 11,
                 EquitiesQuantity = 1,
                 ReferenceDate = new DateTime(2023, 01, 17),
-                UnitPrice = 20000
+                UnitPrice = 11
             });
             response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
             {
                 AssetType = "Ações",
-                TickerSymbol = "VALE3",
-                CorporationName = "Vale S.A.",
-                MovementType = "Venda",
+                TickerSymbol = "PETR4",
+                CorporationName = "Petróleo Brasileiro S.A.",
+                MovementType = "Compra",
                 OperationValue = 12,
                 EquitiesQuantity = 1,
                 ReferenceDate = new DateTime(2023, 02, 17),
@@ -208,6 +208,7 @@ public class IncomeTaxesService : IIncomeTaxesService
                 OperationValue = 10,
                 EquitiesQuantity = 1,
                 ReferenceDate = new DateTime(2023, 02, 17),
+                UnitPrice = 10
             });
 
             BigBang bigBang = new(_genericRepositoryIncomeTaxes, _genericRepositoryAccount);

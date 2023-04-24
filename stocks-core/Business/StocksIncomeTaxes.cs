@@ -7,7 +7,7 @@ using stocks_infrastructure.Enums;
 
 namespace stocks_core.Business
 {
-    public class StocksIncomeTaxes : IIncomeTaxesCalculator
+    public class StocksIncomeTaxes : AverageTradedPriceCalculator, IIncomeTaxesCalculator
     {
         public void CalculateCurrentMonthIncomeTaxes(AssetIncomeTaxes? response,
             IEnumerable<Movement.EquitMovement> stocksMovements, Guid accountId)
@@ -46,16 +46,16 @@ namespace stocks_core.Business
         }
 
         public void CalculateIncomeTaxesForAllMonths(List<AssetIncomeTaxes> response, IEnumerable<Movement.EquitMovement> movements)
-        {            
-            Dictionary<string, CalculateIncomeTaxesForTheFirstTime> total = 
-                AverageTradedPriceCalculator.CalculateAverageTradedPrice(movements);
+        {
+            Dictionary<string, CalculateIncomeTaxesForTheFirstTime> tickersMovementsDetails = 
+                CalculateAverageTradedPrice(movements);
 
             var sells = movements.Where(x => x.MovementType.Equals(B3ServicesConstants.Sell));
-            double totalSoldInStocks = sells.Sum(stock => stock.OperationValue);
+            double totalSold = sells.Sum(stock => stock.OperationValue);
 
-            bool sellsSuperiorThan20000 = totalSoldInStocks >= IncomeTaxesConstants.LimitForStocksSelling;
+            bool sellsSuperiorThan20000 = totalSold >= IncomeTaxesConstants.LimitForStocksSelling;
 
-            double totalProfit = total.Select(x => x.Value.Profit).Sum();
+            double totalProfit = tickersMovementsDetails.Select(x => x.Value.Profit).Sum();
             bool dayTraded = InvestorDayTraded(movements);
 
             bool paysIncomeTaxes = (sellsSuperiorThan20000 && totalProfit > 0) || (dayTraded && totalProfit > 0);
@@ -63,52 +63,15 @@ namespace stocks_core.Business
             AssetIncomeTaxes objectToAddIntoResponse = new();
 
             if (paysIncomeTaxes)
-            {
-                objectToAddIntoResponse.TotalTaxes = (double)CalculateStocksIncomeTaxes(totalProfit, dayTraded);
-            }
+                objectToAddIntoResponse.TotalTaxes = (double)CalculateIncomeTaxes(totalProfit, dayTraded, IncomeTaxesConstants.IncomeTaxesForStocks);
 
             objectToAddIntoResponse.DayTraded = dayTraded;
-            objectToAddIntoResponse.TotalProfit = totalProfit;
-            objectToAddIntoResponse.TotalSold = totalSoldInStocks;
-            objectToAddIntoResponse.TradedAssets = JsonConvert.SerializeObject(DictionaryToList(total));
+            objectToAddIntoResponse.TotalProfitOrLoss = totalProfit;
+            objectToAddIntoResponse.TotalSold = totalSold;
+            objectToAddIntoResponse.TradedAssets = JsonConvert.SerializeObject(DictionaryToList(tickersMovementsDetails));
             objectToAddIntoResponse.AssetTypeId = (int)Assets.Stocks;
 
             response.Add(objectToAddIntoResponse);
-        }
-
-        private static bool InvestorDayTraded(IEnumerable<Movement.EquitMovement> stocksMovements)
-        {
-            var buys = stocksMovements.Where(x =>
-                x.MovementType == B3ServicesConstants.Buy
-            );
-            var sells = stocksMovements.Where(x =>
-                x.MovementType == B3ServicesConstants.Sell
-            );
-
-            var dayTradeTransactions = buys.Where(b => sells.Any(s => 
-                s.ReferenceDate == b.ReferenceDate && 
-                s.TickerSymbol == b.TickerSymbol
-            ));
-
-            return dayTradeTransactions.Any();
-        }
-
-        private static IEnumerable<(string, string)> DictionaryToList(Dictionary<string, CalculateIncomeTaxesForTheFirstTime> total)
-        {
-            foreach(var asset in total.Values)
-            {
-                yield return (asset.TickerSymbol, asset.CorporationName);
-            }
-        }
-
-        private static decimal CalculateStocksIncomeTaxes(double value, bool dayTraded)
-        {
-            double totalTaxesPorcentage = IncomeTaxesConstants.IncomeTaxesForStocks;
-
-            if (dayTraded)
-                totalTaxesPorcentage = IncomeTaxesConstants.IncomeTaxesForDayTrade;
-
-            return ((decimal)totalTaxesPorcentage / 100m) * (decimal)value;
         }
     }
 }

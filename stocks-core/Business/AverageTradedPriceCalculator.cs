@@ -42,9 +42,52 @@ namespace stocks_core.Business
             return response;
         }
 
+        public static bool InvestorDayTraded(IEnumerable<Movement.EquitMovement> stocksMovements)
+        {
+            var buys = stocksMovements.Where(x =>
+                x.MovementType == B3ServicesConstants.Buy
+            );
+            var sells = stocksMovements.Where(x =>
+                x.MovementType == B3ServicesConstants.Sell
+            );
+
+            var dayTradeTransactions = buys.Where(b => sells.Any(s =>
+                s.ReferenceDate == b.ReferenceDate &&
+                s.TickerSymbol == b.TickerSymbol
+            ));
+
+            return dayTradeTransactions.Any();
+        }
+
+        public static decimal CalculateIncomeTaxes(double value, bool dayTraded, int aliquot)
+        {
+            if (dayTraded) aliquot = IncomeTaxesConstants.IncomeTaxesForDayTrade;
+
+            return ((decimal)aliquot / 100m) * (decimal)value;
+        }
+
+        public static IEnumerable<(string, string)> DictionaryToList(Dictionary<string, CalculateIncomeTaxesForTheFirstTime> total)
+        {
+            foreach (var asset in total.Values)
+            {
+                yield return (asset.TickerSymbol, asset.CorporationName);
+            }
+        }
+
         private static void CalculateBuyOperations(Dictionary<string, CalculateIncomeTaxesForTheFirstTime> response, Movement.EquitMovement movement)
         {
-            if (!response.ContainsKey(movement.TickerSymbol))
+            if (response.ContainsKey(movement.TickerSymbol))
+            {
+                var asset = response[movement.TickerSymbol];
+
+                asset.Price += movement.OperationValue;
+                asset.Quantity += movement.EquitiesQuantity;
+
+                asset.AverageTradedPrice = asset.Price / asset.Quantity;
+
+                // TO-DO (MVP?): calcular emolumentos.
+            }
+            else
             {
                 double averageTradedPrice = movement.OperationValue / movement.EquitiesQuantity;
 
@@ -58,17 +101,6 @@ namespace stocks_core.Business
                 );
 
                 response.Add(movement.TickerSymbol, ticker);
-            }
-            else
-            {
-                var asset = response[movement.TickerSymbol];
-
-                asset.Price += movement.OperationValue;
-                asset.Quantity += movement.EquitiesQuantity;
-
-                asset.AverageTradedPrice = asset.Price / asset.Quantity;
-
-                // TO-DO (MVP?): calcular emolumentos.
             }
         }
 

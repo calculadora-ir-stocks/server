@@ -10,12 +10,12 @@
         /// <summary>
         /// Alíquota para o pagamento de imposto de renda sob ações.
         /// </summary>
-        public const double IncomeTaxesForStocks = 15;
+        public const int IncomeTaxesForStocks = 15;
 
         /// <summary>
         /// Alíquota para o pagamento de imposto de renda sob operações daytrade.
         /// </summary>
-        public const double IncomeTaxesForDayTrade = 20;
+        public const int IncomeTaxesForDayTrade = 20;
 
         /// <summary>
         /// Alíquota para o pagamento de imposto de renda para Exchange Traded Fund (ETFs).
