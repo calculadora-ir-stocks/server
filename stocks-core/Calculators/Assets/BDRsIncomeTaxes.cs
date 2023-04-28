@@ -1,23 +1,22 @@
 ﻿using Newtonsoft.Json;
 using stocks_common.Models;
+using stocks_core.Business;
 using stocks_core.Constants;
 using stocks_core.DTOs.B3;
 using stocks_core.Response;
-using stocks_infrastructure.Enums;
 
-namespace stocks_core.Business
+namespace stocks_core.Calculators.Assets
 {
-    public class ETFsIncomeTaxes : AverageTradedPriceCalculator, IIncomeTaxesCalculator
+    public class BDRsIncomeTaxes : AverageTradedPriceCalculator, IIncomeTaxesCalculator
     {
-        public void CalculateCurrentMonthIncomeTaxes(AssetIncomeTaxes? response,
-            IEnumerable<Movement.EquitMovement> movement, Guid accountId)
+        public void CalculateCurrentMonthIncomeTaxes(AssetIncomeTaxes? response, IEnumerable<Movement.EquitMovement> movements, Guid accountId)
         {
             throw new NotImplementedException();
         }
 
         public void CalculateIncomeTaxesForAllMonths(List<AssetIncomeTaxes> response, IEnumerable<Movement.EquitMovement> movements)
         {
-            Dictionary<string, CalculateIncomeTaxesForTheFirstTime> tickersMovementsDetails = 
+            Dictionary<string, CalculateIncomeTaxesForTheFirstTime> tickersMovementsDetails =
                 CalculateAverageTradedPrice(movements);
 
             var sells = movements.Where(x => x.MovementType.Equals(B3ServicesConstants.Sell));
@@ -25,12 +24,12 @@ namespace stocks_core.Business
 
             bool dayTraded = InvestorDayTraded(movements);
 
-            bool paysIncomeTaxes = (sells.Any() && totalProfit > 0) || (dayTraded && totalProfit > 0);
+            bool paysIncomeTaxes = sells.Any() && totalProfit > 0 || dayTraded && totalProfit > 0;
 
             AssetIncomeTaxes objectToAddIntoResponse = new();
 
             if (paysIncomeTaxes)
-                objectToAddIntoResponse.TotalTaxes = (double)CalculateIncomeTaxes(totalProfit, dayTraded, IncomeTaxesConstants.IncomeTaxesForETFs);
+                objectToAddIntoResponse.TotalTaxes = (double)CalculateIncomeTaxes(totalProfit, dayTraded, IncomeTaxesConstants.IncomeTaxesForBDRs);
 
             objectToAddIntoResponse.DayTraded = dayTraded;
             objectToAddIntoResponse.TotalProfitOrLoss = totalProfit;
@@ -39,7 +38,7 @@ namespace stocks_core.Business
             objectToAddIntoResponse.TotalSold = totalSold;
 
             objectToAddIntoResponse.TradedAssets = JsonConvert.SerializeObject(DictionaryToList(tickersMovementsDetails));
-            objectToAddIntoResponse.AssetTypeId = (int)Assets.Stocks;
+            objectToAddIntoResponse.AssetTypeId = stocks_infrastructure.Enums.Assets.BDRs;
 
             response.Add(objectToAddIntoResponse);
         }

@@ -1,4 +1,5 @@
 ﻿using stocks_core.Business;
+using stocks_core.Calculators.Assets;
 using stocks_core.Constants;
 using stocks_core.DTOs.B3;
 using stocks_core.Response;

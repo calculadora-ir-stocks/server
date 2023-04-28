@@ -10,13 +10,13 @@ namespace stocks_core.Business
     /// </summary>
     public class AverageTradedPriceCalculator
     {
+        public static readonly Dictionary<string, CalculateIncomeTaxesForTheFirstTime> response = new();
+
         /// <summary>
         /// Calcula o preço médio de um determinado ativo.
         /// </summary>
         public static Dictionary<string, CalculateIncomeTaxesForTheFirstTime> CalculateAverageTradedPrice(IEnumerable<Movement.EquitMovement> movements)
         {
-            Dictionary<string, CalculateIncomeTaxesForTheFirstTime> response = new();
-
             foreach (var movement in movements)
             {
                 switch (movement.MovementType)
@@ -63,7 +63,7 @@ namespace stocks_core.Business
         {
             if (dayTraded) aliquot = IncomeTaxesConstants.IncomeTaxesForDayTrade;
 
-            return ((decimal)aliquot / 100m) * (decimal)value;
+            return (aliquot / 100m) * (decimal)value;
         }
 
         public static IEnumerable<(string, string)> DictionaryToList(Dictionary<string, CalculateIncomeTaxesForTheFirstTime> total)

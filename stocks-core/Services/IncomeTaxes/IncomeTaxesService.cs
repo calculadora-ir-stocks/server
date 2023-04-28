@@ -4,6 +4,7 @@ using stocks.Models;
 using stocks.Repositories;
 using stocks.Requests;
 using stocks_core.Business;
+using stocks_core.Calculators.Assets;
 using stocks_core.Constants;
 using stocks_core.DTOs.B3;
 using stocks_core.Response;
@@ -28,7 +29,7 @@ public class IncomeTaxesService : IIncomeTaxesService
     private readonly ILogger<IncomeTaxesService> _logger;
 
     public IncomeTaxesService(IAverageTradedPriceService averageTradedPriceService,
-         IIncomeTaxesCalculator calculator,
+        IIncomeTaxesCalculator calculator,
         IGenericRepository<Account> genericRepositoryAccount,
         IGenericRepository<stocks_infrastructure.Models.IncomeTaxes> genericRepositoryIncomeTaxes,
         IAverageTradedPriceRepostory averageTradedPriceRepository,
@@ -182,7 +183,7 @@ public class IncomeTaxesService : IIncomeTaxesService
                 AssetType = "Ações",
                 TickerSymbol = "PETR4",
                 CorporationName = "Petróleo Brasileiro S.A.",
-                MovementType = "Venda",
+                MovementType = "Compra",
                 OperationValue = 11,
                 EquitiesQuantity = 1,
                 ReferenceDate = new DateTime(2023, 01, 17),
@@ -202,8 +203,8 @@ public class IncomeTaxesService : IIncomeTaxesService
             response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
             {
                 AssetType = "Ações",
-                TickerSymbol = "VALE3",
-                CorporationName = "Vale S.A.",
+                TickerSymbol = "PETR4",
+                CorporationName = "Petróleo Brasileiro S.A.",
                 MovementType = "Compra",
                 OperationValue = 10,
                 EquitiesQuantity = 1,

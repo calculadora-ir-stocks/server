@@ -1,11 +1,12 @@
 ﻿using Newtonsoft.Json;
 using stocks_common.Models;
+using stocks_core.Business;
 using stocks_core.Constants;
 using stocks_core.DTOs.B3;
 using stocks_core.Response;
 using stocks_infrastructure.Enums;
 
-namespace stocks_core.Business
+namespace stocks_core.Calculators.Assets
 {
     public class StocksIncomeTaxes : AverageTradedPriceCalculator, IIncomeTaxesCalculator
     {
@@ -18,7 +19,7 @@ namespace stocks_core.Business
 
             if (totalSoldInStocks > IncomeTaxesConstants.LimitForStocksSelling) return;
 
-            foreach(var movement in stocksMovements)
+            foreach (var movement in stocksMovements)
             {
                 // TODO: calculate day-trade.
                 // if user day-traded this ticker, pays 20%
@@ -47,7 +48,7 @@ namespace stocks_core.Business
 
         public void CalculateIncomeTaxesForAllMonths(List<AssetIncomeTaxes> response, IEnumerable<Movement.EquitMovement> movements)
         {
-            Dictionary<string, CalculateIncomeTaxesForTheFirstTime> tickersMovementsDetails = 
+            Dictionary<string, CalculateIncomeTaxesForTheFirstTime> tickersMovementsDetails =
                 CalculateAverageTradedPrice(movements);
 
             var sells = movements.Where(x => x.MovementType.Equals(B3ServicesConstants.Sell));
@@ -58,7 +59,7 @@ namespace stocks_core.Business
             double totalProfit = tickersMovementsDetails.Select(x => x.Value.Profit).Sum();
             bool dayTraded = InvestorDayTraded(movements);
 
-            bool paysIncomeTaxes = (sellsSuperiorThan20000 && totalProfit > 0) || (dayTraded && totalProfit > 0);
+            bool paysIncomeTaxes = sellsSuperiorThan20000 && totalProfit > 0 || dayTraded && totalProfit > 0;
 
             AssetIncomeTaxes objectToAddIntoResponse = new();
 
@@ -69,7 +70,7 @@ namespace stocks_core.Business
             objectToAddIntoResponse.TotalProfitOrLoss = totalProfit;
             objectToAddIntoResponse.TotalSold = totalSold;
             objectToAddIntoResponse.TradedAssets = JsonConvert.SerializeObject(DictionaryToList(tickersMovementsDetails));
-            objectToAddIntoResponse.AssetTypeId = (int)Assets.Stocks;
+            objectToAddIntoResponse.AssetTypeId = Assets.Stocks;
 
             response.Add(objectToAddIntoResponse);
         }

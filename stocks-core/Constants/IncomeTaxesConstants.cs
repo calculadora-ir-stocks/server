@@ -38,6 +38,11 @@
         public const int IncomeTaxesForBDRs = 15;
 
         /// <summary>
+        /// Alíquota para o pagamento de imposto de renda sob fundos de investimentos.
+        /// </summary>
+        public const int IncomeTaxesForInvestmentsFunds = 15;
+
+        /// <summary>
         /// Alíquota do IRRF - comumente chamado de dedo-duro - sob operações swing trade.
         /// </summary>
         public const double IRRFSwingTrade = 0.005;

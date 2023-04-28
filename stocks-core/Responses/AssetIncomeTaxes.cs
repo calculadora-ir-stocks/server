@@ -1,4 +1,6 @@
-﻿namespace stocks_core.Response
+﻿using stocks_infrastructure.Enums;
+
+namespace stocks_core.Response
 {
     public class AssetIncomeTaxes
     {
@@ -22,6 +24,6 @@
         /// <summary>
         /// O id do tipo do ativo sendo negociado.
         /// </summary>
-        public int AssetTypeId { get; set; }
+        public Assets AssetTypeId { get; set; }
     }
 }

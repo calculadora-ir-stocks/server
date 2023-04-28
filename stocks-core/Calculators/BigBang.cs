@@ -1,6 +1,7 @@
 ﻿using Microsoft.IdentityModel.Tokens;
 using stocks.Models;
 using stocks.Repositories;
+using stocks_core.Calculators.Assets;
 using stocks_core.Constants;
 using stocks_core.DTOs.B3;
 using stocks_core.Response;
@@ -9,7 +10,8 @@ using stocks_infrastructure.Models;
 namespace stocks_core.Business
 {
     /// <summary>
-    /// Classe responsável por calcular o imposto de renda a ser pago em todos os ativos de 01/11/2019 até D-1.
+    /// Classe responsável por calcular o imposto de renda a ser pago em todos os ativos de 01/11/2019 até D-1 e de salvar
+    /// na base de dados o preço médio de cada ativo.
     /// </summary>
     public class BigBang
     {
@@ -86,7 +88,7 @@ namespace stocks_core.Business
 
                 if (stocks.Any())
                 {
-                    calculator ??= new StocksIncomeTaxes();
+                    calculator = new StocksIncomeTaxes();
                     calculator.CalculateIncomeTaxesForAllMonths(response[monthMovement.Month], stocks);
                 }
 
@@ -98,26 +100,26 @@ namespace stocks_core.Business
 
                 if (fiis.Any())
                 {
-                    //calculator = new FIIsIncomeTaxes();
-                    //await calculator.AddAllIncomeTaxesToObject(response, fiis, accountId);
+                    calculator = new FIIsIncomeTaxes();
+                    calculator.CalculateIncomeTaxesForAllMonths(response[monthMovement.Month], etfs);
                 }
 
                 if (bdrs.Any())
                 {
-                    //calculator = new BDRsIncomeTaxes();
-                    //await calculator.AddAllIncomeTaxesToObject(response, bdrs, accountId);
+                    calculator = new BDRsIncomeTaxes();
+                    calculator.CalculateIncomeTaxesForAllMonths(response[monthMovement.Month], etfs);
                 }
 
                 if (gold.Any())
                 {
-                    //calculator = new GoldIncomeTaxes();
-                    //await calculator.AddAllIncomeTaxesToObject(response, gold, accountId);
+                    calculator = new GoldIncomeTaxes();
+                    calculator.CalculateIncomeTaxesForAllMonths(response[monthMovement.Month], etfs);
                 }
 
                 if (fundInvestments.Any())
                 {
-                    //calculator = new FundInvestmentsIncomeTaxes();
-                    //await calculator.AddAllIncomeTaxesToObject(response, fundInvestments, accountId);
+                    calculator = new InvestmentsFundsIncomeTaxes();
+                    calculator.CalculateIncomeTaxesForAllMonths(response[monthMovement.Month], etfs);
                 }
             }
 

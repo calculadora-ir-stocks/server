@@ -14,7 +14,7 @@ using stocks.Services.Auth;
 using stocks.Services.B3;
 using stocks.Services.IncomeTaxes;
 using stocks_common;
-using stocks_core.Business;
+using stocks_core.Calculators.Assets;
 using stocks_core.Services.AverageTradedPrice;
 using stocks_infrastructure.Repositories.AverageTradedPrice;
 using System.Reflection;
