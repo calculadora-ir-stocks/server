@@ -3,7 +3,7 @@
     public class CalculateIncomeTaxesForTheFirstTime
     {
         public CalculateIncomeTaxesForTheFirstTime(double currentPrice, double currentQuantity, string tickerSymbol, string corporationName, string tradeDateTime,
-            double averageTradedPrice, bool tickerBoughtBeforeB3DateRange = false)
+            double averageTradedPrice, bool dayTraded, bool tickerBoughtBeforeB3DateRange = false)
         {
             Price = currentPrice;
             Quantity = currentQuantity;
@@ -11,6 +11,7 @@
             CorporationName = corporationName;
             TradeDateTime = tradeDateTime;
             AverageTradedPrice = averageTradedPrice;
+            DayTraded = dayTraded;
             TickerBoughtBeforeB3DateRange = tickerBoughtBeforeB3DateRange;
         }
 
@@ -21,6 +22,7 @@
         public string TradeDateTime { get; set; }
         public double AverageTradedPrice { get; set; } = 0;
         public double Profit { get; set; } = 0;
+        public bool DayTraded { get; set; }
         public bool TickerBoughtBeforeB3DateRange { get; set; } = false;
     }
 }

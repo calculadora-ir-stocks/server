@@ -22,7 +22,7 @@ namespace stocks_core.Business
                 switch (movement.MovementType)
                 {
                     case B3ServicesConstants.Buy:
-                        CalculateBuyOperations(response, movement);
+                        CalculateBuyOperations(response, movement, movements);
                         break;
                     case B3ServicesConstants.Sell:
                         CalculateSellOperations(response, movement, movements);
@@ -42,13 +42,41 @@ namespace stocks_core.Business
             return response;
         }
 
-        public static bool InvestorDayTraded(IEnumerable<Movement.EquitMovement> stocksMovements)
+        public static decimal CalculateIncomeTaxes(double swingTradeProfit, double dayTradeProfit, int aliquot)
         {
-            var buys = stocksMovements.Where(x =>
-                x.MovementType == B3ServicesConstants.Buy
+            decimal swingTradeTaxes = 0;
+            decimal dayTradeTaxes = 0;
+
+            if (swingTradeProfit > 0)
+            {
+                swingTradeTaxes = (aliquot / 100m) * (decimal)swingTradeProfit;
+            }
+
+            if (dayTradeProfit > 0)
+            {
+                dayTradeTaxes = (aliquot / 100m) * (decimal)swingTradeProfit;
+            }
+
+            decimal totalTaxes = swingTradeTaxes + dayTradeTaxes;
+
+            return (aliquot / 100m) * totalTaxes;
+        }
+
+        public static IEnumerable<(string, string)> DictionaryToList(Dictionary<string, CalculateIncomeTaxesForTheFirstTime> total)
+        {
+            foreach (var asset in total.Values)
+            {
+                yield return (asset.TickerSymbol, asset.CorporationName);
+            }
+        }
+    
+        public static bool TickerDayTraded(IEnumerable<Movement.EquitMovement> movements, string tickerSymbol)
+        {
+            var buys = movements.Where(x =>
+                x.MovementType == B3ServicesConstants.Buy && x.TickerSymbol == tickerSymbol
             );
-            var sells = stocksMovements.Where(x =>
-                x.MovementType == B3ServicesConstants.Sell
+            var sells = movements.Where(x =>
+                x.MovementType == B3ServicesConstants.Sell && x.TickerSymbol == tickerSymbol
             );
 
             var dayTradeTransactions = buys.Where(b => sells.Any(s =>
@@ -59,22 +87,8 @@ namespace stocks_core.Business
             return dayTradeTransactions.Any();
         }
 
-        public static decimal CalculateIncomeTaxes(double value, bool dayTraded, int aliquot)
-        {
-            if (dayTraded) aliquot = IncomeTaxesConstants.IncomeTaxesForDayTrade;
-
-            return (aliquot / 100m) * (decimal)value;
-        }
-
-        public static IEnumerable<(string, string)> DictionaryToList(Dictionary<string, CalculateIncomeTaxesForTheFirstTime> total)
-        {
-            foreach (var asset in total.Values)
-            {
-                yield return (asset.TickerSymbol, asset.CorporationName);
-            }
-        }
-
-        private static void CalculateBuyOperations(Dictionary<string, CalculateIncomeTaxesForTheFirstTime> response, Movement.EquitMovement movement)
+        private static void CalculateBuyOperations(Dictionary<string, CalculateIncomeTaxesForTheFirstTime> response, Movement.EquitMovement movement,
+            IEnumerable<Movement.EquitMovement> movements)
         {
             if (response.ContainsKey(movement.TickerSymbol))
             {
@@ -97,7 +111,8 @@ namespace stocks_core.Business
                     movement.TickerSymbol,
                     movement.CorporationName,
                     movement.ReferenceDate.ToString("MM-yyyy"),
-                    averageTradedPrice
+                    averageTradedPrice,
+                    dayTraded: TickerDayTraded(movements, movement.TickerSymbol)
                 );
 
                 response.Add(movement.TickerSymbol, ticker);
@@ -133,6 +148,7 @@ namespace stocks_core.Business
                     movement.CorporationName,
                     movement.ReferenceDate.ToString("MM-yyyy"),
                     averageTradedPrice: 0,
+                    dayTraded: TickerDayTraded(movements, movement.TickerSymbol),
                     tickerBoughtBeforeB3DateRange: true
                 ));
 

@@ -4,7 +4,6 @@ using stocks_core.Business;
 using stocks_core.Constants;
 using stocks_core.DTOs.B3;
 using stocks_core.Response;
-using stocks_infrastructure.Enums;
 
 namespace stocks_core.Calculators.Assets
 {
@@ -48,29 +47,32 @@ namespace stocks_core.Calculators.Assets
 
         public void CalculateIncomeTaxesForAllMonths(List<AssetIncomeTaxes> response, IEnumerable<Movement.EquitMovement> movements)
         {
-            Dictionary<string, CalculateIncomeTaxesForTheFirstTime> tickersMovementsDetails =
+            Dictionary<string, CalculateIncomeTaxesForTheFirstTime> tickersMovements =
                 CalculateAverageTradedPrice(movements);
 
             var sells = movements.Where(x => x.MovementType.Equals(B3ServicesConstants.Sell));
-            double totalSold = sells.Sum(stock => stock.OperationValue);
 
+            double totalSold = sells.Sum(stock => stock.OperationValue);
             bool sellsSuperiorThan20000 = totalSold >= IncomeTaxesConstants.LimitForStocksSelling;
 
-            double totalProfit = tickersMovementsDetails.Select(x => x.Value.Profit).Sum();
-            bool dayTraded = InvestorDayTraded(movements);
+            double swingTradeProfit = tickersMovements.Where(x => !x.Value.DayTraded).Select(x => x.Value.Profit).Sum();
+            double dayTradeProfit = tickersMovements.Where(x => x.Value.DayTraded).Select(x => x.Value.Profit).Sum();
 
-            bool paysIncomeTaxes = sellsSuperiorThan20000 && totalProfit > 0 || dayTraded && totalProfit > 0;
+            bool paysIncomeTaxes = (sellsSuperiorThan20000 && swingTradeProfit > 0) || (dayTradeProfit > 0);
 
             AssetIncomeTaxes objectToAddIntoResponse = new();
 
             if (paysIncomeTaxes)
-                objectToAddIntoResponse.TotalTaxes = (double)CalculateIncomeTaxes(totalProfit, dayTraded, IncomeTaxesConstants.IncomeTaxesForStocks);
+                objectToAddIntoResponse.TotalTaxes = (double)CalculateIncomeTaxes(swingTradeProfit, dayTradeProfit, IncomeTaxesConstants.IncomeTaxesForStocks);
 
+            bool dayTraded = tickersMovements.Where(x => x.Value.DayTraded).Any();
             objectToAddIntoResponse.DayTraded = dayTraded;
-            objectToAddIntoResponse.TotalProfitOrLoss = totalProfit;
+
+            // TO-DO: separar o lucro/prejuízo de swing-trade e de day-trade.
+            objectToAddIntoResponse.TotalProfitOrLoss = swingTradeProfit + dayTradeProfit;
             objectToAddIntoResponse.TotalSold = totalSold;
-            objectToAddIntoResponse.TradedAssets = JsonConvert.SerializeObject(DictionaryToList(tickersMovementsDetails));
-            objectToAddIntoResponse.AssetTypeId = Assets.Stocks;
+            objectToAddIntoResponse.TradedAssets = JsonConvert.SerializeObject(DictionaryToList(tickersMovements));
+            objectToAddIntoResponse.AssetTypeId = stocks_infrastructure.Enums.Assets.Stocks;
 
             response.Add(objectToAddIntoResponse);
         }
