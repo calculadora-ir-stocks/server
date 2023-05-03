@@ -29,32 +29,25 @@ namespace stocks_core.Business
             var movements = GetAllMovements(response);
             if (movements.IsNullOrEmpty()) return;
 
-            movements = OrderMovements(movements);
+            OrderMovementsByDateAndMovementType(movements);
 
-            var month = movements[0].ReferenceDate.ToString("MM/yyyy");
-            List<MonthMovement> monthMovements = new();
+            var monthlyMovements = new Dictionary<string, List<Movement.EquitMovement>>();
+            var monthsWithMovements = movements.Select(x => x.ReferenceDate.ToString("MM")).Distinct();
 
-            foreach(var movement in movements)
+            foreach (var month in monthsWithMovements)
             {
-                var currentMovementMonth = movement.ReferenceDate.ToString("MM/yyyy");
-
-                if (currentMovementMonth == month)
-                {
-                    AddMovementsForEachMonth(movement, monthMovements);
-                } else
-                {
-                    month = currentMovementMonth;
-                    AddMovementsForEachMonth(movement, monthMovements);
-                }
+                monthlyMovements.Add(month, movements.Where(x => x.ReferenceDate.ToString("MM") == month).ToList());
             }
 
-            await CalculateEachMonth(monthMovements, calculator, accountId);
+            await CalculateEachMonth(monthlyMovements, calculator, accountId);
         }
 
         private static List<Movement.EquitMovement> GetAllMovements(Movement.Root response)
         {
-            return response.Data.EquitiesPeriods.EquitiesMovements
-                .Where(x => 
+            var movements = response.Data.EquitiesPeriods.EquitiesMovements;
+
+            return movements
+                .Where(x =>
                     x.MovementType.Equals(B3ServicesConstants.Buy) ||
                     x.MovementType.Equals(B3ServicesConstants.Sell) ||
                     x.MovementType.Equals(B3ServicesConstants.Split) ||
@@ -66,60 +59,60 @@ namespace stocks_core.Business
         /// Ordena as operações por ordem crescente através da data - a B3 retorna em ordem decrescente - e
         /// ordena operações de compra antes das operações de venda em operações day trade.
         /// </summary>
-        private static List<Movement.EquitMovement> OrderMovements(IList<Movement.EquitMovement> movements)
+        private static void OrderMovementsByDateAndMovementType(IList<Movement.EquitMovement> movements)
         {
-            return movements.OrderBy(x => x.MovementType).OrderBy(x => x.ReferenceDate).ToList();
+            movements = movements.OrderBy(x => x.MovementType).OrderBy(x => x.ReferenceDate).ToList();
         }
 
-        private async Task CalculateEachMonth(List<MonthMovement> monthMovements, IIncomeTaxesCalculator calculator, Guid accountId)
+        private async Task CalculateEachMonth(Dictionary<string, List<Movement.EquitMovement>> monthlyMovements, IIncomeTaxesCalculator calculator, Guid accountId)
         {
             Dictionary<string, List<AssetIncomeTaxes>> response = new();
 
-            foreach (var monthMovement in monthMovements)
+            foreach (var monthMovement in monthlyMovements)
             {
-                response.Add(monthMovement.Month, new List<AssetIncomeTaxes>());
+                response.Add(monthMovement.Key, new List<AssetIncomeTaxes>());
 
-                var stocks = monthMovement.Movements.Where(x => x.AssetType.Equals(AssetMovementTypes.Stocks));
-                var etfs = monthMovement.Movements.Where(x => x.AssetType.Equals(AssetMovementTypes.ETFs));
-                var fiis = monthMovement.Movements.Where(x => x.AssetType.Equals(AssetMovementTypes.FIIs));
-                var bdrs = monthMovement.Movements.Where(x => x.AssetType.Equals(AssetMovementTypes.BDRs));
-                var gold = monthMovement.Movements.Where(x => x.AssetType.Equals(AssetMovementTypes.Gold));
-                var fundInvestments = monthMovement.Movements.Where(x => x.AssetType.Equals(AssetMovementTypes.FundInvestments));
+                var stocks = monthMovement.Value.Where(x => x.AssetType.Equals(AssetMovementTypes.Stocks));
+                var etfs = monthMovement.Value.Where(x => x.AssetType.Equals(AssetMovementTypes.ETFs));
+                var fiis = monthMovement.Value.Where(x => x.AssetType.Equals(AssetMovementTypes.FIIs));
+                var bdrs = monthMovement.Value.Where(x => x.AssetType.Equals(AssetMovementTypes.BDRs));
+                var gold = monthMovement.Value.Where(x => x.AssetType.Equals(AssetMovementTypes.Gold));
+                var fundInvestments = monthMovement.Value.Where(x => x.AssetType.Equals(AssetMovementTypes.FundInvestments));
 
                 if (stocks.Any())
                 {
                     calculator = new StocksIncomeTaxes();
-                    calculator.CalculateIncomeTaxesForAllMonths(response[monthMovement.Month], stocks);
+                    calculator.CalculateIncomeTaxesForAllMonths(response[monthMovement.Key], monthMovement.Key, stocks);
                 }
 
                 if (etfs.Any())
                 {
                     calculator = new ETFsIncomeTaxes();
-                    calculator.CalculateIncomeTaxesForAllMonths(response[monthMovement.Month], etfs);
+                    calculator.CalculateIncomeTaxesForAllMonths(response[monthMovement.Key], monthMovement.Key, etfs);
                 }
 
                 if (fiis.Any())
                 {
                     calculator = new FIIsIncomeTaxes();
-                    calculator.CalculateIncomeTaxesForAllMonths(response[monthMovement.Month], etfs);
+                    calculator.CalculateIncomeTaxesForAllMonths(response[monthMovement.Key], monthMovement.Key, fiis);
                 }
 
                 if (bdrs.Any())
                 {
                     calculator = new BDRsIncomeTaxes();
-                    calculator.CalculateIncomeTaxesForAllMonths(response[monthMovement.Month], etfs);
+                    calculator.CalculateIncomeTaxesForAllMonths(response[monthMovement.Key], monthMovement.Key, bdrs);
                 }
 
                 if (gold.Any())
                 {
                     calculator = new GoldIncomeTaxes();
-                    calculator.CalculateIncomeTaxesForAllMonths(response[monthMovement.Month], etfs);
+                    calculator.CalculateIncomeTaxesForAllMonths(response[monthMovement.Key], monthMovement.Key, gold);
                 }
 
                 if (fundInvestments.Any())
                 {
                     calculator = new InvestmentsFundsIncomeTaxes();
-                    calculator.CalculateIncomeTaxesForAllMonths(response[monthMovement.Month], etfs);
+                    calculator.CalculateIncomeTaxesForAllMonths(response[monthMovement.Key], monthMovement.Key, fundInvestments);
                 }
             }
 
@@ -163,56 +156,5 @@ namespace stocks_core.Business
             //    await _genericRepositoryIncomeTaxes.AddAsync(incomeTaxes);
             //}
         }
-
-        private static void AddMovementsForEachMonth(Movement.EquitMovement movement, List<MonthMovement> monthMovements)
-        {
-            var monthAlreadyExists = 
-                monthMovements.Where(m => m.Month == movement.ReferenceDate.ToString("MM/yyyy")).FirstOrDefault();
-
-            if (monthAlreadyExists is null)
-            {
-                MonthMovement monthMovement = new(movement.ReferenceDate.ToString("MM/yyyy"));
-
-                monthMovement.Movements.Add(new Movement.EquitMovement(
-                    movement.TickerSymbol,
-                    movement.CorporationName,
-                    movement.AssetType,
-                    movement.MovementType,
-                    movement.OperationValue,
-                    movement.EquitiesQuantity,
-                    movement.UnitPrice,
-                    movement.ReferenceDate)
-                );
-
-                monthMovements.Add(monthMovement);
-            } else
-            {
-                monthAlreadyExists.Movements.Add(new Movement.EquitMovement(
-                    movement.TickerSymbol,
-                    movement.CorporationName,
-                    movement.AssetType,
-                    movement.MovementType,
-                    movement.OperationValue,
-                    movement.EquitiesQuantity,
-                    movement.UnitPrice,
-                    movement.ReferenceDate)
-                );
-            }
-        }
-
-        /// <summary>
-        /// Representa todas as operações em um determinado mês.
-        /// </summary>
-        private class MonthMovement
-        {
-            public MonthMovement(string month)
-            {
-                Month = month;
-            }
-
-            public string Month;
-            public List<Movement.EquitMovement> Movements = new();
-        }
     }
 }
-

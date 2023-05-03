@@ -18,6 +18,6 @@ namespace stocks_core.Calculators.Assets
         /// O método deve ser executado uma única vez quando o usuário registrar-se na plataforma - tendo visto
         /// que o preço médio atual estará atualizado.
         /// </summary>
-        void CalculateIncomeTaxesForAllMonths(List<AssetIncomeTaxes> response, IEnumerable<Movement.EquitMovement> movements);
+        void CalculateIncomeTaxesForAllMonths(List<AssetIncomeTaxes> response, string month, IEnumerable<Movement.EquitMovement> movements);
     }
 }

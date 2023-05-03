@@ -173,26 +173,26 @@ public class IncomeTaxesService : IIncomeTaxesService
                 TickerSymbol = "PETR4",
                 CorporationName = "Petróleo Brasileiro S.A.",
                 MovementType = "Compra",
-                OperationValue = 10,
+                OperationValue = 20000,
                 EquitiesQuantity = 1,
                 ReferenceDate = new DateTime(2023, 01, 16),
-                UnitPrice = 10
+                UnitPrice = 20000
             });
             response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
             {
                 AssetType = "Ações",
                 TickerSymbol = "PETR4",
                 CorporationName = "Petróleo Brasileiro S.A.",
-                MovementType = "Compra",
-                OperationValue = 11,
+                MovementType = "Venda",
+                OperationValue = 21000,
                 EquitiesQuantity = 1,
                 ReferenceDate = new DateTime(2023, 01, 17),
-                UnitPrice = 11
+                UnitPrice = 21000
             });
             response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
             {
                 AssetType = "Ações",
-                TickerSymbol = "PETR4",
+                TickerSymbol = "VALE3",
                 CorporationName = "Petróleo Brasileiro S.A.",
                 MovementType = "Compra",
                 OperationValue = 12,
@@ -203,9 +203,9 @@ public class IncomeTaxesService : IIncomeTaxesService
             response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
             {
                 AssetType = "Ações",
-                TickerSymbol = "PETR4",
+                TickerSymbol = "VALE3",
                 CorporationName = "Petróleo Brasileiro S.A.",
-                MovementType = "Compra",
+                MovementType = "Venda",
                 OperationValue = 10,
                 EquitiesQuantity = 1,
                 ReferenceDate = new DateTime(2023, 02, 17),

@@ -59,7 +59,7 @@ namespace stocks_core.Business
 
             decimal totalTaxes = swingTradeTaxes + dayTradeTaxes;
 
-            return (aliquot / 100m) * totalTaxes;
+            return totalTaxes;
         }
 
         public static IEnumerable<(string, string)> DictionaryToList(Dictionary<string, CalculateIncomeTaxesForTheFirstTime> total)
@@ -110,9 +110,9 @@ namespace stocks_core.Business
                     movement.EquitiesQuantity,
                     movement.TickerSymbol,
                     movement.CorporationName,
-                    movement.ReferenceDate.ToString("MM-yyyy"),
                     averageTradedPrice,
-                    dayTraded: TickerDayTraded(movements, movement.TickerSymbol)
+                    dayTraded: TickerDayTraded(movements, movement.TickerSymbol),
+                    month: movement.ReferenceDate.ToString("MM")
                 );
 
                 response.Add(movement.TickerSymbol, ticker);
@@ -146,9 +146,9 @@ namespace stocks_core.Business
                     movement.EquitiesQuantity,
                     movement.TickerSymbol,
                     movement.CorporationName,
-                    movement.ReferenceDate.ToString("MM-yyyy"),
                     averageTradedPrice: 0,
                     dayTraded: TickerDayTraded(movements, movement.TickerSymbol),
+                    month: movement.ReferenceDate.ToString("MM"),
                     tickerBoughtBeforeB3DateRange: true
                 ));
 

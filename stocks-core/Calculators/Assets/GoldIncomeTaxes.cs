@@ -14,15 +14,15 @@ namespace stocks_core.Calculators.Assets
             throw new NotImplementedException();
         }
 
-        public void CalculateIncomeTaxesForAllMonths(List<AssetIncomeTaxes> response, IEnumerable<Movement.EquitMovement> movements)
+        public void CalculateIncomeTaxesForAllMonths(List<AssetIncomeTaxes> response, string month, IEnumerable<Movement.EquitMovement> movements)
         {
             Dictionary<string, CalculateIncomeTaxesForTheFirstTime> tickersMovements =
                 CalculateAverageTradedPrice(movements);
 
-            var sells = movements.Where(x => x.MovementType.Equals(B3ServicesConstants.Sell));
+            var sells = movements.Where(x => x.MovementType.Equals(B3ServicesConstants.Sell) && x.ReferenceDate.ToString("MM") == month);
 
-            double swingTradeProfit = tickersMovements.Where(x => !x.Value.DayTraded).Select(x => x.Value.Profit).Sum();
-            double dayTradeProfit = tickersMovements.Where(x => x.Value.DayTraded).Select(x => x.Value.Profit).Sum();
+            double swingTradeProfit = tickersMovements.Where(x => !x.Value.DayTraded && x.Value.Month == month).Select(x => x.Value.Profit).Sum();
+            double dayTradeProfit = tickersMovements.Where(x => x.Value.DayTraded && x.Value.Month == month).Select(x => x.Value.Profit).Sum();
 
             bool paysIncomeTaxes = sells.Any() && (swingTradeProfit > 0 || dayTradeProfit > 0);
 
@@ -31,7 +31,7 @@ namespace stocks_core.Calculators.Assets
             if (paysIncomeTaxes)
                 objectToAddIntoResponse.TotalTaxes = (double)CalculateIncomeTaxes(swingTradeProfit, dayTradeProfit, IncomeTaxesConstants.IncomeTaxesForGold);
 
-            bool dayTraded = tickersMovements.Where(x => x.Value.DayTraded).Any();
+            bool dayTraded = tickersMovements.Where(x => x.Value.DayTraded && x.Value.Month == month).Any();
             objectToAddIntoResponse.DayTraded = dayTraded;
 
             double totalSold = sells.Sum(bdr => bdr.OperationValue);
