@@ -54,7 +54,7 @@ namespace stocks_core.Business
 
             if (dayTradeProfit > 0)
             {
-                dayTradeTaxes = (aliquot / 100m) * (decimal)swingTradeProfit;
+                dayTradeTaxes = (IncomeTaxesConstants.IncomeTaxesForDayTrade / 100m) * (decimal)dayTradeProfit;
             }
 
             decimal totalTaxes = swingTradeTaxes + dayTradeTaxes;

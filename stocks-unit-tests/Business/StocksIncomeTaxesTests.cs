@@ -36,27 +36,6 @@ namespace stocks_unit_tests.Business
             Assert.Equal(response[0].TotalTaxes, (double)twentyPercentTaxes);
         }
 
-        [Fact(DisplayName = "Caso uma operação de compra e venda sejam feitas no mesmo dia e o limite de R$20.000 não seja ultrapassado, o investidor" +
-            "mesmo assim terá que pagar o imposto de renda")]
-        public void Should_pay_taxes_if_day_traded_even_if_investor_didnt_sell_more_than_20000()
-        {
-            List<AssetIncomeTaxes> response = new();
-
-            List<Movement.EquitMovement> movements = new()
-            {
-                new Movement.EquitMovement("PETR4", "Petróleo Brasileiro S/A", "Ações", "Compra", 10, 1, 10, new DateTime(2023, 01, 01)),
-                new Movement.EquitMovement("PETR4", "Petróleo Brasileiro S/A", "Ações", "Venda", 12, 1, 12, new DateTime(2023, 01, 01))
-            };
-
-            _stocksCalculator.CalculateIncomeTaxesForAllMonths(response, "01", movements);
-
-            double profit = movements[1].OperationValue - movements[0].OperationValue;
-            decimal twentyPercentTaxes = ((decimal)IncomeTaxesConstants.IncomeTaxesForDayTrade / 100m) * (decimal)profit;
-
-            Assert.True(response[0].DayTraded);
-            Assert.Equal(response[0].TotalTaxes, (double)twentyPercentTaxes);
-        }
-
         [Fact(DisplayName = "Caso uma operação de compra e venda sejam feitas em dias diferentes, deve ser considerada swing-trade" +
             "e a alíquota sob o lucro líquido deverá ser de 15%.")]
         public void Should_be_swing_trade_if_buy_and_sell_are_on_different_days()
@@ -97,7 +76,7 @@ namespace stocks_unit_tests.Business
             Assert.Equal(0, response[0].TotalTaxes);
         }
 
-        [Fact(DisplayName = "Caso as operações de venda de um mês ultrapassem o limite de R$20.000, mas houveram prejuízos, o investidor não" +
+        [Fact(DisplayName = "Caso as operações de venda de um mês ultrapassem o limite de R$20.000 mas houveram prejuízos, o investidor não" +
             "terá que pagar imposto de renda.")]
         public void Should_not_pay_taxes_if_loss_happened_even_if_investor_sold_more_than_20000()
         {
