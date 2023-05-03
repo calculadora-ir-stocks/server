@@ -30,7 +30,7 @@ namespace stocks_unit_tests.Business
             _stocksCalculator.CalculateIncomeTaxesForAllMonths(response, "01", movements);
 
             double profit = movements[1].OperationValue - movements[0].OperationValue;
-            decimal twentyPercentTaxes = ((decimal)IncomeTaxesConstants.IncomeTaxesForDayTrade / 100m) * (decimal) profit;
+            decimal twentyPercentTaxes = (IncomeTaxesConstants.IncomeTaxesForDayTrade / 100m) * (decimal) profit;
 
             Assert.True(response[0].DayTraded);
             Assert.Equal(response[0].TotalTaxes, (double)twentyPercentTaxes);
@@ -94,7 +94,7 @@ namespace stocks_unit_tests.Business
 
             Assert.Equal(0, response[0].TotalTaxes);
             // Prejuízo de R$1.000
-            Assert.Equal(-1000, response[0].TotalProfitOrLoss);
+            Assert.Equal(-1000, response[0].SwingTradeProfit);
         }
 
         [Fact(DisplayName = "Caso o investidor tenha feito day-trade, mas houveram prejuízos, o investidor não terá que pagar imposto de renda.")]
@@ -112,7 +112,7 @@ namespace stocks_unit_tests.Business
 
             Assert.Equal(0, response[0].TotalTaxes);
             // Prejuízo de R$1.000
-            Assert.Equal(-1000, response[0].TotalProfitOrLoss);
+            Assert.Equal(-1000, response[0].SwingTradeProfit);
         }
 
         [Fact(DisplayName = "Caso o investidor tenha vendido duas ações diferentes em um mês e tenha ultrapassado o limite de R$20.000," +

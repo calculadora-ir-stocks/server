@@ -28,7 +28,7 @@ namespace stocks.Models
         public string Password { get; protected set; }
         public string CPF { get; protected set; }
         public ICollection<AverageTradedPrice>? AverageTradedPrices { get; protected set; }
-        public ICollection<IncomeTaxes>? IncomeTaxes { get; protected set; }
+        public ICollection<IncomeTaxes>? IncomeTaxes { get; set; }
         public Plan Plan { get; protected set; } = Plan.Default;
 
         public void HashPassword(string password)

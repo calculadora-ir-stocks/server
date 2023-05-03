@@ -13,9 +13,13 @@ namespace stocks_core.Response
         /// </summary>
         public double TotalSold { get; set; } = 0;
         /// <summary>
-        /// O total de lucro ou prejuízo de um determinado ativo.
+        /// O total de lucro ou prejuízo de um determinado ativo movimentado por swing trade.
         /// </summary>
-        public double TotalProfitOrLoss { get; set; } = 0;
+        public double SwingTradeProfit { get; set; } = 0;
+        /// <summary>
+        /// O total de lucro ou prejuízo de um determinado ativo movimentado por day trade.
+        /// </summary>
+        public double DayTradeProfit { get; set; } = 0;
         public bool DayTraded { get; set; } = false;
         /// <summary>
         /// Uma lista em formato JSON que representa os ativos negociados.

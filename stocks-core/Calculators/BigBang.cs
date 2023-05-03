@@ -6,6 +6,7 @@ using stocks_core.Constants;
 using stocks_core.DTOs.B3;
 using stocks_core.Response;
 using stocks_infrastructure.Models;
+using stocks_infrastructure.Repositories.IncomeTaxes;
 
 namespace stocks_core.Business
 {
@@ -15,13 +16,13 @@ namespace stocks_core.Business
     /// </summary>
     public class BigBang
     {
-        private readonly IGenericRepository<IncomeTaxes> _genericRepositoryIncomeTaxes;
-        private readonly IGenericRepository<Account> _genericRepositoryAccount;
+        private readonly IIncomeTaxesRepository incomeTaxesRepository;
+        private readonly IGenericRepository<Account> genericRepositoryAccount;
 
-        public BigBang(IGenericRepository<IncomeTaxes> genericRepositoryIncomeTaxes, IGenericRepository<Account> genericRepositoryAccount)
+        public BigBang(IIncomeTaxesRepository incomeTaxesRepository, IGenericRepository<Account> genericRepositoryAccount)
         {
-            _genericRepositoryIncomeTaxes = genericRepositoryIncomeTaxes;
-            _genericRepositoryAccount = genericRepositoryAccount;
+            this.incomeTaxesRepository = incomeTaxesRepository;
+            this.genericRepositoryAccount = genericRepositoryAccount;
         }
 
         public async Task Calculate(Movement.Root response, IIncomeTaxesCalculator calculator, Guid accountId)
@@ -39,7 +40,7 @@ namespace stocks_core.Business
                 monthlyMovements.Add(month, movements.Where(x => x.ReferenceDate.ToString("MM") == month).ToList());
             }
 
-            await CalculateEachMonth(monthlyMovements, calculator, accountId);
+            await CalculateTaxesForEachMonth(monthlyMovements, calculator, accountId);
         }
 
         private static List<Movement.EquitMovement> GetAllMovements(Movement.Root response)
@@ -64,7 +65,7 @@ namespace stocks_core.Business
             movements = movements.OrderBy(x => x.MovementType).OrderBy(x => x.ReferenceDate).ToList();
         }
 
-        private async Task CalculateEachMonth(Dictionary<string, List<Movement.EquitMovement>> monthlyMovements, IIncomeTaxesCalculator calculator, Guid accountId)
+        private async Task CalculateTaxesForEachMonth(Dictionary<string, List<Movement.EquitMovement>> monthlyMovements, IIncomeTaxesCalculator calculator, Guid accountId)
         {
             Dictionary<string, List<AssetIncomeTaxes>> response = new();
 
@@ -121,40 +122,15 @@ namespace stocks_core.Business
 
         private async Task SaveIntoDatabase(Dictionary<string, List<AssetIncomeTaxes>> response, Guid accountId)
         {
-            Account account = _genericRepositoryAccount.GetById(accountId);
+            Account account = genericRepositoryAccount.GetById(accountId);
 
-            IncomeTaxes incomeTaxes = new
-            (
-                    month: "a",
-                    totalTaxes: 2,
-                    totalSold: 2,
-                    totalProfit: 2,
-                    dayTraded: false,
-                    tradedAssets: "json",
-                    compesatedLoss: false,
-                    account: account,
-                    assetId: 1
-            );
+            // The loneliness of building a software company by my own is making me sad. If you're reading this, wanna partner up?
+            List<IncomeTaxes> incomeTaxes = new();
 
-            await _genericRepositoryIncomeTaxes.AddAsync(incomeTaxes);
-
-            //foreach (var item in response.Values)
-            //{
-            //    IncomeTaxes incomeTaxes = new
-            //    (
-            //        month: "a",
-            //        totalTaxes: item.TotalTaxes,
-            //        totalSold: item.TotalSold,
-            //        totalProfit: item.TotalProfit,
-            //        dayTraded: item.DayTraded,
-            //        tradedAssets: item.TradedAssets!,
-            //        compesatedLoss: item.TotalProfit < 0 ? false : null,
-            //        account: account,
-            //        accountId: accountId
-            //    );
-
-            //    await _genericRepositoryIncomeTaxes.AddAsync(incomeTaxes);
-            //}
+            foreach(var movement in response)
+            {
+                // TO-DO: change Dictionary<string, List<AssetIncomeTaxes>> response = new(); to Dictionary<string, AssetIncomeTaxes> response = new();
+            }
         }
     }
 }

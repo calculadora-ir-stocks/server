@@ -37,7 +37,8 @@ namespace stocks_core.Calculators.Assets
             double totalSold = sells.Sum(bdr => bdr.OperationValue);
             objectToAddIntoResponse.TotalSold = totalSold;
 
-            objectToAddIntoResponse.TotalProfitOrLoss = swingTradeProfit + dayTradeProfit;
+            objectToAddIntoResponse.SwingTradeProfit = swingTradeProfit;
+            objectToAddIntoResponse.DayTradeProfit = dayTradeProfit;
             objectToAddIntoResponse.TradedAssets = JsonConvert.SerializeObject(DictionaryToList(tickersMovements));
             objectToAddIntoResponse.AssetTypeId = stocks_infrastructure.Enums.Assets.BDRs;
 

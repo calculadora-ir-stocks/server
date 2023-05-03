@@ -10,15 +10,16 @@ namespace stocks_infrastructure.Models
     public class IncomeTaxes
     {
         public IncomeTaxes(string month, double totalTaxes, double totalSold, double totalProfit, bool dayTraded,
-            string tradedAssets, bool? compesatedLoss, Account account, int assetId)
+            string tradedAssets, bool? compesatedSwingTradeLoss, bool? compesatedDayTradeLoss, Account account, int assetId)
         {
             Month = month;
             TotalTaxes = totalTaxes;
             TotalSold = totalSold;
-            TotalProfit = totalProfit;
+            SwingTradeProfit = totalProfit;
             DayTraded = dayTraded;
             TradedAssets = tradedAssets;
-            CompesatedLoss = compesatedLoss;
+            CompesatedSwingTradeLoss = compesatedSwingTradeLoss;
+            CompesatedDayTradeLoss = compesatedDayTradeLoss;
             Account = account;
             AssetId = assetId;
         }
@@ -33,19 +34,24 @@ namespace stocks_infrastructure.Models
         public string Month { get; set; }
         public double TotalTaxes { get; set; }
         public double TotalSold { get; set; }
-        public double TotalProfit { get; set; }
+        public double SwingTradeProfit { get; set; }
+        public double DayTradeProfit { get; set; }
         public bool DayTraded { get; set; }
         /// <summary>
         /// Uma lista em formato JSON que representa os ativos negociados.
         /// </summary>
         public string TradedAssets { get; set; }
         /// <summary>
-        /// Define se o prejuízo já foi compensado em algum pagamento. É NULL caso
+        /// Define se o prejuízo de swing trade já foi compensado em algum pagamento. É NULL caso
         /// o investidor não tenha tido prejuízo no mês.
-        public bool? CompesatedLoss { get; set; }
+        public bool? CompesatedSwingTradeLoss { get; set; }
+        /// <summary>
+        /// Define se o prejuízo de swing trade já foi compensado em algum pagamento. É NULL caso
+        /// o investidor não tenha tido prejuízo no mês.
+        public bool? CompesatedDayTradeLoss { get; set; }
         public Account Account { get; set; }
         /// <summary>
-        /// Id do ativo que foi negociado no mês.
+        /// Id do tipo de ativo que foi negociado no mês.
         /// </summary>
         public int AssetId { get; set; }
     }

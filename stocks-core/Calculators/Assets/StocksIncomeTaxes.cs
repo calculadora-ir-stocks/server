@@ -68,8 +68,8 @@ namespace stocks_core.Calculators.Assets
             bool dayTraded = tickersMovements.Where(x => x.Value.DayTraded && x.Value.Month == month).Any();
             objectToAddIntoResponse.DayTraded = dayTraded;
 
-            // TO-DO: separar o lucro/prejuízo de swing-trade e de day-trade.
-            objectToAddIntoResponse.TotalProfitOrLoss = swingTradeProfit + dayTradeProfit;
+            objectToAddIntoResponse.SwingTradeProfit = swingTradeProfit;
+            objectToAddIntoResponse.DayTradeProfit = dayTradeProfit;
             objectToAddIntoResponse.TotalSold = totalSold;
             objectToAddIntoResponse.TradedAssets = JsonConvert.SerializeObject(DictionaryToList(tickersMovements));
             objectToAddIntoResponse.AssetTypeId = stocks_infrastructure.Enums.Assets.Stocks;

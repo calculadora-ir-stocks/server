@@ -9,40 +9,45 @@ using stocks_core.Constants;
 using stocks_core.DTOs.B3;
 using stocks_core.Response;
 using stocks_core.Services.AverageTradedPrice;
-using stocks_infrastructure.Models;
 using stocks_infrastructure.Repositories.AverageTradedPrice;
+using stocks_infrastructure.Repositories.IncomeTaxes;
 
 namespace stocks.Services.IncomeTaxes;
 
 public class IncomeTaxesService : IIncomeTaxesService
 {
+    private IIncomeTaxesCalculator incomeTaxCalculator;
 
-    private readonly IAverageTradedPriceService _averageTradedPriceService;
-    private IIncomeTaxesCalculator _incomeTaxCalculator;
+    private readonly IAverageTradedPriceService averageTradedPriceService;
 
-    private readonly IGenericRepository<Account> _genericRepositoryAccount;
-    private readonly IGenericRepository<stocks_infrastructure.Models.IncomeTaxes> _genericRepositoryIncomeTaxes;
-    private readonly IAverageTradedPriceRepostory _averageTradedPriceRepository;
+    private readonly IGenericRepository<Account> genericRepositoryAccount;
+    private readonly IIncomeTaxesRepository incomeTaxesRepository;
+    private readonly IAverageTradedPriceRepostory averageTradedPriceRepository;
 
-    private readonly IB3Client _client;
+    private readonly IB3Client client;
 
-    private readonly ILogger<IncomeTaxesService> _logger;
+    private readonly ILogger<IncomeTaxesService> logger;
 
-    public IncomeTaxesService(IAverageTradedPriceService averageTradedPriceService,
-        IIncomeTaxesCalculator calculator,
+    public IncomeTaxesService(IIncomeTaxesCalculator incomeTaxCalculator,
+        IAverageTradedPriceService averageTradedPriceService,        
         IGenericRepository<Account> genericRepositoryAccount,
-        IGenericRepository<stocks_infrastructure.Models.IncomeTaxes> genericRepositoryIncomeTaxes,
+        IIncomeTaxesRepository incomeTaxesRepository,
         IAverageTradedPriceRepostory averageTradedPriceRepository,
-        IB3Client b3Client,
+        IB3Client client,
         ILogger<IncomeTaxesService> logger
         )
     {
-        _averageTradedPriceService = averageTradedPriceService;
-        _genericRepositoryAccount = genericRepositoryAccount;
-        _averageTradedPriceRepository = averageTradedPriceRepository;
-        _client = b3Client;
-        _incomeTaxCalculator = calculator;
-        _logger = logger;
+        this.incomeTaxCalculator = incomeTaxCalculator;
+
+        this.averageTradedPriceService = averageTradedPriceService;
+
+        this.genericRepositoryAccount = genericRepositoryAccount;
+        this.incomeTaxesRepository = incomeTaxesRepository;
+        this.averageTradedPriceRepository = averageTradedPriceRepository;
+
+        this.client = client;
+
+        this.logger = logger;
     }
 
     #region Calcula o imposto de renda a ser pago no mês atual
@@ -116,23 +121,23 @@ public class IncomeTaxesService : IIncomeTaxesService
         var gold = movements.Where(x => x.AssetType.Equals(AssetMovementTypes.Gold));
         var fundInvestments = movements.Where(x => x.AssetType.Equals(AssetMovementTypes.FundInvestments));
 
-        _incomeTaxCalculator = new StocksIncomeTaxes();
-        _incomeTaxCalculator.CalculateCurrentMonthIncomeTaxes(response, stocks, accountId);
+        incomeTaxCalculator = new StocksIncomeTaxes();
+        incomeTaxCalculator.CalculateCurrentMonthIncomeTaxes(response, stocks, accountId);
 
-        _incomeTaxCalculator = new ETFsIncomeTaxes();
-        _incomeTaxCalculator.CalculateCurrentMonthIncomeTaxes(response, etfs, accountId);
+        incomeTaxCalculator = new ETFsIncomeTaxes();
+        incomeTaxCalculator.CalculateCurrentMonthIncomeTaxes(response, etfs, accountId);
 
         // _incomeTaxCalculator = new FIIsIncomeTaxes();
-        _incomeTaxCalculator.CalculateCurrentMonthIncomeTaxes(response, fiis, accountId);
+        incomeTaxCalculator.CalculateCurrentMonthIncomeTaxes(response, fiis, accountId);
 
         // _incomeTaxCalculator = new BDRsIncomeTaxes();
-        _incomeTaxCalculator.CalculateCurrentMonthIncomeTaxes(response, bdrs, accountId);
+        incomeTaxCalculator.CalculateCurrentMonthIncomeTaxes(response, bdrs, accountId);
 
         // _incomeTaxCalculator = new GoldIncomeTaxes();
-        _incomeTaxCalculator.CalculateCurrentMonthIncomeTaxes(response, gold, accountId);
+        incomeTaxCalculator.CalculateCurrentMonthIncomeTaxes(response, gold, accountId);
 
         // _incomeTaxCalculator = new FundInvestmentsIncomeTaxes();
-        _incomeTaxCalculator.CalculateCurrentMonthIncomeTaxes(response, fundInvestments, accountId);
+        incomeTaxCalculator.CalculateCurrentMonthIncomeTaxes(response, fundInvestments, accountId);
     }
 
     private static bool InvestorSoldAnyAsset(Movement.Root httpClientResponse)
@@ -212,20 +217,21 @@ public class IncomeTaxesService : IIncomeTaxesService
                 UnitPrice = 10
             });
 
-            BigBang bigBang = new(_genericRepositoryIncomeTaxes, _genericRepositoryAccount);
-            await bigBang.Calculate(response, _incomeTaxCalculator, accountId);
+            BigBang bigBang = new(incomeTaxesRepository, genericRepositoryAccount);
+            await bigBang.Calculate(response, incomeTaxCalculator, accountId);
         }
         catch (Exception e)
         {
-            _logger.LogError("Uma exceção ocorreu ao executar o método {1}, classe {2}. Exceção: {3}",
+            logger.LogError("Uma exceção ocorreu ao executar o método {1}, classe {2}. Exceção: {3}",
                 nameof(CalculateIncomeTaxesForEveryMonth), nameof(AverageTradedPriceService), e.Message);
             throw;
         }
-
-        bool AccountAlreadyHasAverageTradedPrice(Guid accountId)
-        {
-            return _averageTradedPriceRepository.AccountAlreadyHasAverageTradedPrice(accountId);
-        }
     }
+
+    private bool AccountAlreadyHasAverageTradedPrice(Guid accountId)
+    {
+        return averageTradedPriceRepository.AccountAlreadyHasAverageTradedPrice(accountId);
+    }
+
     #endregion
 }

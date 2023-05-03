@@ -8,9 +8,9 @@ namespace stocks.Database
     public class StocksContext : DbContext
     {
         public DbSet<Account> Accounts { get; set; } = null!;
+        public DbSet<Asset> Assets { get; } = null!;
         public DbSet<AverageTradedPrice> AverageTradedPrices { get; set; } = null!;
         public DbSet<IncomeTaxes> IncomeTaxes { get; set; } = null!;
-        public DbSet<Asset> Assets { get; } = null!;
 
         public StocksContext()
         {

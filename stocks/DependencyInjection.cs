@@ -6,7 +6,6 @@ using Microsoft.OpenApi.Models;
 using stocks.Clients.B3;
 using stocks.Commons.Jwt;
 using stocks.Database;
-using stocks.DTOs.Auth;
 using stocks.Notification;
 using stocks.Repositories;
 using stocks.Repositories.Account;
@@ -17,6 +16,7 @@ using stocks_common;
 using stocks_core.Calculators.Assets;
 using stocks_core.Services.AverageTradedPrice;
 using stocks_infrastructure.Repositories.AverageTradedPrice;
+using stocks_infrastructure.Repositories.IncomeTaxes;
 using System.Reflection;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
@@ -38,8 +38,12 @@ namespace stocks
             services.AddScoped<NotificationContext>();
 
             // Classes responsáveis pelos algoritmos para cálculo de imposto de renda
-            services.AddScoped<IIncomeTaxesCalculator, StocksIncomeTaxes>();
+            services.AddScoped<IIncomeTaxesCalculator, BDRsIncomeTaxes>();
             services.AddScoped<IIncomeTaxesCalculator, ETFsIncomeTaxes>();
+            services.AddScoped<IIncomeTaxesCalculator, FIIsIncomeTaxes>();
+            services.AddScoped<IIncomeTaxesCalculator, GoldIncomeTaxes>();
+            services.AddScoped<IIncomeTaxesCalculator, InvestmentsFundsIncomeTaxes>();
+            services.AddScoped<IIncomeTaxesCalculator, StocksIncomeTaxes>();
 
             services.AddTransient<IJwtCommon, JwtCommon>();
 
@@ -80,6 +84,7 @@ namespace stocks
             services.AddTransient(typeof(IGenericRepository<>), typeof(GenericRepository<>));
             services.AddTransient<IAccountRepository, AccountRepository>();
             services.AddTransient<IAverageTradedPriceRepostory, AverageTradedPriceRepository>();
+            services.AddTransient<IIncomeTaxesRepository, IncomeTaxesRepository>();
         }
 
         public static void AddJwtAuthentications(this IServiceCollection services, WebApplicationBuilder builder)
