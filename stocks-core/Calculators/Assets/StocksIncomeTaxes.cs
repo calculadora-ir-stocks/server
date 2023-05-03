@@ -45,36 +45,34 @@ namespace stocks_core.Calculators.Assets
             }
         }
 
-        public void CalculateIncomeTaxesForAllMonths(List<AssetIncomeTaxes> response, string month, IEnumerable<Movement.EquitMovement> movements)
+        public void CalculateIncomeTaxesForAllMonths(AssetIncomeTaxes response, string month, IEnumerable<Movement.EquitMovement> movements)
         {
+            movements = movements.Where(x => x.ReferenceDate.ToString("MM") == month).ToList();
+
             Dictionary<string, CalculateIncomeTaxesForTheFirstTime> tickersMovements =
                 CalculateAverageTradedPrice(movements);
 
-            var sells = movements.Where(x => x.MovementType.Equals(B3ServicesConstants.Sell) && x.ReferenceDate.ToString("MM") == month);
+            var sells = movements.Where(x => x.MovementType.Equals(B3ServicesConstants.Sell));
 
             double totalSold = sells.Sum(stock => stock.OperationValue);
             bool sellsSuperiorThan20000 = totalSold >= IncomeTaxesConstants.LimitForStocksSelling;
 
-            double swingTradeProfit = tickersMovements.Where(x => !x.Value.DayTraded && x.Value.Month == month).Select(x => x.Value.Profit).Sum();
-            double dayTradeProfit = tickersMovements.Where(x => x.Value.DayTraded && x.Value.Month == month).Select(x => x.Value.Profit).Sum();
+            double swingTradeProfit = tickersMovements.Where(x => !x.Value.DayTraded).Select(x => x.Value.Profit).Sum();
+            double dayTradeProfit = tickersMovements.Where(x => x.Value.DayTraded).Select(x => x.Value.Profit).Sum();
 
             bool paysIncomeTaxes = (sellsSuperiorThan20000 && swingTradeProfit > 0) || (dayTradeProfit > 0);
 
-            AssetIncomeTaxes objectToAddIntoResponse = new();
-
             if (paysIncomeTaxes)
-                objectToAddIntoResponse.TotalTaxes = (double)CalculateIncomeTaxes(swingTradeProfit, dayTradeProfit, IncomeTaxesConstants.IncomeTaxesForStocks);
+                response.Taxes = (double)CalculateIncomeTaxes(swingTradeProfit, dayTradeProfit, IncomeTaxesConstants.IncomeTaxesForStocks);
 
-            bool dayTraded = tickersMovements.Where(x => x.Value.DayTraded && x.Value.Month == month).Any();
-            objectToAddIntoResponse.DayTraded = dayTraded;
+            bool dayTraded = tickersMovements.Where(x => x.Value.DayTraded).Any();
+            response.DayTraded = dayTraded;
 
-            objectToAddIntoResponse.SwingTradeProfit = swingTradeProfit;
-            objectToAddIntoResponse.DayTradeProfit = dayTradeProfit;
-            objectToAddIntoResponse.TotalSold = totalSold;
-            objectToAddIntoResponse.TradedAssets = JsonConvert.SerializeObject(DictionaryToList(tickersMovements));
-            objectToAddIntoResponse.AssetTypeId = stocks_infrastructure.Enums.Assets.Stocks;
-
-            response.Add(objectToAddIntoResponse);
+            response.SwingTradeProfit = swingTradeProfit;
+            response.DayTradeProfit = dayTradeProfit;
+            response.TotalSold = totalSold;
+            response.TradedAssets = JsonConvert.SerializeObject(DictionaryToList(tickersMovements));
+            response.AssetTypeId = stocks_infrastructure.Enums.Assets.Stocks;
         }
     }
 }

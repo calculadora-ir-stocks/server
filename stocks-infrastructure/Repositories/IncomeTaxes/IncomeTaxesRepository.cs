@@ -11,6 +11,15 @@ namespace stocks_infrastructure.Repositories.IncomeTaxes
             this.context = context;
         }
 
+        public async Task AddAllAsync(List<Models.IncomeTaxes> incomeTaxes)
+        {
+            context.AddRange(incomeTaxes);
+
+            context.AttachRange(incomeTaxes.Select(x => x.Account));
+
+            await context.SaveChangesAsync();
+        }
+
         public async Task AddAsync(Models.IncomeTaxes incomeTaxes)
         {
             context.Add(incomeTaxes);

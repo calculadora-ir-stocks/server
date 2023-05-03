@@ -15,7 +15,7 @@ namespace stocks_core.Calculators.Assets
             throw new NotImplementedException();
         }
 
-        public void CalculateIncomeTaxesForAllMonths(List<AssetIncomeTaxes> response, string month, IEnumerable<Movement.EquitMovement> movements)
+        public void CalculateIncomeTaxesForAllMonths(AssetIncomeTaxes response, string month, IEnumerable<Movement.EquitMovement> movements)
         {
             Dictionary<string, CalculateIncomeTaxesForTheFirstTime> tickersMovements =
                 CalculateAverageTradedPrice(movements);
@@ -27,23 +27,19 @@ namespace stocks_core.Calculators.Assets
 
             bool paysIncomeTaxes = sells.Any() && (swingTradeProfit > 0 || dayTradeProfit > 0);
 
-            AssetIncomeTaxes objectToAddIntoResponse = new();
-
             if (paysIncomeTaxes)
-                objectToAddIntoResponse.TotalTaxes = (double)CalculateIncomeTaxes(swingTradeProfit, dayTradeProfit, IncomeTaxesConstants.IncomeTaxesForETFs);
+                response.Taxes = (double)CalculateIncomeTaxes(swingTradeProfit, dayTradeProfit, IncomeTaxesConstants.IncomeTaxesForETFs);
 
             bool dayTraded = tickersMovements.Where(x => x.Value.DayTraded && x.Value.Month == month).Any();
-            objectToAddIntoResponse.DayTraded = dayTraded;
+            response.DayTraded = dayTraded;
 
             double totalSold = sells.Sum(etf => etf.OperationValue);
-            objectToAddIntoResponse.TotalSold = totalSold;
+            response.TotalSold = totalSold;
 
-            objectToAddIntoResponse.SwingTradeProfit = swingTradeProfit;
-            objectToAddIntoResponse.DayTradeProfit = dayTradeProfit;
-            objectToAddIntoResponse.TradedAssets = JsonConvert.SerializeObject(DictionaryToList(tickersMovements));
-            objectToAddIntoResponse.AssetTypeId = stocks_infrastructure.Enums.Assets.ETFs;
-
-            response.Add(objectToAddIntoResponse);
+            response.SwingTradeProfit = swingTradeProfit;
+            response.DayTradeProfit = dayTradeProfit;
+            response.TradedAssets = JsonConvert.SerializeObject(DictionaryToList(tickersMovements));
+            response.AssetTypeId = stocks_infrastructure.Enums.Assets.ETFs;
         }
     }
 }

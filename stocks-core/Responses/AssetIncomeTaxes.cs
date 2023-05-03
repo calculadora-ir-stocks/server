@@ -7,7 +7,7 @@ namespace stocks_core.Response
         /// <summary>
         /// Total a ser pago em imposto de renda referente a um ativo.
         /// </summary>
-        public double TotalTaxes { get; set; } = 0;
+        public double Taxes { get; set; } = 0;
         /// <summary>
         /// Total vendido (real) do ativo.
         /// </summary>

@@ -33,7 +33,7 @@ namespace stocks_unit_tests.Business
             decimal twentyPercentTaxes = (IncomeTaxesConstants.IncomeTaxesForDayTrade / 100m) * (decimal) profit;
 
             Assert.True(response[0].DayTraded);
-            Assert.Equal(response[0].TotalTaxes, (double)twentyPercentTaxes);
+            Assert.Equal(response[0].Taxes, (double)twentyPercentTaxes);
         }
 
         [Fact(DisplayName = "Caso uma operação de compra e venda sejam feitas em dias diferentes, deve ser considerada swing-trade" +
@@ -54,7 +54,7 @@ namespace stocks_unit_tests.Business
             decimal fifteenPercentTaxes = ((decimal)IncomeTaxesConstants.IncomeTaxesForStocks / 100m) * (decimal)profit;
 
             Assert.False(response[0].DayTraded);
-            Assert.Equal(response[0].TotalTaxes, (double)fifteenPercentTaxes);
+            Assert.Equal(response[0].Taxes, (double)fifteenPercentTaxes);
         }
 
         [Fact(DisplayName = "Caso as operações de venda de um mês não ultrapassem o valor de R$20.000, o investidor não terá que" +
@@ -73,7 +73,7 @@ namespace stocks_unit_tests.Business
 
             _stocksCalculator.CalculateIncomeTaxesForAllMonths(response, "01", movements);
 
-            Assert.Equal(0, response[0].TotalTaxes);
+            Assert.Equal(0, response[0].Taxes);
         }
 
         [Fact(DisplayName = "Caso as operações de venda de um mês ultrapassem o limite de R$20.000 mas houveram prejuízos, o investidor não" +
@@ -92,7 +92,7 @@ namespace stocks_unit_tests.Business
 
             _stocksCalculator.CalculateIncomeTaxesForAllMonths(response, "01", movements);
 
-            Assert.Equal(0, response[0].TotalTaxes);
+            Assert.Equal(0, response[0].Taxes);
             // Prejuízo de R$1.000
             Assert.Equal(-1000, response[0].SwingTradeProfit);
         }
@@ -110,7 +110,7 @@ namespace stocks_unit_tests.Business
 
             _stocksCalculator.CalculateIncomeTaxesForAllMonths(response, "01", movements);
 
-            Assert.Equal(0, response[0].TotalTaxes);
+            Assert.Equal(0, response[0].Taxes);
             // Prejuízo de R$1.000
             Assert.Equal(-1000, response[0].SwingTradeProfit);
         }
@@ -137,7 +137,7 @@ namespace stocks_unit_tests.Business
             var totalProfit = petr4Profit + vale3Profit;
             decimal tax = ((decimal)IncomeTaxesConstants.IncomeTaxesForStocks / 100m) * (decimal)totalProfit;
 
-            Assert.Equal((double)tax, response[0].TotalTaxes);
+            Assert.Equal((double)tax, response[0].Taxes);
         }
     }
 }

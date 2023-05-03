@@ -9,29 +9,32 @@ namespace stocks_infrastructure.Models
     /// </summary>
     public class IncomeTaxes
     {
-        public IncomeTaxes(string month, double totalTaxes, double totalSold, double totalProfit, bool dayTraded,
-            string tradedAssets, bool? compesatedSwingTradeLoss, bool? compesatedDayTradeLoss, Account account, int assetId)
+        public IncomeTaxes(string month, double totalTaxes, double totalSold, double swingTradeProfit, double dayTradeProfit, bool dayTraded,
+            string tradedAssets, Account account, int assetId)
         {
             Month = month;
             TotalTaxes = totalTaxes;
             TotalSold = totalSold;
-            SwingTradeProfit = totalProfit;
+            SwingTradeProfit = swingTradeProfit;
+            DayTradeProfit = dayTradeProfit;
             DayTraded = dayTraded;
             TradedAssets = tradedAssets;
-            CompesatedSwingTradeLoss = compesatedSwingTradeLoss;
-            CompesatedDayTradeLoss = compesatedDayTradeLoss;
+            CompesatedSwingTradeLoss = swingTradeProfit > 0 ? false : null;
+            CompesatedDayTradeLoss = dayTradeProfit > 0 ? false : null;
             Account = account;
             AssetId = assetId;
         }
 
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
-        private IncomeTaxes() { }
+        public IncomeTaxes() { }
 #pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
 
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.None)]
         public Guid Id { get; protected set; } = Guid.NewGuid();
         public string Month { get; set; }
+
+        // https://www.youtube.com/watch?v=VMwqYLSPg_c
         public double TotalTaxes { get; set; }
         public double TotalSold { get; set; }
         public double SwingTradeProfit { get; set; }

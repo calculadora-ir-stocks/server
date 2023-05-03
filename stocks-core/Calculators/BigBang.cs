@@ -67,60 +67,60 @@ namespace stocks_core.Business
 
         private async Task CalculateTaxesForEachMonth(Dictionary<string, List<Movement.EquitMovement>> monthlyMovements, IIncomeTaxesCalculator calculator, Guid accountId)
         {
-            Dictionary<string, List<AssetIncomeTaxes>> response = new();
+            Dictionary<string, AssetIncomeTaxes> response = new();
 
-            foreach (var monthMovement in monthlyMovements)
+            foreach (var monthMovements in monthlyMovements)
             {
-                response.Add(monthMovement.Key, new List<AssetIncomeTaxes>());
+                response.Add(monthMovements.Key, new AssetIncomeTaxes());
 
-                var stocks = monthMovement.Value.Where(x => x.AssetType.Equals(AssetMovementTypes.Stocks));
-                var etfs = monthMovement.Value.Where(x => x.AssetType.Equals(AssetMovementTypes.ETFs));
-                var fiis = monthMovement.Value.Where(x => x.AssetType.Equals(AssetMovementTypes.FIIs));
-                var bdrs = monthMovement.Value.Where(x => x.AssetType.Equals(AssetMovementTypes.BDRs));
-                var gold = monthMovement.Value.Where(x => x.AssetType.Equals(AssetMovementTypes.Gold));
-                var fundInvestments = monthMovement.Value.Where(x => x.AssetType.Equals(AssetMovementTypes.FundInvestments));
+                var stocks = monthMovements.Value.Where(x => x.AssetType.Equals(AssetMovementTypes.Stocks));
+                var etfs = monthMovements.Value.Where(x => x.AssetType.Equals(AssetMovementTypes.ETFs));
+                var fiis = monthMovements.Value.Where(x => x.AssetType.Equals(AssetMovementTypes.FIIs));
+                var bdrs = monthMovements.Value.Where(x => x.AssetType.Equals(AssetMovementTypes.BDRs));
+                var gold = monthMovements.Value.Where(x => x.AssetType.Equals(AssetMovementTypes.Gold));
+                var fundInvestments = monthMovements.Value.Where(x => x.AssetType.Equals(AssetMovementTypes.FundInvestments));
 
                 if (stocks.Any())
                 {
                     calculator = new StocksIncomeTaxes();
-                    calculator.CalculateIncomeTaxesForAllMonths(response[monthMovement.Key], monthMovement.Key, stocks);
+                    calculator.CalculateIncomeTaxesForAllMonths(response[monthMovements.Key], monthMovements.Key, stocks);
                 }
 
                 if (etfs.Any())
                 {
                     calculator = new ETFsIncomeTaxes();
-                    calculator.CalculateIncomeTaxesForAllMonths(response[monthMovement.Key], monthMovement.Key, etfs);
+                    calculator.CalculateIncomeTaxesForAllMonths(response[monthMovements.Key], monthMovements.Key, etfs);
                 }
 
                 if (fiis.Any())
                 {
                     calculator = new FIIsIncomeTaxes();
-                    calculator.CalculateIncomeTaxesForAllMonths(response[monthMovement.Key], monthMovement.Key, fiis);
+                    calculator.CalculateIncomeTaxesForAllMonths(response[monthMovements.Key], monthMovements.Key, fiis);
                 }
 
                 if (bdrs.Any())
                 {
                     calculator = new BDRsIncomeTaxes();
-                    calculator.CalculateIncomeTaxesForAllMonths(response[monthMovement.Key], monthMovement.Key, bdrs);
+                    calculator.CalculateIncomeTaxesForAllMonths(response[monthMovements.Key], monthMovements.Key, bdrs);
                 }
 
                 if (gold.Any())
                 {
                     calculator = new GoldIncomeTaxes();
-                    calculator.CalculateIncomeTaxesForAllMonths(response[monthMovement.Key], monthMovement.Key, gold);
+                    calculator.CalculateIncomeTaxesForAllMonths(response[monthMovements.Key], monthMovements.Key, gold);
                 }
 
                 if (fundInvestments.Any())
                 {
                     calculator = new InvestmentsFundsIncomeTaxes();
-                    calculator.CalculateIncomeTaxesForAllMonths(response[monthMovement.Key], monthMovement.Key, fundInvestments);
+                    calculator.CalculateIncomeTaxesForAllMonths(response[monthMovements.Key], monthMovements.Key, fundInvestments);
                 }
             }
 
             await SaveIntoDatabase(response, accountId);
         }
 
-        private async Task SaveIntoDatabase(Dictionary<string, List<AssetIncomeTaxes>> response, Guid accountId)
+        private async Task SaveIntoDatabase(Dictionary<string, AssetIncomeTaxes> response, Guid accountId)
         {
             Account account = genericRepositoryAccount.GetById(accountId);
 
@@ -129,8 +129,20 @@ namespace stocks_core.Business
 
             foreach(var movement in response)
             {
-                // TO-DO: change Dictionary<string, List<AssetIncomeTaxes>> response = new(); to Dictionary<string, AssetIncomeTaxes> response = new();
+                incomeTaxes.Add(new IncomeTaxes
+                {
+                    Month = movement.Key,
+                    TotalTaxes = movement.Value.Taxes,
+                    TotalSold = movement.Value.TotalSold,
+                    SwingTradeProfit = movement.Value.SwingTradeProfit,
+                    DayTradeProfit = movement.Value.DayTradeProfit,
+                    TradedAssets = movement.Value.TradedAssets,
+                    Account = account,
+                    AssetId = (int)movement.Value.AssetTypeId
+                });
             }
+
+            await incomeTaxesRepository.AddAllAsync(incomeTaxes);
         }
     }
 }
