@@ -1,11 +1,13 @@
 ﻿using Microsoft.IdentityModel.Tokens;
 using stocks.Models;
 using stocks.Repositories;
+using stocks_common.Models;
 using stocks_core.Calculators.Assets;
 using stocks_core.Constants;
 using stocks_core.DTOs.B3;
 using stocks_core.Response;
 using stocks_infrastructure.Models;
+using stocks_infrastructure.Repositories.AverageTradedPrice;
 using stocks_infrastructure.Repositories.IncomeTaxes;
 
 namespace stocks_core.Business
@@ -17,11 +19,14 @@ namespace stocks_core.Business
     public class BigBang
     {
         private readonly IIncomeTaxesRepository incomeTaxesRepository;
+        private readonly IAverageTradedPriceRepostory averageTradedPriceRepository;
         private readonly IGenericRepository<Account> genericRepositoryAccount;
 
-        public BigBang(IIncomeTaxesRepository incomeTaxesRepository, IGenericRepository<Account> genericRepositoryAccount)
+        public BigBang(IIncomeTaxesRepository incomeTaxesRepository, IAverageTradedPriceRepostory averageTradedPriceRepository,
+            IGenericRepository<Account> genericRepositoryAccount)
         {
             this.incomeTaxesRepository = incomeTaxesRepository;
+            this.averageTradedPriceRepository = averageTradedPriceRepository;
             this.genericRepositoryAccount = genericRepositoryAccount;
         }
 
@@ -119,15 +124,17 @@ namespace stocks_core.Business
                 }
             }
 
-            await SaveIntoDatabase(assetsIncomeTaxes, accountId);
+            await SaveIntoDatabase(assetsIncomeTaxes, assetsAverageTradedPrices, accountId);
         }
 
-        private async Task SaveIntoDatabase(Dictionary<string, AssetIncomeTaxes> response, Guid accountId)
+        private async Task SaveIntoDatabase(Dictionary<string, AssetIncomeTaxes> response,
+            List<TickerAverageTradedPrice> assetsAverageTradedPrices, Guid accountId)
         {
             Account account = genericRepositoryAccount.GetById(accountId);
 
             // The loneliness of building a software company by my own is making me sad. If you're reading this, wanna partner up?
             List<IncomeTaxes> incomeTaxes = new();
+            List<AverageTradedPrice> averageTradedPrices = new();
 
             foreach(var movement in response)
             {
@@ -139,12 +146,26 @@ namespace stocks_core.Business
                     SwingTradeProfit = movement.Value.SwingTradeProfit,
                     DayTradeProfit = movement.Value.DayTradeProfit,
                     TradedAssets = movement.Value.TradedAssets,
+                    DayTraded = movement.Value.DayTraded,
                     Account = account,
                     AssetId = (int)movement.Value.AssetTypeId
                 });
             }
 
+            foreach (var asset in assetsAverageTradedPrices)
+            {
+                averageTradedPrices.Add(new AverageTradedPrice
+                {
+                    Account = account,
+                    Ticker = asset.TickerSymbol,
+                    AveragePrice = asset.AverageTradedPrice,
+                    Quantity = asset.TradedQuantity,
+                    UpdatedAt = DateTime.Now
+                });
+            }
+
             await incomeTaxesRepository.AddAllAsync(incomeTaxes);
+            await averageTradedPriceRepository.AddAllAsync(averageTradedPrices);
         }
     }
 }

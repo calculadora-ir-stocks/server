@@ -166,7 +166,7 @@ public class IncomeTaxesService : IIncomeTaxesService
             string minimumAllowedStartDateByB3 = "2019-11-01";
             string referenceEndDate = DateTime.Now.AddDays(-1).ToString("yyyy-MM-dd");
 
-            // Movement.Root? response = await _client.GetAccountMovement("97188167044", minimumAllowedStartDateByB3, referenceEndDate)!;
+            // Movement.Root? response = await client.GetAccountMovement("97188167044", minimumAllowedStartDateByB3, referenceEndDate)!;
             Movement.Root? response = new();
             response.Data = new();
             response.Data.EquitiesPeriods = new();
@@ -217,7 +217,7 @@ public class IncomeTaxesService : IIncomeTaxesService
                 UnitPrice = 10
             });
 
-            BigBang bigBang = new(incomeTaxesRepository, genericRepositoryAccount);
+            BigBang bigBang = new(incomeTaxesRepository, averageTradedPriceRepository, genericRepositoryAccount);
             await bigBang.Calculate(response, incomeTaxCalculator, accountId);
         }
         catch (Exception e)
