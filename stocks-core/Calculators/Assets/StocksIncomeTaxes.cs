@@ -12,67 +12,36 @@ namespace stocks_core.Calculators.Assets
         public void CalculateCurrentMonthIncomeTaxes(AssetIncomeTaxes? response,
             IEnumerable<Movement.EquitMovement> stocksMovements, Guid accountId)
         {
-            var sells = stocksMovements.Where(x => x.MovementType.Equals(B3ServicesConstants.Sell));
-
-            double totalSoldInStocks = sells.Sum(stock => stock.OperationValue);
-
-            if (totalSoldInStocks > IncomeTaxesConstants.LimitForStocksSelling) return;
-
-            foreach (var movement in stocksMovements)
-            {
-                // TODO: calculate day-trade.
-                // if user day-traded this ticker, pays 20%
-
-                var stockBuys = stocksMovements.Where(x =>
-                    x.TickerSymbol.Equals(movement.TickerSymbol) &&
-                    x.MovementType.Equals(B3ServicesConstants.Buy)
-                );
-
-                var stockSells = stocksMovements.Where(x =>
-                    x.TickerSymbol.Equals(movement.TickerSymbol) &&
-                    x.MovementType.Equals(B3ServicesConstants.Sell)
-                );
-
-                var stockSplits = stocksMovements.Where(x =>
-                    x.TickerSymbol.Equals(movement.TickerSymbol) &&
-                    x.MovementType.Equals(B3ServicesConstants.Split)
-                );
-
-                var stockBonusShares = stocksMovements.Where(x =>
-                    x.TickerSymbol.Equals(movement.TickerSymbol) &&
-                    x.MovementType.Equals(B3ServicesConstants.BonusShare)
-                );
-            }
+            throw new NotImplementedException();
         }
 
-        public void CalculateIncomeTaxesForAllMonths(AssetIncomeTaxes response, string month, IEnumerable<Movement.EquitMovement> movements)
+        public List<TickerAverageTradedPrice> CalculateIncomeTaxesForSpecifiedMonth(AssetIncomeTaxes response, IEnumerable<Movement.EquitMovement> movements)
         {
-            movements = movements.Where(x => x.ReferenceDate.ToString("MM") == month).ToList();
-
-            Dictionary<string, CalculateIncomeTaxesForTheFirstTime> tickersMovements =
-                CalculateAverageTradedPrice(movements);
+            var (tradedTickersAverageTradedPrice, tradedTickersDetails) = CalculateMovements(movements);
 
             var sells = movements.Where(x => x.MovementType.Equals(B3ServicesConstants.Sell));
 
             double totalSold = sells.Sum(stock => stock.OperationValue);
             bool sellsSuperiorThan20000 = totalSold >= IncomeTaxesConstants.LimitForStocksSelling;
 
-            double swingTradeProfit = tickersMovements.Where(x => !x.Value.DayTraded).Select(x => x.Value.Profit).Sum();
-            double dayTradeProfit = tickersMovements.Where(x => x.Value.DayTraded).Select(x => x.Value.Profit).Sum();
+            double swingTradeProfit = tradedTickersDetails.Where(x => !x.Value.DayTraded).Select(x => x.Value.Profit).Sum();
+            double dayTradeProfit = tradedTickersDetails.Where(x => x.Value.DayTraded).Select(x => x.Value.Profit).Sum();
 
             bool paysIncomeTaxes = (sellsSuperiorThan20000 && swingTradeProfit > 0) || (dayTradeProfit > 0);
 
             if (paysIncomeTaxes)
                 response.Taxes = (double)CalculateIncomeTaxes(swingTradeProfit, dayTradeProfit, IncomeTaxesConstants.IncomeTaxesForStocks);
 
-            bool dayTraded = tickersMovements.Where(x => x.Value.DayTraded).Any();
+            bool dayTraded = tradedTickersDetails.Where(x => x.Value.DayTraded).Any();
             response.DayTraded = dayTraded;
 
             response.SwingTradeProfit = swingTradeProfit;
             response.DayTradeProfit = dayTradeProfit;
             response.TotalSold = totalSold;
-            response.TradedAssets = JsonConvert.SerializeObject(DictionaryToList(tickersMovements));
+            response.TradedAssets = JsonConvert.SerializeObject(DictionaryToList(tradedTickersDetails));
             response.AssetTypeId = stocks_infrastructure.Enums.Assets.Stocks;
+
+            return tradedTickersAverageTradedPrice;
         }
     }
 }

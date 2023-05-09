@@ -1,5 +1,4 @@
-﻿using stocks_core.Business;
-using stocks_core.Calculators.Assets;
+﻿using stocks_core.Calculators.Assets;
 using stocks_core.Constants;
 using stocks_core.DTOs.B3;
 using stocks_core.Response;
@@ -27,7 +26,7 @@ namespace stocks_unit_tests.Business
                 new Movement.EquitMovement("PETR4", "Petróleo Brasileiro S/A", "Ações", "Venda", 25000, 1, 25000, new DateTime(2023, 01, 01))
             };
 
-            _stocksCalculator.CalculateIncomeTaxesForAllMonths(response, "01", movements);
+            _stocksCalculator.CalculateIncomeTaxesForSpecifiedMonth(response, movements);
 
             double profit = movements[1].OperationValue - movements[0].OperationValue;
             decimal twentyPercentTaxes = (IncomeTaxesConstants.IncomeTaxesForDayTrade / 100m) * (decimal) profit;
@@ -48,7 +47,7 @@ namespace stocks_unit_tests.Business
                 new Movement.EquitMovement("PETR4", "Petróleo Brasileiro S/A", "Ações", "Venda", 25000, 1, 25000, new DateTime(2023, 01, 02))
             };
 
-            _stocksCalculator.CalculateIncomeTaxesForAllMonths(response, "01", movements);
+            _stocksCalculator.CalculateIncomeTaxesForSpecifiedMonth(response, movements);
 
             double profit = movements[1].OperationValue - movements[0].OperationValue;
             decimal fifteenPercentTaxes = (IncomeTaxesConstants.IncomeTaxesForStocks / 100m) * (decimal)profit;
@@ -71,7 +70,7 @@ namespace stocks_unit_tests.Business
                 new Movement.EquitMovement("PETR4", "Petróleo Brasileiro S/A", "Ações", "Venda", 19653, 1, 19653, new DateTime(2023, 01, 02))
             };
 
-            _stocksCalculator.CalculateIncomeTaxesForAllMonths(response, "01", movements);
+            _stocksCalculator.CalculateIncomeTaxesForSpecifiedMonth(response, movements);
 
             Assert.Equal(0, response.Taxes);
         }
@@ -90,7 +89,7 @@ namespace stocks_unit_tests.Business
                 new Movement.EquitMovement("PETR4", "Petróleo Brasileiro S/A", "Ações", "Venda", 21000, 1, 21000, new DateTime(2023, 01, 02))
             };
 
-            _stocksCalculator.CalculateIncomeTaxesForAllMonths(response, "01", movements);
+            _stocksCalculator.CalculateIncomeTaxesForSpecifiedMonth(response, movements);
 
             Assert.Equal(0, response.Taxes);
             // Prejuízo de R$1.000
@@ -108,7 +107,7 @@ namespace stocks_unit_tests.Business
                 new Movement.EquitMovement("PETR4", "Petróleo Brasileiro S/A", "Ações", "Venda", 20000, 1, 20000, new DateTime(2023, 01, 02))
             };
 
-            _stocksCalculator.CalculateIncomeTaxesForAllMonths(response, "01", movements);
+            _stocksCalculator.CalculateIncomeTaxesForSpecifiedMonth(response, movements);
 
             Assert.Equal(0, response.Taxes);
             // Prejuízo de R$1.000
@@ -129,7 +128,7 @@ namespace stocks_unit_tests.Business
                 new Movement.EquitMovement("VALE3", "Vale S.A.", "Ações", "Venda", 12, 1, 12, new DateTime(2023, 01, 04)),
             };
 
-            _stocksCalculator.CalculateIncomeTaxesForAllMonths(response, "01", movements);
+            _stocksCalculator.CalculateIncomeTaxesForSpecifiedMonth(response, movements);
 
             var petr4Profit = movements[1].OperationValue - movements[0].OperationValue;
             var vale3Profit = movements[3].OperationValue - movements[2].OperationValue;

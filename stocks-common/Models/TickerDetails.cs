@@ -1,17 +1,16 @@
 ﻿namespace stocks_common.Models
 {
-    public class CalculateIncomeTaxesForTheFirstTime
+    public class TickerDetails
     {
-        public CalculateIncomeTaxesForTheFirstTime(double currentPrice, double currentQuantity, string tickerSymbol, string corporationName,
-            double averageTradedPrice, bool dayTraded, string month, bool tickerBoughtBeforeB3DateRange = false)
+        public TickerDetails(double currentPrice, double currentQuantity, string tickerSymbol, string corporationName,
+            double monthAverageTradedPrice, bool dayTraded, bool tickerBoughtBeforeB3DateRange = false)
         {
             Price = currentPrice;
             Quantity = currentQuantity;
             TickerSymbol = tickerSymbol;
             CorporationName = corporationName;
-            AverageTradedPrice = averageTradedPrice;
+            MonthAverageTradedPrice = monthAverageTradedPrice;
             DayTraded = dayTraded;
-            Month = month;
             TickerBoughtBeforeB3DateRange = tickerBoughtBeforeB3DateRange;
         }
 
@@ -19,10 +18,12 @@
         public double Quantity { get; set; }
         public string TickerSymbol { get; set; }
         public string CorporationName { get; set; }
-        public double AverageTradedPrice { get; set; } = 0;
+        /// <summary>
+        /// Preço médio de um ativo em um determinado mês.
+        /// </summary>
+        public double MonthAverageTradedPrice { get; set; } = 0;
         public double Profit { get; set; } = 0;
-        public bool DayTraded { get; set; }
-        public string Month { get; set; }
+        public bool DayTraded { get; set; } = false;
         public bool TickerBoughtBeforeB3DateRange { get; set; } = false;
     }
 }

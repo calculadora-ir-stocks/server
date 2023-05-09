@@ -33,9 +33,9 @@ namespace stocks_core.Business
             OrderMovementsByDateAndMovementType(movements);
 
             var monthlyMovements = new Dictionary<string, List<Movement.EquitMovement>>();
-            var monthsWithMovements = movements.Select(x => x.ReferenceDate.ToString("MM")).Distinct();
+            var monthsThatHadMovements = movements.Select(x => x.ReferenceDate.ToString("MM")).Distinct();
 
-            foreach (var month in monthsWithMovements)
+            foreach (var month in monthsThatHadMovements)
             {
                 monthlyMovements.Add(month, movements.Where(x => x.ReferenceDate.ToString("MM") == month).ToList());
             }
@@ -67,11 +67,13 @@ namespace stocks_core.Business
 
         private async Task CalculateTaxesForEachMonth(Dictionary<string, List<Movement.EquitMovement>> monthlyMovements, IIncomeTaxesCalculator calculator, Guid accountId)
         {
-            Dictionary<string, AssetIncomeTaxes> response = new();
+            Dictionary<string, AssetIncomeTaxes> assetsIncomeTaxes = new();
+            // TO-DO
+            List<TickerAverageTradedPrice> assetsAverageTradedPrices = new();
 
             foreach (var monthMovements in monthlyMovements)
             {
-                response.Add(monthMovements.Key, new AssetIncomeTaxes());
+                assetsIncomeTaxes.Add(monthMovements.Key, new AssetIncomeTaxes());
 
                 var stocks = monthMovements.Value.Where(x => x.AssetType.Equals(AssetMovementTypes.Stocks));
                 var etfs = monthMovements.Value.Where(x => x.AssetType.Equals(AssetMovementTypes.ETFs));
@@ -83,41 +85,41 @@ namespace stocks_core.Business
                 if (stocks.Any())
                 {
                     calculator = new StocksIncomeTaxes();
-                    calculator.CalculateIncomeTaxesForAllMonths(response[monthMovements.Key], monthMovements.Key, stocks);
+                    calculator.CalculateIncomeTaxesForSpecifiedMonth(assetsIncomeTaxes[monthMovements.Key], stocks);
                 }
 
                 if (etfs.Any())
                 {
                     calculator = new ETFsIncomeTaxes();
-                    calculator.CalculateIncomeTaxesForAllMonths(response[monthMovements.Key], monthMovements.Key, etfs);
+                    calculator.CalculateIncomeTaxesForSpecifiedMonth(assetsIncomeTaxes[monthMovements.Key], etfs);
                 }
 
                 if (fiis.Any())
                 {
                     calculator = new FIIsIncomeTaxes();
-                    calculator.CalculateIncomeTaxesForAllMonths(response[monthMovements.Key], monthMovements.Key, fiis);
+                    calculator.CalculateIncomeTaxesForSpecifiedMonth(assetsIncomeTaxes[monthMovements.Key], fiis);
                 }
 
                 if (bdrs.Any())
                 {
                     calculator = new BDRsIncomeTaxes();
-                    calculator.CalculateIncomeTaxesForAllMonths(response[monthMovements.Key], monthMovements.Key, bdrs);
+                    calculator.CalculateIncomeTaxesForSpecifiedMonth(assetsIncomeTaxes[monthMovements.Key], bdrs);
                 }
 
                 if (gold.Any())
                 {
                     calculator = new GoldIncomeTaxes();
-                    calculator.CalculateIncomeTaxesForAllMonths(response[monthMovements.Key], monthMovements.Key, gold);
+                    calculator.CalculateIncomeTaxesForSpecifiedMonth(assetsIncomeTaxes[monthMovements.Key], gold);
                 }
 
                 if (fundInvestments.Any())
                 {
                     calculator = new InvestmentsFundsIncomeTaxes();
-                    calculator.CalculateIncomeTaxesForAllMonths(response[monthMovements.Key], monthMovements.Key, fundInvestments);
+                    calculator.CalculateIncomeTaxesForSpecifiedMonth(assetsIncomeTaxes[monthMovements.Key], fundInvestments);
                 }
             }
 
-            await SaveIntoDatabase(response, accountId);
+            await SaveIntoDatabase(assetsIncomeTaxes, accountId);
         }
 
         private async Task SaveIntoDatabase(Dictionary<string, AssetIncomeTaxes> response, Guid accountId)
