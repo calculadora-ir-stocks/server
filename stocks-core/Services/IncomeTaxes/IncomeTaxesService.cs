@@ -169,7 +169,8 @@ public class IncomeTaxesService : IIncomeTaxesService
 
         try
         {
-            Movement.Root? response = await client.GetAccountMovement("97188167044", minimumAllowedStartDateByB3, referenceEndDate, accountId)!;
+            //Movement.Root? response = await client.GetAccountMovement("97188167044", minimumAllowedStartDateByB3, referenceEndDate, accountId)!;
+            Movement.Root? response = new();
             response.Data = new();
             response.Data.EquitiesPeriods = new();
             response.Data.EquitiesPeriods.EquitiesMovements = new();
