@@ -73,8 +73,6 @@ namespace stocks_core.Business
         private async Task CalculateTaxesForEachMonth(Dictionary<string, List<Movement.EquitMovement>> monthlyMovements, IIncomeTaxesCalculator calculator, Guid accountId)
         {
             Dictionary<string, AssetIncomeTaxes> assetsIncomeTaxes = new();
-            // TO-DO
-            List<TickerAverageTradedPrice> assetsAverageTradedPrices = new();
 
             foreach (var monthMovements in monthlyMovements)
             {
@@ -124,7 +122,7 @@ namespace stocks_core.Business
                 }
             }
 
-            await SaveIntoDatabase(assetsIncomeTaxes, assetsAverageTradedPrices, accountId);
+            await SaveIntoDatabase(assetsIncomeTaxes, calculator.GetTickersAverageTradedPrice(), accountId);
         }
 
         private async Task SaveIntoDatabase(Dictionary<string, AssetIncomeTaxes> response,

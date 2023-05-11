@@ -196,7 +196,7 @@ public class IncomeTaxesService : IIncomeTaxesService
             });
             response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
             {
-                AssetType = "Ações",
+                AssetType = "ETF - Exchange Traded Fund",
                 TickerSymbol = "VALE3",
                 CorporationName = "Petróleo Brasileiro S.A.",
                 MovementType = "Compra",
@@ -207,7 +207,7 @@ public class IncomeTaxesService : IIncomeTaxesService
             });
             response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
             {
-                AssetType = "Ações",
+                AssetType = "ETF - Exchange Traded Fund",
                 TickerSymbol = "VALE3",
                 CorporationName = "Petróleo Brasileiro S.A.",
                 MovementType = "Venda",

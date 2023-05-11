@@ -14,9 +14,9 @@ namespace stocks_core.Calculators.Assets
             throw new NotImplementedException();
         }
 
-        public List<TickerAverageTradedPrice> CalculateIncomeTaxesForSpecifiedMonth(AssetIncomeTaxes response, IEnumerable<Movement.EquitMovement> movements)
+        public void CalculateIncomeTaxesForSpecifiedMonth(AssetIncomeTaxes response, IEnumerable<Movement.EquitMovement> movements)
         {            
-            var (tickersAverageTradedPrice, tickersMovements) = CalculateMovements(movements);
+            var tickersMovements = CalculateMovements(movements);
 
             var sells = movements.Where(x => x.MovementType.Equals(B3ServicesConstants.Sell));
 
@@ -38,8 +38,11 @@ namespace stocks_core.Calculators.Assets
             response.DayTradeProfit = dayTradeProfit;
             response.TradedAssets = JsonConvert.SerializeObject(DictionaryToList(tickersMovements));
             response.AssetTypeId = stocks_infrastructure.Enums.Assets.BDRs;
+        }
 
-            return tickersAverageTradedPrice;
+        public List<TickerAverageTradedPrice> GetTickersAverageTradedPrice()
+        {
+            return GetTickersAverageTradedPrice();
         }
     }
 }

@@ -17,7 +17,7 @@ namespace stocks_core.Business
         /// Calcula o preço médio dos ativos que foram operados e calcula o imposto de renda a ser pago
         /// nas operações especificadas.
         /// </summary>
-        public static (List<TickerAverageTradedPrice>, Dictionary<string, TickerDetails>) CalculateMovements
+        public static Dictionary<string, TickerDetails> CalculateMovements
             (IEnumerable<Movement.EquitMovement> movements)
         {
             Dictionary<string, TickerDetails> response = new();
@@ -44,7 +44,7 @@ namespace stocks_core.Business
                 }
             }
 
-            return (tickersAverageTradedPrice, response);
+            return response;
         }
 
         public static decimal CalculateIncomeTaxes(double swingTradeProfit, double dayTradeProfit, int aliquot)
@@ -90,6 +90,11 @@ namespace stocks_core.Business
             ));
 
             return dayTradeTransactions.Any();
+        }
+
+        public static List<TickerAverageTradedPrice> GetListContainingAverageTradedPrices()
+        {
+            return tickersAverageTradedPrice;
         }
 
         private static void CalculateBuyOperations(Dictionary<string, TickerDetails> response, Movement.EquitMovement movement,

@@ -11,11 +11,11 @@ namespace stocks.Controllers;
 [Tags("Income taxes")]
 public class IncomeTaxesController : BaseController
 {
-    private readonly IIncomeTaxesService _service;
+    private readonly IIncomeTaxesService service;
 
     public IncomeTaxesController(IIncomeTaxesService service)
     {
-        _service = service;
+        this.service = service;
     }
 
     /// <summary>
@@ -24,7 +24,7 @@ public class IncomeTaxesController : BaseController
     [HttpGet("assets")]
     [AllowAnonymous]
     public IActionResult CalculateCurrentMonthAssetsIncomeTaxes(Guid accountId) {
-        var response = _service.CalculateCurrentMonthAssetsIncomeTaxes(accountId);
+        var response = service.CalculateCurrentMonthAssetsIncomeTaxes(accountId);
         return Ok(response);
     }
 
@@ -38,7 +38,7 @@ public class IncomeTaxesController : BaseController
     public async Task<IActionResult> CalculateIncomeTaxesForEveryMonth(Guid id,
         [FromBody] List<CalculateIncomeTaxesForEveryMonthRequest> request)
     {
-        await _service.CalculateIncomeTaxesForEveryMonth(id, request);
+        await service.CalculateIncomeTaxesForEveryMonth(id, request);
         return Ok("Preço médio calculado e armazenado com sucesso.");
     }
 
