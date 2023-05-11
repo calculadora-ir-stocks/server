@@ -169,56 +169,9 @@ public class IncomeTaxesService : IIncomeTaxesService
 
         try
         {
-            //Movement.Root? response = await client.GetAccountMovement("97188167044", minimumAllowedStartDateByB3, referenceEndDate, accountId)!;
-            Movement.Root? response = new();
-            response.Data = new();
-            response.Data.EquitiesPeriods = new();
-            response.Data.EquitiesPeriods.EquitiesMovements = new();
+            Account account = await genericRepositoryAccount.GetByIdAsync(accountId);
 
-            response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
-            {
-                AssetType = "Ações",
-                TickerSymbol = "PETR4",
-                CorporationName = "Petróleo Brasileiro S.A.",
-                MovementType = "Compra",
-                OperationValue = 20000,
-                EquitiesQuantity = 1,
-                ReferenceDate = new DateTime(2023, 01, 16),
-                UnitPrice = 20000
-            });
-            response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
-            {
-                AssetType = "Ações",
-                TickerSymbol = "PETR4",
-                CorporationName = "Petróleo Brasileiro S.A.",
-                MovementType = "Venda",
-                OperationValue = 21000,
-                EquitiesQuantity = 1,
-                ReferenceDate = new DateTime(2023, 01, 17),
-                UnitPrice = 21000
-            });
-            response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
-            {
-                AssetType = "ETF - Exchange Traded Fund",
-                TickerSymbol = "VALE3",
-                CorporationName = "Petróleo Brasileiro S.A.",
-                MovementType = "Compra",
-                OperationValue = 12,
-                EquitiesQuantity = 1,
-                ReferenceDate = new DateTime(2023, 02, 17),
-                UnitPrice = 12
-            });
-            response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
-            {
-                AssetType = "ETF - Exchange Traded Fund",
-                TickerSymbol = "VALE3",
-                CorporationName = "Petróleo Brasileiro S.A.",
-                MovementType = "Venda",
-                OperationValue = 10,
-                EquitiesQuantity = 1,
-                ReferenceDate = new DateTime(2023, 02, 17),
-                UnitPrice = 10
-            });
+            Movement.Root? response = await client.GetAccountMovement(account.CPF, minimumAllowedStartDateByB3, referenceEndDate, accountId)!;
 
             BigBang bigBang = new(incomeTaxesRepository, averageTradedPriceRepository, genericRepositoryAccount);
             await bigBang.Calculate(response, incomeTaxCalculator, accountId);

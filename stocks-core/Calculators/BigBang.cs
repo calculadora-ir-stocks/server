@@ -165,8 +165,6 @@ namespace stocks_core.Business
 
             await incomeTaxesRepository.AddAllAsync(incomeTaxes);
             await averageTradedPriceRepository.AddAllAsync(averageTradedPrices);
-
-            
         }
     }
 }
