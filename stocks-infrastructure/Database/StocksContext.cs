@@ -8,8 +8,8 @@ namespace stocks.Database
     public class StocksContext : DbContext
     {
         public DbSet<Account> Accounts { get; set; } = null!;
+        public DbSet<Asset> Assets { get; } = null!;
         public DbSet<AverageTradedPrice> AverageTradedPrices { get; set; } = null!;
-        public DbSet<CompensateLoss> CompesateLosses { get; set; } = null!;
         public DbSet<IncomeTaxes> IncomeTaxes { get; set; } = null!;
 
         public StocksContext()
@@ -40,20 +40,31 @@ namespace stocks.Database
         {
             modelBuilder.Ignore<BaseEntity>();
 
-            modelBuilder.Entity<AverageTradedPrice>()
-                .HasOne(ap => ap.Account)
-                .WithMany(ap => ap.AverageTradedPrices)
-                .HasForeignKey(ap => ap.AccountId);
+            modelBuilder.Entity<Account>()
+                .HasMany(ap => ap.IncomeTaxes)
+                .WithOne(ap => ap.Account);
 
-            modelBuilder.Entity<CompensateLoss>()
-                .HasOne(ap => ap.Account)
-                .WithMany(ap => ap.CompesateLosses)
-                .HasForeignKey(ap => ap.AccountId);
+            modelBuilder.Entity<Account>()
+                .HasMany(ap => ap.AverageTradedPrices)
+                .WithOne(ap => ap.Account);
 
             modelBuilder.Entity<IncomeTaxes>()
                 .HasOne(ap => ap.Account)
-                .WithMany(ap => ap.IncomeTaxes)
-                .HasForeignKey(ap => ap.AccountId);
+                .WithMany(ap => ap.IncomeTaxes);
+
+            modelBuilder.Entity<AverageTradedPrice>()
+                .HasOne(ap => ap.Account)
+                .WithMany(ap => ap.AverageTradedPrices);
+
+            modelBuilder.Entity<Asset>().HasData
+            (
+                new Asset(1, "Ações"),
+                new Asset(2, "ETF - Exchange Traded Fund"),
+                new Asset(3, "FII - Fundo de Investimento Imobiliário"),
+                new Asset(4, "Fundos de Investimentos"),
+                new Asset(5, "BDR - Brazilian Depositary Receipts"),
+                new Asset(6, "Ouro")
+            );
         }
     }
 }

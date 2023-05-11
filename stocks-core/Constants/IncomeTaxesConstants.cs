@@ -5,12 +5,12 @@
         /// <summary>
         /// Teto de vendas para se isentar do pagamento do imposto de renda de ações.
         /// </summary>
-        public const double LimitForStocksSelling = 20000;
+       public const double LimitForStocksSelling = 20000;
 
         /// <summary>
         /// Alíquota para o pagamento de imposto de renda sob ações.
         /// </summary>
-        public const decimal IncomeTaxesForStocks = 15;
+        public const int IncomeTaxesForStocks = 15;
 
         /// <summary>
         /// Alíquota para o pagamento de imposto de renda sob operações daytrade.
@@ -36,6 +36,11 @@
         /// Alíquota para o pagamento de imposto de renda sob Brazilian Depositary Receipts (BDRs).
         /// </summary>
         public const int IncomeTaxesForBDRs = 15;
+
+        /// <summary>
+        /// Alíquota para o pagamento de imposto de renda sob fundos de investimentos.
+        /// </summary>
+        public const int IncomeTaxesForInvestmentsFunds = 15;
 
         /// <summary>
         /// Alíquota do IRRF - comumente chamado de dedo-duro - sob operações swing trade.

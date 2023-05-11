@@ -19,6 +19,12 @@ namespace stocks.Repositories
             _context.SaveChanges();
         }
 
+        public async Task AddAsync(T entity)
+        {
+            await _context.Set<T>().AddAsync(entity);
+            _context.SaveChanges();
+        }
+
         public void Update(T entity)
         {
             _context.Set<T>().Update(entity);
@@ -45,5 +51,6 @@ namespace stocks.Repositories
         {
             return _context.Set<T>().Find(id);
         }
+
     }
 }

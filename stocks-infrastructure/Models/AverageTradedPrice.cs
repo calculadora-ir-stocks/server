@@ -10,17 +10,18 @@ namespace stocks_infrastructure.Models
     /// </summary>
     public class AverageTradedPrice
     {
-        public AverageTradedPrice(string ticker, double averagePrice, int quantity, Account account, Guid accountId, DateTime updatedAt)
+        public AverageTradedPrice(string ticker, double averagePrice, int quantity, Account account, DateTime updatedAt)
         {
             Ticker = ticker;
             AveragePrice = averagePrice;
             Quantity = quantity;
             Account = account;
-            AccountId = accountId;
             UpdatedAt = updatedAt;
         }
 
+#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
         public AverageTradedPrice()
+#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
         {
         }
 
@@ -31,7 +32,6 @@ namespace stocks_infrastructure.Models
         public double AveragePrice { get; set; }
         public int Quantity { get; set; }
         public Account Account { get; set; }
-        public Guid AccountId { get; set; }
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
     }
 }

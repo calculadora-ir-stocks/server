@@ -7,5 +7,6 @@
         Task Insert(Models.AverageTradedPrice averageTradedPrices);
         Models.AverageTradedPrice? GetAverageTradedPrice(string ticker, Guid accountId);
         void Update(Guid id, string ticker);
+        Task AddAllAsync(List<Models.AverageTradedPrice> averageTradedPrices);
     }
 }

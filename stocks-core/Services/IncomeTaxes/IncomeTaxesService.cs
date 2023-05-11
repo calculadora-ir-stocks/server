@@ -4,45 +4,54 @@ using stocks.Models;
 using stocks.Repositories;
 using stocks.Requests;
 using stocks_core.Business;
+using stocks_core.Calculators.Assets;
 using stocks_core.Constants;
 using stocks_core.DTOs.B3;
-using stocks_core.Enums;
 using stocks_core.Response;
 using stocks_core.Services.AverageTradedPrice;
 using stocks_infrastructure.Repositories.AverageTradedPrice;
+using stocks_infrastructure.Repositories.IncomeTaxes;
 
 namespace stocks.Services.IncomeTaxes;
 
 public class IncomeTaxesService : IIncomeTaxesService
 {
-    private readonly IAverageTradedPriceService _averageTradedPriceService;
+    private IIncomeTaxesCalculator incomeTaxCalculator;
 
-    private readonly IGenericRepository<Account> _genericRepositoryAccount;
-    private readonly IAverageTradedPriceRepostory _averageTradedPriceRepository;
+    private readonly IAverageTradedPriceService averageTradedPriceService;
 
-    private readonly IB3Client _client;
+    private readonly IGenericRepository<Account> genericRepositoryAccount;
+    private readonly IIncomeTaxesRepository incomeTaxesRepository;
+    private readonly IAverageTradedPriceRepostory averageTradedPriceRepository;
 
-    private IIncomeTaxesCalculator _incomeTaxCalculator;
+    private readonly IB3Client client;
 
-    private readonly ILogger<IncomeTaxesService> _logger;
+    private readonly ILogger<IncomeTaxesService> logger;
 
-    public IncomeTaxesService(IAverageTradedPriceService averageTradedPriceService, 
+    public IncomeTaxesService(IIncomeTaxesCalculator incomeTaxCalculator,
+        IAverageTradedPriceService averageTradedPriceService,        
         IGenericRepository<Account> genericRepositoryAccount,
+        IIncomeTaxesRepository incomeTaxesRepository,
         IAverageTradedPriceRepostory averageTradedPriceRepository,
-        IB3Client b3Client, IIncomeTaxesCalculator calculator,
+        IB3Client client,
         ILogger<IncomeTaxesService> logger
         )
     {
-        _averageTradedPriceService = averageTradedPriceService;
-        _genericRepositoryAccount = genericRepositoryAccount;
-        _averageTradedPriceRepository = averageTradedPriceRepository;
-        _client = b3Client;
-        _incomeTaxCalculator = calculator;
-        _logger = logger;
+        this.incomeTaxCalculator = incomeTaxCalculator;
+
+        this.averageTradedPriceService = averageTradedPriceService;
+
+        this.genericRepositoryAccount = genericRepositoryAccount;
+        this.incomeTaxesRepository = incomeTaxesRepository;
+        this.averageTradedPriceRepository = averageTradedPriceRepository;
+
+        this.client = client;
+
+        this.logger = logger;
     }
 
     #region Calcula o imposto de renda a ser pago no mês atual
-    public async Task<CalculateAssetsIncomeTaxesResponse?> CalculateCurrentMonthAssetsIncomeTaxes(Guid accountId)
+    public async Task<AssetIncomeTaxes?> CalculateCurrentMonthAssetsIncomeTaxes(Guid accountId)
     {
         string mockedCpf = "97188167044";
 
@@ -86,7 +95,7 @@ public class IncomeTaxesService : IIncomeTaxesService
                 EquitiesQuantity = 3,
             });
 
-            CalculateAssetsIncomeTaxesResponse? response = null;
+            AssetIncomeTaxes? response = null;
 
             if (InvestorSoldAnyAsset(httpClientResponse))
             {
@@ -101,7 +110,7 @@ public class IncomeTaxesService : IIncomeTaxesService
         }
     }
 
-    private async Task AddAllRequiredIncomeTaxesToObject(Movement.Root httpClientResponse, CalculateAssetsIncomeTaxesResponse? response, Guid accountId)
+    private async Task AddAllRequiredIncomeTaxesToObject(Movement.Root httpClientResponse, AssetIncomeTaxes? response, Guid accountId)
     {
         var movements = httpClientResponse.Data.EquitiesPeriods.EquitiesMovements;
 
@@ -112,23 +121,23 @@ public class IncomeTaxesService : IIncomeTaxesService
         var gold = movements.Where(x => x.AssetType.Equals(AssetMovementTypes.Gold));
         var fundInvestments = movements.Where(x => x.AssetType.Equals(AssetMovementTypes.FundInvestments));
 
-        _incomeTaxCalculator = new StocksIncomeTaxes(_averageTradedPriceRepository, _averageTradedPriceService);
-        await _incomeTaxCalculator.AddAllIncomeTaxesToObject(response, stocks, accountId);
+        incomeTaxCalculator = new StocksIncomeTaxes();
+        incomeTaxCalculator.CalculateCurrentMonthIncomeTaxes(response, stocks, accountId);
 
-        _incomeTaxCalculator = new ETFsIncomeTaxes();
-        await _incomeTaxCalculator.AddAllIncomeTaxesToObject(response, etfs, accountId);
+        incomeTaxCalculator = new ETFsIncomeTaxes();
+        incomeTaxCalculator.CalculateCurrentMonthIncomeTaxes(response, etfs, accountId);
 
         // _incomeTaxCalculator = new FIIsIncomeTaxes();
-        await _incomeTaxCalculator.AddAllIncomeTaxesToObject(response, fiis, accountId);
+        incomeTaxCalculator.CalculateCurrentMonthIncomeTaxes(response, fiis, accountId);
 
         // _incomeTaxCalculator = new BDRsIncomeTaxes();
-        await _incomeTaxCalculator.AddAllIncomeTaxesToObject(response, bdrs, accountId);
+        incomeTaxCalculator.CalculateCurrentMonthIncomeTaxes(response, bdrs, accountId);
 
         // _incomeTaxCalculator = new GoldIncomeTaxes();
-        await _incomeTaxCalculator.AddAllIncomeTaxesToObject(response, gold, accountId);
+        incomeTaxCalculator.CalculateCurrentMonthIncomeTaxes(response, gold, accountId);
 
         // _incomeTaxCalculator = new FundInvestmentsIncomeTaxes();
-        await _incomeTaxCalculator.AddAllIncomeTaxesToObject(response, fundInvestments, accountId);
+        incomeTaxCalculator.CalculateCurrentMonthIncomeTaxes(response, fundInvestments, accountId);
     }
 
     private static bool InvestorSoldAnyAsset(Movement.Root httpClientResponse)
@@ -157,7 +166,7 @@ public class IncomeTaxesService : IIncomeTaxesService
             string minimumAllowedStartDateByB3 = "2019-11-01";
             string referenceEndDate = DateTime.Now.AddDays(-1).ToString("yyyy-MM-dd");
 
-            // Movement.Root? response = await _client.GetAccountMovement("97188167044", minimumAllowedStartDateByB3, referenceEndDate)!;
+            // Movement.Root? response = await client.GetAccountMovement("97188167044", minimumAllowedStartDateByB3, referenceEndDate)!;
             Movement.Root? response = new();
             response.Data = new();
             response.Data.EquitiesPeriods = new();
@@ -167,45 +176,62 @@ public class IncomeTaxesService : IIncomeTaxesService
             {
                 AssetType = "Ações",
                 TickerSymbol = "PETR4",
+                CorporationName = "Petróleo Brasileiro S.A.",
                 MovementType = "Compra",
-                OperationValue = 10.43,
-                EquitiesQuantity = 2,
+                OperationValue = 20000,
+                EquitiesQuantity = 1,
                 ReferenceDate = new DateTime(2023, 01, 16),
+                UnitPrice = 20000
             });
             response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
             {
                 AssetType = "Ações",
                 TickerSymbol = "PETR4",
+                CorporationName = "Petróleo Brasileiro S.A.",
                 MovementType = "Venda",
-                OperationValue = 12.94,
-                EquitiesQuantity = 3,
-                ReferenceDate = new DateTime(2023, 01, 18),
-                UnitPrice = 4.31
+                OperationValue = 21000,
+                EquitiesQuantity = 1,
+                ReferenceDate = new DateTime(2023, 01, 17),
+                UnitPrice = 21000
             });
             response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
             {
-                AssetType = "Ações",
-                TickerSymbol = "PETR4",
+                AssetType = "ETF - Exchange Traded Fund",
+                TickerSymbol = "VALE3",
+                CorporationName = "Petróleo Brasileiro S.A.",
                 MovementType = "Compra",
-                OperationValue = 13.12,
-                EquitiesQuantity = 5,
-                ReferenceDate = new DateTime(2023, 01, 17)
+                OperationValue = 12,
+                EquitiesQuantity = 1,
+                ReferenceDate = new DateTime(2023, 02, 17),
+                UnitPrice = 12
+            });
+            response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
+            {
+                AssetType = "ETF - Exchange Traded Fund",
+                TickerSymbol = "VALE3",
+                CorporationName = "Petróleo Brasileiro S.A.",
+                MovementType = "Venda",
+                OperationValue = 10,
+                EquitiesQuantity = 1,
+                ReferenceDate = new DateTime(2023, 02, 17),
+                UnitPrice = 10
             });
 
-            BigBang bigBang = new(_averageTradedPriceRepository, _averageTradedPriceService);
-            await bigBang.Calculate(response, _incomeTaxCalculator, accountId);
+            BigBang bigBang = new(incomeTaxesRepository, averageTradedPriceRepository, genericRepositoryAccount);
+            await bigBang.Calculate(response, incomeTaxCalculator, accountId);
         }
         catch (Exception e)
         {
-            _logger.LogError("Uma exceção ocorreu ao executar o método {1}, classe {2}. Exceção: {3}",
+            logger.LogError("Uma exceção ocorreu ao executar o método {1}, classe {2}. Exceção: {3}",
                 nameof(CalculateIncomeTaxesForEveryMonth), nameof(AverageTradedPriceService), e.Message);
             throw;
         }
-
-        bool AccountAlreadyHasAverageTradedPrice(Guid accountId)
-        {
-            return _averageTradedPriceRepository.AccountAlreadyHasAverageTradedPrice(accountId);
-        }
     }
+
+    private bool AccountAlreadyHasAverageTradedPrice(Guid accountId)
+    {
+        return averageTradedPriceRepository.AccountAlreadyHasAverageTradedPrice(accountId);
+    }
+
     #endregion
 }

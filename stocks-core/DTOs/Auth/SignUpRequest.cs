@@ -1,6 +1,6 @@
 ﻿namespace stocks.DTOs.Auth
 {
-    public class SignUpRequest
+    public record SignUpRequest
     {
         public SignUpRequest(string name, string email, string cpf, string password)
         {

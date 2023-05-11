@@ -6,6 +6,8 @@
         public const string Sell = "Venda";
 
         public const string Split = "Desdobro";
+        public const string ReverseSplit = "Grupamento";
+
         public const string BonusShare = "Bonificação";
     }
 }
