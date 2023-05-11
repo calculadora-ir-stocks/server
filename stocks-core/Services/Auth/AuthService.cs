@@ -13,29 +13,29 @@ namespace stocks.Services.Auth
     public class AuthService : IAuthService
     {
 
-        private readonly IAccountRepository _accountRepository;
-        private readonly IGenericRepository<Account> _accountGenericRepository;
+        private readonly IAccountRepository accountRepository;
+        private readonly IGenericRepository<Account> accountGenericRepository;
         private readonly IJwtCommon _jwtUtils;
 
         private readonly NotificationContext _notificationContext;
 
-        private readonly ILogger<AuthService> _logger;
+        private readonly ILogger<AuthService> logger;
 
         public AuthService(IAccountRepository accountRepository, IGenericRepository<Account> accountGenericRepository,
             IJwtCommon jwtUtils, NotificationContext notificationContext, ILogger<AuthService> logger)
         {
-            _accountRepository = accountRepository;
-            _accountGenericRepository = accountGenericRepository;
+            this.accountRepository = accountRepository;
+            this.accountGenericRepository = accountGenericRepository;
             _jwtUtils = jwtUtils;
             _notificationContext = notificationContext;
-            _logger = logger;
+            this.logger = logger;
         }
 
         public string? SignIn(SignInRequest request)
         {
             try
             {
-                var account = _accountRepository.GetByEmail(request.Email);
+                var account = accountRepository.GetByEmail(request.Email);
 
                 if (account is null)
                     return null;
@@ -57,7 +57,7 @@ namespace stocks.Services.Auth
             }
             catch (Exception e)
             {
-                _logger.LogError($"Uma exceção ocorreu ao autenticar um usuário. Erro: {e.Message}");
+                logger.LogError($"Uma exceção ocorreu ao tentar autenticar um usuário. Erro: {e.Message}");
                 throw;
             }
         }
@@ -69,19 +69,34 @@ namespace stocks.Services.Auth
             if (IsValidSignUp(account))
             {
                 account.HashPassword(account.Password);
-                _accountGenericRepository.Add(account);
+
+                try
+                {
+                    accountGenericRepository.Add(account);
+                } catch(Exception e)
+                {
+                    logger.LogError($"Ocorreu um erro ao tentar registrar o usuário {account.Id}. {e.Message}");
+                }
             }
         }
 
         private bool IsValidSignUp(Account account)
         {
-            if (_accountRepository.AccountExists(account.Email))
-                throw new InvalidBusinessRuleException($"Esse usuário já está cadastrado na plataforma.");
-
-            if (account.IsInvalid)
+            try
             {
-                _notificationContext.AddNotifications(account.ValidationResult);
-                return false;
+                if (accountRepository.AccountExists(account.Email))
+                    throw new InvalidBusinessRuleException($"Esse usuário já está cadastrado na plataforma.");
+
+                if (account.IsInvalid)
+                {
+                    _notificationContext.AddNotifications(account.ValidationResult);
+                    return false;
+                }
+            } catch (Exception e)
+            {
+                logger.LogError($"Ocorreu um erro tentar validar se o usuário {account.Id} já está cadastrado" +
+                    $"na plataforma. {e.Message}");
+                throw;
             }
 
             return true;

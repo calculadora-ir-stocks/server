@@ -3,6 +3,7 @@ using Newtonsoft.Json;
 using stocks.Clients.B3;
 using stocks.DTOs.Auth;
 using stocks_core.DTOs.B3;
+using System.Diagnostics;
 using System.Net;
 using System.Net.Http.Headers;
 
@@ -10,15 +11,15 @@ namespace stocks.Services.B3
 {
     public class B3Client : IB3Client
     {
-        private readonly IHttpClientFactory _clientFactory;
+        private readonly IHttpClientFactory clientFactory;
 
-        private readonly HttpClient _client;
-        private readonly HttpClient _tokenClient;
+        private readonly HttpClient client;
+        private readonly HttpClient tokenClient;
 
-        private static Token? _token;
+        private static Token? token;
 
-        private static SemaphoreSlim AccessTokenSemaphore;
-        private static SemaphoreSlim GetAllMovementsSemaphore;
+        private static readonly SemaphoreSlim AccessTokenSemaphore = new(1, 1);
+        private static readonly SemaphoreSlim GetAllMovementsSemaphore = new(MaximumConcurrentRequests);
 
         private long circuitStatus;
         private const long Closed = 0;
@@ -28,43 +29,43 @@ namespace stocks.Services.B3
         // Número total de sockets a serem utilizados pelas requisições multi-thread de buscar todos os movimentos de um investidor.
         private const int MaximumConcurrentRequests = 4;
 
-        private ILogger<B3Client> _logger;
+        private readonly ILogger<B3Client> logger;
 
         public B3Client(IHttpClientFactory clientFactory, ILogger<B3Client> logger)
         {
-            _clientFactory = clientFactory;
+            this.clientFactory = clientFactory;
 
-            _client = _clientFactory.CreateClient("B3");
-            _tokenClient = _clientFactory.CreateClient("Microsoft");
+            client = this.clientFactory.CreateClient("B3");
+            tokenClient = this.clientFactory.CreateClient("Microsoft");
 
-            _token = null!;
-
-            AccessTokenSemaphore = new SemaphoreSlim(1, 1);            
-            GetAllMovementsSemaphore = new SemaphoreSlim(MaximumConcurrentRequests);
+            token = null!;
 
             circuitStatus = Closed;
 
-            _logger = logger;
+            this.logger = logger;
         }
 
         public B3Client() { }
 
-        public async Task<Movement.Root> GetAccountMovement(string cpf, string? referenceStartDate, string? referenceEndDate, string? nextUrl)
+        public async Task<Movement.Root> GetAccountMovement(string cpf, string referenceStartDate, string referenceEndDate, Guid accountId, string? nextUrl)
         {
+            Stopwatch watch = new();
+
             HttpRequestMessage request = new(HttpMethod.Get, $"movement/v2/equities/investors/{cpf}?referenceStartDate={referenceStartDate}&referenceEndDate={referenceEndDate}");
 
-            // O nextUrl é um parâmetro retornado pelos endpoints da B3 que representa a próxima página do response.
-            // Quando um endpoint é consumido, os dados são separados entre várias páginas para evitar muito processamento de dados.
+            // A API da B3 possui um sistema de paginação. O nextUrl é a URL da página seguinte do response.
             if (nextUrl != null)
             {
                 request = new(HttpMethod.Get, nextUrl);
             }
 
+            watch.Start();
+
             var accessToken = await GetB3AuthorizationToken();
 
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken.AccessToken);
 
-            using var response = await _client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
+            using var response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
             response.EnsureSuccessStatusCode();
 
             var responseContentStream = await response.Content.ReadAsStringAsync();
@@ -76,6 +77,14 @@ namespace stocks.Services.B3
             {
                 await GetAccountMovementsInAllPages(assets);
             });
+
+            watch.Stop();
+
+            int? total = assets?.Data.EquitiesPeriods.EquitiesMovements.Count;
+            long seconds = watch.ElapsedMilliseconds / 1000;
+
+            logger.LogInformation($"O usuário {accountId} executou o big bang e importou um total de {total} movimentações. O tempo" +
+                $"de execução foi de {seconds} segundos.");
 
             return assets!;
         }
@@ -102,7 +111,7 @@ namespace stocks.Services.B3
 
                 request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken.AccessToken);
 
-                using var response = await _client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
+                using var response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
 
                 if (response.StatusCode != HttpStatusCode.OK)
                 {
@@ -144,7 +153,7 @@ namespace stocks.Services.B3
 
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken.AccessToken);
 
-            using var response = await _client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
+            using var response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
             response.EnsureSuccessStatusCode();
 
             var responseContentStream = await response.Content.ReadAsStringAsync();
@@ -156,8 +165,8 @@ namespace stocks.Services.B3
 
         private async Task<Token> GetB3AuthorizationToken()
         {
-            if (_token is not null && !_token!.Expired)
-                return _token;
+            if (token is not null && !token!.Expired)
+                return token;
             else
                 return await RefreshAuthorizationToken();
         }
@@ -168,7 +177,7 @@ namespace stocks.Services.B3
             {
                 await AccessTokenSemaphore.WaitAsync();
 
-                if (_token is not null && !_token.Expired) return _token;
+                if (token is not null && !token.Expired) return token;
 
                 var request = new HttpRequestMessage(HttpMethod.Post, "4bee639f-5388-44c7-bbac-cb92a93911e6/oauth2/v2.0/token/")
                 {
@@ -181,31 +190,23 @@ namespace stocks.Services.B3
                     })
                 };
 
-                using var response = await _tokenClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
+                using var response = await tokenClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
                 response.EnsureSuccessStatusCode();
 
                 var responseContentStream = response.Content.ReadAsStringAsync().Result;
 
-                _token = JsonConvert.DeserializeObject<Token>(responseContentStream)!;
+                token = JsonConvert.DeserializeObject<Token>(responseContentStream)!;
 
-                return _token ?? throw new Exception("Uma exceção ocorreu ao deserializar o objeto de Token de autenticação da B3");
+                return token ?? throw new Exception("Uma exceção ocorreu ao deserializar o objeto de Token de autenticação da B3");
             }
             catch (Exception e)
             {
-                _logger.LogError("Uma exceção ocorreu ao tentar obter o token de autorização da B3. {exception} ", e.Message);
+                logger.LogError("Uma exceção ocorreu ao tentar obter o token de autorização da B3. {exception} ", e.Message);
                 throw new Exception("Uma exceção ocorreu ao tentar obter o token de autorização da B3. " + e.Message);
             }
             finally
             {
                 AccessTokenSemaphore.Release(1);
-            }
-        }
-
-        public void CloseCircuit()
-        {
-            if (Interlocked.CompareExchange(ref circuitStatus, Closed, Tripped) == Tripped)
-            {
-                Console.WriteLine("Closed circuit");
             }
         }
 

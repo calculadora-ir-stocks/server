@@ -156,18 +156,20 @@ public class IncomeTaxesService : IIncomeTaxesService
     #endregion
 
     #region Calcula o imposto de renda a ser pago de 01/11/2019 até D-1.
-    public async Task CalculateIncomeTaxesForEveryMonth(Guid accountId, List<CalculateIncomeTaxesForEveryMonthRequest> request)
+    public async Task BigBang(Guid accountId, List<CalculateIncomeTaxesForEveryMonthRequest> request)
     {
+        if (AccountAlreadyHasAverageTradedPrice(accountId))
+        {
+            logger.LogInformation($"Big bang foi executado para o usuário {accountId}, mas ele já possui o preço médio calculado na base.");
+            return;
+        }
+
+        string minimumAllowedStartDateByB3 = "2019-11-01";
+        string referenceEndDate = DateTime.Now.AddDays(-1).ToString("yyyy-MM-dd");
+
         try
         {
-            // TODO: calculate runtime
-            if (AccountAlreadyHasAverageTradedPrice(accountId)) return;
-
-            string minimumAllowedStartDateByB3 = "2019-11-01";
-            string referenceEndDate = DateTime.Now.AddDays(-1).ToString("yyyy-MM-dd");
-
-            // Movement.Root? response = await client.GetAccountMovement("97188167044", minimumAllowedStartDateByB3, referenceEndDate)!;
-            Movement.Root? response = new();
+            Movement.Root? response = await client.GetAccountMovement("97188167044", minimumAllowedStartDateByB3, referenceEndDate, accountId)!;
             response.Data = new();
             response.Data.EquitiesPeriods = new();
             response.Data.EquitiesPeriods.EquitiesMovements = new();
@@ -219,18 +221,27 @@ public class IncomeTaxesService : IIncomeTaxesService
 
             BigBang bigBang = new(incomeTaxesRepository, averageTradedPriceRepository, genericRepositoryAccount);
             await bigBang.Calculate(response, incomeTaxCalculator, accountId);
-        }
-        catch (Exception e)
+
+            logger.LogInformation($"Big Bang executado com sucesso para o usuário {accountId}.");
+        } catch (Exception e)
         {
-            logger.LogError("Uma exceção ocorreu ao executar o método {1}, classe {2}. Exceção: {3}",
-                nameof(CalculateIncomeTaxesForEveryMonth), nameof(AverageTradedPriceService), e.Message);
+            logger.LogError($"Uma exceção ocorreu ao executar o Big Bang do usuário {accountId}." +
+                $"{e.Message}");
             throw;
         }
     }
 
     private bool AccountAlreadyHasAverageTradedPrice(Guid accountId)
     {
-        return averageTradedPriceRepository.AccountAlreadyHasAverageTradedPrice(accountId);
+        try
+        {
+            return averageTradedPriceRepository.AccountAlreadyHasAverageTradedPrice(accountId);
+        } catch (Exception e)
+        {
+            logger.LogError($"Uma exceção ocorreu ao tentar verificar se o usuário {accountId} já possuia o big bang calculado." +
+                $"{e.Message}");
+            throw;
+        }
     }
 
     #endregion

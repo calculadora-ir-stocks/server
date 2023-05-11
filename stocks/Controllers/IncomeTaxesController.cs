@@ -35,10 +35,10 @@ public class IncomeTaxesController : BaseController
     /// </summary>
     [HttpPost("big-bang/{id}")]
     [AllowAnonymous]
-    public async Task<IActionResult> CalculateIncomeTaxesForEveryMonth(Guid id,
+    public async Task<IActionResult> BigBang(Guid id,
         [FromBody] List<CalculateIncomeTaxesForEveryMonthRequest> request)
     {
-        await service.CalculateIncomeTaxesForEveryMonth(id, request);
+        await service.BigBang(id, request);
         return Ok("Preço médio calculado e armazenado com sucesso.");
     }
 

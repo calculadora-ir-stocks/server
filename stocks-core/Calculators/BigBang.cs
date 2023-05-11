@@ -1,4 +1,5 @@
-﻿using Microsoft.IdentityModel.Tokens;
+﻿using Microsoft.Extensions.Logging;
+using Microsoft.IdentityModel.Tokens;
 using stocks.Models;
 using stocks.Repositories;
 using stocks_common.Models;
@@ -13,8 +14,8 @@ using stocks_infrastructure.Repositories.IncomeTaxes;
 namespace stocks_core.Business
 {
     /// <summary>
-    /// Classe responsável por calcular o imposto de renda a ser pago em todos os ativos de 01/11/2019 até D-1 e de salvar
-    /// na base de dados o preço médio de cada ativo.
+    /// Classe responsável por calcular o imposto de renda a ser pago em todos os meses de 01/11/2019 até D-1.
+    /// Também salva na base de dados o preço médio de cada ativo.
     /// </summary>
     public class BigBang
     {
@@ -30,9 +31,9 @@ namespace stocks_core.Business
             this.genericRepositoryAccount = genericRepositoryAccount;
         }
 
-        public async Task Calculate(Movement.Root response, IIncomeTaxesCalculator calculator, Guid accountId)
+        public async Task Calculate(Movement.Root request, IIncomeTaxesCalculator calculator, Guid accountId)
         {
-            var movements = GetAllMovements(response);
+            var movements = GetAllMovements(request);
             if (movements.IsNullOrEmpty()) return;
 
             OrderMovementsByDateAndMovementType(movements);
@@ -45,7 +46,7 @@ namespace stocks_core.Business
                 monthlyMovements.Add(month, movements.Where(x => x.ReferenceDate.ToString("MM") == month).ToList());
             }
 
-            await CalculateTaxesForEachMonth(monthlyMovements, calculator, accountId);
+            await CalculateTaxesForAllMonths(monthlyMovements, calculator, accountId);
         }
 
         private static List<Movement.EquitMovement> GetAllMovements(Movement.Root response)
@@ -70,7 +71,7 @@ namespace stocks_core.Business
             movements = movements.OrderBy(x => x.MovementType).OrderBy(x => x.ReferenceDate).ToList();
         }
 
-        private async Task CalculateTaxesForEachMonth(Dictionary<string, List<Movement.EquitMovement>> monthlyMovements, IIncomeTaxesCalculator calculator, Guid accountId)
+        private async Task CalculateTaxesForAllMonths(Dictionary<string, List<Movement.EquitMovement>> monthlyMovements, IIncomeTaxesCalculator calculator, Guid accountId)
         {
             Dictionary<string, AssetIncomeTaxes> assetsIncomeTaxes = new();
 
@@ -164,6 +165,8 @@ namespace stocks_core.Business
 
             await incomeTaxesRepository.AddAllAsync(incomeTaxes);
             await averageTradedPriceRepository.AddAllAsync(averageTradedPrices);
+
+            
         }
     }
 }

@@ -11,11 +11,11 @@ namespace stocks.Controllers;
 [Tags("Authentication")]
 public class AuthController : BaseController
 {
-    private readonly IAuthService _service;
+    private readonly IAuthService service;
 
     public AuthController(IAuthService service)
     {
-        _service = service;
+        this.service = service;
     }
 
     /// <summary>
@@ -25,7 +25,7 @@ public class AuthController : BaseController
     [HttpPost("sign-up")]
     public IActionResult SignUp([FromBody] SignUpRequest request)
     {
-        _service.SignUp(request);
+        service.SignUp(request);
         return Ok(200);
     }
 
@@ -36,7 +36,7 @@ public class AuthController : BaseController
     [HttpPost("sign-in")]
     public IActionResult SignIn([FromBody] SignInRequest request)
     {
-        string? jwt = _service.SignIn(request);
+        string? jwt = service.SignIn(request);
 
         if (jwt is null)
             return BadRequest("Nome de usuário ou senha incorreto(s).");

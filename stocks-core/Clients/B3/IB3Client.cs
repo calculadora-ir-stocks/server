@@ -8,7 +8,7 @@ namespace stocks.Clients.B3
         /// Dados referentes da movimentação de ações, fundos imobiliários, ouro e ETF.
         /// </summary>
         /// <returns></returns>
-        Task<Movement.Root> GetAccountMovement(string cpf, string? referenceStartDate, string? referenceEndDate, string? nextUrl = null);
+        Task<Movement.Root> GetAccountMovement(string cpf, string referenceStartDate, string referenceEndDate, Guid accountId, string? nextUrl = null);
 
         /// <summary>
         /// Dados referentes a todos os ativos na conta do investidor.
