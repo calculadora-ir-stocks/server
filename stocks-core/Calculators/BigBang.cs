@@ -39,11 +39,11 @@ namespace stocks_core.Business
             OrderMovementsByDateAndMovementType(movements);
 
             var monthlyMovements = new Dictionary<string, List<Movement.EquitMovement>>();
-            var monthsThatHadMovements = movements.Select(x => x.ReferenceDate.ToString("MM")).Distinct();
+            var monthsThatHadMovements = movements.Select(x => x.ReferenceDate.ToString("MM/yyyy")).Distinct();
 
             foreach (var month in monthsThatHadMovements)
             {
-                monthlyMovements.Add(month, movements.Where(x => x.ReferenceDate.ToString("MM") == month).ToList());
+                monthlyMovements.Add(month, movements.Where(x => x.ReferenceDate.ToString("MM/yyyy") == month).ToList());
             }
 
             await CalculateTaxesForAllMonths(monthlyMovements, calculator, accountId);
