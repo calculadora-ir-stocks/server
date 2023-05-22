@@ -5,11 +5,11 @@ namespace stocks_core.Response
     public class AssetIncomeTaxes
     {
         /// <summary>
-        /// Total a ser pago em imposto de renda referente a um ativo.
+        /// Total a ser pago em imposto de renda.
         /// </summary>
         public double Taxes { get; set; } = 0;
         /// <summary>
-        /// Total vendido (real) do ativo.
+        /// Total vendido do ativo.
         /// </summary>
         public double TotalSold { get; set; } = 0;
         /// <summary>
@@ -26,7 +26,7 @@ namespace stocks_core.Response
         /// </summary>
         public string TradedAssets { get; set; } = String.Empty;
         /// <summary>
-        /// O id do tipo do ativo sendo negociado.
+        /// O id do tipo de ativo sendo negociado.
         /// </summary>
         public Assets AssetTypeId { get; set; }
     }

@@ -1,7 +1,8 @@
-﻿using Microsoft.IdentityModel.Tokens;
+﻿using Microsoft.EntityFrameworkCore.Query.Internal;
 using stocks_common.Models;
 using stocks_core.Constants;
 using stocks_core.DTOs.B3;
+using System.Linq;
 
 namespace stocks_core.Business
 {
@@ -11,7 +12,7 @@ namespace stocks_core.Business
     /// </summary>
     public class AverageTradedPriceCalculator
     {
-        private static readonly List<TickerAverageTradedPrice> tickersAverageTradedPrice = new();
+        private static readonly List<TickerAverageTradedPrice> assetDetails = new();
 
         /// <summary>
         /// Calcula o preço médio dos ativos que foram operados e calcula o imposto de renda a ser pago
@@ -27,19 +28,19 @@ namespace stocks_core.Business
                 switch (movement.MovementType)
                 {
                     case B3ServicesConstants.Buy:
-                        CalculateBuyOperations(response, movement, movements);
+                        CalculateBuyOperation(response, movement, movements);
                         break;
                     case B3ServicesConstants.Sell:
-                        CalculateSellOperations(response, movement, movements);
+                        CalculateSellOperation(response, movement, movements);
                         break;
                     case B3ServicesConstants.Split:
-                        CalculateSplitOperations(response, movement);
+                        CalculateSplitOperation(response, movement);
                         break;
                     case B3ServicesConstants.ReverseSplit:
-                        CalculateReverseSplit(response, movement);
+                        CalculateReverseSplitOperation(response, movement);
                         break;
                     case B3ServicesConstants.BonusShare:
-                        CalculateBonusSharesOperations(response, movement, movements);
+                        CalculateBonusSharesOperation(response, movement, movements);
                         break;
                 }
             }
@@ -92,53 +93,70 @@ namespace stocks_core.Business
             return dayTradeTransactions.Any();
         }
 
-        public static List<TickerAverageTradedPrice> GetListContainingAverageTradedPrices()
-        {
-            return tickersAverageTradedPrice;
-        }
-
-        private static void CalculateBuyOperations(Dictionary<string, TickerDetails> response, Movement.EquitMovement movement,
+        private static void CalculateBuyOperation(Dictionary<string, TickerDetails> response, Movement.EquitMovement movement,
             IEnumerable<Movement.EquitMovement> movements)
         {
-            if (response.ContainsKey(movement.TickerSymbol))
-            {
-                var asset = response[movement.TickerSymbol];
+            var assetDetail = assetDetails.SingleOrDefault(x => x.TickerSymbol == movement.TickerSymbol);
 
-                asset.Price += movement.OperationValue;
-                asset.Quantity += movement.EquitiesQuantity;
-                asset.MonthAverageTradedPrice = asset.Price / asset.Quantity;
-                // TO-DO (MVP?): calcular emolumentos.
+            if (assetDetail is not null)
+            {
+                var asset = new TickerDetails(
+                    assetDetail.TotalBought + movement.OperationValue,
+                    assetDetail.TradedQuantity + movement.EquitiesQuantity,
+                    assetDetail.TickerSymbol,
+                    assetDetail.CorporationName,
+                    TickerDayTraded(movements, movement.TickerSymbol)
+                );
+
+                response.Add(movement.TickerSymbol, asset);
             }
-            else
+            else 
             {
-                double averageTradedPrice = movement.OperationValue / movement.EquitiesQuantity;
-
-                var ticker = new TickerDetails(
+                var asset = new TickerDetails(
                     movement.OperationValue,
                     movement.EquitiesQuantity,
                     movement.TickerSymbol,
                     movement.CorporationName,
-                    averageTradedPrice,
-                    dayTraded: TickerDayTraded(movements, movement.TickerSymbol)
+                    TickerDayTraded(movements, movement.TickerSymbol)
                 );
 
-                response.Add(movement.TickerSymbol, ticker);
+                response.Add(movement.TickerSymbol, asset);
             }
 
-            UpdateTickerAverageTradedPrice(
-                tickerSymbol: movement.TickerSymbol,
-                operationValue: movement.OperationValue,
-                tradedQuantity: (int)movement.EquitiesQuantity
-            );
-        }        
+            UpdateAssetDetail(response[movement.TickerSymbol], assetDetail);
+        }
 
-        private static void CalculateSellOperations(Dictionary<string, TickerDetails> response, Movement.EquitMovement movement, IEnumerable<Movement.EquitMovement> movements)
+        private static void UpdateAssetDetail(TickerDetails asset, TickerAverageTradedPrice? assetDetail)
+        {
+            if (assetDetail is null)
+            {
+                assetDetails.Add(new TickerAverageTradedPrice(
+                    asset.TickerSymbol,
+                    asset.CorporationName,
+                    averageTradedPrice: asset.Price / asset.Quantity,
+                    totalBought: asset.Price,
+                    tradedQuantity: (int)asset.Quantity
+                ));
+            } else
+            {
+                assetDetail.TotalBought = asset.Price;
+                assetDetail.TradedQuantity = (int)asset.Quantity;
+                assetDetail.AverageTradedPrice = assetDetail.TotalBought / assetDetail.TradedQuantity;
+            }
+        }
+
+        private static void CalculateSellOperation(Dictionary<string, TickerDetails> response, Movement.EquitMovement movement, IEnumerable<Movement.EquitMovement> movements)
         {
             if (response.ContainsKey(movement.TickerSymbol))
             {
                 var asset = response[movement.TickerSymbol];
 
-                double profitPerShare = movement.UnitPrice - asset.MonthAverageTradedPrice;
+                double averageTradedPrice = assetDetails
+                    .Where(x => x.TickerSymbol == asset.TickerSymbol)
+                    .Select(x => x.AverageTradedPrice)
+                    .First();
+
+                double profitPerShare = movement.UnitPrice - averageTradedPrice;
                 double totalProfit = profitPerShare * movement.EquitiesQuantity;
 
                 if (totalProfit > 0)
@@ -159,7 +177,6 @@ namespace stocks_core.Business
                     movement.EquitiesQuantity,
                     movement.TickerSymbol,
                     movement.CorporationName,
-                    monthAverageTradedPrice: 0,
                     dayTraded: TickerDayTraded(movements, movement.TickerSymbol),
                     tickerBoughtBeforeB3DateRange: true
                 ));
@@ -168,7 +185,7 @@ namespace stocks_core.Business
             }
         }
 
-        private static void CalculateSplitOperations(Dictionary<string, TickerDetails> response, Movement.EquitMovement movement)
+        private static void CalculateSplitOperation(Dictionary<string, TickerDetails> response, Movement.EquitMovement movement)
         {
             // É necessário calcular os desdobramentos de um ativo pois a sua relação de preço/quantidade alteram. Caso elas se alterem,
             // o cálculo do preço médio pode ser afetado.
@@ -177,7 +194,7 @@ namespace stocks_core.Business
             throw new NotImplementedException();
         }
 
-        private static void CalculateReverseSplit(Dictionary<string, TickerDetails> response, Movement.EquitMovement movement)
+        private static void CalculateReverseSplitOperation(Dictionary<string, TickerDetails> response, Movement.EquitMovement movement)
         {
             // É necessário calcular os agrupamentos de um ativo pois a sua relação de preço/quantidade alteram. Caso elas se alterem,
             // o cálculo do preço médio pode ser afetado.
@@ -186,34 +203,13 @@ namespace stocks_core.Business
             throw new NotImplementedException();
         }
 
-        private static void CalculateBonusSharesOperations(Dictionary<string, TickerDetails> response, Movement.EquitMovement movement, IEnumerable<Movement.EquitMovement> movements)
+        private static void CalculateBonusSharesOperation(Dictionary<string, TickerDetails> response, Movement.EquitMovement movement, IEnumerable<Movement.EquitMovement> movements)
         {
             // É necessário calcular as bonificações de um ativo pois a sua relação de preço/quantidade alteram. Caso elas se alterem,
             // o cálculo do preço médio pode ser afetado.
 
             // TO-DO: entrar em contato com a B3 e tirar a dúvida de como funciona o response de bonificação.
             throw new NotImplementedException();
-        }
-
-        /// <summary>
-        /// Atualiza o preço médio de um determinado ativo.
-        /// </summary>
-        private static void UpdateTickerAverageTradedPrice(string tickerSymbol, double operationValue, int tradedQuantity)
-        {
-            var ticker = tickersAverageTradedPrice.Where(x => x.TickerSymbol == tickerSymbol).FirstOrDefault();
-
-            if (ticker is null)
-            {
-                double averageTradedPrice = operationValue / tradedQuantity;
-                tickersAverageTradedPrice.Add(new TickerAverageTradedPrice(tickerSymbol, averageTradedPrice, operationValue, tradedQuantity));
-            }
-            else
-            {
-                ticker.TotalBought += operationValue;
-                ticker.TradedQuantity += tradedQuantity;
-
-                ticker.AverageTradedPrice = ticker.TotalBought / ticker.TradedQuantity;
-            }
         }
     }    
 }
