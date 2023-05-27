@@ -213,26 +213,26 @@ public class IncomeTaxesService : IIncomeTaxesService
 
             response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
             {
-                AssetType = "ETF - Exchange Traded Fund",
-                TickerSymbol = "BOVA11",
-                CorporationName = "BOVA11",
+                AssetType = "Ações",
+                TickerSymbol = "VALE3",
+                CorporationName = "Vale S.A.",
                 MovementType = "Compra",
-                OperationValue = 230,
+                OperationValue = 49000,
                 EquitiesQuantity = 1,
-                ReferenceDate = new DateTime(2023, 02, 12),
-                UnitPrice = 230
+                ReferenceDate = new DateTime(2023, 03, 12),
+                UnitPrice = 49000
             });
 
             response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
             {
-                AssetType = "ETF - Exchange Traded Fund",
-                TickerSymbol = "BOVA11",
-                CorporationName = "BOVA11",
+                AssetType = "Ações",
+                TickerSymbol = "VALE3",
+                CorporationName = "Vale S.A.",
                 MovementType = "Venda",
-                OperationValue = 300,
+                OperationValue = 52000,
                 EquitiesQuantity = 1,
-                ReferenceDate = new DateTime(2023, 02, 12),
-                UnitPrice = 300
+                ReferenceDate = new DateTime(2023, 03, 12),
+                UnitPrice = 52000
             });
 
             BigBang bigBang = new(incomeTaxesRepository, averageTradedPriceRepository, genericRepositoryAccount);

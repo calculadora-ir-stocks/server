@@ -32,6 +32,7 @@ namespace stocks_core.Calculators.Assets
                 SwingTradeProfit = swingTradeProfit,
                 DayTradeProfit = dayTradeProfit,
                 TotalSold = sells.Sum(gold => gold.OperationValue),
+                AverageTradedPrices = GetAssetDetails(),
                 TradedAssets = JsonConvert.SerializeObject(DictionaryToList(tradedTickersDetails)),
                 AssetTypeId = stocks_infrastructure.Enums.Assets.Gold
             });

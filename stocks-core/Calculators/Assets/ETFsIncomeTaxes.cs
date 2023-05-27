@@ -33,6 +33,7 @@ namespace stocks_core.Calculators.Assets
                 SwingTradeProfit = swingTradeProfit,
                 DayTradeProfit = dayTradeProfit,
                 TotalSold = sells.Sum(etf => etf.OperationValue),
+                AverageTradedPrices = GetAssetDetails(),
                 TradedAssets = JsonConvert.SerializeObject(DictionaryToList(tradedTickersDetails)),
                 AssetTypeId = stocks_infrastructure.Enums.Assets.ETFs
             });

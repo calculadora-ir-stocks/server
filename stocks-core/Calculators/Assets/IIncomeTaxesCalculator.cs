@@ -1,4 +1,5 @@
-﻿using stocks_core.DTOs.B3;
+﻿using stocks_common.Models;
+using stocks_core.DTOs.B3;
 using stocks_core.Response;
 
 namespace stocks_core.Calculators.Assets

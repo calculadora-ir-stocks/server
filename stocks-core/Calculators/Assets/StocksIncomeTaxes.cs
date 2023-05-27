@@ -36,10 +36,16 @@ namespace stocks_core.Calculators.Assets
                 SwingTradeProfit = swingTradeProfit,
                 DayTradeProfit = dayTradeProfit,
                 TotalSold = totalSold,
+                AverageTradedPrices = GetAssetDetails(),
                 TradedAssets = JsonConvert.SerializeObject(DictionaryToList(tradedTickersDetails)),
                 AssetTypeId = stocks_infrastructure.Enums.Assets.Stocks
             });
-        } 
+        }
+
+        public Dictionary<string, TickerAverageTradedPrice> GetTickerDetails()
+        {
+            return GetAssetDetails();
+        }
 
         private bool DayTraded(Dictionary<string, TickerDetails> tradedTickersDetails)
         {

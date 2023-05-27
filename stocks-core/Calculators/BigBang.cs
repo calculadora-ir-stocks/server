@@ -10,6 +10,7 @@ using stocks_core.Response;
 using stocks_infrastructure.Models;
 using stocks_infrastructure.Repositories.AverageTradedPrice;
 using stocks_infrastructure.Repositories.IncomeTaxes;
+using System.Security.Principal;
 
 namespace stocks_core.Business
 {
@@ -124,11 +125,10 @@ namespace stocks_core.Business
                 }
             }
 
-            await SaveIntoDatabase(assetsIncomeTaxes, new List<TickerAverageTradedPrice>(), accountId);
+            await SaveIntoDatabase(assetsIncomeTaxes, accountId);
         }
 
-        private async Task SaveIntoDatabase(Dictionary<string, List<AssetIncomeTaxes>> response,
-            List<TickerAverageTradedPrice> assetsAverageTradedPrices, Guid accountId)
+        private async Task SaveIntoDatabase(Dictionary<string, List<AssetIncomeTaxes>> response, Guid accountId)
         {
             Account account = genericRepositoryAccount.GetById(accountId);
 
@@ -138,40 +138,52 @@ namespace stocks_core.Business
             // urgh, nested loops. leetcode bros hate my O(n^2) algorithm
             foreach(var month in response)
             {
-                foreach (var asset in month.Value)
-                {
-                    if (asset.Taxes > 0)
-                    {
-                        incomeTaxes.Add(new IncomeTaxes
-                        {
-                            Month = month.Key,
-                            TotalTaxes = asset.Taxes,
-                            TotalSold = asset.TotalSold,
-                            SwingTradeProfit = asset.SwingTradeProfit,
-                            DayTradeProfit = asset.DayTradeProfit,
-                            TradedAssets = asset.TradedAssets,
-                            DayTraded = asset.DayTraded,
-                            Account = account,
-                            AssetId = (int)asset.AssetTypeId
-                        });
-                    }
-                }
+                AddIncomeTaxes(month, incomeTaxes, account);
             }
 
-            foreach (var asset in assetsAverageTradedPrices)
-            {
-                averageTradedPrices.Add(new AverageTradedPrice
-                {
-                    Account = account,
-                    Ticker = asset.TickerSymbol,
-                    AveragePrice = asset.AverageTradedPrice,
-                    Quantity = asset.TradedQuantity,
-                    UpdatedAt = DateTime.Now
-                });
-            }
+            AddAverageTradedPrices(response, averageTradedPrices, account);                
 
             await incomeTaxesRepository.AddAllAsync(incomeTaxes);
             await averageTradedPriceRepository.AddAllAsync(averageTradedPrices);
+        }
+
+        private void AddAverageTradedPrices(Dictionary<string, List<AssetIncomeTaxes>> response, List<AverageTradedPrice> averageTradedPricesList, Account account)
+        {
+            var averageTradedPrices = response.First().Value.First().AverageTradedPrices;
+
+            foreach(var averageTradedPrice in averageTradedPrices)
+            {
+                averageTradedPricesList.Add(new AverageTradedPrice
+                {
+                    Ticker = averageTradedPrice.Key,
+                    AveragePrice = averageTradedPrice.Value.AverageTradedPrice,
+                    Quantity = averageTradedPrice.Value.TradedQuantity,
+                    Account = account,
+                    UpdatedAt = DateTime.UtcNow
+                });
+            }
+        }
+
+        private void AddIncomeTaxes(KeyValuePair<string, List<AssetIncomeTaxes>> month, List<IncomeTaxes> incomeTaxes, Account account)
+        {
+            foreach (var asset in month.Value)
+            {
+                if (asset.Taxes > 0)
+                {
+                    incomeTaxes.Add(new IncomeTaxes
+                    {
+                        Month = month.Key,
+                        TotalTaxes = asset.Taxes,
+                        TotalSold = asset.TotalSold,
+                        SwingTradeProfit = asset.SwingTradeProfit,
+                        DayTradeProfit = asset.DayTradeProfit,
+                        TradedAssets = asset.TradedAssets,
+                        DayTraded = asset.DayTraded,
+                        Account = account,
+                        AssetId = (int)asset.AssetTypeId
+                    });
+                }
+            }
         }
     }
 }
