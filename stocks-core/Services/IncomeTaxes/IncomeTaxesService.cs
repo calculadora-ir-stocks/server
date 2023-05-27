@@ -181,18 +181,6 @@ public class IncomeTaxesService : IIncomeTaxesService
                 TickerSymbol = "VALE3",
                 CorporationName = "Vale S.A.",
                 MovementType = "Compra",
-                OperationValue = 50000,
-                EquitiesQuantity = 1,
-                ReferenceDate = new DateTime(2023, 01, 10),
-                UnitPrice = 50000
-            });
-
-            response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
-            {
-                AssetType = "Ações",
-                TickerSymbol = "VALE3",
-                CorporationName = "Vale S.A.",
-                MovementType = "Compra",
                 OperationValue = 43000,
                 EquitiesQuantity = 1,
                 ReferenceDate = new DateTime(2023, 02, 10),
@@ -214,8 +202,8 @@ public class IncomeTaxesService : IIncomeTaxesService
             response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
             {
                 AssetType = "Ações",
-                TickerSymbol = "VALE3",
-                CorporationName = "Vale S.A.",
+                TickerSymbol = "PETR4",
+                CorporationName = "Petrobras",
                 MovementType = "Compra",
                 OperationValue = 49000,
                 EquitiesQuantity = 1,
@@ -226,8 +214,8 @@ public class IncomeTaxesService : IIncomeTaxesService
             response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
             {
                 AssetType = "Ações",
-                TickerSymbol = "VALE3",
-                CorporationName = "Vale S.A.",
+                TickerSymbol = "PETR4",
+                CorporationName = "Petrobras",
                 MovementType = "Venda",
                 OperationValue = 52000,
                 EquitiesQuantity = 1,

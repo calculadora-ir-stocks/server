@@ -100,19 +100,12 @@ namespace stocks_core.Business
             {
                 var ticker = assetDetails[movement.TickerSymbol];
 
-                double price = ticker.TotalBought + movement.OperationValue;
+                double totalBought = ticker.TotalBought + movement.OperationValue;
                 double quantity = ticker.TradedQuantity + movement.EquitiesQuantity;
 
-                var asset = new TickerDetails(
-                    price,
-                    quantity,
-                    movement.TickerSymbol,
-                    ticker.CorporationName,
-                    averageTradedPrice: price / quantity,
-                    TickerDayTraded(movements, movement.TickerSymbol)
-                );
-
-                response.Add(movement.TickerSymbol, asset);
+                ticker.TotalBought = totalBought;
+                ticker.TradedQuantity = (int)quantity;
+                ticker.AverageTradedPrice = totalBought / quantity;
             }
             else
             {

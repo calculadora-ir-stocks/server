@@ -135,7 +135,6 @@ namespace stocks_core.Business
             List<IncomeTaxes> incomeTaxes = new();
             List<AverageTradedPrice> averageTradedPrices = new();
 
-            // urgh, nested loops. leetcode bros hate my O(n^2) algorithm
             foreach(var month in response)
             {
                 AddIncomeTaxes(month, incomeTaxes, account);
