@@ -10,6 +10,7 @@ using stocks_core.Response;
 using stocks_infrastructure.Models;
 using stocks_infrastructure.Repositories.AverageTradedPrice;
 using stocks_infrastructure.Repositories.IncomeTaxes;
+using System.Security.Principal;
 
 namespace stocks_core.Business
 {
@@ -37,7 +38,7 @@ namespace stocks_core.Business
             if (movements.IsNullOrEmpty()) return;
 
             OrderMovementsByDateAndMovementType(movements);
-
+             
             var monthlyMovements = new Dictionary<string, List<Movement.EquitMovement>>();
             var monthsThatHadMovements = movements.Select(x => x.ReferenceDate.ToString("MM/yyyy")).Distinct();
 
@@ -59,7 +60,8 @@ namespace stocks_core.Business
                     x.MovementType.Equals(B3ServicesConstants.Sell) ||
                     x.MovementType.Equals(B3ServicesConstants.Split) ||
                     x.MovementType.Equals(B3ServicesConstants.ReverseSplit) ||
-                    x.MovementType.Equals(B3ServicesConstants.BonusShare)).ToList();
+                    x.MovementType.Equals(B3ServicesConstants.BonusShare))
+                .ToList();
         }
 
         /// <summary>
@@ -73,11 +75,11 @@ namespace stocks_core.Business
 
         private async Task CalculateTaxesForAllMonths(Dictionary<string, List<Movement.EquitMovement>> monthlyMovements, IIncomeTaxesCalculator calculator, Guid accountId)
         {
-            Dictionary<string, AssetIncomeTaxes> assetsIncomeTaxes = new();
+            Dictionary<string, List<AssetIncomeTaxes>> assetsIncomeTaxes = new();
 
             foreach (var monthMovements in monthlyMovements)
             {
-                assetsIncomeTaxes.Add(monthMovements.Key, new AssetIncomeTaxes());
+                assetsIncomeTaxes.Add(monthMovements.Key, new List<AssetIncomeTaxes>());
 
                 var stocks = monthMovements.Value.Where(x => x.AssetType.Equals(AssetMovementTypes.Stocks));
                 var etfs = monthMovements.Value.Where(x => x.AssetType.Equals(AssetMovementTypes.ETFs));
@@ -123,48 +125,64 @@ namespace stocks_core.Business
                 }
             }
 
-            await SaveIntoDatabase(assetsIncomeTaxes, calculator.GetTickersAverageTradedPrice(), accountId);
+            await SaveIntoDatabase(assetsIncomeTaxes, accountId);
         }
 
-        private async Task SaveIntoDatabase(Dictionary<string, AssetIncomeTaxes> response,
-            List<TickerAverageTradedPrice> assetsAverageTradedPrices, Guid accountId)
+        private async Task SaveIntoDatabase(Dictionary<string, List<AssetIncomeTaxes>> response, Guid accountId)
         {
             Account account = genericRepositoryAccount.GetById(accountId);
 
-            // The loneliness of building a software company by my own is making me sad. If you're reading this, wanna partner up?
             List<IncomeTaxes> incomeTaxes = new();
             List<AverageTradedPrice> averageTradedPrices = new();
 
-            foreach(var movement in response)
+            foreach(var month in response)
             {
-                incomeTaxes.Add(new IncomeTaxes
-                {
-                    Month = movement.Key,
-                    TotalTaxes = movement.Value.Taxes,
-                    TotalSold = movement.Value.TotalSold,
-                    SwingTradeProfit = movement.Value.SwingTradeProfit,
-                    DayTradeProfit = movement.Value.DayTradeProfit,
-                    TradedAssets = movement.Value.TradedAssets,
-                    DayTraded = movement.Value.DayTraded,
-                    Account = account,
-                    AssetId = (int)movement.Value.AssetTypeId
-                });
+                AddIncomeTaxes(month, incomeTaxes, account);
             }
 
-            foreach (var asset in assetsAverageTradedPrices)
-            {
-                averageTradedPrices.Add(new AverageTradedPrice
-                {
-                    Account = account,
-                    Ticker = asset.TickerSymbol,
-                    AveragePrice = asset.AverageTradedPrice,
-                    Quantity = asset.TradedQuantity,
-                    UpdatedAt = DateTime.Now
-                });
-            }
+            AddAverageTradedPrices(response, averageTradedPrices, account);                
 
             await incomeTaxesRepository.AddAllAsync(incomeTaxes);
             await averageTradedPriceRepository.AddAllAsync(averageTradedPrices);
+        }
+
+        private void AddAverageTradedPrices(Dictionary<string, List<AssetIncomeTaxes>> response, List<AverageTradedPrice> averageTradedPricesList, Account account)
+        {
+            var averageTradedPrices = response.First().Value.First().AverageTradedPrices;
+
+            foreach(var averageTradedPrice in averageTradedPrices)
+            {
+                averageTradedPricesList.Add(new AverageTradedPrice
+                {
+                    Ticker = averageTradedPrice.Key,
+                    AveragePrice = averageTradedPrice.Value.AverageTradedPrice,
+                    Quantity = averageTradedPrice.Value.TradedQuantity,
+                    Account = account,
+                    UpdatedAt = DateTime.UtcNow
+                });
+            }
+        }
+
+        private void AddIncomeTaxes(KeyValuePair<string, List<AssetIncomeTaxes>> month, List<IncomeTaxes> incomeTaxes, Account account)
+        {
+            foreach (var asset in month.Value)
+            {
+                if (asset.Taxes > 0)
+                {
+                    incomeTaxes.Add(new IncomeTaxes
+                    {
+                        Month = month.Key,
+                        TotalTaxes = asset.Taxes,
+                        TotalSold = asset.TotalSold,
+                        SwingTradeProfit = asset.SwingTradeProfit,
+                        DayTradeProfit = asset.DayTradeProfit,
+                        TradedAssets = asset.TradedAssets,
+                        DayTraded = asset.DayTraded,
+                        Account = account,
+                        AssetId = (int)asset.AssetTypeId
+                    });
+                }
+            }
         }
     }
 }

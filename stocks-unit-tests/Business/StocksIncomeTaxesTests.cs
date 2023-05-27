@@ -18,7 +18,7 @@ namespace stocks_unit_tests.Business
             "e a alíquota sob o lucro líquido deverá ser de 20%.")]
         public void Should_be_day_trade_if_buy_and_sell_are_on_the_same_day()
         {
-            AssetIncomeTaxes response = new();
+            List<AssetIncomeTaxes> response = new();
 
             List<Movement.EquitMovement> movements = new()
             {
@@ -31,15 +31,15 @@ namespace stocks_unit_tests.Business
             double profit = movements[1].OperationValue - movements[0].OperationValue;
             decimal twentyPercentTaxes = (IncomeTaxesConstants.IncomeTaxesForDayTrade / 100m) * (decimal) profit;
 
-            Assert.True(response.DayTraded);
-            Assert.Equal(response.Taxes, (double)twentyPercentTaxes);
+            Assert.True(response[0].DayTraded);
+            Assert.Equal(response[0].Taxes, (double)twentyPercentTaxes);
         }
 
         [Fact(DisplayName = "Caso uma operação de compra e venda sejam feitas em dias diferentes, deve ser considerada swing-trade" +
             "e a alíquota sob o lucro líquido deverá ser de 15%.")]
         public void Should_be_swing_trade_if_buy_and_sell_are_on_different_days()
         {
-            AssetIncomeTaxes response = new();
+            List<AssetIncomeTaxes> response = new();
 
             List<Movement.EquitMovement> movements = new()
             {
@@ -52,15 +52,15 @@ namespace stocks_unit_tests.Business
             double profit = movements[1].OperationValue - movements[0].OperationValue;
             decimal fifteenPercentTaxes = (IncomeTaxesConstants.IncomeTaxesForStocks / 100m) * (decimal)profit;
 
-            Assert.False(response.DayTraded);
-            Assert.Equal(response.Taxes, (double)fifteenPercentTaxes);
+            Assert.False(response[0].DayTraded);
+            Assert.Equal(response[0].Taxes, (double)fifteenPercentTaxes);
         }
 
         [Fact(DisplayName = "Caso as operações de venda de um mês não ultrapassem o valor de R$20.000, o investidor não terá que" +
             "pagar imposto de renda.")]
         public void Should_not_pay_taxes_if_month_sells_are_less_than_20000()
         {
-            AssetIncomeTaxes response = new();
+            List<AssetIncomeTaxes> response = new();
 
             List<Movement.EquitMovement> movements = new()
             {
@@ -72,14 +72,14 @@ namespace stocks_unit_tests.Business
 
             stocksCalculator.CalculateIncomeTaxesForSpecifiedMonth(response, movements);
 
-            Assert.Equal(0, response.Taxes);
+            Assert.Equal(0, response[0].Taxes);
         }
 
         [Fact(DisplayName = "Caso as operações de venda de um mês ultrapassem o limite de R$20.000 mas houveram prejuízos, o investidor não" +
             "terá que pagar imposto de renda.")]
         public void Should_not_pay_taxes_if_loss_happened_even_if_investor_sold_more_than_20000()
         {
-            AssetIncomeTaxes response = new();
+            List<AssetIncomeTaxes> response = new();
 
             List<Movement.EquitMovement> movements = new()
             {
@@ -91,15 +91,15 @@ namespace stocks_unit_tests.Business
 
             stocksCalculator.CalculateIncomeTaxesForSpecifiedMonth(response, movements);
 
-            Assert.Equal(0, response.Taxes);
+            Assert.Equal(0, response[0].Taxes);
             // Prejuízo de R$1.000
-            Assert.Equal(-1000, response.SwingTradeProfit);
+            Assert.Equal(-1000, response[0].SwingTradeProfit);
         }
 
         [Fact(DisplayName = "Caso o investidor tenha feito day-trade, mas houveram prejuízos, o investidor não terá que pagar imposto de renda.")]
         public void Should_not_pay_taxes_if_loss_happened_even_if_investor_day_traded()
         {
-            AssetIncomeTaxes response = new();
+            List<AssetIncomeTaxes> response = new();
 
             List<Movement.EquitMovement> movements = new()
             {
@@ -109,16 +109,16 @@ namespace stocks_unit_tests.Business
 
             stocksCalculator.CalculateIncomeTaxesForSpecifiedMonth(response, movements);
 
-            Assert.Equal(0, response.Taxes);
+            Assert.Equal(0, response[0].Taxes);
             // Prejuízo de R$1.000
-            Assert.Equal(-1000, response.SwingTradeProfit);
+            Assert.Equal(-1000, response[0].SwingTradeProfit);
         }
 
         [Fact(DisplayName = "Caso o investidor tenha vendido duas ações diferentes em um mês e tenha ultrapassado o limite de R$20.000," +
             "deverá pagar o imposto de renda sob o lucro das duas operações.")]
         public void Should_pay_taxes_when_two_different_tickers_are_sold()
         {
-            AssetIncomeTaxes response = new();
+            List<AssetIncomeTaxes> response = new();
 
             List<Movement.EquitMovement> movements = new()
             {
@@ -136,7 +136,7 @@ namespace stocks_unit_tests.Business
             var totalProfit = petr4Profit + vale3Profit;
             decimal tax = (IncomeTaxesConstants.IncomeTaxesForStocks / 100m) * (decimal)totalProfit;
 
-            Assert.Equal((double)tax, response.Taxes);
+            Assert.Equal((double)tax, response[0].Taxes);
         }
     }
 }

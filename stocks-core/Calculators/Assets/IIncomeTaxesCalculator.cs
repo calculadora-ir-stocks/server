@@ -17,14 +17,6 @@ namespace stocks_core.Calculators.Assets
         /// Retorna o preço médio de todos os ativos movimentados do investidor.
         /// </summary>
         /// <returns>Lista contendo o preço médio de todos os ativos negociados.</returns>
-        void CalculateIncomeTaxesForSpecifiedMonth(AssetIncomeTaxes response, IEnumerable<Movement.EquitMovement> movements);
-
-        /// <summary>
-        /// Retorna uma lista de tickers e seus respectivos preços médios.
-        /// Essa função deve ser chamada após a CalculateIncomeTaxesForSpecifiedMonth, já que ela que
-        /// define os preços médios.
-        /// </summary>
-        /// <returns></returns>
-        List<TickerAverageTradedPrice> GetTickersAverageTradedPrice();
+        void CalculateIncomeTaxesForSpecifiedMonth(List<AssetIncomeTaxes> response, IEnumerable<Movement.EquitMovement> movements);
     }
 }

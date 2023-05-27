@@ -169,9 +169,59 @@ public class IncomeTaxesService : IIncomeTaxesService
 
         try
         {
-            Account account = await genericRepositoryAccount.GetByIdAsync(accountId);
+            // Movement.Root? response = await client.GetAccountMovement("97188167044", minimumAllowedStartDateByB3, referenceEndDate, accountId)!;
+            Movement.Root? response = new();
+            response.Data = new();
+            response.Data.EquitiesPeriods = new();
+            response.Data.EquitiesPeriods.EquitiesMovements = new();
 
-            Movement.Root? response = await client.GetAccountMovement(account.CPF, minimumAllowedStartDateByB3, referenceEndDate, accountId)!;
+            response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
+            {
+                AssetType = "Ações",
+                TickerSymbol = "VALE3",
+                CorporationName = "Vale S.A.",
+                MovementType = "Compra",
+                OperationValue = 43000,
+                EquitiesQuantity = 1,
+                ReferenceDate = new DateTime(2023, 02, 10),
+                UnitPrice = 43000
+            });
+
+            response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
+            {
+                AssetType = "Ações",
+                TickerSymbol = "VALE3",
+                CorporationName = "Vale S.A.",
+                MovementType = "Venda",
+                OperationValue = 48000,
+                EquitiesQuantity = 1,
+                ReferenceDate = new DateTime(2023, 02, 11),
+                UnitPrice = 48000
+            });
+
+            response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
+            {
+                AssetType = "Ações",
+                TickerSymbol = "PETR4",
+                CorporationName = "Petrobras",
+                MovementType = "Compra",
+                OperationValue = 49000,
+                EquitiesQuantity = 1,
+                ReferenceDate = new DateTime(2023, 03, 12),
+                UnitPrice = 49000
+            });
+
+            response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
+            {
+                AssetType = "Ações",
+                TickerSymbol = "PETR4",
+                CorporationName = "Petrobras",
+                MovementType = "Venda",
+                OperationValue = 52000,
+                EquitiesQuantity = 1,
+                ReferenceDate = new DateTime(2023, 03, 12),
+                UnitPrice = 52000
+            });
 
             BigBang bigBang = new(incomeTaxesRepository, averageTradedPriceRepository, genericRepositoryAccount);
             await bigBang.Calculate(response, incomeTaxCalculator, accountId);

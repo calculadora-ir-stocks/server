@@ -14,7 +14,7 @@ namespace stocks_core.Calculators.Assets
             throw new NotImplementedException();
         }
 
-        public void CalculateIncomeTaxesForSpecifiedMonth(AssetIncomeTaxes response, IEnumerable<Movement.EquitMovement> movements)
+        public void CalculateIncomeTaxesForSpecifiedMonth(List<AssetIncomeTaxes> response, IEnumerable<Movement.EquitMovement> movements)
         {
             var tradedTickersDetails = CalculateMovements(movements);
 
@@ -25,24 +25,30 @@ namespace stocks_core.Calculators.Assets
 
             bool paysIncomeTaxes = sells.Any() && (swingTradeProfit > 0 || dayTradeProfit > 0);
 
-            if (paysIncomeTaxes)
-                response.Taxes = (double)CalculateIncomeTaxes(swingTradeProfit, dayTradeProfit, IncomeTaxesConstants.IncomeTaxesForInvestmentsFunds);
-
-            bool dayTraded = tradedTickersDetails.Where(x => x.Value.DayTraded).Any();
-            response.DayTraded = dayTraded;
-
-            double totalSold = sells.Sum(bdr => bdr.OperationValue);
-            response.TotalSold = totalSold;
-
-            response.SwingTradeProfit = swingTradeProfit;
-            response.DayTradeProfit = dayTradeProfit;
-            response.TradedAssets = JsonConvert.SerializeObject(DictionaryToList(tradedTickersDetails));
-            response.AssetTypeId = stocks_infrastructure.Enums.Assets.InvestmentsFunds;
+            response.Add(new AssetIncomeTaxes
+            {
+                Taxes = TaxesToPay(paysIncomeTaxes, swingTradeProfit, dayTradeProfit),
+                DayTraded = DayTraded(tradedTickersDetails),
+                SwingTradeProfit = swingTradeProfit,
+                DayTradeProfit = dayTradeProfit,
+                TotalSold = sells.Sum(funds => funds.OperationValue),
+                AverageTradedPrices = GetAssetDetails(),
+                TradedAssets = JsonConvert.SerializeObject(DictionaryToList(tradedTickersDetails)),
+                AssetTypeId = stocks_infrastructure.Enums.Assets.InvestmentsFunds
+            });
         }
 
-        public List<TickerAverageTradedPrice> GetTickersAverageTradedPrice()
+        private bool DayTraded(Dictionary<string, TickerDetails> tradedTickersDetails)
         {
-            return GetTickersAverageTradedPrice();
+            return tradedTickersDetails.Where(x => x.Value.DayTraded).Any();
+        }
+
+        private double TaxesToPay(bool paysIncomeTaxes, double swingTradeProfit, double dayTradeProfit)
+        {
+            if (paysIncomeTaxes)
+                return (double)CalculateIncomeTaxes(swingTradeProfit, dayTradeProfit, IncomeTaxesConstants.IncomeTaxesForInvestmentsFunds);
+            else
+                return 0;
         }
     }
 }
