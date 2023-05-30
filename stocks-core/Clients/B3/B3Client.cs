@@ -86,16 +86,17 @@ namespace stocks.Services.B3
             logger.LogInformation($"O usuário {accountId} executou o big bang e importou um total de {total} movimentações. O tempo" +
                 $"de execução foi de {seconds} segundos.");
 
-            return assets!;
+            return assets;
         }
 
         /// <summary>
         /// Como a API da B3 separa o response por páginas, é necessário percorrê-las
         /// afim de obter todos os dados.
         /// </summary>
-        private async Task GetAccountMovementsInAllPages(Movement.Root root)
+        private async Task GetAccountMovementsInAllPages(Movement.Root? root)
         {
-            if (root.Links.Next == null) return;
+            if (root is null) return;
+            if (root.Links.Next is null) return;
 
             try
             {

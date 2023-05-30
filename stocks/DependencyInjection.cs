@@ -13,8 +13,9 @@ using stocks.Services.Auth;
 using stocks.Services.B3;
 using stocks.Services.IncomeTaxes;
 using stocks_common;
+using stocks_core.Calculators;
 using stocks_core.Calculators.Assets;
-using stocks_core.Services.AverageTradedPrice;
+using stocks_core.Services.BigBang;
 using stocks_infrastructure.Repositories.AverageTradedPrice;
 using stocks_infrastructure.Repositories.IncomeTaxes;
 using System.Reflection;
@@ -33,7 +34,7 @@ namespace stocks
 
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IIncomeTaxesService, IncomeTaxesService>();
-            services.AddScoped<IAverageTradedPriceService, AverageTradedPriceService>();
+            services.AddScoped<IBigBang, BigBang>();
             services.AddSingleton<IB3Client, B3Client>();
             services.AddScoped<NotificationContext>();
 

@@ -1,6 +1,5 @@
 ﻿using DevOne.Security.Cryptography.BCrypt;
 using FluentValidation;
-using stocks.Commons.Constants;
 using stocks.Enums;
 using stocks_infrastructure.Models;
 using System.Text.RegularExpressions;
@@ -46,11 +45,18 @@ namespace stocks.Models
         private readonly Regex isValidEmail = new(@"^([\w\.\-]+)@([\w\-]+)((\.(\w){2,3})+)$");
         private readonly Regex isValidCPF = new(@"(^\d{3}\.\d{3}\.\d{3}\-\d{2}$)");
 
+        private const int NameMinLength = 3;
+        private const int NameMaxLength = 20;
+
         public AccountValidator()
         {
             RuleFor(c => c.Name)
-                .MinimumLength(Validators.UsernameMinLength)
-                .WithMessage($"Nome de usuário deve conter no mínimo {Validators.UsernameMinLength} caracteres.");
+                .MinimumLength(NameMinLength)
+                .WithMessage($"Nome de usuário deve conter no mínimo {NameMinLength} caracteres.");
+
+            RuleFor(c => c.Name)
+                .MaximumLength(NameMaxLength)
+                .WithMessage($"Nome de usuário deve conter no máximo {NameMaxLength} caracteres.");
 
             RuleFor(c => c.Email)
                 .Must(c => isValidEmail.IsMatch(c.ToString()))

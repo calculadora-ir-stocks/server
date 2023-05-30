@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
 using stocks.Exceptions;
+using stocks_common.Exceptions;
 using System.Net;
 
 namespace stocks.Middlewares
@@ -28,6 +29,9 @@ namespace stocks.Middlewares
                 {
                     case InvalidBusinessRuleException:
                         response.StatusCode = (int)HttpStatusCode.BadRequest;
+                        break;
+                    case NoneMovementsException:
+                        response.StatusCode = (int)HttpStatusCode.OK;
                         break;
                     case KeyNotFoundException _:
                         response.StatusCode = (int)HttpStatusCode.NotFound;

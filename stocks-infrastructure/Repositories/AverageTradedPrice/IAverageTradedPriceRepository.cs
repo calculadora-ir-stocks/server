@@ -2,7 +2,7 @@
 {
     public interface IAverageTradedPriceRepostory
     {
-        bool AccountAlreadyHasAverageTradedPrice(Guid accountId);
+        bool AlreadyHasAverageTradedPriceCalculated(Guid accountId);
         void InsertAll(IEnumerable<Models.AverageTradedPrice> averageTradedPrices);
         Task Insert(Models.AverageTradedPrice averageTradedPrices);
         Models.AverageTradedPrice? GetAverageTradedPrice(string ticker, Guid accountId);

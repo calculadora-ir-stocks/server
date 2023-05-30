@@ -17,7 +17,7 @@ namespace stocks.Commons.Jwt
             _appSettings = appSettings.Value;
         }
 
-        public string GenerateToken(AccountDTO account)
+        public string GenerateToken(AccountDto account)
         {
             var key = Encoding.ASCII.GetBytes(_appSettings.Secret);
             var signinCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature);

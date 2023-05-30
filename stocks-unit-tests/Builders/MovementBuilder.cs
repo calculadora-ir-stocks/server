@@ -69,12 +69,12 @@ namespace stocks_unit_tests.Builders
         {
             string[] assetTypes = new string[6]
             {
-                AssetMovementTypes.Stocks,
-                AssetMovementTypes.ETFs,
-                AssetMovementTypes.Gold,
-                AssetMovementTypes.FIIs,
-                AssetMovementTypes.FundInvestments,
-                AssetMovementTypes.BDRs,
+                MovementsTypes.Stocks,
+                MovementsTypes.ETFs,
+                MovementsTypes.Gold,
+                MovementsTypes.FIIs,
+                MovementsTypes.FundInvestments,
+                MovementsTypes.BDRs,
             };
 
             return assetTypes[_random.Next(0, assetTypes.Length)];

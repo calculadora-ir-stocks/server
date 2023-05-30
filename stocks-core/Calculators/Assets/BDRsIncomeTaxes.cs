@@ -3,7 +3,7 @@ using stocks_common.Models;
 using stocks_core.Business;
 using stocks_core.Constants;
 using stocks_core.DTOs.B3;
-using stocks_core.Response;
+using stocks_core.Models;
 
 namespace stocks_core.Calculators.Assets
 {
@@ -14,11 +14,11 @@ namespace stocks_core.Calculators.Assets
             throw new NotImplementedException();
         }
 
-        public void CalculateIncomeTaxesForSpecifiedMonth(List<AssetIncomeTaxes> response, IEnumerable<Movement.EquitMovement> movements)
+        public void CalculateIncomeTaxesForSpecifiedMovements(List<AssetIncomeTaxes> response, IEnumerable<Movement.EquitMovement> movements)
         {            
             var tradedTickersDetails = CalculateMovements(movements);
 
-            var sells = movements.Where(x => x.MovementType.Equals(B3ServicesConstants.Sell));
+            var sells = movements.Where(x => x.MovementType.Equals(B3ResponseConstants.Sell));
 
             double swingTradeProfit = tradedTickersDetails.Where(x => !x.Value.DayTraded).Select(x => x.Value.Profit).Sum();
             double dayTradeProfit = tradedTickersDetails.Where(x => x.Value.DayTraded ).Select(x => x.Value.Profit).Sum();
@@ -46,7 +46,7 @@ namespace stocks_core.Calculators.Assets
         private double TaxesToPay(bool paysIncomeTaxes, double swingTradeProfit, double dayTradeProfit)
         {
             if (paysIncomeTaxes)
-                return (double)CalculateIncomeTaxes(swingTradeProfit, dayTradeProfit, IncomeTaxesConstants.IncomeTaxesForBDRs);
+                return (double)CalculateIncomeTaxes(swingTradeProfit, dayTradeProfit, AliquotConstants.IncomeTaxesForBDRs);
             else
                 return 0;
         }

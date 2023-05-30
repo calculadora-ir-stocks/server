@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using stocks.Requests;
 using stocks.Services.IncomeTaxes;
+using stocks_core.Requests.BigBang;
 
 namespace stocks.Controllers;
 
@@ -22,24 +22,22 @@ public class IncomeTaxesController : BaseController
     /// Calcula o total de imposto de renda a ser pago em ativos de renda variável no mês atual. 
     /// </summary>
     [HttpGet("assets")]
-    [AllowAnonymous]
     public IActionResult CalculateCurrentMonthAssetsIncomeTaxes(Guid accountId) {
         var response = service.CalculateCurrentMonthAssetsIncomeTaxes(accountId);
         return Ok(response);
     }
 
     /// <summary>
+    /// (Deve ser executado uma única vez quando um usuário cadastrar-se na plataforma)
     /// Calcula e armazena o imposto de renda a ser pago em todos os meses desde 01/11/2019 até D-1.
     /// Também calcula e armazena o preço médio de todos os ativos até a data atual.
-    /// Deve ser executado uma única vez quando um usuário cadastrar-se na plataforma.
     /// </summary>
     [HttpPost("big-bang/{id}")]
     [AllowAnonymous]
-    public async Task<IActionResult> BigBang(Guid id,
-        [FromBody] List<CalculateIncomeTaxesForEveryMonthRequest> request)
+    public async Task<IActionResult> BigBang(Guid id, [FromBody] List<BigBangRequest> request)
     {
         await service.BigBang(id, request);
-        return Ok("Preço médio calculado e armazenado com sucesso.");
+        return Ok("Imposto de renda e preço médio mais recente calculados e armazenados com sucesso.");
     }
 
     /// <summary>

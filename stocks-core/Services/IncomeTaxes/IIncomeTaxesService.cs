@@ -1,5 +1,5 @@
-using stocks.Requests;
-using stocks_core.Response;
+using stocks_core.Models;
+using stocks_core.Requests.BigBang;
 
 namespace stocks.Services.IncomeTaxes;
 
@@ -14,5 +14,5 @@ public interface IIncomeTaxesService
     /// Calcula e armazena o imposto de renda a ser pago em todos os meses desde 01/11/2019 até D-1.
     /// Também calcula e armazena o preço médio de todos os ativos.
     /// </summary>
-    Task BigBang(Guid accountId, List<CalculateIncomeTaxesForEveryMonthRequest> request);
+    Task BigBang(Guid accountId, List<BigBangRequest> request);
 }

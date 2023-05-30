@@ -8,7 +8,7 @@ namespace stocks_core.Business
     /// Classe responsável por calcular o preço médio em movimentações de compra e venda.
     /// Também leva em consideração movimentos de bonificação, desdobramento e agrupamento.
     /// </summary>
-    public class AverageTradedPriceCalculator
+    public abstract class AverageTradedPriceCalculator
     {
         private static readonly Dictionary<string, TickerAverageTradedPrice> assetDetails = new();
 
@@ -25,19 +25,19 @@ namespace stocks_core.Business
             {
                 switch (movement.MovementType)
                 {
-                    case B3ServicesConstants.Buy:
+                    case B3ResponseConstants.Buy:
                         CalculateBuyOperation(response, movement, movements);
                         break;
-                    case B3ServicesConstants.Sell:
+                    case B3ResponseConstants.Sell:
                         CalculateSellOperation(response, movement, movements);
                         break;
-                    case B3ServicesConstants.Split:
+                    case B3ResponseConstants.Split:
                         CalculateSplitOperation(response, movement);
                         break;
-                    case B3ServicesConstants.ReverseSplit:
+                    case B3ResponseConstants.ReverseSplit:
                         CalculateReverseSplitOperation(response, movement);
                         break;
-                    case B3ServicesConstants.BonusShare:
+                    case B3ResponseConstants.BonusShare:
                         CalculateBonusSharesOperation(response, movement, movements);
                         break;
                 }
@@ -52,14 +52,10 @@ namespace stocks_core.Business
             decimal dayTradeTaxes = 0;
 
             if (swingTradeProfit > 0)
-            {
                 swingTradeTaxes = (aliquot / 100m) * (decimal)swingTradeProfit;
-            }
 
             if (dayTradeProfit > 0)
-            {
-                dayTradeTaxes = (IncomeTaxesConstants.IncomeTaxesForDayTrade / 100m) * (decimal)dayTradeProfit;
-            }
+                dayTradeTaxes = (AliquotConstants.IncomeTaxesForDayTrade / 100m) * (decimal)dayTradeProfit;
 
             decimal totalTaxes = swingTradeTaxes + dayTradeTaxes;
 
@@ -77,10 +73,10 @@ namespace stocks_core.Business
         public static bool TickerDayTraded(IEnumerable<Movement.EquitMovement> movements, string tickerSymbol)
         {
             var buys = movements.Where(x =>
-                x.MovementType == B3ServicesConstants.Buy && x.TickerSymbol == tickerSymbol
+                x.MovementType == B3ResponseConstants.Buy && x.TickerSymbol == tickerSymbol
             );
             var sells = movements.Where(x =>
-                x.MovementType == B3ServicesConstants.Sell && x.TickerSymbol == tickerSymbol
+                x.MovementType == B3ResponseConstants.Sell && x.TickerSymbol == tickerSymbol
             );
 
             var dayTradeTransactions = buys.Where(b => sells.Any(s =>

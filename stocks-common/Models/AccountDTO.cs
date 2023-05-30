@@ -2,15 +2,15 @@
 
 namespace stocks_common.Models
 {
-    public class AccountDTO
+    public class AccountDto
     {
-        public AccountDTO(Guid id, string name, string email, string password, string cPF, Plan plan)
+        public AccountDto(Guid id, string name, string email, string password, string cpf, Plan plan)
         {
             Id = id;
             Name = name;
             Email = email;
             Password = password;
-            CPF = cPF;
+            CPF = cpf;
             Plan = plan;
         }
 

@@ -1,7 +1,8 @@
-﻿using stocks_core.Calculators.Assets;
+﻿using stocks_core.Calculators;
+using stocks_core.Calculators.Assets;
 using stocks_core.Constants;
 using stocks_core.DTOs.B3;
-using stocks_core.Response;
+using stocks_core.Models;
 
 namespace stocks_unit_tests.Business
 {
@@ -26,10 +27,10 @@ namespace stocks_unit_tests.Business
                 new Movement.EquitMovement("PETR4", "Petróleo Brasileiro S/A", "Ações", "Venda", 25000, 1, 25000, new DateTime(2023, 01, 01))
             };
 
-            stocksCalculator.CalculateIncomeTaxesForSpecifiedMonth(response, movements);
+            stocksCalculator.CalculateIncomeTaxesForSpecifiedMovements(response, movements);
 
             double profit = movements[1].OperationValue - movements[0].OperationValue;
-            decimal twentyPercentTaxes = (IncomeTaxesConstants.IncomeTaxesForDayTrade / 100m) * (decimal) profit;
+            decimal twentyPercentTaxes = (AliquotConstants.IncomeTaxesForDayTrade / 100m) * (decimal) profit;
 
             Assert.True(response[0].DayTraded);
             Assert.Equal(response[0].Taxes, (double)twentyPercentTaxes);
@@ -47,10 +48,10 @@ namespace stocks_unit_tests.Business
                 new Movement.EquitMovement("PETR4", "Petróleo Brasileiro S/A", "Ações", "Venda", 25000, 1, 25000, new DateTime(2023, 01, 02))
             };
 
-            stocksCalculator.CalculateIncomeTaxesForSpecifiedMonth(response, movements);
+            stocksCalculator.CalculateIncomeTaxesForSpecifiedMovements(response, movements);
 
             double profit = movements[1].OperationValue - movements[0].OperationValue;
-            decimal fifteenPercentTaxes = (IncomeTaxesConstants.IncomeTaxesForStocks / 100m) * (decimal)profit;
+            decimal fifteenPercentTaxes = (AliquotConstants.IncomeTaxesForStocks / 100m) * (decimal)profit;
 
             Assert.False(response[0].DayTraded);
             Assert.Equal(response[0].Taxes, (double)fifteenPercentTaxes);
@@ -70,7 +71,7 @@ namespace stocks_unit_tests.Business
                 new Movement.EquitMovement("PETR4", "Petróleo Brasileiro S/A", "Ações", "Venda", 19653, 1, 19653, new DateTime(2023, 01, 02))
             };
 
-            stocksCalculator.CalculateIncomeTaxesForSpecifiedMonth(response, movements);
+            stocksCalculator.CalculateIncomeTaxesForSpecifiedMovements(response, movements);
 
             Assert.Equal(0, response[0].Taxes);
         }
@@ -89,7 +90,7 @@ namespace stocks_unit_tests.Business
                 new Movement.EquitMovement("PETR4", "Petróleo Brasileiro S/A", "Ações", "Venda", 21000, 1, 21000, new DateTime(2023, 01, 02))
             };
 
-            stocksCalculator.CalculateIncomeTaxesForSpecifiedMonth(response, movements);
+            stocksCalculator.CalculateIncomeTaxesForSpecifiedMovements(response, movements);
 
             Assert.Equal(0, response[0].Taxes);
             // Prejuízo de R$1.000
@@ -107,7 +108,7 @@ namespace stocks_unit_tests.Business
                 new Movement.EquitMovement("PETR4", "Petróleo Brasileiro S/A", "Ações", "Venda", 20000, 1, 20000, new DateTime(2023, 01, 02))
             };
 
-            stocksCalculator.CalculateIncomeTaxesForSpecifiedMonth(response, movements);
+            stocksCalculator.CalculateIncomeTaxesForSpecifiedMovements(response, movements);
 
             Assert.Equal(0, response[0].Taxes);
             // Prejuízo de R$1.000
@@ -128,13 +129,13 @@ namespace stocks_unit_tests.Business
                 new Movement.EquitMovement("VALE3", "Vale S.A.", "Ações", "Venda", 12, 1, 12, new DateTime(2023, 01, 04)),
             };
 
-            stocksCalculator.CalculateIncomeTaxesForSpecifiedMonth(response, movements);
+            stocksCalculator.CalculateIncomeTaxesForSpecifiedMovements(response, movements);
 
             var petr4Profit = movements[1].OperationValue - movements[0].OperationValue;
             var vale3Profit = movements[3].OperationValue - movements[2].OperationValue;
 
             var totalProfit = petr4Profit + vale3Profit;
-            decimal tax = (IncomeTaxesConstants.IncomeTaxesForStocks / 100m) * (decimal)totalProfit;
+            decimal tax = (AliquotConstants.IncomeTaxesForStocks / 100m) * (decimal)totalProfit;
 
             Assert.Equal((double)tax, response[0].Taxes);
         }
