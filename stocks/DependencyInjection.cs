@@ -13,6 +13,7 @@ using stocks.Services.Auth;
 using stocks.Services.B3;
 using stocks.Services.IncomeTaxes;
 using stocks_common;
+using stocks_core.Calculators;
 using stocks_core.Calculators.Assets;
 using stocks_core.Services.BigBang;
 using stocks_infrastructure.Repositories.AverageTradedPrice;

@@ -1,9 +1,10 @@
 ﻿using Microsoft.IdentityModel.Tokens;
 using stocks_common.Exceptions;
+using stocks_core.Calculators;
 using stocks_core.Calculators.Assets;
 using stocks_core.Constants;
 using stocks_core.DTOs.B3;
-using stocks_core.Response;
+using stocks_core.Models;
 
 namespace stocks_core.Services.BigBang
 {
@@ -43,11 +44,11 @@ namespace stocks_core.Services.BigBang
 
             return movements
                 .Where(x =>
-                    x.MovementType.Equals(B3ServicesConstants.Buy) ||
-                    x.MovementType.Equals(B3ServicesConstants.Sell) ||
-                    x.MovementType.Equals(B3ServicesConstants.Split) ||
-                    x.MovementType.Equals(B3ServicesConstants.ReverseSplit) ||
-                    x.MovementType.Equals(B3ServicesConstants.BonusShare))
+                    x.MovementType.Equals(B3ResponseConstants.Buy) ||
+                    x.MovementType.Equals(B3ResponseConstants.Sell) ||
+                    x.MovementType.Equals(B3ResponseConstants.Split) ||
+                    x.MovementType.Equals(B3ResponseConstants.ReverseSplit) ||
+                    x.MovementType.Equals(B3ResponseConstants.BonusShare))
                 .ToList();
         }
 
@@ -68,12 +69,12 @@ namespace stocks_core.Services.BigBang
             {
                 assetsIncomeTaxes.Add(monthMovements.Key, new List<AssetIncomeTaxes>());
 
-                var stocks = monthMovements.Value.Where(x => x.AssetType.Equals(AssetMovementTypes.Stocks));
-                var etfs = monthMovements.Value.Where(x => x.AssetType.Equals(AssetMovementTypes.ETFs));
-                var fiis = monthMovements.Value.Where(x => x.AssetType.Equals(AssetMovementTypes.FIIs));
-                var bdrs = monthMovements.Value.Where(x => x.AssetType.Equals(AssetMovementTypes.BDRs));
-                var gold = monthMovements.Value.Where(x => x.AssetType.Equals(AssetMovementTypes.Gold));
-                var fundInvestments = monthMovements.Value.Where(x => x.AssetType.Equals(AssetMovementTypes.FundInvestments));
+                var stocks = monthMovements.Value.Where(x => x.AssetType.Equals(B3ResponseConstants.Stocks));
+                var etfs = monthMovements.Value.Where(x => x.AssetType.Equals(B3ResponseConstants.ETFs));
+                var fiis = monthMovements.Value.Where(x => x.AssetType.Equals(B3ResponseConstants.FIIs));
+                var bdrs = monthMovements.Value.Where(x => x.AssetType.Equals(B3ResponseConstants.BDRs));
+                var gold = monthMovements.Value.Where(x => x.AssetType.Equals(B3ResponseConstants.Gold));
+                var fundInvestments = monthMovements.Value.Where(x => x.AssetType.Equals(B3ResponseConstants.FundInvestments));
 
                 if (stocks.Any())
                 {

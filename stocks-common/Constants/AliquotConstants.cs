@@ -1,6 +1,6 @@
 ﻿namespace stocks_core.Constants
 {
-    public static class IncomeTaxesConstants
+    public static class AliquotConstants
     {
         /// <summary>
         /// Teto de vendas para se isentar do pagamento do imposto de renda de ações.

@@ -1,7 +1,7 @@
 ﻿using stocks_common.Models;
 using stocks_infrastructure.Enums;
 
-namespace stocks_core.Response
+namespace stocks_core.Models
 {
     public class AssetIncomeTaxes
     {
@@ -28,14 +28,14 @@ namespace stocks_core.Response
         /// <summary>
         /// O total de lucro ou prejuízo de um determinado ativo movimentado por day trade.
         /// </summary>
-        public double DayTradeProfit { get; set; } = 0;        
+        public double DayTradeProfit { get; set; } = 0;
 
         public bool DayTraded { get; set; } = false;
 
         /// <summary>
         /// Uma lista em formato JSON que representa os ativos negociados.
         /// </summary>
-        public string TradedAssets { get; set; } = String.Empty;
+        public string TradedAssets { get; set; } = string.Empty;
 
         /// <summary>
         /// O id do tipo de ativo sendo negociado.

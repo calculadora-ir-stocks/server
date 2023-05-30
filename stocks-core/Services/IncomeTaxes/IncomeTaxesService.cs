@@ -2,10 +2,10 @@ using Microsoft.Extensions.Logging;
 using stocks.Clients.B3;
 using stocks.Models;
 using stocks.Repositories;
-using stocks.Requests;
-using stocks_core.Calculators.Assets;
+using stocks_core.Calculators;
 using stocks_core.DTOs.B3;
-using stocks_core.Response;
+using stocks_core.Models;
+using stocks_core.Requests.BigBang;
 using stocks_core.Services.BigBang;
 using stocks_infrastructure.Models;
 using stocks_infrastructure.Repositories.AverageTradedPrice;
@@ -53,14 +53,67 @@ public class IncomeTaxesService : IIncomeTaxesService
                 $"calculado na base.");
 
             return;
-        }        
+        }
 
         try
         {
             string minimumAllowedStartDateByB3 = "2019-11-01";
             string yesterday = DateTime.Now.AddDays(-1).ToString("yyyy-MM-dd");
 
-            Movement.Root? response = await client.GetAccountMovement("97188167044", minimumAllowedStartDateByB3, referenceEndDate: yesterday, accountId)!;            
+            //Movement.Root? response = await client.GetAccountMovement("97188167044", minimumAllowedStartDateByB3, referenceEndDate: yesterday, accountId);            
+
+            Movement.Root? response = new();
+            response.Data = new();
+            response.Data.EquitiesPeriods = new();
+            response.Data.EquitiesPeriods.EquitiesMovements = new();
+
+            response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
+            {
+                AssetType = "Ações",
+                TickerSymbol = "VALE3",
+                CorporationName = "Vale S.A.",
+                MovementType = "Compra",
+                OperationValue = 43000,
+                EquitiesQuantity = 1,
+                ReferenceDate = new DateTime(2023, 02, 10),
+                UnitPrice = 43000
+            });
+
+            response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
+            {
+                AssetType = "Ações",
+                TickerSymbol = "VALE3",
+                CorporationName = "Vale S.A.",
+                MovementType = "Venda",
+                OperationValue = 48000,
+                EquitiesQuantity = 1,
+                ReferenceDate = new DateTime(2023, 02, 11),
+                UnitPrice = 48000
+            });
+
+            response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
+            {
+                AssetType = "Ações",
+                TickerSymbol = "PETR4",
+                CorporationName = "Petrobras",
+                MovementType = "Compra",
+                OperationValue = 49000,
+                EquitiesQuantity = 1,
+                ReferenceDate = new DateTime(2023, 03, 12),
+                UnitPrice = 49000
+            });
+
+            response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
+            {
+                AssetType = "Ações",
+                TickerSymbol = "PETR4",
+                CorporationName = "Petrobras",
+                MovementType = "Venda",
+                OperationValue = 52000,
+                EquitiesQuantity = 1,
+                ReferenceDate = new DateTime(2023, 03, 12),
+                UnitPrice = 52000
+            });
 
             BigBang bigBang = new(incomeTaxCalculator);
             var taxesToBePaid = bigBang.Calculate(response);
@@ -72,6 +125,7 @@ public class IncomeTaxesService : IIncomeTaxesService
         {
             logger.LogError($"Uma exceção ocorreu ao executar o Big Bang do usuário {accountId}." +
                 $"{e.Message}");
+
             throw;
         }
     }
@@ -80,7 +134,7 @@ public class IncomeTaxesService : IIncomeTaxesService
     {
         try
         {
-            return averageTradedPriceRepository.AccountAlreadyHasAverageTradedPrice(accountId);
+            return averageTradedPriceRepository.AlreadyHasAverageTradedPriceCalculated(accountId);
         } catch (Exception e)
         {
             logger.LogError($"Uma exceção ocorreu ao tentar verificar se o usuário {accountId} já possuia o big bang calculado." +

@@ -1,5 +1,5 @@
-using stocks.Requests;
-using stocks_core.Response;
+using stocks_core.Models;
+using stocks_core.Requests.BigBang;
 
 namespace stocks.Services.IncomeTaxes;
 

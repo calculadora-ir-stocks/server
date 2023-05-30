@@ -42,7 +42,7 @@ namespace stocks.Services.Auth
 
                 if (BCryptHelper.CheckPassword(request.Password, account?.Password))
                 {
-                    return _jwtUtils.GenerateToken(new stocks_common.Models.AccountDTO
+                    return _jwtUtils.GenerateToken(new stocks_common.Models.AccountDto
                     (
                         account!.Id,
                         account!.Name,

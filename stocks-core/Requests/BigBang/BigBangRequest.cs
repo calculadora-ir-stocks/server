@@ -1,4 +1,4 @@
-﻿namespace stocks.Requests
+﻿namespace stocks_core.Requests.BigBang
 {
     /// <summary>
     /// Preço médio de um determinado ativo que foi comprado antes de 01/11/2019 - a data mínima de consulta da B3.

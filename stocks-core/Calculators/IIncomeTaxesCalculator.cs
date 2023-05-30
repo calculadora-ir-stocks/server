@@ -1,7 +1,7 @@
 ﻿using stocks_core.DTOs.B3;
-using stocks_core.Response;
+using stocks_core.Models;
 
-namespace stocks_core.Calculators.Assets
+namespace stocks_core.Calculators
 {
     public interface IIncomeTaxesCalculator
     {

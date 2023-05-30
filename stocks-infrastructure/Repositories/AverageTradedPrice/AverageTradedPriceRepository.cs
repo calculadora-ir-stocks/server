@@ -11,7 +11,7 @@ namespace stocks_infrastructure.Repositories.AverageTradedPrice
             this.context = context;
         }
 
-        public bool AccountAlreadyHasAverageTradedPrice(Guid accountId)
+        public bool AlreadyHasAverageTradedPriceCalculated(Guid accountId)
         {
             return context.AverageTradedPrices.Where(x => x.Account.Id.Equals(accountId)).FirstOrDefault() != null;
         }
