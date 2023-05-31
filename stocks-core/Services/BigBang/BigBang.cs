@@ -38,7 +38,7 @@ namespace stocks_core.Services.BigBang
 
         private static List<Movement.EquitMovement> GetAllInvestorMovements(Movement.Root? response)
         {
-            if (response is null) return new List<Movement.EquitMovement>();
+            if (response is null || response.Data is null) return new List<Movement.EquitMovement>();
 
             var movements = response.Data.EquitiesPeriods.EquitiesMovements;
 
