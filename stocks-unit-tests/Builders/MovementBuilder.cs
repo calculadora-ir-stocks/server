@@ -5,64 +5,52 @@ namespace stocks_unit_tests.Builders
 {
     public class MovementBuilder
     {
-        private Movement.Root _root = new();
-        private static readonly Random _random = new();
+        private Movement.Root root = new();
+        private static readonly Random random = new();
 
         public MovementBuilder()
         {
-            _root.Data = new();
-            _root.Data.EquitiesPeriods = new();
-            _root.Data.EquitiesPeriods.EquitiesMovements = new();
+            root.Data = new();
+            root.Data.EquitiesPeriods = new();
+            root.Data.EquitiesPeriods.EquitiesMovements = new();
         }
 
         public Movement.Root Build()
         {
-            return _root;
+            return root;
         }
 
-        public MovementBuilder WithBuy(double price, int quantity, string ticker)
+        public MovementBuilder Create(string movementType, double operationValue, int quantity, string? assetType = null, string? ticker = null)
         {
             Movement.EquitMovement movement = new()
             {
-                AssetType = GetRandomAssetType(),
-                MovementType = "Compra",
-                TickerSymbol = ticker,
-                OperationValue = price,
-                EquitiesQuantity = quantity
+                MovementType = movementType,
+                OperationValue = operationValue,
+                EquitiesQuantity = quantity,
+                TickerSymbol = ticker ?? GetRandomTickerSymbol(),
+                AssetType = assetType ?? GetRandomAssetType(),
             };
 
-            _root.Data.EquitiesPeriods.EquitiesMovements.Add(movement);
-
-            return this;
-        }
-
-        public MovementBuilder WithSell(double price, int quantity, string ticker)
-        {
-            Movement.EquitMovement movement = new()
-            {
-                AssetType = GetRandomAssetType(),
-                MovementType = "Venda",
-                TickerSymbol = ticker,
-                OperationValue = price,
-                EquitiesQuantity = quantity
-            };
-
-            _root.Data.EquitiesPeriods.EquitiesMovements.Add(movement);
+            root.Data.EquitiesPeriods.EquitiesMovements.Add(movement);
 
             return this;
         }
 
         private static string GetRandomTickerSymbol()
         {
-            string[] tickers = new string[4]
+            string[] tickers = new string[8]
             {
                 "PETR4",
                 "GOOGL34",
                 "AMZO34",
-                "IVVB11"
+                "IVVB11",
+                "VALE3",
+                "ITUB4",
+                "BBDC4",
+                "BBAS3"
             };
 
-            return tickers[_random.Next(0, tickers.Length)];
+            return tickers[random.Next(0, tickers.Length)];
         }
 
         private static string GetRandomAssetType()
@@ -77,7 +65,7 @@ namespace stocks_unit_tests.Builders
                 B3ResponseConstants.BDRs,
             };
 
-            return assetTypes[_random.Next(0, assetTypes.Length)];
+            return assetTypes[random.Next(0, assetTypes.Length)];
         }
     }
 }
