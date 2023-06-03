@@ -22,7 +22,7 @@ namespace stocks_core.Services.BigBang
             var movements = GetAllInvestorMovements(request);
             if (movements.IsNullOrEmpty()) throw new NoneMovementsException("O usuário não possui nenhuma movimentação na bolsa até então.");
 
-            OrderMovementsByDateAndMovementType(movements);
+            movements = OrderMovementsByDateAndMovementType(movements);
 
             var monthlyMovements = new Dictionary<string, List<Movement.EquitMovement>>();
             var monthsThatHadMovements = movements.Select(x => x.ReferenceDate.ToString("MM/yyyy")).Distinct();
@@ -56,9 +56,9 @@ namespace stocks_core.Services.BigBang
         /// Ordena as operações por ordem crescente através da data - a B3 retorna em ordem decrescente - e
         /// ordena operações de compra antes das operações de venda em operações day trade.
         /// </summary>
-        private static void OrderMovementsByDateAndMovementType(IList<Movement.EquitMovement> movements)
+        private List<Movement.EquitMovement> OrderMovementsByDateAndMovementType(IList<Movement.EquitMovement> movements)
         {
-            movements = movements.OrderBy(x => x.MovementType).OrderBy(x => x.ReferenceDate).ToList();
+            return movements.OrderBy(x => x.MovementType).OrderBy(x => x.ReferenceDate).ToList();
         }
 
         private Dictionary<string, List<AssetIncomeTaxes>> GetTaxesAndAverageTradedPrices(Dictionary<string, List<Movement.EquitMovement>> monthlyMovements)
@@ -67,6 +67,8 @@ namespace stocks_core.Services.BigBang
 
             foreach (var monthMovements in monthlyMovements)
             {
+                SetDayTradeSellOperations(monthMovements.Value);
+
                 assetsIncomeTaxes.Add(monthMovements.Key, new List<AssetIncomeTaxes>());
 
                 var stocks = monthMovements.Value.Where(x => x.AssetType.Equals(B3ResponseConstants.Stocks));
@@ -114,6 +116,23 @@ namespace stocks_core.Services.BigBang
             }
 
             return assetsIncomeTaxes;
+        }
+
+        private static void SetDayTradeSellOperations(List<Movement.EquitMovement> movements)
+        {
+            var buys = movements.Where(x => x.MovementType == B3ResponseConstants.Buy);
+            var sells = movements.Where(x => x.MovementType == B3ResponseConstants.Sell);
+
+            var dayTradeSellsOperationsIds = sells.Where(b => buys.Any(s =>
+                s.ReferenceDate == b.ReferenceDate &&
+                s.TickerSymbol == b.TickerSymbol
+            )).Select(x => x.Id);
+
+            foreach(var id in dayTradeSellsOperationsIds)
+            {
+                var dayTradeOperation = movements.Where(x => x.Id == id).Single();
+                dayTradeOperation.DayTraded = true;
+            }
         }
     }
 }

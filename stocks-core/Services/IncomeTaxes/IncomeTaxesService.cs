@@ -60,7 +60,71 @@ public class IncomeTaxesService : IIncomeTaxesService
             string minimumAllowedStartDateByB3 = "2019-11-01";
             string yesterday = DateTime.Now.AddDays(-1).ToString("yyyy-MM-dd");
 
-            Movement.Root? response = await client.GetAccountMovement("97188167044", minimumAllowedStartDateByB3, referenceEndDate: yesterday, accountId);            
+            //Movement.Root? response = await client.GetAccountMovement("97188167044", minimumAllowedStartDateByB3, referenceEndDate: yesterday, accountId);            
+            Movement.Root? response = new();
+            response.Data = new();
+            response.Data.EquitiesPeriods = new();
+            response.Data.EquitiesPeriods.EquitiesMovements = new();
+
+            response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
+            {
+                AssetType = "Ações",
+                TickerSymbol = "VALE3",
+                CorporationName = "Vale S.A.",
+                MovementType = "Compra",
+                OperationValue = 43000,
+                EquitiesQuantity = 1,
+                ReferenceDate = new DateTime(2023, 02, 10),
+                UnitPrice = 43000
+            });
+
+            response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
+            {
+                AssetType = "Ações",
+                TickerSymbol = "VALE3",
+                CorporationName = "Vale S.A.",
+                MovementType = "Compra",
+                OperationValue = 48000,
+                EquitiesQuantity = 1,
+                ReferenceDate = new DateTime(2023, 02, 11),
+                UnitPrice = 48000
+            });
+
+            response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
+            {
+                AssetType = "Ações",
+                TickerSymbol = "VALE3",
+                CorporationName = "Vale S.A",
+                MovementType = "Venda",
+                OperationValue = 49000,
+                EquitiesQuantity = 1,
+                ReferenceDate = new DateTime(2023, 03, 12),
+                UnitPrice = 49000
+            });
+
+            response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
+            {
+                AssetType = "Ações",
+                TickerSymbol = "VALE3",
+                CorporationName = "Vale S.A",
+                MovementType = "Venda",
+                OperationValue = 51000,
+                EquitiesQuantity = 1,
+                ReferenceDate = new DateTime(2023, 03, 13),
+                UnitPrice = 51000
+            });
+
+            response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
+            {
+                AssetType = "Ações",
+                TickerSymbol = "VALE3",
+                CorporationName = "Vale S.A",
+                MovementType = "Compra",
+                OperationValue = 50000,
+                EquitiesQuantity = 1,
+                ReferenceDate = new DateTime(2023, 03, 13),
+                UnitPrice = 50000
+            });
 
             BigBang bigBang = new(incomeTaxCalculator);
             var taxesToBePaid = bigBang.Calculate(response);
@@ -139,7 +203,6 @@ public class IncomeTaxesService : IIncomeTaxesService
                     SwingTradeProfit = asset.SwingTradeProfit,
                     DayTradeProfit = asset.DayTradeProfit,
                     TradedAssets = asset.TradedAssets,
-                    DayTraded = asset.DayTraded,
                     Account = account,
                     AssetId = (int)asset.AssetTypeId
                 });

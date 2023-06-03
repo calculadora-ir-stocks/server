@@ -10,9 +10,16 @@
             TradedQuantity = tradedQuantity;
         }
 
-        public string TickerSymbol { get; set; }
-        public double AverageTradedPrice { get; set; }
-        public double TotalBought { get; set; }
-        public int TradedQuantity { get; set; }
+        public string TickerSymbol { get; init; }
+        public double AverageTradedPrice { get; protected set; }
+        public double TotalBought { get; protected set; }
+        public int TradedQuantity { get; protected set; }
+
+        public void UpdateValues(double totalBought, int tradedQuantity, double averageTradedPrice)
+        {
+            TotalBought = totalBought;
+            TradedQuantity = tradedQuantity;
+            AverageTradedPrice = averageTradedPrice;
+        }
     }
 }

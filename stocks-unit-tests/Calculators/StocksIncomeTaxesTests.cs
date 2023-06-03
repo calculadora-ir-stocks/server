@@ -23,8 +23,8 @@ namespace stocks_unit_tests.Business
 
             List<Movement.EquitMovement> movements = new()
             {
-                new Movement.EquitMovement("PETR4", "Petróleo Brasileiro S/A", "Ações", "Compra", 21405, 1, 21405, new DateTime(2023, 01, 01)),
-                new Movement.EquitMovement("PETR4", "Petróleo Brasileiro S/A", "Ações", "Venda", 25000, 1, 25000, new DateTime(2023, 01, 01))
+                new Movement.EquitMovement("PETR4", "Petróleo Brasileiro S/A", "Ações", "Compra", 21405, 1, 21405, new DateTime(2023, 01, 01), true),
+                new Movement.EquitMovement("PETR4", "Petróleo Brasileiro S/A", "Ações", "Venda", 25000, 1, 25000, new DateTime(2023, 01, 01), true)
             };
 
             stocksCalculator.CalculateIncomeTaxesForSpecifiedMovements(response, movements);
@@ -32,7 +32,6 @@ namespace stocks_unit_tests.Business
             double profit = movements[1].OperationValue - movements[0].OperationValue;
             decimal twentyPercentTaxes = (AliquotConstants.IncomeTaxesForDayTrade / 100m) * (decimal) profit;
 
-            Assert.True(response[0].DayTraded);
             Assert.Equal(response[0].Taxes, (double)twentyPercentTaxes);
         }
 
@@ -53,7 +52,6 @@ namespace stocks_unit_tests.Business
             double profit = movements[1].OperationValue - movements[0].OperationValue;
             decimal fifteenPercentTaxes = (AliquotConstants.IncomeTaxesForStocks / 100m) * (decimal)profit;
 
-            Assert.False(response[0].DayTraded);
             Assert.Equal(response[0].Taxes, (double)fifteenPercentTaxes);
         }
 

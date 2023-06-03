@@ -30,8 +30,6 @@ namespace stocks_core.Models
         /// </summary>
         public double DayTradeProfit { get; set; } = 0;
 
-        public bool DayTraded { get; set; } = false;
-
         /// <summary>
         /// Uma lista em formato JSON que representa os ativos negociados.
         /// </summary>

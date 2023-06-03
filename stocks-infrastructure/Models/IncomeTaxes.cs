@@ -9,7 +9,7 @@ namespace stocks_infrastructure.Models
     /// </summary>
     public class IncomeTaxes
     {
-        public IncomeTaxes(string month, double totalTaxes, double totalSold, double swingTradeProfit, double dayTradeProfit, bool dayTraded,
+        public IncomeTaxes(string month, double totalTaxes, double totalSold, double swingTradeProfit, double dayTradeProfit,
             string tradedAssets, Account account, int assetId)
         {
             Month = month;
@@ -17,7 +17,6 @@ namespace stocks_infrastructure.Models
             TotalSold = totalSold;
             SwingTradeProfit = swingTradeProfit;
             DayTradeProfit = dayTradeProfit;
-            DayTraded = dayTraded;
             TradedAssets = tradedAssets;
             CompesatedSwingTradeLoss = swingTradeProfit > 0 ? false : null;
             CompesatedDayTradeLoss = dayTradeProfit > 0 ? false : null;
@@ -39,7 +38,7 @@ namespace stocks_infrastructure.Models
         public double TotalSold { get; set; }
         public double SwingTradeProfit { get; set; }
         public double DayTradeProfit { get; set; }
-        public bool DayTraded { get; set; }
+
         /// <summary>
         /// Uma lista em formato JSON que representa os ativos negociados.
         /// </summary>

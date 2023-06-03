@@ -1,5 +1,4 @@
 ﻿using Newtonsoft.Json;
-using stocks_common.Models;
 using stocks_core.Business;
 using stocks_core.Constants;
 using stocks_core.DTOs.B3;
@@ -17,47 +16,33 @@ namespace stocks_core.Calculators.Assets
 
         public void CalculateIncomeTaxesForSpecifiedMovements(List<AssetIncomeTaxes> response, IEnumerable<Movement.EquitMovement> movements)
         {
-            var tradedTickersDetails = CalculateMovements(movements);
+            var (dayTradeOperations, swingTradeOperations) = CalculateMovements(movements);
+
+            var dayTradeProfit = dayTradeOperations.Values.Select(x => x.Profit).Sum();
+            var swingTradeProfit = swingTradeOperations.Values.Select(x => x.Profit).Sum();
 
             var sells = movements.Where(x => x.MovementType.Equals(B3ResponseConstants.Sell));
 
             double totalSold = sells.Sum(stock => stock.OperationValue);
             bool sellsSuperiorThan20000 = totalSold >= AliquotConstants.LimitForStocksSelling;
 
-            double swingTradeProfit = tradedTickersDetails.Where(x => !x.Value.DayTraded).Select(x => x.Value.Profit).Sum();
-            double dayTradeProfit = tradedTickersDetails.Where(x => x.Value.DayTraded).Select(x => x.Value.Profit).Sum();
-
             bool paysIncomeTaxes = (sellsSuperiorThan20000 && swingTradeProfit > 0) || (dayTradeProfit > 0);
 
             response.Add(new AssetIncomeTaxes
             {
-                Taxes = TaxesToPay(paysIncomeTaxes, swingTradeProfit, dayTradeProfit),
-                DayTraded = DayTraded(tradedTickersDetails),
+                Taxes = paysIncomeTaxes ? TaxesToPay(swingTradeProfit, dayTradeProfit) : 0,
                 SwingTradeProfit = swingTradeProfit,
                 DayTradeProfit = dayTradeProfit,
                 TotalSold = totalSold,
                 AverageTradedPrices = GetAssetDetails(),
-                TradedAssets = JsonConvert.SerializeObject(DictionaryToList(tradedTickersDetails)),
+                TradedAssets = JsonConvert.SerializeObject(DictionaryToList(dayTradeOperations)), // TODO CHANCE THIS CONCAT TWO DICTIONARIES
                 AssetTypeId = stocks_infrastructure.Enums.Assets.Stocks
             });
         }
 
-        public Dictionary<string, TickerAverageTradedPrice> GetTickerDetails()
+        private double TaxesToPay(double swingTradeProfit, double dayTradeProfit)
         {
-            return GetAssetDetails();
-        }
-
-        private bool DayTraded(Dictionary<string, TickerDetails> tradedTickersDetails)
-        {
-            return tradedTickersDetails.Where(x => x.Value.DayTraded).Any();
-        }
-
-        private double TaxesToPay(bool paysIncomeTaxes, double swingTradeProfit, double dayTradeProfit)
-        {
-            if (paysIncomeTaxes)
-                return (double)CalculateIncomeTaxes(swingTradeProfit, dayTradeProfit, AliquotConstants.IncomeTaxesForStocks);
-            else
-                return 0;
+            return (double)CalculateIncomeTaxes(swingTradeProfit, dayTradeProfit, AliquotConstants.IncomeTaxesForStocks);
         }
     }
 }

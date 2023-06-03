@@ -33,7 +33,6 @@ public class IncomeTaxesController : BaseController
     /// Também calcula e armazena o preço médio de todos os ativos até a data atual.
     /// </summary>
     [HttpPost("big-bang/{id}")]
-    [AllowAnonymous]
     public async Task<IActionResult> BigBang(Guid id, [FromBody] List<BigBangRequest> request)
     {
         await service.BigBang(id, request);
