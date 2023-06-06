@@ -18,8 +18,8 @@ namespace stocks_core.Business
         public static (Dictionary<string, OperationDetails> dayTrade, Dictionary<string, OperationDetails> swingTrade) CalculateMovements
             (IEnumerable<Movement.EquitMovement> movements)
         {
-            Dictionary<string, OperationDetails> dayTradeResponse = new();
-            Dictionary<string, OperationDetails> swingTradeResponse = new();
+            Dictionary<string, OperationDetails> dayTrade = new();
+            Dictionary<string, OperationDetails> swingTrade = new();
 
             foreach (var movement in movements)
             {
@@ -29,11 +29,11 @@ namespace stocks_core.Business
                         CalculateBuyOperation(movement);
                         break;
                     case B3ResponseConstants.Sell:
-                        CalculateSellOperation(dayTradeResponse, swingTradeResponse, movement, movements);
+                        CalculateSellOperation(dayTrade, swingTrade, movement, movements);
                         break;
                     case B3ResponseConstants.Split:
                         CalculateSplitOperation(movement);
-                        break;
+                        break; 
                     case B3ResponseConstants.ReverseSplit:
                         CalculateReverseSplitOperation(movement);
                         break;
@@ -43,20 +43,22 @@ namespace stocks_core.Business
                 }
             }
 
-            return (dayTradeResponse, swingTradeResponse);
+            return (dayTrade, swingTrade);
         }
 
-        private static void AddTickerIntoDictionaryIfDoesntExists(
+        private static void AddTickerIntoDictionary(
             Dictionary<string, OperationDetails> dayTradeResponse,
             Dictionary<string, OperationDetails> swingTradeResponse,
             Movement.EquitMovement movement
         )
         {
-            if (movement.DayTraded && !dayTradeResponse.ContainsKey(movement.TickerSymbol))
-                dayTradeResponse.Add(movement.TickerSymbol, new OperationDetails(movement.TickerSymbol, movement.CorporationName, movement.DayTraded));
+            if (dayTradeResponse.ContainsKey(movement.TickerSymbol) || swingTradeResponse.ContainsKey(movement.TickerSymbol)) return;
 
-            if (!movement.DayTraded && !swingTradeResponse.ContainsKey(movement.TickerSymbol))
-                swingTradeResponse.Add(movement.TickerSymbol, new OperationDetails(movement.TickerSymbol, movement.CorporationName, movement.DayTraded));
+            if (movement.DayTraded)
+                dayTradeResponse.Add(movement.TickerSymbol, new OperationDetails(movement.CorporationName, movement.DayTraded));
+
+            if (!movement.DayTraded)
+                swingTradeResponse.Add(movement.TickerSymbol, new OperationDetails(movement.CorporationName, movement.DayTraded));
         }
 
         public static decimal CalculateIncomeTaxes(double swingTradeProfit, double dayTradeProfit, int aliquot)
@@ -75,26 +77,24 @@ namespace stocks_core.Business
             return totalTaxes;
         }
 
-        public static IEnumerable<(string, string)> DictionaryToList(Dictionary<string, OperationDetails> total)
+        public static IEnumerable<(string, string)> ToDto(IEnumerable<Movement.EquitMovement> movements)
         {
-            foreach (var asset in total.Values)
-            {
-                yield return (asset.TickerSymbol, asset.CorporationName);
-            }
+            var tradedTickers = movements.Select(x => (x.TickerSymbol, x.CorporationName)).Distinct();
+            return tradedTickers;
         }
 
         private static void CalculateBuyOperation(Movement.EquitMovement movement)
         {
-            bool tickerCalculatedBefore = assetAverageTradedPrice.ContainsKey(movement.TickerSymbol);
+            bool tickerHasAverageTradedPrice = assetAverageTradedPrice.ContainsKey(movement.TickerSymbol);
 
-            if (tickerCalculatedBefore)
+            if (tickerHasAverageTradedPrice)
             {
                 var ticker = assetAverageTradedPrice[movement.TickerSymbol];
 
                 double totalBought = ticker.TotalBought + movement.OperationValue;
                 double quantity = ticker.TradedQuantity + movement.EquitiesQuantity;
 
-                ticker.UpdateValues(totalBought, (int)quantity, averageTradedPrice: totalBought / quantity);
+                ticker.UpdateValues(totalBought, (int)quantity);
             }
             else
             {
@@ -119,7 +119,14 @@ namespace stocks_core.Business
             IEnumerable<Movement.EquitMovement> movements
         )
         {
-            AddTickerIntoDictionaryIfDoesntExists(dayTradeResponse, swingTradeResponse, movement);
+            AddTickerIntoDictionary(dayTradeResponse, swingTradeResponse, movement);
+
+            OperationDetails? asset = null;
+
+            if (movement.DayTraded)
+                asset = dayTradeResponse[movement.TickerSymbol];
+            else
+                asset = swingTradeResponse[movement.TickerSymbol];
 
             if (AssetBoughtAfterB3MinimumDate(movement))
             {
@@ -132,13 +139,6 @@ namespace stocks_core.Business
                     // TO-DO (MVP?): calcular IRRFs (e.g dedo-duro).
                 }
 
-                OperationDetails asset = null;
-
-                if (movement.DayTraded) 
-                    asset = dayTradeResponse[movement.TickerSymbol];
-                else
-                    asset = swingTradeResponse[movement.TickerSymbol];
-
                 asset.UpdateTotalProfit(totalProfit);
 
                 // TO-DO (MVP?): calcular emolumentos.
@@ -148,18 +148,7 @@ namespace stocks_core.Business
                 // Se um ticker está sendo vendido e não consta no Dictionary de compras (ou seja, foi comprado antes ou em 01/11/2019 e a API não reconhece),
                 // o usuário manualmente precisará inserir o preço médio do ticker.
 
-                var asset = new OperationDetails(
-                    movement.TickerSymbol,
-                    movement.CorporationName,
-                    dayTraded: movement.DayTraded,
-                    tickerBoughtBeforeB3DateRange: true
-                );
-
-                if (movement.DayTraded)
-                    dayTradeResponse.Add(movement.TickerSymbol, asset);
-                else
-                    swingTradeResponse.Add(movement.TickerSymbol, asset);
-
+                asset.UpdateTickerBoughtBeforeB3DateRange(boughtBeforeB3DateRange: true);
                 movements = movements.Where(x => x.TickerSymbol != movement.TickerSymbol).ToList();
             }
         }

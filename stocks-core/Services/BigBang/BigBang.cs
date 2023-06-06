@@ -58,6 +58,7 @@ namespace stocks_core.Services.BigBang
         /// </summary>
         private List<Movement.EquitMovement> OrderMovementsByDateAndMovementType(IList<Movement.EquitMovement> movements)
         {
+            // TODO: a premissa da descrição do método está correta?
             return movements.OrderBy(x => x.MovementType).OrderBy(x => x.ReferenceDate).ToList();
         }
 

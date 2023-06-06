@@ -44,14 +44,13 @@ public class IncomeTaxesService : IIncomeTaxesService
         this.logger = logger;
     }
 
-    #region Calcula o imposto de renda a ser pago de 01/11/2019 até D-1.
+    #region Calcula todos os impostos de renda retroativos.
     public async Task BigBang(Guid accountId, List<BigBangRequest> request)
     {
-        if (AccountAlreadyHasAverageTradedPrice(accountId))
+        if (AlreadyHasAverageTradedPrice(accountId))
         {
             logger.LogInformation($"Big bang foi executado para o usuário {accountId}, mas ele já possui o preço médio e imposto de renda " +
                 $"calculado na base.");
-
             return;
         }
 
@@ -72,10 +71,10 @@ public class IncomeTaxesService : IIncomeTaxesService
                 TickerSymbol = "VALE3",
                 CorporationName = "Vale S.A.",
                 MovementType = "Compra",
-                OperationValue = 43000,
+                OperationValue = 21405,
                 EquitiesQuantity = 1,
-                ReferenceDate = new DateTime(2023, 02, 10),
-                UnitPrice = 43000
+                ReferenceDate = new DateTime(2023, 01, 01),
+                UnitPrice = 21405
             });
 
             response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
@@ -83,47 +82,36 @@ public class IncomeTaxesService : IIncomeTaxesService
                 AssetType = "Ações",
                 TickerSymbol = "VALE3",
                 CorporationName = "Vale S.A.",
-                MovementType = "Compra",
-                OperationValue = 48000,
-                EquitiesQuantity = 1,
-                ReferenceDate = new DateTime(2023, 02, 11),
-                UnitPrice = 48000
-            });
-
-            response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
-            {
-                AssetType = "Ações",
-                TickerSymbol = "VALE3",
-                CorporationName = "Vale S.A",
                 MovementType = "Venda",
-                OperationValue = 49000,
+                OperationValue = 25000,
                 EquitiesQuantity = 1,
-                ReferenceDate = new DateTime(2023, 03, 12),
-                UnitPrice = 49000
+                ReferenceDate = new DateTime(2023, 01, 02),
+                UnitPrice = 25000
             });
 
             response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
             {
-                AssetType = "Ações",
-                TickerSymbol = "VALE3",
-                CorporationName = "Vale S.A",
-                MovementType = "Venda",
-                OperationValue = 51000,
-                EquitiesQuantity = 1,
-                ReferenceDate = new DateTime(2023, 03, 13),
-                UnitPrice = 51000
-            });
-
-            response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
-            {
-                AssetType = "Ações",
-                TickerSymbol = "VALE3",
-                CorporationName = "Vale S.A",
+                AssetType = "ETF - Exchange Traded Fund",
+                TickerSymbol = "BOVA11",
+                CorporationName = "BOVA",
                 MovementType = "Compra",
-                OperationValue = 50000,
+                OperationValue = 439,
                 EquitiesQuantity = 1,
-                ReferenceDate = new DateTime(2023, 03, 13),
-                UnitPrice = 50000
+                ReferenceDate = new DateTime(2023, 01, 03),
+                UnitPrice = 439
+            });
+
+            response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
+            {
+                AssetType = "ETF - Exchange Traded Fund",
+                TickerSymbol = "BOVA11",
+                CorporationName = "BOVA",
+                MovementType = "Venda",
+                OperationValue = 768,
+                EquitiesQuantity = 1,
+                ReferenceDate = new DateTime(2023, 01, 03),
+                UnitPrice = 768,
+                DayTraded = true
             });
 
             BigBang bigBang = new(incomeTaxCalculator);
@@ -141,11 +129,11 @@ public class IncomeTaxesService : IIncomeTaxesService
         }
     }
 
-    private bool AccountAlreadyHasAverageTradedPrice(Guid accountId)
+    private bool AlreadyHasAverageTradedPrice(Guid accountId)
     {
         try
         {
-            return averageTradedPriceRepository.AlreadyHasAverageTradedPriceCalculated(accountId);
+            return averageTradedPriceRepository.AlreadyHasAverageTradedPrice(accountId);
         } catch (Exception e)
         {
             logger.LogError($"Uma exceção ocorreu ao tentar verificar se o usuário {accountId} já possuia o big bang calculado." +
@@ -174,19 +162,19 @@ public class IncomeTaxesService : IIncomeTaxesService
 
     private void AddAverageTradedPrices(Dictionary<string, List<AssetIncomeTaxes>> response, List<AverageTradedPrice> averageTradedPricesList, Account account)
     {
-        var averageTradedPrices = response.First().Value.First().AverageTradedPrices;
+        //var averageTradedPrices = response.First().Value.First().AverageTradedPrices;
 
-        foreach (var averageTradedPrice in averageTradedPrices)
-        {
-            averageTradedPricesList.Add(new AverageTradedPrice
-            {
-                Ticker = averageTradedPrice.Key,
-                AveragePrice = averageTradedPrice.Value.AverageTradedPrice,
-                Quantity = averageTradedPrice.Value.TradedQuantity,
-                Account = account,
-                UpdatedAt = DateTime.UtcNow
-            });
-        }
+        //foreach (var averageTradedPrice in averageTradedPrices)
+        //{
+        //    averageTradedPricesList.Add(new AverageTradedPrice
+        //    {
+        //        Ticker = averageTradedPrice.Key,
+        //        AveragePrice = averageTradedPrice.Value.AverageTradedPrice,
+        //        Quantity = averageTradedPrice.Value.TradedQuantity,
+        //        Account = account,
+        //        UpdatedAt = DateTime.UtcNow
+        //    });
+        //}
     }
 
     private void AddIncomeTaxes(KeyValuePair<string, List<AssetIncomeTaxes>> month, List<stocks_infrastructure.Models.IncomeTaxes> incomeTaxes, Account account)
@@ -211,8 +199,11 @@ public class IncomeTaxesService : IIncomeTaxesService
     }
 
     #endregion
+
+    #region Calcula o imposto de renda mensal.
     public Task<AssetIncomeTaxes?> CalculateCurrentMonthAssetsIncomeTaxes(Guid accountId)
     {
         throw new NotImplementedException();
     }
+    #endregion
 }

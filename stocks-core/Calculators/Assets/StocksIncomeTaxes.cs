@@ -34,9 +34,8 @@ namespace stocks_core.Calculators.Assets
                 SwingTradeProfit = swingTradeProfit,
                 DayTradeProfit = dayTradeProfit,
                 TotalSold = totalSold,
-                AverageTradedPrices = GetAssetDetails(),
-                TradedAssets = JsonConvert.SerializeObject(DictionaryToList(dayTradeOperations)), // TODO CHANCE THIS CONCAT TWO DICTIONARIES
-                AssetTypeId = stocks_infrastructure.Enums.Assets.Stocks
+                TradedAssets = JsonConvert.SerializeObject(ToDto(movements)),
+                AssetTypeId = stocks_infrastructure.Enums.Asset.Stocks
             });
         }
 
