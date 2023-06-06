@@ -65,6 +65,18 @@ namespace stocks_core.DTOs.B3
                 DayTraded = dayTraded;
             }
 
+            public EquitMovement(string tickerSymbol, string assetType, string movementType, double operationValue, double equitiesQuantity, DateTime referenceDate, bool dayTraded = false)
+            {
+                TickerSymbol = tickerSymbol;
+                AssetType = assetType;
+                MovementType = movementType;
+                OperationValue = operationValue;
+                UnitPrice = operationValue;
+                EquitiesQuantity = equitiesQuantity;
+                ReferenceDate = referenceDate;
+                DayTraded = dayTraded;
+            }
+
             public EquitMovement() {}
 
             // Obrigado por não retornarem ids, B3!

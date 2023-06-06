@@ -1,5 +1,7 @@
-﻿using stocks_common.Exceptions;
+﻿using Microsoft.VisualStudio.TestPlatform.CrossPlatEngine;
+using stocks_common.Exceptions;
 using stocks_core.Calculators;
+using stocks_core.Constants;
 using stocks_core.Services.BigBang;
 using static stocks_core.DTOs.B3.Movement;
 
@@ -22,56 +24,82 @@ namespace stocks_unit_tests.Services
             Assert.Throws<NoneMovementsException>(() => bigBang.Calculate(emptyMovements));
         }
 
-        [Theory(DisplayName = "Deve calcular corretamenta operações de day-trade e swing-trade em ações. Ambas operações" +
-            "devem ser calculadas separadamente. O imposto devido pelo investidor será a soma dos impostos dos dois tipos de operações.")]
-        [MemberData("SwingTradeAndDayTradeData")]
-        public void Should_correctly_calculate_income_taxes_for_movements((Root, Result) request)
+        #region Swing-trade
+        [Fact(DisplayName = "Deve calcular corretamente o imposto devido, total vendido e o lucro de swing-trade.")]
+        public void Should_correctly_calculate_income_taxes_for_movements()
         {
-            var response = bigBang.Calculate(request.Item1);
+            Root root = CreateMovements(
+                new EquitMovement("PETR4", B3ResponseConstants.Stocks, B3ResponseConstants.Buy, 21573, 1, new DateTime(2023, 01, 01)),
+                new EquitMovement("PETR4", B3ResponseConstants.Stocks, B3ResponseConstants.Buy, 22695, 1, new DateTime(2023, 01, 02)),
+                new EquitMovement("PETR4", B3ResponseConstants.Stocks, B3ResponseConstants.Sell, 23211, 1, new DateTime(2023, 01, 03))
+            );
+
+            var response = bigBang.Calculate(root);
 
             foreach (var _ in response.Values)
             {
-                foreach (var asset in _)
+                foreach(var i in _)
                 {
-                    Assert.Equal(asset.Taxes, request.Item2.Taxes);
+                    Assert.Equal(GetCalculatedTaxes(i.SwingTradeProfit, i.DayTradeProfit, AliquotConstants.IncomeTaxesForStocks), i.Taxes);
+                    Assert.Equal(GetTotalSold(root), i.TotalSold);
+                    Assert.Equal(1077, i.SwingTradeProfit);
                 }
             }
         }
-    }
 
-    public class Action
-    {
-        public Action(string assetType, string tickerSymbol, string movementType, double value, int quantity, DateTime referenceDate)
+        #endregion
+
+        #region Day-trade
+
+        #endregion
+
+        private static Root CreateMovements(params EquitMovement[] equitiesMovements)
         {
-            AssetType = assetType;
-            TickerSymbol = tickerSymbol;
-            MovementType = movementType;
-            Value = value;
-            Quantity = quantity;
-            ReferenceDate = referenceDate;
+            Root? response = new();
+            response.Data = new();
+            response.Data.EquitiesPeriods = new();
+            response.Data.EquitiesPeriods.EquitiesMovements = new();
+
+            foreach(var i in equitiesMovements)
+            {
+                response.Data.EquitiesPeriods.EquitiesMovements.Add(i);
+            }
+
+            return response;
         }
 
-        public string AssetType { get; set; }
-        public string TickerSymbol { get; set; }
-        public string MovementType { get; set; }
-        public double Value { get; set; }
-        public int Quantity { get; set; }
-        public DateTime ReferenceDate { get; set; }
-    }
-
-    public class Result
-    {
-        public Result(double taxes, double swingTradeProfit, double dayTradeProfit, double averageTradedPrice)
+        private static double GetCalculatedTaxes(double swingTradeProfit, double dayTradeProfit, int aliquot)
         {
-            Taxes = taxes;
-            SwingTradeProfit = swingTradeProfit;
-            DayTradeProfit = dayTradeProfit;
-            AverageTradedPrice = averageTradedPrice;
+            decimal swingTradeTaxes = 0;
+            decimal dayTradeTaxes = 0;
+
+            if (swingTradeProfit > 0)
+                swingTradeTaxes = (aliquot / 100m) * (decimal)swingTradeProfit;
+
+            if (dayTradeProfit > 0)
+                dayTradeTaxes = (AliquotConstants.IncomeTaxesForDayTrade / 100m) * (decimal)dayTradeProfit;
+
+            decimal totalTaxes = swingTradeTaxes + dayTradeTaxes;
+
+            return (double)totalTaxes;
         }
 
-        public double Taxes { get; set; }
-        public double SwingTradeProfit { get; set; }
-        public double DayTradeProfit { get; set; }
-        public double AverageTradedPrice { get; set; }
+        private static double GetAverageTradedPrice(Root root, string tickerSymbol)
+        {
+            var buys = root.Data.EquitiesPeriods.EquitiesMovements.Where(
+                x => x.MovementType == B3ResponseConstants.Buy &&
+                x.TickerSymbol == tickerSymbol
+            );
+
+            double paid = buys.Select(x => x.OperationValue).Sum();
+            int quantity = buys.Count();
+
+            return paid / quantity;
+        }
+
+        private static double GetTotalSold(Root root)
+        {
+            return root.Data.EquitiesPeriods.EquitiesMovements.Where(x => x.MovementType == B3ResponseConstants.Sell).Select(x => x.OperationValue).Sum();
+        }
     }
 }
