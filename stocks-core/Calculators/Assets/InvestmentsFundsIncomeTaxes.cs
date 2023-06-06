@@ -15,7 +15,7 @@ namespace stocks_core.Calculators.Assets
 
         public void CalculateIncomeTaxesForSpecifiedMovements(List<AssetIncomeTaxes> response, IEnumerable<Movement.EquitMovement> movements)
         {
-            var (dayTradeOperations, swingTradeOperations) = CalculateMovements(movements);
+            var (dayTradeOperations, swingTradeOperations) = CalculateProfit(movements);
 
             var sells = movements.Where(x => x.MovementType.Equals(B3ResponseConstants.Sell));
 

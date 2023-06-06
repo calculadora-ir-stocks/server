@@ -12,10 +12,7 @@ namespace stocks_core.Business
     {
         private static readonly Dictionary<string, TickerAverageTradedPrice> assetAverageTradedPrice = new();
 
-        /// <summary>
-        /// Calcula o preço médio e lucro dos ativos que foram operados.
-        /// </summary>
-        public static (Dictionary<string, OperationDetails> dayTrade, Dictionary<string, OperationDetails> swingTrade) CalculateMovements
+        public static (Dictionary<string, OperationDetails> dayTrade, Dictionary<string, OperationDetails> swingTrade) CalculateProfit
             (IEnumerable<Movement.EquitMovement> movements)
         {
             Dictionary<string, OperationDetails> dayTrade = new();
@@ -26,10 +23,10 @@ namespace stocks_core.Business
                 switch (movement.MovementType)
                 {
                     case B3ResponseConstants.Buy:
-                        CalculateBuyOperation(movement);
+                        UpdateAverageTradedPrice(movement);
                         break;
                     case B3ResponseConstants.Sell:
-                        CalculateSellOperation(dayTrade, swingTrade, movement, movements);
+                        UpdateProfit(dayTrade, swingTrade, movement, movements);
                         break;
                     case B3ResponseConstants.Split:
                         CalculateSplitOperation(movement);
@@ -46,7 +43,7 @@ namespace stocks_core.Business
             return (dayTrade, swingTrade);
         }
 
-        private static void AddTickerIntoDictionary(
+        private static void AddTickerIntoResponseDictionary(
             Dictionary<string, OperationDetails> dayTradeResponse,
             Dictionary<string, OperationDetails> swingTradeResponse,
             Movement.EquitMovement movement
@@ -83,7 +80,7 @@ namespace stocks_core.Business
             return tradedTickers;
         }
 
-        private static void CalculateBuyOperation(Movement.EquitMovement movement)
+        private static void UpdateAverageTradedPrice(Movement.EquitMovement movement)
         {
             bool tickerHasAverageTradedPrice = assetAverageTradedPrice.ContainsKey(movement.TickerSymbol);
 
@@ -112,14 +109,14 @@ namespace stocks_core.Business
             return assetAverageTradedPrice;
         }
 
-        private static void CalculateSellOperation(
+        private static void UpdateProfit(
             Dictionary<string, OperationDetails> dayTradeResponse,
             Dictionary<string, OperationDetails> swingTradeResponse,
             Movement.EquitMovement movement,
             IEnumerable<Movement.EquitMovement> movements
         )
         {
-            AddTickerIntoDictionary(dayTradeResponse, swingTradeResponse, movement);
+            AddTickerIntoResponseDictionary(dayTradeResponse, swingTradeResponse, movement);
 
             OperationDetails? asset = null;
 

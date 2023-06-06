@@ -16,7 +16,7 @@ namespace stocks_core.Calculators.Assets
 
         public void CalculateIncomeTaxesForSpecifiedMovements(List<AssetIncomeTaxes> response, IEnumerable<Movement.EquitMovement> movements)
         {
-            var (dayTradeOperations, swingTradeOperations) = CalculateMovements(movements);
+            var (dayTradeOperations, swingTradeOperations) = CalculateProfit(movements);
 
             var dayTradeProfit = dayTradeOperations.Values.Select(x => x.Profit).Sum();
             var swingTradeProfit = swingTradeOperations.Values.Select(x => x.Profit).Sum();
