@@ -42,7 +42,17 @@ namespace stocks_core.DTOs.B3
 
         public class EquitMovement
         {
-            public EquitMovement(string tickerSymbol, string corporationName, string assetType, string movementType, double operationValue, double quantity, double unitPrice, DateTime referenceDate)
+            public EquitMovement(
+                string tickerSymbol,
+                string corporationName,
+                string assetType,
+                string movementType,
+                double operationValue,
+                double quantity,
+                double unitPrice,
+                DateTime referenceDate,
+                bool dayTraded = false
+            )
             {
                 TickerSymbol = tickerSymbol;
                 CorporationName = corporationName;
@@ -52,9 +62,30 @@ namespace stocks_core.DTOs.B3
                 EquitiesQuantity = quantity;
                 UnitPrice = unitPrice;
                 ReferenceDate = referenceDate;
+                DayTraded = dayTraded;
+            }
+
+            public EquitMovement(string tickerSymbol, string assetType, string movementType, double operationValue, double equitiesQuantity, DateTime referenceDate, bool dayTraded = false)
+            {
+                TickerSymbol = tickerSymbol;
+                AssetType = assetType;
+                MovementType = movementType;
+                OperationValue = operationValue;
+                UnitPrice = operationValue;
+                EquitiesQuantity = equitiesQuantity;
+                ReferenceDate = referenceDate;
+                DayTraded = dayTraded;
             }
 
             public EquitMovement() {}
+
+            // Obrigado por não retornarem ids, B3!
+            [JsonIgnore]
+            public Guid Id { get; } = Guid.NewGuid();
+
+            [JsonIgnore]
+            public bool DayTraded { get; set; } = false;
+
 
             [JsonProperty("referenceDate")]
             public DateTime ReferenceDate { get; set; }
@@ -76,6 +107,7 @@ namespace stocks_core.DTOs.B3
 
             [JsonProperty("equitiesQuantity")]
             public double EquitiesQuantity { get; set; }
+
             [JsonProperty("unitPrice")]
             public double UnitPrice { get; set; }
         }

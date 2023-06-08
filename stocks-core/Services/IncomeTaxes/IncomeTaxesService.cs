@@ -44,14 +44,13 @@ public class IncomeTaxesService : IIncomeTaxesService
         this.logger = logger;
     }
 
-    #region Calcula o imposto de renda a ser pago de 01/11/2019 até D-1.
+    #region Calcula todos os impostos de renda retroativos.
     public async Task BigBang(Guid accountId, List<BigBangRequest> request)
     {
-        if (AccountAlreadyHasAverageTradedPrice(accountId))
+        if (AlreadyHasAverageTradedPrice(accountId))
         {
             logger.LogInformation($"Big bang foi executado para o usuário {accountId}, mas ele já possui o preço médio e imposto de renda " +
                 $"calculado na base.");
-
             return;
         }
 
@@ -60,60 +59,8 @@ public class IncomeTaxesService : IIncomeTaxesService
             string minimumAllowedStartDateByB3 = "2019-11-01";
             string yesterday = DateTime.Now.AddDays(-1).ToString("yyyy-MM-dd");
 
-            //Movement.Root? response = await client.GetAccountMovement("97188167044", minimumAllowedStartDateByB3, referenceEndDate: yesterday, accountId);            
-
-            Movement.Root? response = new();
-            response.Data = new();
-            response.Data.EquitiesPeriods = new();
-            response.Data.EquitiesPeriods.EquitiesMovements = new();
-
-            response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
-            {
-                AssetType = "Ações",
-                TickerSymbol = "VALE3",
-                CorporationName = "Vale S.A.",
-                MovementType = "Compra",
-                OperationValue = 43000,
-                EquitiesQuantity = 1,
-                ReferenceDate = new DateTime(2023, 02, 10),
-                UnitPrice = 43000
-            });
-
-            response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
-            {
-                AssetType = "Ações",
-                TickerSymbol = "VALE3",
-                CorporationName = "Vale S.A.",
-                MovementType = "Venda",
-                OperationValue = 48000,
-                EquitiesQuantity = 1,
-                ReferenceDate = new DateTime(2023, 02, 11),
-                UnitPrice = 48000
-            });
-
-            response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
-            {
-                AssetType = "Ações",
-                TickerSymbol = "PETR4",
-                CorporationName = "Petrobras",
-                MovementType = "Compra",
-                OperationValue = 49000,
-                EquitiesQuantity = 1,
-                ReferenceDate = new DateTime(2023, 03, 12),
-                UnitPrice = 49000
-            });
-
-            response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
-            {
-                AssetType = "Ações",
-                TickerSymbol = "PETR4",
-                CorporationName = "Petrobras",
-                MovementType = "Venda",
-                OperationValue = 52000,
-                EquitiesQuantity = 1,
-                ReferenceDate = new DateTime(2023, 03, 12),
-                UnitPrice = 52000
-            });
+            //TODO: remove mock and get user CPF.
+            Movement.Root? response = await client.GetAccountMovement("97188167044", minimumAllowedStartDateByB3, referenceEndDate: yesterday, accountId);            
 
             BigBang bigBang = new(incomeTaxCalculator);
             var taxesToBePaid = bigBang.Calculate(response);
@@ -130,11 +77,11 @@ public class IncomeTaxesService : IIncomeTaxesService
         }
     }
 
-    private bool AccountAlreadyHasAverageTradedPrice(Guid accountId)
+    private bool AlreadyHasAverageTradedPrice(Guid accountId)
     {
         try
         {
-            return averageTradedPriceRepository.AlreadyHasAverageTradedPriceCalculated(accountId);
+            return averageTradedPriceRepository.AlreadyHasAverageTradedPrice(accountId);
         } catch (Exception e)
         {
             logger.LogError($"Uma exceção ocorreu ao tentar verificar se o usuário {accountId} já possuia o big bang calculado." +
@@ -163,19 +110,19 @@ public class IncomeTaxesService : IIncomeTaxesService
 
     private void AddAverageTradedPrices(Dictionary<string, List<AssetIncomeTaxes>> response, List<AverageTradedPrice> averageTradedPricesList, Account account)
     {
-        var averageTradedPrices = response.First().Value.First().AverageTradedPrices;
+        //var averageTradedPrices = response.First().Value.First().AverageTradedPrices;
 
-        foreach (var averageTradedPrice in averageTradedPrices)
-        {
-            averageTradedPricesList.Add(new AverageTradedPrice
-            {
-                Ticker = averageTradedPrice.Key,
-                AveragePrice = averageTradedPrice.Value.AverageTradedPrice,
-                Quantity = averageTradedPrice.Value.TradedQuantity,
-                Account = account,
-                UpdatedAt = DateTime.UtcNow
-            });
-        }
+        //foreach (var averageTradedPrice in averageTradedPrices)
+        //{
+        //    averageTradedPricesList.Add(new AverageTradedPrice
+        //    {
+        //        Ticker = averageTradedPrice.Key,
+        //        AveragePrice = averageTradedPrice.Value.AverageTradedPrice,
+        //        Quantity = averageTradedPrice.Value.TradedQuantity,
+        //        Account = account,
+        //        UpdatedAt = DateTime.UtcNow
+        //    });
+        //}
     }
 
     private void AddIncomeTaxes(KeyValuePair<string, List<AssetIncomeTaxes>> month, List<stocks_infrastructure.Models.IncomeTaxes> incomeTaxes, Account account)
@@ -192,7 +139,6 @@ public class IncomeTaxesService : IIncomeTaxesService
                     SwingTradeProfit = asset.SwingTradeProfit,
                     DayTradeProfit = asset.DayTradeProfit,
                     TradedAssets = asset.TradedAssets,
-                    DayTraded = asset.DayTraded,
                     Account = account,
                     AssetId = (int)asset.AssetTypeId
                 });
@@ -201,8 +147,11 @@ public class IncomeTaxesService : IIncomeTaxesService
     }
 
     #endregion
+
+    #region Calcula o imposto de renda mensal.
     public Task<AssetIncomeTaxes?> CalculateCurrentMonthAssetsIncomeTaxes(Guid accountId)
     {
         throw new NotImplementedException();
     }
+    #endregion
 }

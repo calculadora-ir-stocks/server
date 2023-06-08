@@ -1,6 +1,6 @@
-﻿namespace stocks_infrastructure.Enums
+﻿namespace stocks_common.Enums
 {
-    public enum Assets
+    public enum Asset
     {
         Stocks = 1,
         ETFs = 2,

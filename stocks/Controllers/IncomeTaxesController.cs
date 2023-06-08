@@ -29,11 +29,10 @@ public class IncomeTaxesController : BaseController
 
     /// <summary>
     /// (Deve ser executado uma única vez quando um usuário cadastrar-se na plataforma)
-    /// Calcula e armazena o imposto de renda a ser pago em todos os meses desde 01/11/2019 até D-1.
+    /// Calcula e armazena o imposto de renda a ser pago em todos os meses retroativos.
     /// Também calcula e armazena o preço médio de todos os ativos até a data atual.
     /// </summary>
     [HttpPost("big-bang/{id}")]
-    [AllowAnonymous]
     public async Task<IActionResult> BigBang(Guid id, [FromBody] List<BigBangRequest> request)
     {
         await service.BigBang(id, request);

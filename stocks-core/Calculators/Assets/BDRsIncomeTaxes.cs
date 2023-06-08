@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using stocks_common.Enums;
 using stocks_common.Models;
 using stocks_core.Business;
 using stocks_core.Constants;
@@ -15,40 +16,27 @@ namespace stocks_core.Calculators.Assets
         }
 
         public void CalculateIncomeTaxesForSpecifiedMovements(List<AssetIncomeTaxes> response, IEnumerable<Movement.EquitMovement> movements)
-        {            
-            var tradedTickersDetails = CalculateMovements(movements);
+        {
+            var (dayTradeOperations, swingTradeOperations) = CalculateProfit(movements);
+
+            double dayTradeProfit = dayTradeOperations.Select(x => x.Value.Profit).Sum();
+            double swingTradeProfit = swingTradeOperations.Select(x => x.Value.Profit).Sum();
 
             var sells = movements.Where(x => x.MovementType.Equals(B3ResponseConstants.Sell));
-
-            double swingTradeProfit = tradedTickersDetails.Where(x => !x.Value.DayTraded).Select(x => x.Value.Profit).Sum();
-            double dayTradeProfit = tradedTickersDetails.Where(x => x.Value.DayTraded ).Select(x => x.Value.Profit).Sum();
+            double totalSold = sells.Sum(bdr => bdr.OperationValue);
 
             bool paysIncomeTaxes = sells.Any() && (swingTradeProfit > 0 || dayTradeProfit > 0);
 
             response.Add(new AssetIncomeTaxes
             {
-                Taxes = TaxesToPay(paysIncomeTaxes, swingTradeProfit, dayTradeProfit),
-                DayTraded = DayTraded(tradedTickersDetails),
+                AssetTypeId = Asset.BDRs,
+                Taxes = paysIncomeTaxes ? (double)CalculateIncomeTaxes(swingTradeProfit, dayTradeProfit, AliquotConstants.IncomeTaxesForBDRs) : 0,
+                TotalSold = totalSold,
+                AverageTradedPrices = GetAverageTradedPrice(Asset.BDRs).ToList(),
                 SwingTradeProfit = swingTradeProfit,
                 DayTradeProfit = dayTradeProfit,
-                TotalSold = sells.Sum(bdr => bdr.OperationValue),
-                AverageTradedPrices = GetAssetDetails(),
-                TradedAssets = JsonConvert.SerializeObject(DictionaryToList(tradedTickersDetails)),
-                AssetTypeId = stocks_infrastructure.Enums.Assets.BDRs
+                TradedAssets = JsonConvert.SerializeObject(ToDto(movements, B3ResponseConstants.BDRs)),
             });
-        }
-
-        private bool DayTraded(Dictionary<string, TickerDetails> tradedTickersDetails)
-        {
-            return tradedTickersDetails.Where(x => x.Value.DayTraded).Any();
-        }
-
-        private double TaxesToPay(bool paysIncomeTaxes, double swingTradeProfit, double dayTradeProfit)
-        {
-            if (paysIncomeTaxes)
-                return (double)CalculateIncomeTaxes(swingTradeProfit, dayTradeProfit, AliquotConstants.IncomeTaxesForBDRs);
-            else
-                return 0;
-        }
+        }        
     }
 }
