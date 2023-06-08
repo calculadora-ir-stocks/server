@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using stocks_common.Enums;
 using stocks_core.Business;
 using stocks_core.Constants;
 using stocks_core.DTOs.B3;
@@ -22,26 +23,22 @@ namespace stocks_core.Calculators.Assets
             var swingTradeProfit = swingTradeOperations.Values.Select(x => x.Profit).Sum();
 
             var sells = movements.Where(x => x.MovementType.Equals(B3ResponseConstants.Sell));
-
             double totalSold = sells.Sum(stock => stock.OperationValue);
+
             bool sellsSuperiorThan20000 = totalSold >= AliquotConstants.LimitForStocksSelling;
 
             bool paysIncomeTaxes = (sellsSuperiorThan20000 && swingTradeProfit > 0) || (dayTradeProfit > 0);
 
             response.Add(new AssetIncomeTaxes
             {
-                Taxes = paysIncomeTaxes ? TaxesToPay(swingTradeProfit, dayTradeProfit) : 0,
+                AssetTypeId = Asset.Stocks,
+                Taxes = paysIncomeTaxes ? (double)CalculateIncomeTaxes(swingTradeProfit, dayTradeProfit, AliquotConstants.IncomeTaxesForStocks) : 0,
+                TotalSold = totalSold,
+                AverageTradedPrices = GetAverageTradedPrice(Asset.Stocks).ToList(),
                 SwingTradeProfit = swingTradeProfit,
                 DayTradeProfit = dayTradeProfit,
-                TotalSold = totalSold,
-                TradedAssets = JsonConvert.SerializeObject(ToDto(movements)),
-                AssetTypeId = stocks_infrastructure.Enums.Asset.Stocks
+                TradedAssets = JsonConvert.SerializeObject(ToDto(movements, B3ResponseConstants.Stocks)),
             });
-        }
-
-        private double TaxesToPay(double swingTradeProfit, double dayTradeProfit)
-        {
-            return (double)CalculateIncomeTaxes(swingTradeProfit, dayTradeProfit, AliquotConstants.IncomeTaxesForStocks);
         }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using stocks_common.Enums;
 using stocks_core.Business;
 using stocks_core.Constants;
 using stocks_core.DTOs.B3;
@@ -17,21 +18,23 @@ namespace stocks_core.Calculators.Assets
         {
             var (dayTradeOperations, swingTradeOperations) = CalculateProfit(movements);
 
-            var sells = movements.Where(x => x.MovementType.Equals(B3ResponseConstants.Sell));
-
             double dayTradeProfit = dayTradeOperations.Select(x => x.Value.Profit).Sum();
             double swingTradeProfit = swingTradeOperations.Select(x => x.Value.Profit).Sum();
+
+            var sells = movements.Where(x => x.MovementType.Equals(B3ResponseConstants.Sell));
+            double totalSold = sells.Sum(gold => gold.OperationValue);
 
             bool paysIncomeTaxes = sells.Any() && (swingTradeProfit > 0 || dayTradeProfit > 0);
 
             response.Add(new AssetIncomeTaxes
             {
-                Taxes = TaxesToPay(paysIncomeTaxes, swingTradeProfit, dayTradeProfit),
+                AssetTypeId = Asset.Gold,
+                Taxes = paysIncomeTaxes ? (double)CalculateIncomeTaxes(swingTradeProfit, dayTradeProfit, AliquotConstants.IncomeTaxesForGold) : 0,
+                TotalSold = totalSold,
+                AverageTradedPrices = GetAverageTradedPrice(Asset.Gold).ToList(),
                 SwingTradeProfit = swingTradeProfit,
                 DayTradeProfit = dayTradeProfit,
-                TotalSold = sells.Sum(gold => gold.OperationValue),
-                TradedAssets = JsonConvert.SerializeObject(ToDto(movements)),
-                AssetTypeId = stocks_infrastructure.Enums.Asset.Gold
+                TradedAssets = JsonConvert.SerializeObject(ToDto(movements, B3ResponseConstants.Gold)),
             });
         }
 

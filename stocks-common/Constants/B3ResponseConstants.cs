@@ -15,7 +15,7 @@
         public const string ETFs = "ETF - Exchange Traded Fund";
         public const string Gold = "Ouro";
         public const string FIIs = "FII - Fundo de Investimento Imobiliário";
-        public const string FundInvestments = "Fundos de Investimentos";
+        public const string InvestmentsFunds = "Fundos de Investimentos";
         public const string BDRs = "BDR - Brazilian Depositary Receipts";
         #endregion
     }

@@ -1,8 +1,11 @@
 ﻿using Microsoft.VisualStudio.TestPlatform.CrossPlatEngine;
+using stocks_common.Enums;
 using stocks_common.Exceptions;
+using stocks_common.Helpers;
 using stocks_core.Calculators;
 using stocks_core.Constants;
 using stocks_core.Services.BigBang;
+using System.Net.WebSockets;
 using static stocks_core.DTOs.B3.Movement;
 
 namespace stocks_unit_tests.Services
@@ -26,7 +29,7 @@ namespace stocks_unit_tests.Services
 
         #region Swing-trade
         [Fact(DisplayName = "Deve calcular corretamente o imposto devido, total vendido e o lucro de swing-trade.")]
-        public void Should_correctly_calculate_income_taxes_for_movements()
+        public void SwingTradeWithProfitTradingStocks()
         {
             Root root = CreateMovements(
                 new EquitMovement("PETR4", B3ResponseConstants.Stocks, B3ResponseConstants.Buy, 21573, 1, new DateTime(2023, 01, 01)),
@@ -36,22 +39,98 @@ namespace stocks_unit_tests.Services
 
             var response = bigBang.Calculate(root);
 
-            foreach (var _ in response.Values)
+            foreach (var _ in response)
             {
-                foreach(var i in _)
+                string date = _.Key;
+
+                foreach (var i in _.Value)
                 {
                     Assert.Equal(GetCalculatedTaxes(i.SwingTradeProfit, i.DayTradeProfit, AliquotConstants.IncomeTaxesForStocks), i.Taxes);
-                    Assert.Equal(GetTotalSold(root), i.TotalSold);
+                    Assert.Equal(GetTotalSold(root, date, i.AssetTypeId), i.TotalSold);
                     Assert.Equal(1077, i.SwingTradeProfit);
+                    Assert.Equal(22134, i.AverageTradedPrices.First().Value.AverageTradedPrice);
                 }
             }
         }
 
+        [Fact(DisplayName = "Deve calcular corretamente o imposto devido, total vendido e o prejuízo de swing-trade.")]
+        public void SwingTradeWithLossTradingStocks()
+        {
+            Root root = CreateMovements(
+                new EquitMovement("PETR4", B3ResponseConstants.Stocks, B3ResponseConstants.Buy, 21139, 1, new DateTime(2023, 01, 01)),
+                new EquitMovement("PETR4", B3ResponseConstants.Stocks, B3ResponseConstants.Buy, 20394, 1, new DateTime(2023, 01, 02)),
+                new EquitMovement("PETR4", B3ResponseConstants.Stocks, B3ResponseConstants.Sell, 20000, 1, new DateTime(2023, 01, 03))
+            );
+
+            var response = bigBang.Calculate(root);
+
+            foreach (var _ in response)
+            {
+                string date = _.Key;
+
+                foreach (var i in _.Value)
+                {
+                    Assert.Equal(GetCalculatedTaxes(i.SwingTradeProfit, i.DayTradeProfit, AliquotConstants.IncomeTaxesForStocks), i.Taxes);
+                    Assert.Equal(GetTotalSold(root, date, i.AssetTypeId), i.TotalSold);
+                    Assert.Equal(-766.5, i.SwingTradeProfit);
+                    Assert.Equal(20766.5, i.AverageTradedPrices.First().Value.AverageTradedPrice);
+                }
+            }
+        }
+
+        [Fact(DisplayName = "Deve calcular corretamente o imposto devido, total vendido e o lucro de swing-trade com diferentes tipos de ações.")]
+        public void SwingTradeWithProfitTradingMultipleStocks()
+        {
+            Root root = CreateMovements(
+                new EquitMovement("PETR4", B3ResponseConstants.Stocks, B3ResponseConstants.Buy, 49000, 1, new DateTime(2023, 02, 03)),
+                new EquitMovement("PETR4", B3ResponseConstants.Stocks, B3ResponseConstants.Sell, 52000, 1, new DateTime(2023, 02, 04)),
+                new EquitMovement("VALE3", B3ResponseConstants.Stocks, B3ResponseConstants.Buy, 43000, 1, new DateTime(2023, 02, 10)),
+                new EquitMovement("VALE3", B3ResponseConstants.Stocks, B3ResponseConstants.Sell, 48000, 1, new DateTime(2023, 02, 11))
+            );
+
+            var response = bigBang.Calculate(root);
+
+            foreach (var _ in response)
+            {
+                string date = _.Key;
+
+                foreach (var i in _.Value)
+                {
+                    Assert.Equal(GetCalculatedTaxes(i.SwingTradeProfit, i.DayTradeProfit, AliquotConstants.IncomeTaxesForStocks), i.Taxes);
+                    Assert.Equal(GetTotalSold(root, date, i.AssetTypeId), i.TotalSold);
+
+                    var prices = i.AverageTradedPrices;
+
+                    Assert.Equal(49000, prices[0].Value.AverageTradedPrice);
+                    Assert.Equal(43000, prices[1].Value.AverageTradedPrice);
+                }
+            }            
+        }
+
+        [Fact(DisplayName = "Deve calcular corretamente o imposto devido, total vendido e o lucro de swing-trade com diferentes tipos de ativos.")]
+        public void SwingTradeWithProfitTradingMultipleAssets()
+        {
+            Root root = CreateMovements(
+                new EquitMovement("GOOGL34", B3ResponseConstants.BDRs, B3ResponseConstants.Buy, 23.43, 1, new DateTime(2023, 02, 01)),
+                new EquitMovement("AMZO34", B3ResponseConstants.BDRs, B3ResponseConstants.Buy, 56.44, 1, new DateTime(2023, 02, 01)),
+                new EquitMovement("BOVA11", B3ResponseConstants.ETFs, B3ResponseConstants.Buy, 21043, 1, new DateTime(2023, 02, 02)),
+                new EquitMovement("GOOGL34", B3ResponseConstants.BDRs, B3ResponseConstants.Buy, 25.54, 1, new DateTime(2023, 02, 03)),
+                new EquitMovement("GOOGL34", B3ResponseConstants.BDRs, B3ResponseConstants.Sell, 26.54, 1, new DateTime(2023, 02, 03), dayTraded: true),
+                new EquitMovement("AMZO34", B3ResponseConstants.BDRs, B3ResponseConstants.Buy, 59.76, 1, new DateTime(2023, 02, 04)),
+                new EquitMovement("VALE3", B3ResponseConstants.Stocks, B3ResponseConstants.Buy, 25543, 1, new DateTime(2023, 02, 05)),
+                new EquitMovement("VALE3", B3ResponseConstants.Stocks, B3ResponseConstants.Buy, 27654, 1, new DateTime(2023, 02, 06)),
+                new EquitMovement("VALE3", B3ResponseConstants.Stocks, B3ResponseConstants.Sell, 24432, 1, new DateTime(2023, 02, 07))
+            );
+
+            var response = bigBang.Calculate(root);
+            //TO-DO
+        }
         #endregion
+
 
         #region Day-trade
 
-        #endregion
+            #endregion
 
         private static Root CreateMovements(params EquitMovement[] equitiesMovements)
         {
@@ -60,7 +139,7 @@ namespace stocks_unit_tests.Services
             response.Data.EquitiesPeriods = new();
             response.Data.EquitiesPeriods.EquitiesMovements = new();
 
-            foreach(var i in equitiesMovements)
+            foreach (var i in equitiesMovements)
             {
                 response.Data.EquitiesPeriods.EquitiesMovements.Add(i);
             }
@@ -84,22 +163,31 @@ namespace stocks_unit_tests.Services
             return (double)totalTaxes;
         }
 
-        private static double GetAverageTradedPrice(Root root, string tickerSymbol)
+        private static double GetTotalSold(Root root, string date, Asset assetType)
         {
-            var buys = root.Data.EquitiesPeriods.EquitiesMovements.Where(
-                x => x.MovementType == B3ResponseConstants.Buy &&
-                x.TickerSymbol == tickerSymbol
-            );
+            return root.Data.EquitiesPeriods.EquitiesMovements.Where(
+                x => x.MovementType == B3ResponseConstants.Sell && 
+                x.ReferenceDate.ToString("MM/yyyy") == date &&
+                x.AssetType == AssetTypeHelper.GetNameByAssetType(assetType)
+            ).Select(x => x.OperationValue).Sum();
+        }
+    }
 
-            double paid = buys.Select(x => x.OperationValue).Sum();
-            int quantity = buys.Count();
-
-            return paid / quantity;
+    public class AverageTradedPriceTestRequest
+    {
+        public AverageTradedPriceTestRequest(string ticker, string assetType, string movementType, double price, int quantity)
+        {
+            this.ticker = ticker;
+            this.assetType = assetType;
+            this.movementType = movementType;
+            this.price = price;
+            this.quantity = quantity;
         }
 
-        private static double GetTotalSold(Root root)
-        {
-            return root.Data.EquitiesPeriods.EquitiesMovements.Where(x => x.MovementType == B3ResponseConstants.Sell).Select(x => x.OperationValue).Sum();
-        }
+        public string ticker { get; set; }
+        public string assetType { get; set; }
+        public string movementType { get; set; }
+        public double price { get; set; }
+        public int quantity { get; set; }
     }
 }

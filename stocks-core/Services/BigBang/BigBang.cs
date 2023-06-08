@@ -77,7 +77,7 @@ namespace stocks_core.Services.BigBang
                 var fiis = monthMovements.Value.Where(x => x.AssetType.Equals(B3ResponseConstants.FIIs));
                 var bdrs = monthMovements.Value.Where(x => x.AssetType.Equals(B3ResponseConstants.BDRs));
                 var gold = monthMovements.Value.Where(x => x.AssetType.Equals(B3ResponseConstants.Gold));
-                var fundInvestments = monthMovements.Value.Where(x => x.AssetType.Equals(B3ResponseConstants.FundInvestments));
+                var fundInvestments = monthMovements.Value.Where(x => x.AssetType.Equals(B3ResponseConstants.InvestmentsFunds));
 
                 if (stocks.Any())
                 {

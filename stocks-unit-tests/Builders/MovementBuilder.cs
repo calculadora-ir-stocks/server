@@ -61,7 +61,7 @@ namespace stocks_unit_tests.Builders
                 B3ResponseConstants.ETFs,
                 B3ResponseConstants.Gold,
                 B3ResponseConstants.FIIs,
-                B3ResponseConstants.FundInvestments,
+                B3ResponseConstants.InvestmentsFunds,
                 B3ResponseConstants.BDRs,
             };
 

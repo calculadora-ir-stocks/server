@@ -1,19 +1,23 @@
-﻿namespace stocks_common.Models
+﻿using stocks_common.Enums;
+
+namespace stocks_common.Models
 {
-    public class TickerAverageTradedPrice
+    public class AverageTradedPriceDetails
     {
-        public TickerAverageTradedPrice(string tickerSymbol, double averageTradedPrice, double totalBought, int tradedQuantity)
+        public AverageTradedPriceDetails(string tickerSymbol, double averageTradedPrice, double totalBought, int tradedQuantity, Asset assetTypeId)
         {
             TickerSymbol = tickerSymbol;
             AverageTradedPrice = averageTradedPrice;
             TotalBought = totalBought;
             TradedQuantity = tradedQuantity;
+            AssetType = assetTypeId;
         }
 
         public string TickerSymbol { get; init; }
         public double AverageTradedPrice { get; protected set; }
         public double TotalBought { get; protected set; }
         public int TradedQuantity { get; protected set; }
+        public Asset AssetType { get; init; }
 
         public void UpdateValues(double totalBought, int tradedQuantity)
         {

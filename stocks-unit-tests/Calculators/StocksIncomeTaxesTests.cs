@@ -1,4 +1,5 @@
-﻿using stocks_core.Calculators;
+﻿using stocks_common.Enums;
+using stocks_core.Calculators;
 using stocks_core.Calculators.Assets;
 using stocks_core.Constants;
 using stocks_core.DTOs.B3;
@@ -27,7 +28,7 @@ namespace stocks_unit_tests.Business
             stocksCalculator.CalculateIncomeTaxesForSpecifiedMovements(response, movements);
 
             AssetIncomeTaxes stocksResponse = 
-                response.Where(x => x.AssetTypeId == stocks_infrastructure.Enums.Asset.Stocks).Single();
+                response.Where(x => x.AssetTypeId == Asset.Stocks).Single();
 
             decimal twentyPercentTaxes = (AliquotConstants.IncomeTaxesForDayTrade / 100m) * (decimal)stocksResponse.DayTradeProfit;
             double totalSold = movements.Where(x => x.MovementType.Equals(B3ResponseConstants.Sell)).Select(x => x.OperationValue).Sum();
@@ -77,7 +78,7 @@ namespace stocks_unit_tests.Business
             stocksCalculator.CalculateIncomeTaxesForSpecifiedMovements(response, movements);
 
             AssetIncomeTaxes stocksResponse =
-                response.Where(x => x.AssetTypeId == stocks_infrastructure.Enums.Asset.Stocks).Single();
+                response.Where(x => x.AssetTypeId == Asset.Stocks).Single();
 
             decimal fifteenPercentTaxes = (AliquotConstants.IncomeTaxesForStocks / 100m) * (decimal)stocksResponse.SwingTradeProfit;
             double totalSold = movements.Where(x => x.MovementType.Equals(B3ResponseConstants.Sell)).Select(x => x.OperationValue).Sum();
@@ -141,7 +142,7 @@ namespace stocks_unit_tests.Business
             stocksCalculator.CalculateIncomeTaxesForSpecifiedMovements(response, movements);
 
             AssetIncomeTaxes stocksResponse =
-                response.Where(x => x.AssetTypeId == stocks_infrastructure.Enums.Asset.Stocks).Single();
+                response.Where(x => x.AssetTypeId == Asset.Stocks).Single();
 
             decimal fifteenPercentTaxes = (AliquotConstants.IncomeTaxesForStocks / 100m) * (decimal)stocksResponse.SwingTradeProfit;
             decimal twentyPercentTaxes = (AliquotConstants.IncomeTaxesForDayTrade / 100m) * (decimal)stocksResponse.DayTradeProfit;

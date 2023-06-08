@@ -1,4 +1,4 @@
-﻿namespace stocks_infrastructure.Enums
+﻿namespace stocks_common.Enums
 {
     public enum Asset
     {

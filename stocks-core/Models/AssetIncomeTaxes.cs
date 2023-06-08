@@ -1,4 +1,5 @@
-﻿using stocks_infrastructure.Enums;
+﻿using stocks_common.Enums;
+using stocks_common.Models;
 
 namespace stocks_core.Models
 {
@@ -18,6 +19,11 @@ namespace stocks_core.Models
         /// Total vendido do ativo.
         /// </summary>
         public double TotalSold { get; set; } = 0;
+
+        /// <summary>
+        /// Lista de KeyValuePair (tickerSymbol, AverageTradedPriceDetails) contendo o preço médio de cada ativo negociado.
+        /// </summary>
+        public IList<KeyValuePair<string, AverageTradedPriceDetails>> AverageTradedPrices { get; init; } = null!;
 
         /// <summary>
         /// O total de lucro ou prejuízo de um determinado ativo movimentado por swing trade.

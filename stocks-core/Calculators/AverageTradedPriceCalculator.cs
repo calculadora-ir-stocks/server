@@ -1,4 +1,6 @@
-﻿using stocks_common.Models;
+﻿using stocks_common.Enums;
+using stocks_common.Helpers;
+using stocks_common.Models;
 using stocks_core.Constants;
 using stocks_core.DTOs.B3;
 
@@ -10,7 +12,7 @@ namespace stocks_core.Business
     /// </summary>
     public abstract class AverageTradedPriceCalculator
     {
-        private static readonly Dictionary<string, TickerAverageTradedPrice> assetAverageTradedPrice = new();
+        private static readonly Dictionary<string, AverageTradedPriceDetails> assetAverageTradedPrice = new();
 
         public static (Dictionary<string, OperationDetails> dayTrade, Dictionary<string, OperationDetails> swingTrade) CalculateProfit
             (IEnumerable<Movement.EquitMovement> movements)
@@ -74,9 +76,11 @@ namespace stocks_core.Business
             return totalTaxes;
         }
 
-        public static IEnumerable<(string, string)> ToDto(IEnumerable<Movement.EquitMovement> movements)
+        public static IEnumerable<(string, string)> ToDto(IEnumerable<Movement.EquitMovement> movements, string assetType)
         {
-            var tradedTickers = movements.Select(x => (x.TickerSymbol, x.CorporationName)).Distinct();
+            var tradedTickers = movements
+                .Where(x => x.AssetType == assetType)
+                .Select(x => (x.TickerSymbol, x.CorporationName)).Distinct();
             return tradedTickers;
         }
 
@@ -95,18 +99,19 @@ namespace stocks_core.Business
             }
             else
             {
-                assetAverageTradedPrice.Add(movement.TickerSymbol, new TickerAverageTradedPrice(
+                assetAverageTradedPrice.Add(movement.TickerSymbol, new AverageTradedPriceDetails(
                     movement.CorporationName,
                     averageTradedPrice: movement.OperationValue / movement.EquitiesQuantity,
                     totalBought: movement.OperationValue,
-                    tradedQuantity: (int)movement.EquitiesQuantity
+                    tradedQuantity: (int)movement.EquitiesQuantity,
+                    AssetTypeHelper.GetAssetTypeByName(movement.AssetType)
                 ));
-            }            
+            }
         }
 
-        protected static Dictionary<string, TickerAverageTradedPrice> GetAssetDetails()
+        protected static IEnumerable<KeyValuePair<string, AverageTradedPriceDetails>> GetAverageTradedPrice(Asset assetType)
         {
-            return assetAverageTradedPrice;
+            return assetAverageTradedPrice.Where(x => x.Value.AssetType == assetType);
         }
 
         private static void UpdateProfit(
