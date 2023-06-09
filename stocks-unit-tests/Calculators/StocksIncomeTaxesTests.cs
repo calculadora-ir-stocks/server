@@ -1,4 +1,5 @@
 ﻿using stocks_common.Enums;
+using stocks_common.Models;
 using stocks_core.Calculators;
 using stocks_core.Calculators.Assets;
 using stocks_core.Constants;
@@ -24,8 +25,9 @@ namespace stocks_unit_tests.Business
         public void Should_be_day_trade_if_buy_and_sell_are_on_the_same_day(List<Movement.EquitMovement> movements)
         {
             List<AssetIncomeTaxes> response = new();
+            List<AverageTradedPriceDetails> averageTradedPrice = new();
 
-            stocksCalculator.CalculateIncomeTaxesForSpecifiedMovements(response, movements);
+            stocksCalculator.CalculateIncomeTaxesForSpecifiedMovements(response, averageTradedPrice, movements, "1");
 
             AssetIncomeTaxes stocksResponse = 
                 response.Where(x => x.AssetTypeId == Asset.Stocks).Single();
@@ -74,8 +76,9 @@ namespace stocks_unit_tests.Business
         public void Should_be_swing_trade_if_buy_and_sell_are_on_different_days(List<Movement.EquitMovement> movements)
         {
             List<AssetIncomeTaxes> response = new();
+            List<AverageTradedPriceDetails> averageTradedPrice = new();
 
-            stocksCalculator.CalculateIncomeTaxesForSpecifiedMovements(response, movements);
+            stocksCalculator.CalculateIncomeTaxesForSpecifiedMovements(response, averageTradedPrice, movements, "1");
 
             AssetIncomeTaxes stocksResponse =
                 response.Where(x => x.AssetTypeId == Asset.Stocks).Single();
@@ -138,30 +141,24 @@ namespace stocks_unit_tests.Business
         public void Should_calculate_day_trade_and_swing_trade_operations(List<Movement.EquitMovement> movements)
         {
             List<AssetIncomeTaxes> response = new();
+            List<AverageTradedPriceDetails> averageTradedPrice = new();
 
-            stocksCalculator.CalculateIncomeTaxesForSpecifiedMovements(response, movements);
+            stocksCalculator.CalculateIncomeTaxesForSpecifiedMovements(response, averageTradedPrice, movements, "1");
 
             AssetIncomeTaxes stocksResponse =
                 response.Where(x => x.AssetTypeId == Asset.Stocks).Single();
 
-            decimal fifteenPercentTaxes = (AliquotConstants.IncomeTaxesForStocks / 100m) * (decimal)stocksResponse.SwingTradeProfit;
-            decimal twentyPercentTaxes = (AliquotConstants.IncomeTaxesForDayTrade / 100m) * (decimal)stocksResponse.DayTradeProfit;
+            decimal swingTradeTaxes = (AliquotConstants.IncomeTaxesForStocks / 100m) * (decimal)stocksResponse.SwingTradeProfit;
+            decimal dayTradeTaxes = (AliquotConstants.IncomeTaxesForDayTrade / 100m) * (decimal)stocksResponse.DayTradeProfit;
 
             double totalSold = movements.Where(x => x.MovementType.Equals(B3ResponseConstants.Sell)).Select(x => x.OperationValue).Sum();
+            double expectedTaxes = 0;
 
-            if (totalSold > AliquotConstants.LimitForStocksSelling && stocksResponse.SwingTradeProfit > 0)
-            {
-                Assert.Equal((double)fifteenPercentTaxes, stocksResponse.Taxes);
-            } else if (stocksResponse.DayTradeProfit > 0)
-            {
-                Assert.Equal((double)twentyPercentTaxes, stocksResponse.Taxes);
-            }
-            else
-            {
-                Assert.Equal(0, stocksResponse.Taxes);
-            }
+            if (stocksResponse.SwingTradeProfit > 0) expectedTaxes += (double)swingTradeTaxes;
+            if (stocksResponse.DayTradeProfit > 0) expectedTaxes += (double)dayTradeTaxes;
 
             Assert.Equal(totalSold, stocksResponse.TotalSold);
+            Assert.Equal(expectedTaxes, stocksResponse.Taxes);
         }
 
         public static IEnumerable<object[]> DayTradeAndSwingTradeData()
@@ -173,7 +170,7 @@ namespace stocks_unit_tests.Business
                 {
                     new Movement.EquitMovement("PETR4", "Petróleo Brasileiro S/A", "Ações", "Compra", 21405, 1, 21405, new DateTime(2023, 01, 01)),
                     new Movement.EquitMovement("PETR4", "Petróleo Brasileiro S/A", "Ações", "Venda", 25000, 1, 25000, new DateTime(2023, 01, 02)),
-                    new Movement.EquitMovement("PETR4", "Petróleo Brasileiro S/A", "Ações", "Compra", 26405, 1, 26405, new DateTime(2023, 01, 03), true),
+                    new Movement.EquitMovement("PETR4", "Petróleo Brasileiro S/A", "Ações", "Compra", 26405, 1, 26405, new DateTime(2023, 01, 03)),
                     new Movement.EquitMovement("PETR4", "Petróleo Brasileiro S/A", "Ações", "Venda", 27000, 1, 27000, new DateTime(2023, 01, 03), true)
                 }
             };

@@ -1,4 +1,5 @@
-﻿using stocks_core.DTOs.B3;
+﻿using stocks_common.Models;
+using stocks_core.DTOs.B3;
 using stocks_core.Models;
 
 namespace stocks_core.Calculators
@@ -15,6 +16,7 @@ namespace stocks_core.Calculators
         /// Altera a variável response com o imposto de renda a ser pago referente as movimentações especificadas.
         /// Retorna o preço médio de todos os ativos movimentados do investidor.
         /// </summary>
-        void CalculateIncomeTaxesForSpecifiedMovements(List<AssetIncomeTaxes> response, IEnumerable<Movement.EquitMovement> movements);
+        void CalculateIncomeTaxesForSpecifiedMovements(List<AssetIncomeTaxes> assetsIncomeTaxes, List<AverageTradedPriceDetails> averageTradedPrices, 
+            IEnumerable<Movement.EquitMovement> movements, string month);
     }
 }

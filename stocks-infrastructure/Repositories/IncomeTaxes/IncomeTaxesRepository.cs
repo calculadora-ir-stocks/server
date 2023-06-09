@@ -24,7 +24,7 @@ namespace stocks_infrastructure.Repositories.IncomeTaxes
         {
             context.Add(incomeTaxes);
 
-            context.Attach(incomeTaxes.Account);
+            // context.Attach(incomeTaxes.Account);
 
             await context.SaveChangesAsync();
         }

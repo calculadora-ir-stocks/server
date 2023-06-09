@@ -2,6 +2,7 @@ using Microsoft.Extensions.Logging;
 using stocks.Clients.B3;
 using stocks.Models;
 using stocks.Repositories;
+using stocks_common.Models;
 using stocks_core.Calculators;
 using stocks_core.DTOs.B3;
 using stocks_core.Models;
@@ -21,7 +22,7 @@ public class IncomeTaxesService : IIncomeTaxesService
     private readonly IIncomeTaxesRepository incomeTaxesRepository;
     private readonly IAverageTradedPriceRepostory averageTradedPriceRepository;
 
-    private readonly IB3Client client;
+    private readonly IB3Client b3Client;
 
     private readonly ILogger<IncomeTaxesService> logger;
 
@@ -39,33 +40,33 @@ public class IncomeTaxesService : IIncomeTaxesService
         this.incomeTaxesRepository = incomeTaxesRepository;
         this.averageTradedPriceRepository = averageTradedPriceRepository;
 
-        this.client = client;
+        this.b3Client = client;
 
         this.logger = logger;
     }
 
     #region Calcula todos os impostos de renda retroativos.
     public async Task BigBang(Guid accountId, List<BigBangRequest> request)
-    {
-        if (AlreadyHasAverageTradedPrice(accountId))
-        {
-            logger.LogInformation($"Big bang foi executado para o usuário {accountId}, mas ele já possui o preço médio e imposto de renda " +
-                $"calculado na base.");
-            return;
-        }
-
+    {        
         try
         {
-            string minimumAllowedStartDateByB3 = "2019-11-01";
+            if (AlreadyHasAverageTradedPrice(accountId))
+            {
+                logger.LogInformation($"Big bang foi executado para o usuário {accountId}, mas ele já possui o preço médio e imposto de renda " +
+                    $"calculado na base.");
+                return;
+            }
+
+            string minimumAllowedStartDate = "2019-11-01";
             string yesterday = DateTime.Now.AddDays(-1).ToString("yyyy-MM-dd");
 
             //TODO: remove mock and get user CPF.
-            Movement.Root? response = await client.GetAccountMovement("97188167044", minimumAllowedStartDateByB3, referenceEndDate: yesterday, accountId);            
+            Movement.Root? b3Response = await b3Client.GetAccountMovement("97188167044", minimumAllowedStartDate, referenceEndDate: yesterday, accountId);            
 
             BigBang bigBang = new(incomeTaxCalculator);
-            var taxesToBePaid = bigBang.Calculate(response);
+            var bigBangResponse = bigBang.Calculate(b3Response);
 
-            await SaveBigBang(taxesToBePaid, accountId);
+            await SaveBigBang(bigBangResponse, accountId);
 
             logger.LogInformation($"Big Bang executado com sucesso para o usuário {accountId}.");
         } catch (Exception e)
@@ -75,65 +76,49 @@ public class IncomeTaxesService : IIncomeTaxesService
 
             throw;
         }
-    }
+    } 
 
-    private bool AlreadyHasAverageTradedPrice(Guid accountId)
-    {
-        try
-        {
-            return averageTradedPriceRepository.AlreadyHasAverageTradedPrice(accountId);
-        } catch (Exception e)
-        {
-            logger.LogError($"Uma exceção ocorreu ao tentar verificar se o usuário {accountId} já possuia o big bang calculado." +
-                $"{e.Message}");
-            throw;
-        }
-    }
+    private bool AlreadyHasAverageTradedPrice(Guid accountId) =>
+        averageTradedPriceRepository.AlreadyHasAverageTradedPrice(accountId);
 
-    private async Task SaveBigBang(Dictionary<string, List<AssetIncomeTaxes>> response, Guid accountId)
+    private async Task SaveBigBang((List<AssetIncomeTaxes>, List<AverageTradedPriceDetails>) response, Guid accountId)
     {
         Account account = genericRepositoryAccount.GetById(accountId);
 
         List<stocks_infrastructure.Models.IncomeTaxes> incomeTaxes = new();
-
-        foreach (var month in response)
-        {
-            AddIncomeTaxes(month, incomeTaxes, account);
-        }
+        CreateIncomeTaxes(response.Item1, incomeTaxes, account);
 
         List<AverageTradedPrice> averageTradedPrices = new();
-        AddAverageTradedPrices(response, averageTradedPrices, account);
+        CreateAverageTradedPrices(response.Item2, averageTradedPrices, account);
 
         await incomeTaxesRepository.AddAllAsync(incomeTaxes);
         await averageTradedPriceRepository.AddAllAsync(averageTradedPrices);
     }
 
-    private void AddAverageTradedPrices(Dictionary<string, List<AssetIncomeTaxes>> response, List<AverageTradedPrice> averageTradedPricesList, Account account)
+    private void CreateAverageTradedPrices(List<AverageTradedPriceDetails> response, List<AverageTradedPrice> averageTradedPrices, Account account)
     {
-        //var averageTradedPrices = response.First().Value.First().AverageTradedPrices;
-
-        //foreach (var averageTradedPrice in averageTradedPrices)
-        //{
-        //    averageTradedPricesList.Add(new AverageTradedPrice
-        //    {
-        //        Ticker = averageTradedPrice.Key,
-        //        AveragePrice = averageTradedPrice.Value.AverageTradedPrice,
-        //        Quantity = averageTradedPrice.Value.TradedQuantity,
-        //        Account = account,
-        //        UpdatedAt = DateTime.UtcNow
-        //    });
-        //}
+        foreach (var averageTradedPrice in response)
+        {
+            averageTradedPrices.Add(new AverageTradedPrice
+            (
+               averageTradedPrice.TickerSymbol,
+               averageTradedPrice.AverageTradedPrice,
+               averageTradedPrice.TradedQuantity,
+               account,
+               updatedAt: DateTime.UtcNow
+            ));
+        }
     }
 
-    private void AddIncomeTaxes(KeyValuePair<string, List<AssetIncomeTaxes>> month, List<stocks_infrastructure.Models.IncomeTaxes> incomeTaxes, Account account)
+    private void CreateIncomeTaxes(List<AssetIncomeTaxes> assets, List<stocks_infrastructure.Models.IncomeTaxes> incomeTaxes, Account account)
     {
-        foreach (var asset in month.Value)
+        foreach (var asset in assets)
         {
-            if (asset.Taxes > 0)
+            if (MovementHadProfitOrLoss(asset))
             {
                 incomeTaxes.Add(new stocks_infrastructure.Models.IncomeTaxes
                 {
-                    Month = month.Key,
+                    Month = asset.Month,
                     TotalTaxes = asset.Taxes,
                     TotalSold = asset.TotalSold,
                     SwingTradeProfit = asset.SwingTradeProfit,
@@ -144,6 +129,14 @@ public class IncomeTaxesService : IIncomeTaxesService
                 });
             }
         }
+    }
+
+    /// <summary>
+    /// Salva na base apenas 
+    /// </summary>
+    private bool MovementHadProfitOrLoss(AssetIncomeTaxes asset)
+    {
+        return asset.SwingTradeProfit != 0 || asset.DayTradeProfit != 0;
     }
 
     #endregion

@@ -1,10 +1,19 @@
 ﻿using stocks_common.Enums;
-using stocks_common.Models;
 
 namespace stocks_core.Models
 {
     public class AssetIncomeTaxes
     {
+        public AssetIncomeTaxes(string month)
+        {
+            Month = month;
+        }
+
+        /// <summary>
+        /// O mês em que o ativo foi negociado.
+        /// </summary>
+        public string Month { get; init; }
+
         /// <summary>
         /// O id do tipo de ativo sendo negociado.
         /// </summary>
@@ -19,11 +28,6 @@ namespace stocks_core.Models
         /// Total vendido do ativo.
         /// </summary>
         public double TotalSold { get; set; } = 0;
-
-        /// <summary>
-        /// Lista de KeyValuePair (tickerSymbol, AverageTradedPriceDetails) contendo o preço médio de cada ativo negociado.
-        /// </summary>
-        public IList<KeyValuePair<string, AverageTradedPriceDetails>> AverageTradedPrices { get; init; } = null!;
 
         /// <summary>
         /// O total de lucro ou prejuízo de um determinado ativo movimentado por swing trade.

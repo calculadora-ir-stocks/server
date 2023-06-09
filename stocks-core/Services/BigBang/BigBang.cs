@@ -1,5 +1,6 @@
 ﻿using Microsoft.IdentityModel.Tokens;
 using stocks_common.Exceptions;
+using stocks_common.Models;
 using stocks_core.Calculators;
 using stocks_core.Calculators.Assets;
 using stocks_core.Constants;
@@ -17,7 +18,7 @@ namespace stocks_core.Services.BigBang
             this.calculator = calculator;
         }
 
-        public Dictionary<string, List<AssetIncomeTaxes>> Calculate(Movement.Root? request)
+        public (List<AssetIncomeTaxes>, List<AverageTradedPriceDetails>) Calculate(Movement.Root? request)
         {
             var movements = GetAllInvestorMovements(request);
             if (movements.IsNullOrEmpty()) throw new NoneMovementsException("O usuário não possui nenhuma movimentação na bolsa até então.");
@@ -62,15 +63,14 @@ namespace stocks_core.Services.BigBang
             return movements.OrderBy(x => x.MovementType).OrderBy(x => x.ReferenceDate).ToList();
         }
 
-        private Dictionary<string, List<AssetIncomeTaxes>> GetTaxesAndAverageTradedPrices(Dictionary<string, List<Movement.EquitMovement>> monthlyMovements)
+        private (List<AssetIncomeTaxes>, List<AverageTradedPriceDetails>) GetTaxesAndAverageTradedPrices(Dictionary<string, List<Movement.EquitMovement>> monthlyMovements)
         {
-            Dictionary<string, List<AssetIncomeTaxes>> assetsIncomeTaxes = new();
+            List<AssetIncomeTaxes> assetsIncomeTaxes = new();
+            List<AverageTradedPriceDetails> averageTradedPrices = new();
 
             foreach (var monthMovements in monthlyMovements)
             {
                 SetDayTradeSellOperations(monthMovements.Value);
-
-                assetsIncomeTaxes.Add(monthMovements.Key, new List<AssetIncomeTaxes>());
 
                 var stocks = monthMovements.Value.Where(x => x.AssetType.Equals(B3ResponseConstants.Stocks));
                 var etfs = monthMovements.Value.Where(x => x.AssetType.Equals(B3ResponseConstants.ETFs));
@@ -82,43 +82,47 @@ namespace stocks_core.Services.BigBang
                 if (stocks.Any())
                 {
                     calculator = new StocksIncomeTaxes();
-                    calculator.CalculateIncomeTaxesForSpecifiedMovements(assetsIncomeTaxes[monthMovements.Key], stocks);
+                    calculator.CalculateIncomeTaxesForSpecifiedMovements(assetsIncomeTaxes, averageTradedPrices, stocks, monthMovements.Key);
                 }
 
                 if (etfs.Any())
                 {
                     calculator = new ETFsIncomeTaxes();
-                    calculator.CalculateIncomeTaxesForSpecifiedMovements(assetsIncomeTaxes[monthMovements.Key], etfs);
+                    calculator.CalculateIncomeTaxesForSpecifiedMovements(assetsIncomeTaxes, averageTradedPrices, etfs, monthMovements.Key);
                 }
 
                 if (fiis.Any())
                 {
                     calculator = new FIIsIncomeTaxes();
-                    calculator.CalculateIncomeTaxesForSpecifiedMovements(assetsIncomeTaxes[monthMovements.Key], fiis);
+                    calculator.CalculateIncomeTaxesForSpecifiedMovements(assetsIncomeTaxes, averageTradedPrices, fiis, monthMovements.Key);
                 }
 
                 if (bdrs.Any())
                 {
                     calculator = new BDRsIncomeTaxes();
-                    calculator.CalculateIncomeTaxesForSpecifiedMovements(assetsIncomeTaxes[monthMovements.Key], bdrs);
+                    calculator.CalculateIncomeTaxesForSpecifiedMovements(assetsIncomeTaxes, averageTradedPrices, bdrs, monthMovements.Key);
                 }
 
                 if (gold.Any())
                 {
                     calculator = new GoldIncomeTaxes();
-                    calculator.CalculateIncomeTaxesForSpecifiedMovements(assetsIncomeTaxes[monthMovements.Key], gold);
+                    calculator.CalculateIncomeTaxesForSpecifiedMovements(assetsIncomeTaxes, averageTradedPrices, gold, monthMovements.Key);
                 }
 
                 if (fundInvestments.Any())
                 {
                     calculator = new InvestmentsFundsIncomeTaxes();
-                    calculator.CalculateIncomeTaxesForSpecifiedMovements(assetsIncomeTaxes[monthMovements.Key], fundInvestments);
+                    calculator.CalculateIncomeTaxesForSpecifiedMovements(assetsIncomeTaxes, averageTradedPrices, fundInvestments, monthMovements.Key);
                 }
             }
 
-            return assetsIncomeTaxes;
+            return (assetsIncomeTaxes, averageTradedPrices);
         }
 
+        /// <summary>
+        /// Altera a propriedade booleana DayTraded para operações de venda day-trade.
+        /// </summary>
+        /// <param name="movements"></param>
         private static void SetDayTradeSellOperations(List<Movement.EquitMovement> movements)
         {
             var buys = movements.Where(x => x.MovementType == B3ResponseConstants.Buy);

@@ -1,4 +1,5 @@
-﻿using stocks_core.DTOs.B3;
+﻿using stocks_common.Models;
+using stocks_core.DTOs.B3;
 using stocks_core.Models;
 
 namespace stocks_core.Services.BigBang
@@ -15,6 +16,6 @@ namespace stocks_core.Services.BigBang
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>
-        Dictionary<string, List<AssetIncomeTaxes>> Calculate(Movement.Root? request);
+        (List<AssetIncomeTaxes>, List<AverageTradedPriceDetails>) Calculate(Movement.Root? request);
     }
 }

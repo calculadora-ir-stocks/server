@@ -12,13 +12,13 @@ namespace stocks_core.Business
     /// </summary>
     public abstract class AverageTradedPriceCalculator
     {
-        private static readonly Dictionary<string, AverageTradedPriceDetails> assetAverageTradedPrice = new();
+        private static readonly Dictionary<string, AverageTradedPriceDetails> averageTradedPrices = new();
 
-        public static (Dictionary<string, OperationDetails> dayTrade, Dictionary<string, OperationDetails> swingTrade) CalculateProfit
+        public static (List<OperationDetails> dayTrade, List<OperationDetails> swingTrade) CalculateProfit
             (IEnumerable<Movement.EquitMovement> movements)
         {
-            Dictionary<string, OperationDetails> dayTrade = new();
-            Dictionary<string, OperationDetails> swingTrade = new();
+            List<OperationDetails> dayTrade = new();
+            List<OperationDetails> swingTrade = new();
 
             foreach (var movement in movements)
             {
@@ -45,21 +45,6 @@ namespace stocks_core.Business
             return (dayTrade, swingTrade);
         }
 
-        private static void AddTickerIntoResponseDictionary(
-            Dictionary<string, OperationDetails> dayTradeResponse,
-            Dictionary<string, OperationDetails> swingTradeResponse,
-            Movement.EquitMovement movement
-        )
-        {
-            if (dayTradeResponse.ContainsKey(movement.TickerSymbol) || swingTradeResponse.ContainsKey(movement.TickerSymbol)) return;
-
-            if (movement.DayTraded)
-                dayTradeResponse.Add(movement.TickerSymbol, new OperationDetails(movement.CorporationName, movement.DayTraded));
-
-            if (!movement.DayTraded)
-                swingTradeResponse.Add(movement.TickerSymbol, new OperationDetails(movement.CorporationName, movement.DayTraded));
-        }
-
         public static decimal CalculateIncomeTaxes(double swingTradeProfit, double dayTradeProfit, int aliquot)
         {
             decimal swingTradeTaxes = 0;
@@ -84,13 +69,52 @@ namespace stocks_core.Business
             return tradedTickers;
         }
 
+        public void AddIntoAverageTradedPricesList(List<AverageTradedPriceDetails> averageTradedPrices, Asset assetType)
+        {
+            foreach (var price in GetAverageTradedPrices(assetType))
+            {
+                bool contains = averageTradedPrices.Select(x => x.TickerSymbol).Contains(price.TickerSymbol);
+
+                if (contains)
+                {
+                    AverageTradedPriceDetails averageTradedPrice = averageTradedPrices.Where(x => x.TickerSymbol == price.TickerSymbol).First();
+                    averageTradedPrice.UpdateValues(price.TotalBought, price.TradedQuantity);
+                }
+                else
+                {
+                    averageTradedPrices.Add(price);
+                }
+            }
+        }
+
+        private static void AddTickerIntoResponseDictionary(
+            List<OperationDetails> dayTradeResponse,
+            List<OperationDetails> swingTradeResponse,
+            Movement.EquitMovement movement
+        )
+        {
+            if (TickerAlreadyAdded(dayTradeResponse, swingTradeResponse, movement)) return;
+
+            if (movement.DayTraded)
+                dayTradeResponse.Add(new OperationDetails(movement.TickerSymbol, movement.CorporationName));
+
+            if (!movement.DayTraded)
+                swingTradeResponse.Add(new OperationDetails(movement.TickerSymbol, movement.CorporationName));
+        }
+
+        private static bool TickerAlreadyAdded(List<OperationDetails> dayTradeResponse, List<OperationDetails> swingTradeResponse, Movement.EquitMovement movement)
+        {
+            return dayTradeResponse.Select(x => x.TickerSymbol).Equals(movement.TickerSymbol) ||
+                swingTradeResponse.Select(x => x.TickerSymbol).Equals(movement.TickerSymbol);
+        }
+
         private static void UpdateAverageTradedPrice(Movement.EquitMovement movement)
         {
-            bool tickerHasAverageTradedPrice = assetAverageTradedPrice.ContainsKey(movement.TickerSymbol);
+            bool tickerHasAverageTradedPrice = averageTradedPrices.ContainsKey(movement.TickerSymbol);
 
             if (tickerHasAverageTradedPrice)
             {
-                var ticker = assetAverageTradedPrice[movement.TickerSymbol];
+                var ticker = averageTradedPrices[movement.TickerSymbol];
 
                 double totalBought = ticker.TotalBought + movement.OperationValue;
                 double quantity = ticker.TradedQuantity + movement.EquitiesQuantity;
@@ -99,7 +123,7 @@ namespace stocks_core.Business
             }
             else
             {
-                assetAverageTradedPrice.Add(movement.TickerSymbol, new AverageTradedPriceDetails(
+                averageTradedPrices.Add(movement.TickerSymbol, new AverageTradedPriceDetails(
                     movement.CorporationName,
                     averageTradedPrice: movement.OperationValue / movement.EquitiesQuantity,
                     totalBought: movement.OperationValue,
@@ -109,14 +133,25 @@ namespace stocks_core.Business
             }
         }
 
-        protected static IEnumerable<KeyValuePair<string, AverageTradedPriceDetails>> GetAverageTradedPrice(Asset assetType)
+        protected static IEnumerable<AverageTradedPriceDetails> GetAverageTradedPrices(Asset assetType)
         {
-            return assetAverageTradedPrice.Where(x => x.Value.AssetType == assetType);
+            var prices = averageTradedPrices.Where(x => x.Value.AssetType == assetType);
+
+            foreach (var price in prices)
+            {
+                yield return new AverageTradedPriceDetails(
+                    price.Key,
+                    price.Value.AverageTradedPrice,
+                    price.Value.TotalBought,
+                    price.Value.TradedQuantity,
+                    assetType
+                );
+            }
         }
 
         private static void UpdateProfit(
-            Dictionary<string, OperationDetails> dayTradeResponse,
-            Dictionary<string, OperationDetails> swingTradeResponse,
+            List<OperationDetails> dayTradeResponse,
+            List<OperationDetails> swingTradeResponse,
             Movement.EquitMovement movement,
             IEnumerable<Movement.EquitMovement> movements
         )
@@ -126,13 +161,13 @@ namespace stocks_core.Business
             OperationDetails? asset = null;
 
             if (movement.DayTraded)
-                asset = dayTradeResponse[movement.TickerSymbol];
+                asset = dayTradeResponse.First(x => x.TickerSymbol == movement.TickerSymbol);
             else
-                asset = swingTradeResponse[movement.TickerSymbol];
+                asset = swingTradeResponse.First(x => x.TickerSymbol == movement.TickerSymbol);
 
             if (AssetBoughtAfterB3MinimumDate(movement))
             {
-                double averageTradedPrice = assetAverageTradedPrice[movement.TickerSymbol].AverageTradedPrice;
+                double averageTradedPrice = averageTradedPrices[movement.TickerSymbol].AverageTradedPrice;
                 double profitPerShare = movement.UnitPrice - averageTradedPrice;
                 double totalProfit = profitPerShare * movement.EquitiesQuantity;
 
@@ -157,7 +192,7 @@ namespace stocks_core.Business
 
         private static bool AssetBoughtAfterB3MinimumDate(Movement.EquitMovement movement)
         {
-            return assetAverageTradedPrice.ContainsKey(movement.TickerSymbol);
+            return averageTradedPrices.ContainsKey(movement.TickerSymbol);
         }
 
         private static void CalculateSplitOperation(Movement.EquitMovement movement)
