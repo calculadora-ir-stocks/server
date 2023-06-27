@@ -88,37 +88,37 @@ namespace stocks_core.Services.BigBang
                 if (stocks.Any())
                 {
                     calculator = new StocksIncomeTaxes();
-                    calculator.CalculateIncomeTaxesForSpecifiedMovements(assetsIncomeTaxes, averageTradedPrices, stocks, monthMovements.Key);
+                    calculator.CalculateIncomeTaxes(assetsIncomeTaxes, averageTradedPrices, stocks, monthMovements.Key);
                 }
 
                 if (etfs.Any())
                 {
                     calculator = new ETFsIncomeTaxes();
-                    calculator.CalculateIncomeTaxesForSpecifiedMovements(assetsIncomeTaxes, averageTradedPrices, etfs, monthMovements.Key);
+                    calculator.CalculateIncomeTaxes(assetsIncomeTaxes, averageTradedPrices, etfs, monthMovements.Key);
                 }
 
                 if (fiis.Any())
                 {
                     calculator = new FIIsIncomeTaxes();
-                    calculator.CalculateIncomeTaxesForSpecifiedMovements(assetsIncomeTaxes, averageTradedPrices, fiis, monthMovements.Key);
+                    calculator.CalculateIncomeTaxes(assetsIncomeTaxes, averageTradedPrices, fiis, monthMovements.Key);
                 }
 
                 if (bdrs.Any())
                 {
                     calculator = new BDRsIncomeTaxes();
-                    calculator.CalculateIncomeTaxesForSpecifiedMovements(assetsIncomeTaxes, averageTradedPrices, bdrs, monthMovements.Key);
+                    calculator.CalculateIncomeTaxes(assetsIncomeTaxes, averageTradedPrices, bdrs, monthMovements.Key);
                 }
 
                 if (gold.Any())
                 {
                     calculator = new GoldIncomeTaxes();
-                    calculator.CalculateIncomeTaxesForSpecifiedMovements(assetsIncomeTaxes, averageTradedPrices, gold, monthMovements.Key);
+                    calculator.CalculateIncomeTaxes(assetsIncomeTaxes, averageTradedPrices, gold, monthMovements.Key);
                 }
 
                 if (fundInvestments.Any())
                 {
                     calculator = new InvestmentsFundsIncomeTaxes();
-                    calculator.CalculateIncomeTaxesForSpecifiedMovements(assetsIncomeTaxes, averageTradedPrices, fundInvestments, monthMovements.Key);
+                    calculator.CalculateIncomeTaxes(assetsIncomeTaxes, averageTradedPrices, fundInvestments, monthMovements.Key);
                 }
             }
 

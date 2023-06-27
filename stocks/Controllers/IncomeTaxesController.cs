@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using stocks.Services.IncomeTaxes;
@@ -44,8 +43,6 @@ public class IncomeTaxesController : BaseController
         return Ok("Imposto de renda e preço médio mais recente calculados e armazenados com sucesso.");
     }
 
-    // ,,,vbc trm um trabalho a ser feito what
-
     /// <summary>
     /// Calcula o imposto de renda de criptomoedas.
     /// </summary>
@@ -55,7 +52,7 @@ public class IncomeTaxesController : BaseController
     }
 
     /// <summary>
-    /// Calcula o imposto de renda de NFTs (lol).
+    /// Calcula o imposto de renda de NFTs (kkkkk).
     /// </summary>
     [HttpPost("nfts")]
     public IActionResult CalculateNFTs() {

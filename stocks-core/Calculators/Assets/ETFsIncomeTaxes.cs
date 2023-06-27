@@ -10,13 +10,7 @@ namespace stocks_core.Calculators.Assets
 {
     public class ETFsIncomeTaxes : AverageTradedPriceCalculator, IIncomeTaxesCalculator
     {
-        public void CalculateCurrentMonthIncomeTaxes(AssetIncomeTaxes? response,
-            IEnumerable<Movement.EquitMovement> movement, Guid accountId)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void CalculateIncomeTaxesForSpecifiedMovements(
+        public void CalculateIncomeTaxes(
             List<AssetIncomeTaxes> response,
             List<AverageTradedPriceDetails> averageTradedPrices,
             IEnumerable<Movement.EquitMovement> movements,
