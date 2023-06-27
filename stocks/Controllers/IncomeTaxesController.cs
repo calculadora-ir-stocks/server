@@ -1,5 +1,5 @@
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
 using stocks.Services.IncomeTaxes;
 using stocks_core.Requests.BigBang;
 
@@ -22,8 +22,12 @@ public class IncomeTaxesController : BaseController
     /// Calcula o total de imposto de renda a ser pago em ativos de renda variável no mês atual. 
     /// </summary>
     [HttpGet("assets")]
-    public IActionResult CalculateCurrentMonthAssetsIncomeTaxes(Guid accountId) {
-        var response = service.CalculateCurrentMonthAssetsIncomeTaxes(accountId);
+    public async Task<IActionResult> CalculateCurrentMonthAssetsIncomeTaxes(Guid accountId)
+    {
+        var response = await service.CalculateCurrentMonthAssetsIncomeTaxes(accountId);
+
+        if (response.IsNullOrEmpty()) return NotFound("Por enquanto não há nenhum imposto de renda a ser pago.");
+
         return Ok(response);
     }
 
@@ -48,7 +52,7 @@ public class IncomeTaxesController : BaseController
     }
 
     /// <summary>
-    /// Calcula o imposto de renda de NFTs (lol).
+    /// Calcula o imposto de renda de NFTs (kkkkk).
     /// </summary>
     [HttpPost("nfts")]
     public IActionResult CalculateNFTs() {
