@@ -9,6 +9,9 @@ using stocks_core.Models;
 
 namespace stocks_core.Services.BigBang
 {
+    /// <summary>
+    /// Classe responsável por calcular o imposto de renda devido nos meses especificados.
+    /// </summary>
     public class BigBang : IBigBang
     {
         private IIncomeTaxesCalculator calculator;
@@ -18,7 +21,10 @@ namespace stocks_core.Services.BigBang
             this.calculator = calculator;
         }
 
-        public (List<AssetIncomeTaxes>, List<AverageTradedPriceDetails>) Calculate(Movement.Root? request)
+        /// <summary>
+        /// Calcula o imposto de renda a ser pago em todos os meses especificados no parâmetro de retorno da B3.
+        /// </summary>
+        public (List<AssetIncomeTaxes>, List<AverageTradedPriceDetails>) Execute(Movement.Root? request)
         {
             var movements = GetAllInvestorMovements(request);
             if (movements.IsNullOrEmpty()) throw new NoneMovementsException("O usuário não possui nenhuma movimentação na bolsa até então.");
@@ -122,7 +128,6 @@ namespace stocks_core.Services.BigBang
         /// <summary>
         /// Altera a propriedade booleana DayTraded para operações de venda day-trade.
         /// </summary>
-        /// <param name="movements"></param>
         private static void SetDayTradeSellOperations(List<Movement.EquitMovement> movements)
         {
             var buys = movements.Where(x => x.MovementType == B3ResponseConstants.Buy);
