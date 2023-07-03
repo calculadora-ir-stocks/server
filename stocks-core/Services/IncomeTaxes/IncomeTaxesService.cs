@@ -104,9 +104,10 @@ public class IncomeTaxesService : IIncomeTaxesService
         {
             AssetType = "ETF - Exchange Traded Fund",
             TickerSymbol = "BOVA11",
+            CorporationName = "BOVA 11 Corporation Inc.",
             MovementType = "Compra",
             OperationValue = 10.43,
-            EquitiesQuantity = 2,
+            EquitiesQuantity = 1,
             ReferenceDate = new DateTime(2022, 01, 01)
         });
 
@@ -114,9 +115,10 @@ public class IncomeTaxesService : IIncomeTaxesService
         {
             AssetType = "ETF - Exchange Traded Fund",
             TickerSymbol = "BOVA11",
+            CorporationName = "BOVA 11 Corporation Inc.",
             MovementType = "Compra",
             OperationValue = 18.43,
-            EquitiesQuantity = 3,
+            EquitiesQuantity = 1,
             ReferenceDate = new DateTime(2022, 01, 03)
         });
 
@@ -124,9 +126,11 @@ public class IncomeTaxesService : IIncomeTaxesService
         {
             AssetType = "ETF - Exchange Traded Fund",
             TickerSymbol = "BOVA11",
+            CorporationName = "BOVA 11 Corporation Inc.",
             MovementType = "Venda",
-            OperationValue = 16.54,
-            EquitiesQuantity = 3,
+            OperationValue = 12.54,
+            UnitPrice = 12.54,
+            EquitiesQuantity = 1,
             ReferenceDate = new DateTime(2022, 01, 08)
         });
 
@@ -134,6 +138,7 @@ public class IncomeTaxesService : IIncomeTaxesService
         {
             AssetType = "FII - Fundo de Investimento Imobiliário",
             TickerSymbol = "KFOF11",
+            CorporationName = "KFOF11 Corporation Inc.",
             MovementType = "Compra",
             OperationValue = 231.34,
             EquitiesQuantity = 1,
@@ -144,8 +149,10 @@ public class IncomeTaxesService : IIncomeTaxesService
         {
             AssetType = "FII - Fundo de Investimento Imobiliário",
             TickerSymbol = "KFOF11",
+            CorporationName = "KFOF11 Corporation Inc.",
             MovementType = "Venda",
             OperationValue = 237.34,
+            UnitPrice = 237.34,
             EquitiesQuantity = 1,
             ReferenceDate = new DateTime(2022, 01, 28)
         });
@@ -154,8 +161,10 @@ public class IncomeTaxesService : IIncomeTaxesService
         {
             AssetType = "Ações",
             TickerSymbol = "AMER3",
+            CorporationName = "Americanas S/A",
             MovementType = "Venda",
             OperationValue = 234.43,
+            UnitPrice = 234.43,
             EquitiesQuantity = 1,
             ReferenceDate = new DateTime(2022, 02, 01)
         });
@@ -165,6 +174,7 @@ public class IncomeTaxesService : IIncomeTaxesService
             AssetType = "Ações",
             TickerSymbol = "AMER3",
             MovementType = "Compra",
+            CorporationName = "Americanas S/A",
             OperationValue = 265.54,
             EquitiesQuantity = 1,
             ReferenceDate = new DateTime(2022, 02, 01)
@@ -257,6 +267,13 @@ public class IncomeTaxesService : IIncomeTaxesService
             BigBang bigBang = new(incomeTaxCalculator, averageTradedPriceRepository);
             var response = await bigBang.Execute(b3Response, account.Id);
 
+            /**
+             * TO-DO: create customized response with:
+             * TotalTaxes
+             * List<Assets>: ticker name, corporation name, assettype, taxes
+             * AlreadySoldStocksQuantity: contém a quantidade de real já vendido em ações indicando o restante para se ausentar de ir
+             * */
+
             return response.Item1;
         } catch (Exception e)
         {
@@ -271,9 +288,10 @@ public class IncomeTaxesService : IIncomeTaxesService
         {
             AssetType = "ETF - Exchange Traded Fund",
             TickerSymbol = "BOVA11",
+            CorporationName = "BOVA11 Corporation Inc.",
             MovementType = "Compra",
             OperationValue = 19.54,
-            EquitiesQuantity = 2,
+            EquitiesQuantity = 1,
             ReferenceDate = new DateTime(2023, 01, 01)
         });
 
@@ -281,9 +299,10 @@ public class IncomeTaxesService : IIncomeTaxesService
         {
             AssetType = "ETF - Exchange Traded Fund",
             TickerSymbol = "BOVA11",
+            CorporationName = "BOVA11 Corporation Inc.",
             MovementType = "Compra",
             OperationValue = 34.65,
-            EquitiesQuantity = 3,
+            EquitiesQuantity = 1,
             ReferenceDate = new DateTime(2023, 01, 03)
         });
 
@@ -291,9 +310,11 @@ public class IncomeTaxesService : IIncomeTaxesService
         {
             AssetType = "ETF - Exchange Traded Fund",
             TickerSymbol = "BOVA11",
+            CorporationName = "BOVA11 Corporation Inc.",
             MovementType = "Venda",
             OperationValue = 10.43,
-            EquitiesQuantity = 6,
+            UnitPrice = 10.43,
+            EquitiesQuantity = 1,
             ReferenceDate = new DateTime(2023, 01, 08)
         });
 
@@ -301,6 +322,7 @@ public class IncomeTaxesService : IIncomeTaxesService
         {
             AssetType = "FII - Fundo de Investimento Imobiliário",
             TickerSymbol = "VISC11",
+            CorporationName = "VISC11 Corporation Inc.",
             MovementType = "Compra",
             OperationValue = 231.34,
             EquitiesQuantity = 1,
@@ -311,8 +333,10 @@ public class IncomeTaxesService : IIncomeTaxesService
         {
             AssetType = "FII - Fundo de Investimento Imobiliário",
             TickerSymbol = "VISC11",
+            CorporationName = "VISC11 Corporation Inc.",
             MovementType = "Venda",
             OperationValue = 65.34,
+            UnitPrice = 65.34,
             EquitiesQuantity = 1,
             ReferenceDate = new DateTime(2023, 01, 28)
         });
@@ -321,20 +345,22 @@ public class IncomeTaxesService : IIncomeTaxesService
         {
             AssetType = "Ações",
             TickerSymbol = "AMER3",
+            CorporationName = "Americanas S/A",
             MovementType = "Compra",
             OperationValue = 234.43,
             EquitiesQuantity = 1,
-            ReferenceDate = new DateTime(2023, 02, 01)
+            ReferenceDate = new DateTime(2023, 01, 29)
         });
 
         response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
         {
             AssetType = "Ações",
             TickerSymbol = "AMER3",
+            CorporationName = "Americanas S/A",
             MovementType = "Compra",
             OperationValue = 265.54,
             EquitiesQuantity = 1,
-            ReferenceDate = new DateTime(2023, 02, 01)
+            ReferenceDate = new DateTime(2023, 01, 29)
         });
     }
     #endregion

@@ -1,13 +1,10 @@
-﻿using stocks_common.Enums;
-using stocks_common.Helpers;
+﻿using stocks_common.Helpers;
 using stocks_common.Models;
 using stocks_core.Constants;
 using stocks_core.DTOs.B3;
-using stocks_infrastructure.Models;
-using System.Runtime.CompilerServices;
 using Asset = stocks_common.Enums.Asset;
 
-namespace stocks_core.Business
+namespace stocks_core.Calculators
 {
     /// <summary>
     /// Classe responsável por calcular o preço médio e o lucro de movimentações de compra e venda.
@@ -69,12 +66,13 @@ namespace stocks_core.Business
             return totalTaxes;
         }
 
-        public static IEnumerable<(string, string)> ToDto(IEnumerable<Movement.EquitMovement> movements, string assetType)
+        public static IEnumerable<Dto> ToDto(IEnumerable<Movement.EquitMovement> movements, string assetType)
         {
             var tradedTickers = movements
                 .Where(x => x.AssetType == assetType)
                 .Select(x => (x.TickerSymbol, x.CorporationName)).Distinct();
-            return tradedTickers;
+
+            foreach (var item in tradedTickers) yield return new Dto(item.TickerSymbol, item.CorporationName);
         }
 
         public static void AddIntoAverageTradedPricesList(List<AverageTradedPriceDetails> averageTradedPrices, Asset assetType)
@@ -229,5 +227,17 @@ namespace stocks_core.Business
             // TO-DO: entrar em contato com a B3 e tirar a dúvida de como funciona o response de bonificação.
             throw new NotImplementedException();
         }
-    }    
+    }
+
+    public class Dto
+    {
+        public Dto(string ticker, string corporationName)
+        {
+            Ticker = ticker;
+            CorporationName = corporationName;
+        }
+
+        public string Ticker { get; init; }
+        public string CorporationName { get; init; }
+    }
 }
