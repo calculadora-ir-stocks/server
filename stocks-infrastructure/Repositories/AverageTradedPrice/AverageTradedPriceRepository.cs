@@ -1,4 +1,8 @@
 ﻿using stocks.Database;
+using Dapper;
+using Microsoft.EntityFrameworkCore;
+using stocks_infrastructure.Models;
+using stocks_infrastructure.Dtos;
 
 namespace stocks_infrastructure.Repositories.AverageTradedPrice
 {
@@ -49,6 +53,29 @@ namespace stocks_infrastructure.Repositories.AverageTradedPrice
 
             string lastUpdatedFormatted = lastUpdated.ToString("yyyy-MM-dd");
             string referenceEndDate = DateTime.Now.AddDays(-1).ToString("yyyy-MM-dd");
+        }
+
+        public async Task<IEnumerable<AverageTradedPriceDto>> GetAverageTradedPrices(Guid accountId, List<string>? tickers = null)
+        {
+            DynamicParameters parameters = new();
+
+            parameters.Add("@AccountId", accountId);
+            parameters.Add("@Tickers", tickers);
+
+            string sql =
+                @"SELECT 
+                    atp.""Ticker"",
+                    atp.""AveragePrice"",
+                    atp.""Quantity""
+                  FROM ""AverageTradedPrices"" atp
+                  WHERE atp.""AccountId"" = @AccountId AND
+                  atp.""Ticker"" = ANY(@Tickers);
+                ";
+
+            var connection = context.Database.GetDbConnection();
+            var response = await connection.QueryAsync<AverageTradedPriceDto>(sql, parameters);
+
+            return response;
         }
     }
 }

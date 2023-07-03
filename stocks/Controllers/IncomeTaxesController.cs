@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using stocks.Services.IncomeTaxes;
 using stocks_core.Requests.BigBang;
+using stocks_core.Requests.IncomeTaxes;
 
 namespace stocks.Controllers;
 
@@ -20,11 +21,12 @@ public class IncomeTaxesController : BaseController
 
     /// <summary>
     /// Calcula o total de imposto de renda a ser pago em ativos de renda variável no mês atual. 
+    /// O formato data deve ser yyyy-MM-dd.
     /// </summary>
     [HttpGet("assets")]
-    public async Task<IActionResult> CalculateCurrentMonthAssetsIncomeTaxes(Guid accountId)
+    public async Task<IActionResult> CalculateIncomeTaxesFromMonth([FromQuery] AssetsIncomeTaxesRequest request)
     {
-        var response = await service.CalculateCurrentMonthAssetsIncomeTaxes(accountId);
+        var response = await service.CalculateCurrentMonthAssetsIncomeTaxes(request);
 
         if (response.IsNullOrEmpty()) return NotFound("Por enquanto não há nenhum imposto de renda a ser pago.");
 

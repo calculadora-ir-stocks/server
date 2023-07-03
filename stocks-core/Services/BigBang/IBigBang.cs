@@ -16,6 +16,6 @@ namespace stocks_core.Services.BigBang
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>
-        (List<AssetIncomeTaxes>, List<AverageTradedPriceDetails>) Execute(Movement.Root? request);
+        Task<(List<AssetIncomeTaxes>, List<AverageTradedPriceDetails>)> Execute(Movement.Root? request, Guid accountId);
     }
 }

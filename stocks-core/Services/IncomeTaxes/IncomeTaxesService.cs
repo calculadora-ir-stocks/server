@@ -7,6 +7,7 @@ using stocks_core.Calculators;
 using stocks_core.DTOs.B3;
 using stocks_core.Models;
 using stocks_core.Requests.BigBang;
+using stocks_core.Requests.IncomeTaxes;
 using stocks_core.Services.BigBang;
 using stocks_infrastructure.Models;
 using stocks_infrastructure.Repositories.AverageTradedPrice;
@@ -64,15 +65,26 @@ public class IncomeTaxesService : IIncomeTaxesService
              * TODO: O Big Bang não deve salvar na base o imposto de renda a ser pago no mês atual se o mês ainda não encerrou. Se for dia 10, por exemplo,
              * deverá salvar na base apenas o imposto a ser pago no mês passado. Dessa forma, o endpoint de pagar o imposto do mês atual irá calcular do primeiro dia
              * útil até o dia 10 e, apenas no último dia do mês, o Job irá rodar e salvar na base de dados o imposto devido desse mês em questão.
+             * Entretanto, o preço médio deverá sim ser calculado até D-1.
              * **/
 
             string yesterday = DateTime.Now.AddDays(-1).ToString("yyyy-MM-dd");
 
-            //TODO: remove mock and get user CPF.
-            Movement.Root? response = await b3Client.GetAccountMovement("97188167044", minimumAllowedStartDate, referenceEndDate: yesterday, accountId);            
+            Movement.Root? response = new()
+            {
+                Data = new()
+                {
+                    EquitiesPeriods = new()
+                    {
+                        EquitiesMovements = new()
+                    }
+                }
+            };
 
-            BigBang bigBang = new(incomeTaxCalculator);
-            var taxesToBePaid = bigBang.Execute(response);
+            AddBigBangDataSet(response);
+
+            BigBang bigBang = new(incomeTaxCalculator, averageTradedPriceRepository);
+            var taxesToBePaid = await bigBang.Execute(response, accountId);
 
             await SaveBigBang(taxesToBePaid, accountId);
 
@@ -84,7 +96,80 @@ public class IncomeTaxesService : IIncomeTaxesService
 
             throw;
         }
-    } 
+    }
+
+    private static void AddBigBangDataSet(Movement.Root response)
+    {
+        response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
+        {
+            AssetType = "ETF - Exchange Traded Fund",
+            TickerSymbol = "BOVA11",
+            MovementType = "Compra",
+            OperationValue = 10.43,
+            EquitiesQuantity = 2,
+            ReferenceDate = new DateTime(2022, 01, 01)
+        });
+
+        response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
+        {
+            AssetType = "ETF - Exchange Traded Fund",
+            TickerSymbol = "BOVA11",
+            MovementType = "Compra",
+            OperationValue = 18.43,
+            EquitiesQuantity = 3,
+            ReferenceDate = new DateTime(2022, 01, 03)
+        });
+
+        response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
+        {
+            AssetType = "ETF - Exchange Traded Fund",
+            TickerSymbol = "BOVA11",
+            MovementType = "Venda",
+            OperationValue = 16.54,
+            EquitiesQuantity = 3,
+            ReferenceDate = new DateTime(2022, 01, 08)
+        });
+
+        response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
+        {
+            AssetType = "FII - Fundo de Investimento Imobiliário",
+            TickerSymbol = "KFOF11",
+            MovementType = "Compra",
+            OperationValue = 231.34,
+            EquitiesQuantity = 1,
+            ReferenceDate = new DateTime(2022, 01, 16)
+        });
+
+        response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
+        {
+            AssetType = "FII - Fundo de Investimento Imobiliário",
+            TickerSymbol = "KFOF11",
+            MovementType = "Venda",
+            OperationValue = 237.34,
+            EquitiesQuantity = 1,
+            ReferenceDate = new DateTime(2022, 01, 28)
+        });
+
+        response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
+        {
+            AssetType = "Ações",
+            TickerSymbol = "AMER3",
+            MovementType = "Venda",
+            OperationValue = 234.43,
+            EquitiesQuantity = 1,
+            ReferenceDate = new DateTime(2022, 02, 01)
+        });
+
+        response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
+        {
+            AssetType = "Ações",
+            TickerSymbol = "AMER3",
+            MovementType = "Compra",
+            OperationValue = 265.54,
+            EquitiesQuantity = 1,
+            ReferenceDate = new DateTime(2022, 02, 01)
+        });
+    }
 
     private bool AlreadyHasAverageTradedPrice(Guid accountId) =>
         averageTradedPriceRepository.AlreadyHasAverageTradedPrice(accountId);
@@ -147,21 +232,30 @@ public class IncomeTaxesService : IIncomeTaxesService
     #endregion
 
     #region Calcula o imposto de renda mensal.
-    public async Task<List<AssetIncomeTaxes>> CalculateCurrentMonthAssetsIncomeTaxes(Guid accountId)
+    public async Task<List<AssetIncomeTaxes>> CalculateCurrentMonthAssetsIncomeTaxes(AssetsIncomeTaxesRequest request)
     {
         try
         {
-            DateTime now = DateTime.Now;
-
-            string firstMonthDay = new DateTime(now.Year, now.Minute, 1).ToString();
             string yesterday = DateTime.Now.AddDays(-1).ToString("yyyy-MM-dd");
+            Account account = await genericRepositoryAccount.GetByIdAsync(request.AccountId);
 
-            Account account = await genericRepositoryAccount.GetByIdAsync(accountId);
+            // var b3Response = await b3Client.GetAccountMovement(account.CPF, request.Month, yesterday, request.AccountId);
 
-            var b3Response = await b3Client.GetAccountMovement(account.CPF, firstMonthDay, yesterday, accountId);
+            Movement.Root? b3Response = new()
+            {
+                Data = new()
+                {
+                    EquitiesPeriods = new()
+                    {
+                        EquitiesMovements = new()
+                    }
+                }
+            };
 
-            BigBang bigBang = new(incomeTaxCalculator);
-            var response = bigBang.Execute(b3Response);
+            AddBigCurrentMonthSet(b3Response);
+
+            BigBang bigBang = new(incomeTaxCalculator, averageTradedPriceRepository);
+            var response = await bigBang.Execute(b3Response, account.Id);
 
             return response.Item1;
         } catch (Exception e)
@@ -169,6 +263,79 @@ public class IncomeTaxesService : IIncomeTaxesService
             logger.LogError(e, $"Ocorreu um erro ao calcular o imposto mensal devido. {e.Message}");
             throw;
         }
+    }
+
+    private void AddBigCurrentMonthSet(Movement.Root response)
+    {
+        response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
+        {
+            AssetType = "ETF - Exchange Traded Fund",
+            TickerSymbol = "BOVA11",
+            MovementType = "Compra",
+            OperationValue = 19.54,
+            EquitiesQuantity = 2,
+            ReferenceDate = new DateTime(2023, 01, 01)
+        });
+
+        response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
+        {
+            AssetType = "ETF - Exchange Traded Fund",
+            TickerSymbol = "BOVA11",
+            MovementType = "Compra",
+            OperationValue = 34.65,
+            EquitiesQuantity = 3,
+            ReferenceDate = new DateTime(2023, 01, 03)
+        });
+
+        response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
+        {
+            AssetType = "ETF - Exchange Traded Fund",
+            TickerSymbol = "BOVA11",
+            MovementType = "Venda",
+            OperationValue = 10.43,
+            EquitiesQuantity = 6,
+            ReferenceDate = new DateTime(2023, 01, 08)
+        });
+
+        response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
+        {
+            AssetType = "FII - Fundo de Investimento Imobiliário",
+            TickerSymbol = "VISC11",
+            MovementType = "Compra",
+            OperationValue = 231.34,
+            EquitiesQuantity = 1,
+            ReferenceDate = new DateTime(2023, 01, 16)
+        });
+
+        response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
+        {
+            AssetType = "FII - Fundo de Investimento Imobiliário",
+            TickerSymbol = "VISC11",
+            MovementType = "Venda",
+            OperationValue = 65.34,
+            EquitiesQuantity = 1,
+            ReferenceDate = new DateTime(2023, 01, 28)
+        });
+
+        response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
+        {
+            AssetType = "Ações",
+            TickerSymbol = "AMER3",
+            MovementType = "Compra",
+            OperationValue = 234.43,
+            EquitiesQuantity = 1,
+            ReferenceDate = new DateTime(2023, 02, 01)
+        });
+
+        response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
+        {
+            AssetType = "Ações",
+            TickerSymbol = "AMER3",
+            MovementType = "Compra",
+            OperationValue = 265.54,
+            EquitiesQuantity = 1,
+            ReferenceDate = new DateTime(2023, 02, 01)
+        });
     }
     #endregion
 }

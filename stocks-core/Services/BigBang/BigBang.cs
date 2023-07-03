@@ -1,4 +1,5 @@
 ﻿using Microsoft.IdentityModel.Tokens;
+using stocks.Repositories;
 using stocks_common.Exceptions;
 using stocks_common.Models;
 using stocks_core.Calculators;
@@ -6,6 +7,9 @@ using stocks_core.Calculators.Assets;
 using stocks_core.Constants;
 using stocks_core.DTOs.B3;
 using stocks_core.Models;
+using stocks_infrastructure.Dtos;
+using stocks_infrastructure.Models;
+using stocks_infrastructure.Repositories.AverageTradedPrice;
 
 namespace stocks_core.Services.BigBang
 {
@@ -15,16 +19,18 @@ namespace stocks_core.Services.BigBang
     public class BigBang : IBigBang
     {
         private IIncomeTaxesCalculator calculator;
+        private readonly IAverageTradedPriceRepostory averageTradedPriceRepository;
 
-        public BigBang(IIncomeTaxesCalculator calculator)
+        public BigBang(IIncomeTaxesCalculator calculator, IAverageTradedPriceRepostory averageTradedPriceRepository)
         {
             this.calculator = calculator;
+            this.averageTradedPriceRepository = averageTradedPriceRepository;
         }
 
         /// <summary>
         /// Calcula o imposto de renda a ser pago em todos os meses especificados no parâmetro de retorno da B3.
         /// </summary>
-        public (List<AssetIncomeTaxes>, List<AverageTradedPriceDetails>) Execute(Movement.Root? request)
+        public async Task<(List<AssetIncomeTaxes>, List<AverageTradedPriceDetails>)> Execute(Movement.Root? request, Guid accountId)
         {
             var movements = GetAllInvestorMovements(request);
             if (movements.IsNullOrEmpty()) throw new NoneMovementsException("O usuário não possui nenhuma movimentação na bolsa até então.");
@@ -40,7 +46,7 @@ namespace stocks_core.Services.BigBang
                 monthlyMovements.Add(month, monthMovements);
             }
 
-            return GetTaxesAndAverageTradedPrices(monthlyMovements);
+            return await GetTaxesAndAverageTradedPrices(monthlyMovements, accountId);
         }
 
         private static List<Movement.EquitMovement> GetAllInvestorMovements(Movement.Root? response)
@@ -69,7 +75,8 @@ namespace stocks_core.Services.BigBang
             return movements.OrderBy(x => x.MovementType).OrderBy(x => x.ReferenceDate).ToList();
         }
 
-        private (List<AssetIncomeTaxes>, List<AverageTradedPriceDetails>) GetTaxesAndAverageTradedPrices(Dictionary<string, List<Movement.EquitMovement>> monthlyMovements)
+        private async Task<(List<AssetIncomeTaxes>, List<AverageTradedPriceDetails>)> GetTaxesAndAverageTradedPrices(
+            Dictionary<string, List<Movement.EquitMovement>> monthlyMovements, Guid accountId)
         {
             List<AssetIncomeTaxes> assetsIncomeTaxes = new();
             List<AverageTradedPriceDetails> averageTradedPrices = new();
@@ -87,42 +94,79 @@ namespace stocks_core.Services.BigBang
 
                 if (stocks.Any())
                 {
-                    calculator = new StocksIncomeTaxes();
+                    var prices = await GetMovementsAverageTradedPrices(accountId, stocks);
+                    averageTradedPrices.AddRange(ToAverageTradedPriceDetails(prices, stocks_common.Enums.Asset.Stocks));
+
+                    calculator = new StocksIncomeTaxes(); 
                     calculator.CalculateIncomeTaxes(assetsIncomeTaxes, averageTradedPrices, stocks, monthMovements.Key);
                 }
 
                 if (etfs.Any())
                 {
+                    var prices = await GetMovementsAverageTradedPrices(accountId, etfs);
+                    averageTradedPrices.AddRange(ToAverageTradedPriceDetails(prices, stocks_common.Enums.Asset.ETFs));
+
                     calculator = new ETFsIncomeTaxes();
                     calculator.CalculateIncomeTaxes(assetsIncomeTaxes, averageTradedPrices, etfs, monthMovements.Key);
                 }
 
                 if (fiis.Any())
                 {
+                    var prices = await GetMovementsAverageTradedPrices(accountId, fiis);
+                    averageTradedPrices.AddRange(ToAverageTradedPriceDetails(prices, stocks_common.Enums.Asset.FIIs));
+
                     calculator = new FIIsIncomeTaxes();
                     calculator.CalculateIncomeTaxes(assetsIncomeTaxes, averageTradedPrices, fiis, monthMovements.Key);
                 }
 
                 if (bdrs.Any())
                 {
+                    var prices = await GetMovementsAverageTradedPrices(accountId, bdrs);
+                    averageTradedPrices.AddRange(ToAverageTradedPriceDetails(prices, stocks_common.Enums.Asset.BDRs));
+
                     calculator = new BDRsIncomeTaxes();
                     calculator.CalculateIncomeTaxes(assetsIncomeTaxes, averageTradedPrices, bdrs, monthMovements.Key);
                 }
 
                 if (gold.Any())
                 {
+                    var prices = await GetMovementsAverageTradedPrices(accountId, gold);
+                    averageTradedPrices.AddRange(ToAverageTradedPriceDetails(prices, stocks_common.Enums.Asset.Gold));
+
                     calculator = new GoldIncomeTaxes();
                     calculator.CalculateIncomeTaxes(assetsIncomeTaxes, averageTradedPrices, gold, monthMovements.Key);
                 }
 
                 if (fundInvestments.Any())
                 {
+                    var prices = await GetMovementsAverageTradedPrices(accountId, fundInvestments);
+                    averageTradedPrices.AddRange(ToAverageTradedPriceDetails(prices, stocks_common.Enums.Asset.InvestmentsFunds));
+
                     calculator = new InvestmentsFundsIncomeTaxes();
                     calculator.CalculateIncomeTaxes(assetsIncomeTaxes, averageTradedPrices, fundInvestments, monthMovements.Key);
                 }
             }
 
             return (assetsIncomeTaxes, averageTradedPrices);
+        }
+
+        private IEnumerable<AverageTradedPriceDetails> ToAverageTradedPriceDetails(IEnumerable<AverageTradedPriceDto> prices, stocks_common.Enums.Asset assetType)
+        {
+            foreach (var price in prices)
+            {
+                yield return new AverageTradedPriceDetails(
+                    tickerSymbol: price.Ticker,
+                    averageTradedPrice: price.AverageTradedPrice,
+                    totalBought: price.AverageTradedPrice,
+                    tradedQuantity: price.Quantity,
+                    assetType
+                );
+            }
+        }
+
+        private async Task <IEnumerable<AverageTradedPriceDto>> GetMovementsAverageTradedPrices(Guid accountId, IEnumerable<Movement.EquitMovement> movements)
+        {
+            return await averageTradedPriceRepository.GetAverageTradedPrices(accountId, movements.Select(x => x.TickerSymbol).ToList());
         }
 
         /// <summary>
