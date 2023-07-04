@@ -8,6 +8,7 @@ using stocks_core.DTOs.B3;
 using stocks_core.Models;
 using stocks_core.Requests.BigBang;
 using stocks_core.Requests.IncomeTaxes;
+using stocks_core.Responses;
 using stocks_core.Services.BigBang;
 using stocks_infrastructure.Models;
 using stocks_infrastructure.Repositories.AverageTradedPrice;
@@ -242,7 +243,7 @@ public class IncomeTaxesService : IIncomeTaxesService
     #endregion
 
     #region Calcula o imposto de renda mensal.
-    public async Task<List<AssetIncomeTaxes>> CalculateCurrentMonthAssetsIncomeTaxes(AssetsIncomeTaxesRequest request)
+    public async Task<List<CurrentMonthTaxesResponse>> CalculateCurrentMonthAssetsIncomeTaxes(AssetsIncomeTaxesRequest request)
     {
         try
         {
@@ -267,19 +268,35 @@ public class IncomeTaxesService : IIncomeTaxesService
             BigBang bigBang = new(incomeTaxCalculator, averageTradedPriceRepository);
             var response = await bigBang.Execute(b3Response, account.Id);
 
-            /**
-             * TO-DO: create customized response with:
-             * TotalTaxes
-             * List<Assets>: ticker name, corporation name, assettype, taxes
-             * AlreadySoldStocksQuantity: contém a quantidade de real já vendido em ações indicando o restante para se ausentar de ir
-             * */
-
-            return response.Item1;
+            return ToDto(response.Item1, response.Item2).ToList();
         } catch (Exception e)
         {
             logger.LogError(e, $"Ocorreu um erro ao calcular o imposto mensal devido. {e.Message}");
             throw;
         }
+    }
+
+    private IEnumerable<CurrentMonthTaxesResponse> ToDto(List<AssetIncomeTaxes> item1, List<AverageTradedPriceDetails> item2)
+    {
+        double totalTaxes = item1.Select(x => x.Taxes).Sum();
+        List<stocks_core.Responses.Asset> tradedAssets = new();
+
+        foreach (var item in item1)
+        {
+            tradedAssets.Add(new stocks_core.Responses.Asset(
+                item.AssetTypeId,
+                item.Taxes,
+                item.TotalSold,
+                item.SwingTradeProfit,
+                item.DayTradeProfit,
+                item.TradedAssets
+            ));
+        }
+
+        yield return new CurrentMonthTaxesResponse(
+            taxes: totalTaxes,
+            tradedAssets
+        );
     }
 
     private void AddBigCurrentMonthSet(Movement.Root response)

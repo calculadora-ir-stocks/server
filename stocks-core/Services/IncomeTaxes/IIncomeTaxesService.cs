@@ -1,6 +1,7 @@
 using stocks_core.Models;
 using stocks_core.Requests.BigBang;
 using stocks_core.Requests.IncomeTaxes;
+using stocks_core.Responses;
 
 namespace stocks.Services.IncomeTaxes;
 
@@ -9,7 +10,7 @@ public interface IIncomeTaxesService
     /// <summary>
     /// Calcula a quantidade de imposto de renda a ser pago para cada ativo de renda variável no mês atual.
     /// </summary>
-    Task<List<AssetIncomeTaxes>> CalculateCurrentMonthAssetsIncomeTaxes(AssetsIncomeTaxesRequest request);
+    Task<List<CurrentMonthTaxesResponse>> CalculateCurrentMonthAssetsIncomeTaxes(AssetsIncomeTaxesRequest request);
 
     /// <summary>
     /// Calcula e armazena o imposto de renda a ser pago em todos os meses desde 01/11/2019 até D-1.
