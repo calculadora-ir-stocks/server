@@ -65,7 +65,7 @@ namespace stocks_infrastructure.Repositories.AverageTradedPrice
             string sql =
                 @"SELECT 
                     atp.""Ticker"",
-                    atp.""AveragePrice"",
+                    atp.""AveragePrice"" as AverageTradedPrice,
                     atp.""Quantity""
                   FROM ""AverageTradedPrices"" atp
                   WHERE atp.""AccountId"" = @AccountId AND

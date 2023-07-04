@@ -7,7 +7,6 @@ using stocks_core.Calculators;
 using stocks_core.DTOs.B3;
 using stocks_core.Models;
 using stocks_core.Requests.BigBang;
-using stocks_core.Requests.IncomeTaxes;
 using stocks_core.Responses;
 using stocks_core.Services.BigBang;
 using stocks_infrastructure.Models;
@@ -243,12 +242,12 @@ public class IncomeTaxesService : IIncomeTaxesService
     #endregion
 
     #region Calcula o imposto de renda mensal.
-    public async Task<List<CurrentMonthTaxesResponse>> CalculateCurrentMonthAssetsIncomeTaxes(AssetsIncomeTaxesRequest request)
+    public async Task<CurrentMonthTaxesResponse> CalculateCurrentMonthAssetsIncomeTaxes(Guid accountId)
     {
         try
         {
             string yesterday = DateTime.Now.AddDays(-1).ToString("yyyy-MM-dd");
-            Account account = await genericRepositoryAccount.GetByIdAsync(request.AccountId);
+            Account account = await genericRepositoryAccount.GetByIdAsync(accountId);
 
             // var b3Response = await b3Client.GetAccountMovement(account.CPF, request.Month, yesterday, request.AccountId);
 
@@ -263,12 +262,12 @@ public class IncomeTaxesService : IIncomeTaxesService
                 }
             };
 
-            AddBigCurrentMonthSet(b3Response);
+            AddCurrentMonthSet(b3Response);
 
             BigBang bigBang = new(incomeTaxCalculator, averageTradedPriceRepository);
             var response = await bigBang.Execute(b3Response, account.Id);
 
-            return ToDto(response.Item1, response.Item2).ToList();
+            return ToDto(response.Item1, response.Item2);
         } catch (Exception e)
         {
             logger.LogError(e, $"Ocorreu um erro ao calcular o imposto mensal devido. {e.Message}");
@@ -276,7 +275,7 @@ public class IncomeTaxesService : IIncomeTaxesService
         }
     }
 
-    private IEnumerable<CurrentMonthTaxesResponse> ToDto(List<AssetIncomeTaxes> item1, List<AverageTradedPriceDetails> item2)
+    private CurrentMonthTaxesResponse ToDto(List<AssetIncomeTaxes> item1, List<AverageTradedPriceDetails> item2)
     {
         double totalTaxes = item1.Select(x => x.Taxes).Sum();
         List<stocks_core.Responses.Asset> tradedAssets = new();
@@ -293,13 +292,13 @@ public class IncomeTaxesService : IIncomeTaxesService
             ));
         }
 
-        yield return new CurrentMonthTaxesResponse(
+        return new CurrentMonthTaxesResponse(
             taxes: totalTaxes,
             tradedAssets
         );
     }
 
-    private void AddBigCurrentMonthSet(Movement.Root response)
+    private void AddCurrentMonthSet(Movement.Root response)
     {
         response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
         {
@@ -352,8 +351,8 @@ public class IncomeTaxesService : IIncomeTaxesService
             TickerSymbol = "VISC11",
             CorporationName = "VISC11 Corporation Inc.",
             MovementType = "Venda",
-            OperationValue = 65.34,
-            UnitPrice = 65.34,
+            OperationValue = 304.43,
+            UnitPrice = 304.43,
             EquitiesQuantity = 1,
             ReferenceDate = new DateTime(2023, 01, 28)
         });
@@ -374,8 +373,9 @@ public class IncomeTaxesService : IIncomeTaxesService
             AssetType = "Ações",
             TickerSymbol = "AMER3",
             CorporationName = "Americanas S/A",
-            MovementType = "Compra",
+            MovementType = "Venda",
             OperationValue = 265.54,
+            UnitPrice = 265.54,
             EquitiesQuantity = 1,
             ReferenceDate = new DateTime(2023, 01, 29)
         });

@@ -2,6 +2,7 @@
 using stocks_common.Models;
 using stocks_core.Constants;
 using stocks_core.DTOs.B3;
+using stocks_infrastructure.Models;
 using Asset = stocks_common.Enums.Asset;
 
 namespace stocks_core.Calculators
@@ -12,28 +13,21 @@ namespace stocks_core.Calculators
     /// </summary>
     public abstract class AverageTradedPriceCalculator
     {
-        private static readonly Dictionary<string, AverageTradedPriceDetails> averageTradedPricesList = new();
-
         public static (List<OperationDetails> dayTrade, List<OperationDetails> swingTrade) CalculateProfit
-            (IEnumerable<Movement.EquitMovement> movements, List<AverageTradedPriceDetails>? averageTradedPrices = null)
+            (IEnumerable<Movement.EquitMovement> movements, List<AverageTradedPriceDetails> averageTradedPrices)
         {
             List<OperationDetails> dayTrade = new();
             List<OperationDetails> swingTrade = new();
-
-            if (averageTradedPrices != null)
-            {
-                AddIntoAverageTradedPricesList(averageTradedPrices, Asset.Stocks);
-            }
 
             foreach (var movement in movements)
             {
                 switch (movement.MovementType)
                 {
                     case B3ResponseConstants.Buy:
-                        UpdateAverageTradedPrice(movement);
+                        UpdateAverageTradedPrice(movement, averageTradedPrices!);
                         break;
                     case B3ResponseConstants.Sell:
-                        UpdateProfit(dayTrade, swingTrade, movement, movements);
+                        UpdateProfit(dayTrade, swingTrade, movement, movements, averageTradedPrices);
                         break;
                     case B3ResponseConstants.Split:
                         CalculateSplitOperation(movement);
@@ -77,7 +71,9 @@ namespace stocks_core.Calculators
 
         public static void AddIntoAverageTradedPricesList(List<AverageTradedPriceDetails> averageTradedPrices, Asset assetType)
         {
-            foreach (var price in GetAverageTradedPrices(assetType))
+            var prices = averageTradedPrices.Where(x => x.AssetType == assetType);
+
+            foreach (var price in prices)
             {
                 bool contains = averageTradedPrices.Select(x => x.TickerSymbol).Contains(price.TickerSymbol);
 
@@ -114,13 +110,13 @@ namespace stocks_core.Calculators
                 swingTradeResponse.Select(x => x.TickerSymbol).Equals(movement.TickerSymbol);
         }
 
-        private static void UpdateAverageTradedPrice(Movement.EquitMovement movement)
+        private static void UpdateAverageTradedPrice(Movement.EquitMovement movement, List<AverageTradedPriceDetails> averageTradedPrices)
         {
-            bool tickerHasAverageTradedPrice = averageTradedPricesList.ContainsKey(movement.TickerSymbol);
+            bool tickerHasAverageTradedPrice = averageTradedPrices.Select(x => x.TickerSymbol).Contains(movement.TickerSymbol);
 
             if (tickerHasAverageTradedPrice)
             {
-                var ticker = averageTradedPricesList[movement.TickerSymbol];
+                var ticker = averageTradedPrices.Where(x => x.TickerSymbol == movement.TickerSymbol).First();
 
                 double totalBought = ticker.TotalBought + movement.OperationValue;
                 double quantity = ticker.TradedQuantity + movement.EquitiesQuantity;
@@ -129,8 +125,8 @@ namespace stocks_core.Calculators
             }
             else
             {
-                averageTradedPricesList.Add(movement.TickerSymbol, new AverageTradedPriceDetails(
-                    movement.CorporationName,
+                averageTradedPrices.Add(new AverageTradedPriceDetails(
+                    movement.TickerSymbol,
                     averageTradedPrice: movement.OperationValue / movement.EquitiesQuantity,
                     totalBought: movement.OperationValue,
                     tradedQuantity: (int)movement.EquitiesQuantity,
@@ -139,27 +135,12 @@ namespace stocks_core.Calculators
             }
         }
 
-        protected static IEnumerable<AverageTradedPriceDetails> GetAverageTradedPrices(Asset assetType)
-        {
-            var prices = averageTradedPricesList.Where(x => x.Value.AssetType == assetType);
-
-            foreach (var price in prices)
-            {
-                yield return new AverageTradedPriceDetails(
-                    price.Key,
-                    price.Value.AverageTradedPrice,
-                    price.Value.TotalBought,
-                    price.Value.TradedQuantity,
-                    assetType
-                );
-            }
-        }
-
         private static void UpdateProfit(
             List<OperationDetails> dayTradeResponse,
             List<OperationDetails> swingTradeResponse,
             Movement.EquitMovement movement,
-            IEnumerable<Movement.EquitMovement> movements
+            IEnumerable<Movement.EquitMovement> movements,
+            List<AverageTradedPriceDetails> averageTradedPrices
         )
         {
             AddTickerIntoResponseDictionary(dayTradeResponse, swingTradeResponse, movement);
@@ -171,9 +152,9 @@ namespace stocks_core.Calculators
             else
                 asset = swingTradeResponse.First(x => x.TickerSymbol == movement.TickerSymbol);
 
-            if (AssetBoughtAfterB3MinimumDate(movement))
+            if (AssetBoughtAfterB3MinimumDate(movement, averageTradedPrices))
             {
-                double averageTradedPrice = averageTradedPricesList[movement.TickerSymbol].AverageTradedPrice;
+                double averageTradedPrice = averageTradedPrices.Where(x => x.TickerSymbol == movement.TickerSymbol).First().AverageTradedPrice;
                 double profitPerShare = movement.UnitPrice - averageTradedPrice;
                 double totalProfit = profitPerShare * movement.EquitiesQuantity;
 
@@ -196,9 +177,9 @@ namespace stocks_core.Calculators
             }
         }
 
-        private static bool AssetBoughtAfterB3MinimumDate(Movement.EquitMovement movement)
+        private static bool AssetBoughtAfterB3MinimumDate(Movement.EquitMovement movement, List<AverageTradedPriceDetails> averageTradedPrices)
         {
-            return averageTradedPricesList.ContainsKey(movement.TickerSymbol);
+            return averageTradedPrices.Where(x => x.TickerSymbol == movement.TickerSymbol).FirstOrDefault() != null;
         }
 
         private static void CalculateSplitOperation(Movement.EquitMovement movement)
