@@ -19,17 +19,25 @@ public class IncomeTaxesController : BaseController
     }
 
     /// <summary>
-    /// Calcula o total de imposto de renda a ser pago em ativos de renda variável no mês atual. 
-    /// O formato data deve ser yyyy-MM-dd.
+    /// Calcula o total de imposto de renda a ser pago em ativos de renda variável no mês atual.
     /// </summary>
-    [HttpGet("assets")]
-    public async Task<IActionResult> CalculateIncomeTaxesFromMonth([FromQuery] Guid accountId)
+    [HttpGet("assets/now")]
+    public async Task<IActionResult> CalculateCurrentMonthAssetsIncomeTaxes([FromQuery] Guid accountId)
     {
         var response = await service.CalculateCurrentMonthAssetsIncomeTaxes(accountId);
 
         if (response.TradedAssets.IsNullOrEmpty()) return NotFound("Por enquanto não há nenhum imposto de renda a ser pago.");
 
         return Ok(response);
+    }
+
+    /// <summary>
+    /// Calcula o total de imposto de renda a ser pago em ativos de renda variável no mês especificado.
+    /// </summary>
+    [HttpGet("assets/{month}")]
+    public async Task<IActionResult> CalculateIncomeTaxesForMonth(string month)
+    {
+        throw new NotImplementedException();
     }
 
     /// <summary>

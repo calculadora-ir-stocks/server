@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Logging;
 using stocks.Clients.B3;
+using stocks.Exceptions;
 using stocks.Models;
 using stocks.Repositories;
 using stocks_common.Models;
@@ -52,10 +53,16 @@ public class IncomeTaxesService : IIncomeTaxesService
             {
                 logger.LogInformation($"Big bang foi executado para o usuário {accountId}, mas ele já possui o preço médio e imposto de renda " +
                     $"calculado na base.");
+
                 return;
             }
 
-            string minimumAllowedStartDate = "2019-11-01";
+            // A B3 apenas possui dados a partir de 01/11/2019.
+            string startDate = "2019-11-01";
+
+            string lastMonth = new DateTime(year: DateTime.Now.Year, month: DateTime.Now.Month, day: 1)
+                .AddMonths(-1)
+                .ToString("yyyy-MM-dd");
 
             /**
              * O fluxo funcionará começando pelo Big Bang, onde o imposto devido de todos os meses retroativos será salvo na base de dados.
@@ -68,7 +75,7 @@ public class IncomeTaxesService : IIncomeTaxesService
              * Entretanto, o preço médio deverá sim ser calculado até D-1.
              * **/
 
-            string yesterday = DateTime.Now.AddDays(-1).ToString("yyyy-MM-dd");
+            // var b3Response = await b3Client.GetAccountMovement(account.CPF, startDate, yesterday, accountId);
 
             Movement.Root? response = new()
             {
@@ -84,9 +91,9 @@ public class IncomeTaxesService : IIncomeTaxesService
             AddBigBangDataSet(response);
 
             BigBang bigBang = new(incomeTaxCalculator, averageTradedPriceRepository);
-            var taxesToBePaid = await bigBang.Execute(response, accountId);
+            var taxesAndAverageTradedPrices = await bigBang.Execute(response, accountId);
 
-            await SaveBigBang(taxesToBePaid, accountId);
+            await SaveBigBang(taxesAndAverageTradedPrices, accountId);
 
             logger.LogInformation($"Big Bang executado com sucesso para o usuário {accountId}.");
         } catch (Exception e)
@@ -241,15 +248,23 @@ public class IncomeTaxesService : IIncomeTaxesService
 
     #endregion
 
-    #region Calcula o imposto de renda mensal.
+    #region Calcula o imposto de renda do mês atual.
     public async Task<CurrentMonthTaxesResponse> CalculateCurrentMonthAssetsIncomeTaxes(Guid accountId)
     {
         try
         {
+            // Caso seja dia 1, não há como obter os dados do mês atual já que a B3 disponibiliza os dados em D-1.
+            if (IsDayOne())
+            {
+                throw new NotImplementedException("TO-DO: fazer a chamada de /assets/{month}");
+            }
+
+            string startDate = DateTime.Now.ToString("yyyy-MM-01");
             string yesterday = DateTime.Now.AddDays(-1).ToString("yyyy-MM-dd");
+
             Account account = await genericRepositoryAccount.GetByIdAsync(accountId);
 
-            // var b3Response = await b3Client.GetAccountMovement(account.CPF, request.Month, yesterday, request.AccountId);
+            // var b3Response = await b3Client.GetAccountMovement(account.CPF, startDate, , request.AccountId);
 
             Movement.Root? b3Response = new()
             {
@@ -273,6 +288,12 @@ public class IncomeTaxesService : IIncomeTaxesService
             logger.LogError(e, $"Ocorreu um erro ao calcular o imposto mensal devido. {e.Message}");
             throw;
         }
+    }
+
+    private static bool IsDayOne()
+    {
+        DateTime yesterday = DateTime.Now.AddDays(-1);
+        return yesterday.Day > 1;
     }
 
     private CurrentMonthTaxesResponse ToDto(List<AssetIncomeTaxes> item1, List<AverageTradedPriceDetails> item2)
