@@ -11,7 +11,7 @@ namespace stocks_core.Calculators.Assets
     public class StocksIncomeTaxes : AverageTradedPriceCalculator, IIncomeTaxesCalculator
     {
         public void CalculateIncomeTaxes(
-            List<AssetIncomeTaxes> response,
+            List<AssetIncomeTaxes> assetsIncomeTaxes,
             List<AverageTradedPriceDetails> averageTradedPrices,
             IEnumerable<Movement.EquitMovement> movements,
             string month
@@ -30,7 +30,7 @@ namespace stocks_core.Calculators.Assets
             bool paysIncomeTaxes = (sellsSuperiorThan20000 && swingTradeProfit > 0) || (dayTradeProfit > 0);
             double taxes = paysIncomeTaxes ? (double)CalculateIncomeTaxes(swingTradeProfit, dayTradeProfit, AliquotConstants.IncomeTaxesForStocks) : 0;
 
-            response.Add(new AssetIncomeTaxes(month, AssetTypeHelper.GetNameByAssetType(Asset.Stocks))
+            assetsIncomeTaxes.Add(new AssetIncomeTaxes(month, AssetTypeHelper.GetNameByAssetType(Asset.Stocks))
             {
                 AssetTypeId = Asset.Stocks,
                 Taxes = taxes,

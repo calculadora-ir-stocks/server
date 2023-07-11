@@ -7,11 +7,11 @@ namespace stocks_core.Calculators
     public interface IIncomeTaxesCalculator
     {
         /// <summary>
-        /// Calcula o total de imposto a ser pago em operações swing-trade e day-trade.
+        /// Calcula o imposto de renda e o preço médios com base nas movimentações especificadas.
+        /// <para>Altera o <c>assets</c> com o imposto devido referente as movimentações <c>movements</c>.</para>
+        /// <para>Altera o <c>averageTradedPrices</c> com o preço médio dos ativos negociados referente as movimentações <c>movements</c>.</para>
         /// </summary>
-        /// <param name="response">Variável que será atualizada com o imposto devido e lucro em operações swing-trade e day-trade</param>
-        /// <param name="averageTradedPrices">Preço médio de todos os ativos negociados</param>
-        void CalculateIncomeTaxes(List<AssetIncomeTaxes> response, List<AverageTradedPriceDetails> averageTradedPrices, 
+        void CalculateIncomeTaxes(List<AssetIncomeTaxes> assets, List<AverageTradedPriceDetails> averageTradedPrices, 
             IEnumerable<Movement.EquitMovement> movements, string month);
     }
 }

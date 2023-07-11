@@ -3,8 +3,6 @@ using stocks_common.Helpers;
 using stocks_common.Models;
 using stocks_core.Constants;
 using stocks_core.DTOs.B3;
-using stocks_infrastructure.Models;
-using System.Diagnostics.CodeAnalysis;
 using Asset = stocks_common.Enums.Asset;
 
 namespace stocks_core.Calculators
@@ -15,8 +13,11 @@ namespace stocks_core.Calculators
     /// </summary>
     public abstract class AverageTradedPriceCalculator
     {
+        /// <summary>
+        /// Calcula o lucro das movimentações especificadas levando em consideração o preço médio dos ativos.
+        /// </summary>
         public static (List<OperationDetails> dayTrade, List<OperationDetails> swingTrade) CalculateProfit
-            (IEnumerable<Movement.EquitMovement> movements, List<AverageTradedPriceDetails> averageTradedPrices)
+            (IEnumerable<Movement.EquitMovement> movements, List<AverageTradedPriceDetails> movementsAverageTradedPrices)
         {
             List<OperationDetails> dayTrade = new();
             List<OperationDetails> swingTrade = new();
@@ -26,10 +27,10 @@ namespace stocks_core.Calculators
                 switch (movement.MovementType)
                 {
                     case B3ResponseConstants.Buy:
-                        UpdateAverageTradedPrice(movement, averageTradedPrices!);
+                        UpdateAverageTradedPrice(movement, movementsAverageTradedPrices!);
                         break;
                     case B3ResponseConstants.Sell:
-                        UpdateProfitOrLoss(dayTrade, swingTrade, movement, movements, averageTradedPrices);
+                        UpdateProfitOrLoss(dayTrade, swingTrade, movement, movements, movementsAverageTradedPrices);
                         break;
                     case B3ResponseConstants.Split:
                         CalculateSplitOperation(movement);

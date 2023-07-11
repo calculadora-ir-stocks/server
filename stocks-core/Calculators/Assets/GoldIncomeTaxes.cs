@@ -11,7 +11,7 @@ namespace stocks_core.Calculators.Assets
     public class GoldIncomeTaxes : AverageTradedPriceCalculator, IIncomeTaxesCalculator
     {
         public void CalculateIncomeTaxes(
-            List<AssetIncomeTaxes> response,
+            List<AssetIncomeTaxes> assetsIncomeTaxes,
             List<AverageTradedPriceDetails> averageTradedPrices,
             IEnumerable<Movement.EquitMovement> movements,
             string month
@@ -27,7 +27,7 @@ namespace stocks_core.Calculators.Assets
 
             bool paysIncomeTaxes = sells.Any() && (swingTradeProfit > 0 || dayTradeProfit > 0);
 
-            response.Add(new AssetIncomeTaxes(month, AssetTypeHelper.GetNameByAssetType(Asset.Gold))
+            assetsIncomeTaxes.Add(new AssetIncomeTaxes(month, AssetTypeHelper.GetNameByAssetType(Asset.Gold))
             {
                 AssetTypeId = Asset.Gold,
                 Taxes = paysIncomeTaxes ? (double)CalculateIncomeTaxes(swingTradeProfit, dayTradeProfit, AliquotConstants.IncomeTaxesForGold) : 0,
