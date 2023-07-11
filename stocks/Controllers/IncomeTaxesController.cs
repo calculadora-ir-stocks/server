@@ -21,23 +21,29 @@ public class IncomeTaxesController : BaseController
     /// <summary>
     /// Calcula o total de imposto de renda a ser pago em ativos de renda variável no mês atual.
     /// </summary>
-    [HttpGet("assets/now")]
-    public async Task<IActionResult> CalculateCurrentMonthAssetsIncomeTaxes([FromQuery] Guid accountId)
+    [HttpGet("assets/current/{accountId}")]
+    public async Task<IActionResult> CalculateCurrentMonthAssetsIncomeTaxes(Guid accountId)
     {
         var response = await service.CalculateCurrentMonthAssetsIncomeTaxes(accountId);
 
         if (response.TradedAssets.IsNullOrEmpty()) return NotFound("Por enquanto não há nenhum imposto de renda a ser pago.");
 
+        // TO-DO: alterar AssetId pelo nome do ativo.
         return Ok(response);
     }
 
     /// <summary>
-    /// Calcula o total de imposto de renda a ser pago em ativos de renda variável no mês especificado.
+    /// Retorna o total de imposto de renda a ser pago em ativos de renda variável no mês especificado.
     /// </summary>
-    [HttpGet("assets/{month}")]
-    public async Task<IActionResult> CalculateIncomeTaxesForMonth(string month)
+    [HttpGet("assets/{month}/{accountId}")]
+    public async Task<IActionResult> CalculateSpecifiedMonthAssetsIncomeTaxes(string month, Guid accountId)
     {
-        throw new NotImplementedException();
+        var response = await service.CalculateSpecifiedMonthAssetsIncomeTaxes(month, accountId);
+
+        if (response.TradedAssets.IsNullOrEmpty()) return NotFound("Nenhum imposto de renda foi encontrado para o mês especificado.");
+
+        // TO-DO: alterar AssetId pelo nome do ativo.
+        return Ok(response);
     }
 
     /// <summary>

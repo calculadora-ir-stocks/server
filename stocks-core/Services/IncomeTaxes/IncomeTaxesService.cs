@@ -10,6 +10,7 @@ using stocks_core.Models;
 using stocks_core.Requests.BigBang;
 using stocks_core.Responses;
 using stocks_core.Services.BigBang;
+using stocks_infrastructure.Dtos;
 using stocks_infrastructure.Models;
 using stocks_infrastructure.Repositories.AverageTradedPrice;
 using stocks_infrastructure.Repositories.IncomeTaxes;
@@ -143,6 +144,29 @@ public class IncomeTaxesService : IIncomeTaxesService
 
         response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
         {
+            AssetType = "ETF - Exchange Traded Fund",
+            TickerSymbol = "IVVB11",
+            CorporationName = "IVVB 11 Corporation Inc.",
+            MovementType = "Compra",
+            OperationValue = 245.65,
+            EquitiesQuantity = 1,
+            ReferenceDate = new DateTime(2022, 01, 09)
+        });
+
+        response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
+        {
+            AssetType = "ETF - Exchange Traded Fund",
+            TickerSymbol = "IVVB11",
+            CorporationName = "IVVB 11 Corporation Inc.",
+            MovementType = "Venda",
+            OperationValue = 304.54,
+            UnitPrice = 304.54,
+            EquitiesQuantity = 1,
+            ReferenceDate = new DateTime(2022, 01, 10)
+        });
+
+        response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
+        {
             AssetType = "FII - Fundo de Investimento Imobiliário",
             TickerSymbol = "KFOF11",
             CorporationName = "KFOF11 Corporation Inc.",
@@ -249,14 +273,15 @@ public class IncomeTaxesService : IIncomeTaxesService
     #endregion
 
     #region Calcula o imposto de renda do mês atual.
-    public async Task<CurrentMonthTaxesResponse> CalculateCurrentMonthAssetsIncomeTaxes(Guid accountId)
+    public async Task<MonthTaxesResponse> CalculateCurrentMonthAssetsIncomeTaxes(Guid accountId)
     {
         try
         {
             // Caso seja dia 1, não há como obter os dados do mês atual já que a B3 disponibiliza os dados em D-1.
             if (IsDayOne())
             {
-                throw new NotImplementedException("TO-DO: fazer a chamada de /assets/{month}");
+                // Porém, sendo dia 1, o Worker já salvou os dados do mês passado na base.
+                return await CalculateSpecifiedMonthAssetsIncomeTaxes(DateTime.Now.ToString("yyyy-MM"), accountId);
             }
 
             string startDate = DateTime.Now.ToString("yyyy-MM-01");
@@ -282,7 +307,7 @@ public class IncomeTaxesService : IIncomeTaxesService
             BigBang bigBang = new(incomeTaxCalculator, averageTradedPriceRepository);
             var response = await bigBang.Execute(b3Response, account.Id);
 
-            return ToDto(response.Item1, response.Item2);
+            return CurrentMonthToDto(response.Item1);
         } catch (Exception e)
         {
             logger.LogError(e, $"Ocorreu um erro ao calcular o imposto mensal devido. {e.Message}");
@@ -292,11 +317,12 @@ public class IncomeTaxesService : IIncomeTaxesService
 
     private static bool IsDayOne()
     {
+        // D-1
         DateTime yesterday = DateTime.Now.AddDays(-1);
-        return yesterday.Day > 1;
+        return yesterday.Month < DateTime.Now.Month;
     }
 
-    private CurrentMonthTaxesResponse ToDto(List<AssetIncomeTaxes> item1, List<AverageTradedPriceDetails> item2)
+    private MonthTaxesResponse CurrentMonthToDto(List<AssetIncomeTaxes> item1)
     {
         double totalTaxes = item1.Select(x => x.Taxes).Sum();
         List<stocks_core.Responses.Asset> tradedAssets = new();
@@ -313,7 +339,7 @@ public class IncomeTaxesService : IIncomeTaxesService
             ));
         }
 
-        return new CurrentMonthTaxesResponse(
+        return new MonthTaxesResponse(
             taxes: totalTaxes,
             tradedAssets
         );
@@ -400,6 +426,56 @@ public class IncomeTaxesService : IIncomeTaxesService
             EquitiesQuantity = 1,
             ReferenceDate = new DateTime(2023, 01, 29)
         });
+    }
+    #endregion
+
+    #region Calcula o imposto de renda do mês especificado.
+    public async Task<MonthTaxesResponse> CalculateSpecifiedMonthAssetsIncomeTaxes(string month, Guid accountId)
+    {
+        try
+        {
+            if (WorkerDidNotSaveDataForThisMonthYet(month))
+            {
+                throw new InvalidBusinessRuleException("Para obter as informações de impostos do mês atual, acesse /assets/current.");
+            }
+
+            var response = await incomeTaxesRepository.GetSpecifiedMonthAssetsIncomeTaxes(System.Net.WebUtility.UrlDecode(month), accountId);
+
+            return SpecifiedMonthToDto(response);
+        } catch (Exception e)
+        {
+            logger.LogError(e, $"Ocorreu um erro ao calcular um imposto mensal devido especificado. {e.Message}");
+            throw;
+        }
+    }
+
+    private MonthTaxesResponse SpecifiedMonthToDto(IEnumerable<SpecifiedMonthAssetsIncomeTaxesDto> taxes)
+    {
+        double totalMonthTaxes = taxes.Select(x => x.Taxes).Sum();
+        List<stocks_core.Responses.Asset> tradedAssets = new();
+
+        foreach (var tax in taxes)
+        {
+            tradedAssets.Add(new stocks_core.Responses.Asset(
+                (stocks_common.Enums.Asset) tax.AssetTypeId,
+                tax.Taxes,
+                tax.TotalSold,
+                tax.SwingTradeProfit,
+                tax.DayTradeProfit,
+                tax.TradedAssets
+            ));
+        }
+
+        return new MonthTaxesResponse(
+            totalMonthTaxes,
+            tradedAssets
+        );
+    }
+
+    private bool WorkerDidNotSaveDataForThisMonthYet(string month)
+    {
+        string currentMonth = DateTime.Now.ToString("yyyy-MM");
+        return month == currentMonth;
     }
     #endregion
 }

@@ -33,7 +33,7 @@ namespace stocks_core.Calculators.Assets
                 TotalSold = totalSold,
                 SwingTradeProfit = swingTradeProfit,
                 DayTradeProfit = dayTradeProfit,
-                TradedAssets = JsonConvert.SerializeObject(ToDto(movements, B3ResponseConstants.Gold)),
+                TradedAssets = JsonConvert.SerializeObject(ConcatOperations(dayTradeOperations, swingTradeOperations)),
             });
 
             AddIntoAverageTradedPricesList(averageTradedPrices, Asset.Gold);

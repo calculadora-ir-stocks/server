@@ -1,8 +1,8 @@
 ﻿namespace stocks_core.Responses
 {
-    public class CurrentMonthTaxesResponse
+    public class MonthTaxesResponse
     {
-        public CurrentMonthTaxesResponse(double taxes, List<Asset> tradedAssets)
+        public MonthTaxesResponse(double taxes, List<Asset> tradedAssets)
         {
             Taxes = taxes;
             TradedAssets = tradedAssets;

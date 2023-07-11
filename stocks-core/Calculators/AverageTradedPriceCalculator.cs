@@ -1,8 +1,10 @@
-﻿using stocks_common.Helpers;
+﻿using Microsoft.IdentityModel.Tokens;
+using stocks_common.Helpers;
 using stocks_common.Models;
 using stocks_core.Constants;
 using stocks_core.DTOs.B3;
 using stocks_infrastructure.Models;
+using System.Diagnostics.CodeAnalysis;
 using Asset = stocks_common.Enums.Asset;
 
 namespace stocks_core.Calculators
@@ -27,7 +29,7 @@ namespace stocks_core.Calculators
                         UpdateAverageTradedPrice(movement, averageTradedPrices!);
                         break;
                     case B3ResponseConstants.Sell:
-                        UpdateProfit(dayTrade, swingTrade, movement, movements, averageTradedPrices);
+                        UpdateProfitOrLoss(dayTrade, swingTrade, movement, movements, averageTradedPrices);
                         break;
                     case B3ResponseConstants.Split:
                         CalculateSplitOperation(movement);
@@ -60,13 +62,24 @@ namespace stocks_core.Calculators
             return totalTaxes;
         }
 
-        public static IEnumerable<Dto> ToDto(IEnumerable<Movement.EquitMovement> movements, string assetType)
+        /// <summary>
+        /// Retorna as operações day-trade e swing-trade concatenadas.
+        /// </summary>
+        public static IEnumerable<OperationDetails> ConcatOperations(
+            List<OperationDetails>? dayTradeMovements,
+            List<OperationDetails>? swingTradeMovements
+        )
         {
-            var tradedTickers = movements
-                .Where(x => x.AssetType == assetType)
-                .Select(x => (x.TickerSymbol, x.CorporationName)).Distinct();
+            if (!dayTradeMovements.IsNullOrEmpty() && !swingTradeMovements.IsNullOrEmpty())
+            {
+                return dayTradeMovements!.Concat(swingTradeMovements!);
+            }
 
-            foreach (var item in tradedTickers) yield return new Dto(item.TickerSymbol, item.CorporationName);
+            if (!dayTradeMovements.IsNullOrEmpty()) return dayTradeMovements;
+
+            if (!swingTradeMovements.IsNullOrEmpty()) return swingTradeMovements;
+
+            return Array.Empty<OperationDetails>();
         }
 
         public static void AddIntoAverageTradedPricesList(List<AverageTradedPriceDetails> averageTradedPrices, Asset assetType)
@@ -98,10 +111,21 @@ namespace stocks_core.Calculators
             if (TickerAlreadyAdded(dayTradeResponse, swingTradeResponse, movement)) return;
 
             if (movement.DayTraded)
-                dayTradeResponse.Add(new OperationDetails(movement.TickerSymbol, movement.CorporationName));
-
-            if (!movement.DayTraded)
-                swingTradeResponse.Add(new OperationDetails(movement.TickerSymbol, movement.CorporationName));
+            {
+                dayTradeResponse.Add(new OperationDetails(
+                    movement.ReferenceDate.Day.ToString(),
+                    movement.TickerSymbol,
+                    movement.CorporationName
+                ));
+            }
+            else
+            {
+                swingTradeResponse.Add(new OperationDetails(
+                    movement.ReferenceDate.Day.ToString(),
+                    movement.TickerSymbol,
+                    movement.CorporationName
+                ));
+            }
         }
 
         private static bool TickerAlreadyAdded(List<OperationDetails> dayTradeResponse, List<OperationDetails> swingTradeResponse, Movement.EquitMovement movement)
@@ -135,7 +159,7 @@ namespace stocks_core.Calculators
             }
         }
 
-        private static void UpdateProfit(
+        private static void UpdateProfitOrLoss(
             List<OperationDetails> dayTradeResponse,
             List<OperationDetails> swingTradeResponse,
             Movement.EquitMovement movement,
@@ -163,7 +187,8 @@ namespace stocks_core.Calculators
                     // TO-DO (MVP?): calcular IRRFs (e.g dedo-duro).
                 }
 
-                asset.UpdateTotalProfit(totalProfit);
+                asset.UpdateProfit(totalProfit, movement.ReferenceDate.Day.ToString());
+                asset.UpdateTotalSold(movement.OperationValue);
 
                 // TO-DO (MVP?): calcular emolumentos.
             }
@@ -212,13 +237,32 @@ namespace stocks_core.Calculators
 
     public class Dto
     {
-        public Dto(string ticker, string corporationName)
+        public Dto(string day, string ticker, string corporationName, double profit)
         {
+            Day = day;
             Ticker = ticker;
             CorporationName = corporationName;
+            Profit = profit;
         }
 
+        /// <summary>
+        /// O dia em que a movimentação foi realizada.
+        /// </summary>
+        public string Day { get; init; }
+
+        /// <summary>
+        /// O nome do ticker sendo negociado.
+        /// </summary>
         public string Ticker { get; init; }
+
+        /// <summary>
+        /// O nome da corporação sendo negociada.
+        /// </summary>
         public string CorporationName { get; init; }
+
+        /// <summary>
+        /// Lucro ou prejuízo da operação.
+        /// </summary>
+        public double Profit { get; init; }
     }
 }

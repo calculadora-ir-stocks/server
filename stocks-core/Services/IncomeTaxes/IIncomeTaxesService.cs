@@ -6,9 +6,14 @@ namespace stocks.Services.IncomeTaxes;
 public interface IIncomeTaxesService
 {
     /// <summary>
-    /// Calcula a quantidade de imposto de renda a ser pago para cada ativo de renda variável no mês atual.
+    /// Retorna a quantidade de imposto de renda a ser pago para cada ativo de renda variável no mês atual.
     /// </summary>
-    Task<CurrentMonthTaxesResponse> CalculateCurrentMonthAssetsIncomeTaxes(Guid accountId);
+    Task<MonthTaxesResponse> CalculateCurrentMonthAssetsIncomeTaxes(Guid accountId);
+
+    /// <summary>
+    /// Retorna a quantidade de imposto de renda a ser pago para cada ativo de renda variável no mês especificado.
+    /// </summary>
+    Task<MonthTaxesResponse> CalculateSpecifiedMonthAssetsIncomeTaxes(string month, Guid accountId);
 
     /// <summary>
     /// Calcula e armazena o imposto de renda a ser pago em todos os meses desde 01/11/2019 até D-1.

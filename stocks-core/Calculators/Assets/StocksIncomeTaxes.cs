@@ -27,15 +27,16 @@ namespace stocks_core.Calculators.Assets
             bool sellsSuperiorThan20000 = totalSold >= AliquotConstants.LimitForStocksSelling;
 
             bool paysIncomeTaxes = (sellsSuperiorThan20000 && swingTradeProfit > 0) || (dayTradeProfit > 0);
+            double taxes = paysIncomeTaxes ? (double)CalculateIncomeTaxes(swingTradeProfit, dayTradeProfit, AliquotConstants.IncomeTaxesForStocks) : 0;
 
             response.Add(new AssetIncomeTaxes(month)
             {
                 AssetTypeId = Asset.Stocks,
-                Taxes = paysIncomeTaxes ? (double)CalculateIncomeTaxes(swingTradeProfit, dayTradeProfit, AliquotConstants.IncomeTaxesForStocks) : 0,
+                Taxes = taxes,
                 TotalSold = totalSold,                
                 SwingTradeProfit = swingTradeProfit,
                 DayTradeProfit = dayTradeProfit,
-                TradedAssets = JsonConvert.SerializeObject(ToDto(movements, B3ResponseConstants.Stocks)),
+                TradedAssets = JsonConvert.SerializeObject(ConcatOperations(dayTradeOperations, swingTradeOperations)),
             });
 
             AddIntoAverageTradedPricesList(averageTradedPrices, Asset.Stocks);
