@@ -5,7 +5,7 @@ namespace stocks_common.Helpers
 {
     public class AssetTypeHelper
     {
-        public static Asset GetAssetTypeByName(string assetType)
+        public static Asset GetEnumByName(string assetType)
         {
             return assetType switch
             {

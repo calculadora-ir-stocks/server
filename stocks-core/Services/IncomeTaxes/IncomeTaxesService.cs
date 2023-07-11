@@ -65,17 +65,6 @@ public class IncomeTaxesService : IIncomeTaxesService
                 .AddMonths(-1)
                 .ToString("yyyy-MM-dd");
 
-            /**
-             * O fluxo funcionará começando pelo Big Bang, onde o imposto devido de todos os meses retroativos será salvo na base de dados.
-             * O endpoint para calcular o imposto a ser pago no mês atual irá levar em consideração o primeiro dia do mês atual até D-1.
-             * Quando o mês atual virar, o Job que irá rodar todo fim de mês irá calcular o imposto de renda a ser pago no mês em questão e irá salvar na base.
-             * 
-             * TODO: O Big Bang não deve salvar na base o imposto de renda a ser pago no mês atual se o mês ainda não encerrou. Se for dia 10, por exemplo,
-             * deverá salvar na base apenas o imposto a ser pago no mês passado. Dessa forma, o endpoint de pagar o imposto do mês atual irá calcular do primeiro dia
-             * útil até o dia 10 e, apenas no último dia do mês, o Job irá rodar e salvar na base de dados o imposto devido desse mês em questão.
-             * Entretanto, o preço médio deverá sim ser calculado até D-1.
-             * **/
-
             // var b3Response = await b3Client.GetAccountMovement(account.CPF, startDate, yesterday, accountId);
 
             Movement.Root? response = new()
@@ -331,6 +320,7 @@ public class IncomeTaxesService : IIncomeTaxesService
         {
             tradedAssets.Add(new stocks_core.Responses.Asset(
                 item.AssetTypeId,
+                item.AssetName,
                 item.Taxes,
                 item.TotalSold,
                 item.SwingTradeProfit,
@@ -458,6 +448,7 @@ public class IncomeTaxesService : IIncomeTaxesService
         {
             tradedAssets.Add(new stocks_core.Responses.Asset(
                 (stocks_common.Enums.Asset) tax.AssetTypeId,
+                tax.AssetName,
                 tax.Taxes,
                 tax.TotalSold,
                 tax.SwingTradeProfit,

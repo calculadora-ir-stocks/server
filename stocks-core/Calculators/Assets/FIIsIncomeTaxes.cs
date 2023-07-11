@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
 using stocks_common.Enums;
+using stocks_common.Helpers;
 using stocks_common.Models;
 using stocks_core.Constants;
 using stocks_core.DTOs.B3;
@@ -26,7 +27,7 @@ namespace stocks_core.Calculators.Assets
 
             bool paysIncomeTaxes = sells.Any() && (swingTradeProfit > 0 || dayTradeProfit > 0);
 
-            response.Add(new AssetIncomeTaxes(month)
+            response.Add(new AssetIncomeTaxes(month, AssetTypeHelper.GetNameByAssetType(Asset.FIIs))
             {
                 AssetTypeId = Asset.FIIs,
                 Taxes = paysIncomeTaxes ? (double)CalculateIncomeTaxes(swingTradeProfit, dayTradeProfit, AliquotConstants.IncomeTaxesForFIIs) : 0,

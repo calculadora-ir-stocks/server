@@ -154,7 +154,7 @@ namespace stocks_core.Calculators
                     averageTradedPrice: movement.OperationValue / movement.EquitiesQuantity,
                     totalBought: movement.OperationValue,
                     tradedQuantity: (int)movement.EquitiesQuantity,
-                    AssetTypeHelper.GetAssetTypeByName(movement.AssetType)
+                    AssetTypeHelper.GetEnumByName(movement.AssetType)
                 ));
             }
         }

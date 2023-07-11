@@ -4,9 +4,10 @@ namespace stocks_core.Models
 {
     public class AssetIncomeTaxes
     {
-        public AssetIncomeTaxes(string month)
+        public AssetIncomeTaxes(string month, string assetName)
         {
             Month = month;
+            AssetName = assetName;
         }
 
         /// <summary>
@@ -18,6 +19,11 @@ namespace stocks_core.Models
         /// O id do tipo de ativo sendo negociado.
         /// </summary>
         public Asset AssetTypeId { get; set; }
+
+        /// <summary>
+        /// O nome do tipo de ativo sendo negociado.
+        /// </summary>
+        public string AssetName { get; set; }
 
         /// <summary>
         /// Total a ser pago em imposto de renda referente a um ativo.

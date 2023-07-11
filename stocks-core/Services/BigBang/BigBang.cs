@@ -1,5 +1,4 @@
 ﻿using Microsoft.IdentityModel.Tokens;
-using stocks.Repositories;
 using stocks_common.Exceptions;
 using stocks_common.Models;
 using stocks_core.Calculators;
@@ -8,14 +7,10 @@ using stocks_core.Constants;
 using stocks_core.DTOs.B3;
 using stocks_core.Models;
 using stocks_infrastructure.Dtos;
-using stocks_infrastructure.Models;
 using stocks_infrastructure.Repositories.AverageTradedPrice;
 
 namespace stocks_core.Services.BigBang
 {
-    /// <summary>
-    /// Classe responsável por calcular o imposto de renda devido nos meses especificados.
-    /// </summary>
     public class BigBang : IBigBang
     {
         private IIncomeTaxesCalculator calculator;
@@ -27,17 +22,14 @@ namespace stocks_core.Services.BigBang
             this.averageTradedPriceRepository = averageTradedPriceRepository;
         }
 
-        /// <summary>
-        /// Calcula o imposto de renda a ser pago em todos os meses especificados no parâmetro de retorno da B3.
-        /// </summary>
         public async Task<(List<AssetIncomeTaxes>, List<AverageTradedPriceDetails>)> Execute(Movement.Root? request, Guid accountId)
         {
-            var movements = GetAllInvestorMovements(request);
+            var movements = GetInvestorMovements(request);
             if (movements.IsNullOrEmpty()) throw new NoneMovementsException("O usuário não possui nenhuma movimentação na bolsa até então.");
 
             movements = OrderMovementsByDateAndMovementType(movements);
 
-            var monthlyMovements = new Dictionary<string, List<Movement.EquitMovement>>();
+            Dictionary<string, List<Movement.EquitMovement>> monthlyMovements = new();
             var monthsThatHadMovements = movements.Select(x => x.ReferenceDate.ToString("MM/yyyy")).Distinct();
 
             foreach (var month in monthsThatHadMovements)
@@ -49,7 +41,7 @@ namespace stocks_core.Services.BigBang
             return await GetTaxesAndAverageTradedPrices(monthlyMovements, accountId);
         }
 
-        private static List<Movement.EquitMovement> GetAllInvestorMovements(Movement.Root? response)
+        private static List<Movement.EquitMovement> GetInvestorMovements(Movement.Root? response)
         {
             if (response is null || response.Data is null) return new List<Movement.EquitMovement>();
 
@@ -83,7 +75,7 @@ namespace stocks_core.Services.BigBang
 
             foreach (var monthMovements in monthlyMovements)
             {
-                SetDayTradeSellOperations(monthMovements.Value);
+                SetDayTradeOperations(monthMovements.Value);
 
                 var stocks = monthMovements.Value.Where(x => x.AssetType.Equals(B3ResponseConstants.Stocks));
                 var etfs = monthMovements.Value.Where(x => x.AssetType.Equals(B3ResponseConstants.ETFs));
@@ -94,7 +86,7 @@ namespace stocks_core.Services.BigBang
 
                 if (stocks.Any())
                 {
-                    var prices = await GetMovementsAverageTradedPrices(accountId, stocks);
+                    var prices = await GetAverageTradedPrices(accountId, stocks);
                     averageTradedPrices.AddRange(ToAverageTradedPriceDetails(prices, stocks_common.Enums.Asset.Stocks));
 
                     calculator = new StocksIncomeTaxes(); 
@@ -103,7 +95,7 @@ namespace stocks_core.Services.BigBang
 
                 if (etfs.Any())
                 {
-                    var prices = await GetMovementsAverageTradedPrices(accountId, etfs);
+                    var prices = await GetAverageTradedPrices(accountId, etfs);
                     averageTradedPrices.AddRange(ToAverageTradedPriceDetails(prices, stocks_common.Enums.Asset.ETFs));
 
                     calculator = new ETFsIncomeTaxes();
@@ -112,7 +104,7 @@ namespace stocks_core.Services.BigBang
 
                 if (fiis.Any())
                 {
-                    var prices = await GetMovementsAverageTradedPrices(accountId, fiis);
+                    var prices = await GetAverageTradedPrices(accountId, fiis);
                     averageTradedPrices.AddRange(ToAverageTradedPriceDetails(prices, stocks_common.Enums.Asset.FIIs));
 
                     calculator = new FIIsIncomeTaxes();
@@ -121,7 +113,7 @@ namespace stocks_core.Services.BigBang
 
                 if (bdrs.Any())
                 {
-                    var prices = await GetMovementsAverageTradedPrices(accountId, bdrs);
+                    var prices = await GetAverageTradedPrices(accountId, bdrs);
                     averageTradedPrices.AddRange(ToAverageTradedPriceDetails(prices, stocks_common.Enums.Asset.BDRs));
 
                     calculator = new BDRsIncomeTaxes();
@@ -130,7 +122,7 @@ namespace stocks_core.Services.BigBang
 
                 if (gold.Any())
                 {
-                    var prices = await GetMovementsAverageTradedPrices(accountId, gold);
+                    var prices = await GetAverageTradedPrices(accountId, gold);
                     averageTradedPrices.AddRange(ToAverageTradedPriceDetails(prices, stocks_common.Enums.Asset.Gold));
 
                     calculator = new GoldIncomeTaxes();
@@ -139,7 +131,7 @@ namespace stocks_core.Services.BigBang
 
                 if (fundInvestments.Any())
                 {
-                    var prices = await GetMovementsAverageTradedPrices(accountId, fundInvestments);
+                    var prices = await GetAverageTradedPrices(accountId, fundInvestments);
                     averageTradedPrices.AddRange(ToAverageTradedPriceDetails(prices, stocks_common.Enums.Asset.InvestmentsFunds));
 
                     calculator = new InvestmentsFundsIncomeTaxes();
@@ -164,15 +156,15 @@ namespace stocks_core.Services.BigBang
             }
         }
 
-        private async Task <IEnumerable<AverageTradedPriceDto>> GetMovementsAverageTradedPrices(Guid accountId, IEnumerable<Movement.EquitMovement> movements)
+        private async Task <IEnumerable<AverageTradedPriceDto>> GetAverageTradedPrices(Guid accountId, IEnumerable<Movement.EquitMovement> movements)
         {
             return await averageTradedPriceRepository.GetAverageTradedPrices(accountId, movements.Select(x => x.TickerSymbol).ToList());
         }
 
         /// <summary>
-        /// Altera a propriedade booleana DayTraded para operações de venda day-trade.
+        /// Altera a propriedade booleana DayTraded para verdadeiro em operações de venda day-trade.
         /// </summary>
-        private static void SetDayTradeSellOperations(List<Movement.EquitMovement> movements)
+        private static void SetDayTradeOperations(List<Movement.EquitMovement> movements)
         {
             var buys = movements.Where(x => x.MovementType == B3ResponseConstants.Buy);
             var sells = movements.Where(x => x.MovementType == B3ResponseConstants.Sell);

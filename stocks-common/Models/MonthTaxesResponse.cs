@@ -17,9 +17,11 @@
 
     public class Asset
     {
-        public Asset(stocks_common.Enums.Asset assetTypeId, double taxes, double totalSold, double swingTradeProfit, double dayTradeProfit, string tradedAssets)
+        public Asset(stocks_common.Enums.Asset assetTypeId, string assetName, double taxes, double totalSold,
+            double swingTradeProfit, double dayTradeProfit, string tradedAssets)
         {
             AssetTypeId = assetTypeId;
+            AssetName = assetName;
             Taxes = taxes;
             TotalSold = totalSold;
             SwingTradeProfit = swingTradeProfit;
@@ -32,6 +34,11 @@
         /// O id do tipo de ativo sendo negociado.
         /// </summary>
         public stocks_common.Enums.Asset AssetTypeId { get; init; }
+
+        /// <summary>
+        /// O nome do tipo de ativo sendo negociado.
+        /// </summary>
+        public string AssetName { get; init; }
 
         /// <summary>
         /// Total a ser pago em imposto de renda referente a um ativo.

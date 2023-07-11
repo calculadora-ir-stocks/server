@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
 using stocks_common.Enums;
+using stocks_common.Helpers;
 using stocks_common.Models;
 using stocks_core.Constants;
 using stocks_core.DTOs.B3;
@@ -29,14 +30,14 @@ namespace stocks_core.Calculators.Assets
             bool paysIncomeTaxes = (sellsSuperiorThan20000 && swingTradeProfit > 0) || (dayTradeProfit > 0);
             double taxes = paysIncomeTaxes ? (double)CalculateIncomeTaxes(swingTradeProfit, dayTradeProfit, AliquotConstants.IncomeTaxesForStocks) : 0;
 
-            response.Add(new AssetIncomeTaxes(month)
+            response.Add(new AssetIncomeTaxes(month, AssetTypeHelper.GetNameByAssetType(Asset.Stocks))
             {
                 AssetTypeId = Asset.Stocks,
                 Taxes = taxes,
-                TotalSold = totalSold,                
+                TotalSold = totalSold,
                 SwingTradeProfit = swingTradeProfit,
                 DayTradeProfit = dayTradeProfit,
-                TradedAssets = JsonConvert.SerializeObject(ConcatOperations(dayTradeOperations, swingTradeOperations)),
+                TradedAssets = JsonConvert.SerializeObject(ConcatOperations(dayTradeOperations, swingTradeOperations))
             });
 
             AddIntoAverageTradedPricesList(averageTradedPrices, Asset.Stocks);

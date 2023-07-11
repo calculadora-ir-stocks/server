@@ -44,8 +44,10 @@ namespace stocks_infrastructure.Repositories.IncomeTaxes
 	                it.""SwingTradeProfit"",
 	                it.""DayTradeProfit"",
 	                it.""TradedAssets"",
-	                it.""AssetId""
+	                it.""AssetId"",
+                    a.""Name"" as AssetName
                 FROM ""IncomeTaxes"" it
+                INNER JOIN ""Assets"" a ON it.""AssetId"" = a.""Id""
                 WHERE it.""Month"" = @Month AND it.""AccountId"" = @AccountId;
             ";
 

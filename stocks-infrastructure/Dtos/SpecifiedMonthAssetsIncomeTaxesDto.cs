@@ -8,6 +8,6 @@
         public double DayTradeProfit { get; init; }
         public string TradedAssets { get; init; }
         public int AssetTypeId { get; init; }
-
+        public string AssetName { get; init; }
     }
 }
