@@ -11,9 +11,9 @@ namespace stocks.Controllers;
 [Tags("Income taxes")]
 public class IncomeTaxesController : BaseController
 {
-    private readonly IIncomeTaxesService service;
+    private readonly IAssetsService service;
 
-    public IncomeTaxesController(IIncomeTaxesService service)
+    public IncomeTaxesController(IAssetsService service)
     {
         this.service = service;
     }

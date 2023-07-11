@@ -1,472 +1,184 @@
-using Microsoft.Extensions.Logging;
-using stocks.Clients.B3;
-using stocks.Exceptions;
-using stocks.Models;
-using stocks.Repositories;
+﻿using Microsoft.IdentityModel.Tokens;
+using stocks_common.Exceptions;
 using stocks_common.Models;
 using stocks_core.Calculators;
+using stocks_core.Calculators.Assets;
+using stocks_core.Constants;
 using stocks_core.DTOs.B3;
 using stocks_core.Models;
-using stocks_core.Requests.BigBang;
-using stocks_core.Responses;
-using stocks_core.Services.BigBang;
 using stocks_infrastructure.Dtos;
-using stocks_infrastructure.Models;
 using stocks_infrastructure.Repositories.AverageTradedPrice;
-using stocks_infrastructure.Repositories.IncomeTaxes;
 
-namespace stocks.Services.IncomeTaxes;
-
-public class IncomeTaxesService : IIncomeTaxesService
+namespace stocks_core.Services.IncomeTaxes
 {
-    private readonly IIncomeTaxesCalculator incomeTaxCalculator;
-
-    private readonly IGenericRepository<Account> genericRepositoryAccount;
-    private readonly IIncomeTaxesRepository incomeTaxesRepository;
-    private readonly IAverageTradedPriceRepostory averageTradedPriceRepository;
-
-    private readonly IB3Client b3Client;
-
-    private readonly ILogger<IncomeTaxesService> logger;
-
-    public IncomeTaxesService(IIncomeTaxesCalculator incomeTaxCalculator,
-        IGenericRepository<Account> genericRepositoryAccount,
-        IIncomeTaxesRepository incomeTaxesRepository,
-        IAverageTradedPriceRepostory averageTradedPriceRepository,
-        IB3Client b3Client,
-        ILogger<IncomeTaxesService> logger
-        )
+    public class IncomeTaxesService : IIncomeTaxesService
     {
-        this.incomeTaxCalculator = incomeTaxCalculator;
-        this.genericRepositoryAccount = genericRepositoryAccount;
-        this.incomeTaxesRepository = incomeTaxesRepository;
-        this.averageTradedPriceRepository = averageTradedPriceRepository;
-        this.b3Client = b3Client;
-        this.logger = logger;
-    }
+        private IIncomeTaxesCalculator calculator;
+        private readonly IAverageTradedPriceRepostory averageTradedPriceRepository;
 
-    #region Calcula todos os impostos de renda retroativos.
-    public async Task BigBang(Guid accountId, List<BigBangRequest> request)
-    {
-        try
+        public IncomeTaxesService(IIncomeTaxesCalculator calculator, IAverageTradedPriceRepostory averageTradedPriceRepository)
         {
-            if (AlreadyHasAverageTradedPrice(accountId))
-            {
-                logger.LogInformation($"Big bang foi executado para o usuário {accountId}, mas ele já possui o preço médio e imposto de renda " +
-                    $"calculado na base.");
+            this.calculator = calculator;
+            this.averageTradedPriceRepository = averageTradedPriceRepository;
+        }
 
-                return;
+        public async Task<(List<AssetIncomeTaxes>, List<AverageTradedPriceDetails>)> Execute(Movement.Root? request, Guid accountId)
+        {
+            var movements = GetInvestorMovements(request);
+            if (movements.IsNullOrEmpty()) throw new NoneMovementsException("O usuário não possui nenhuma movimentação na bolsa até então.");
+
+            movements = OrderMovementsByDateAndMovementType(movements);
+
+            Dictionary<string, List<Movement.EquitMovement>> monthlyMovements = new();
+            var monthsThatHadMovements = movements.Select(x => x.ReferenceDate.ToString("MM/yyyy")).Distinct();
+
+            foreach (var month in monthsThatHadMovements)
+            {
+                var monthMovements = movements.Where(x => x.ReferenceDate.ToString("MM/yyyy") == month).ToList();
+                monthlyMovements.Add(month, monthMovements);
             }
 
-            // A B3 apenas possui dados a partir de 01/11/2019.
-            string startDate = "2019-11-01";
+            return await GetTaxesAndAverageTradedPrices(monthlyMovements, accountId);
+        }
 
-            string lastMonth = new DateTime(year: DateTime.Now.Year, month: DateTime.Now.Month, day: 1)
-                .AddMonths(-1)
-                .ToString("yyyy-MM-dd");
+        private static List<Movement.EquitMovement> GetInvestorMovements(Movement.Root? response)
+        {
+            if (response is null || response.Data is null) return new List<Movement.EquitMovement>();
 
-            // var b3Response = await b3Client.GetAccountMovement(account.CPF, startDate, yesterday, accountId);
+            var movements = response.Data.EquitiesPeriods.EquitiesMovements;
 
-            Movement.Root? response = new()
+            return movements
+                .Where(x =>
+                    x.MovementType.Equals(B3ResponseConstants.Buy) ||
+                    x.MovementType.Equals(B3ResponseConstants.Sell) ||
+                    x.MovementType.Equals(B3ResponseConstants.Split) ||
+                    x.MovementType.Equals(B3ResponseConstants.ReverseSplit) ||
+                    x.MovementType.Equals(B3ResponseConstants.BonusShare))
+                .ToList();
+        }
+
+        /// <summary>
+        /// Ordena as operações por ordem crescente através da data - a B3 retorna em ordem decrescente - e
+        /// ordena operações de compra antes das operações de venda em operações day trade.
+        /// </summary>
+        private List<Movement.EquitMovement> OrderMovementsByDateAndMovementType(IList<Movement.EquitMovement> movements)
+        {
+            // TODO: a premissa da descrição do método está correta?
+            return movements.OrderBy(x => x.MovementType).OrderBy(x => x.ReferenceDate).ToList();
+        }
+
+        private async Task<(List<AssetIncomeTaxes>, List<AverageTradedPriceDetails>)> GetTaxesAndAverageTradedPrices(
+            Dictionary<string, List<Movement.EquitMovement>> monthlyMovements, Guid accountId)
+        {
+            List<AssetIncomeTaxes> assetsIncomeTaxes = new();
+            List<AverageTradedPriceDetails> averageTradedPrices = new();
+
+            foreach (var monthMovements in monthlyMovements)
             {
-                Data = new()
+                SetDayTradeOperations(monthMovements.Value);
+
+                var stocks = monthMovements.Value.Where(x => x.AssetType.Equals(B3ResponseConstants.Stocks));
+                var etfs = monthMovements.Value.Where(x => x.AssetType.Equals(B3ResponseConstants.ETFs));
+                var fiis = monthMovements.Value.Where(x => x.AssetType.Equals(B3ResponseConstants.FIIs));
+                var bdrs = monthMovements.Value.Where(x => x.AssetType.Equals(B3ResponseConstants.BDRs));
+                var gold = monthMovements.Value.Where(x => x.AssetType.Equals(B3ResponseConstants.Gold));
+                var fundInvestments = monthMovements.Value.Where(x => x.AssetType.Equals(B3ResponseConstants.InvestmentsFunds));
+
+                if (stocks.Any())
                 {
-                    EquitiesPeriods = new()
-                    {
-                        EquitiesMovements = new()
-                    }
+                    var prices = await GetAverageTradedPrices(accountId, stocks);
+                    averageTradedPrices.AddRange(ToAverageTradedPriceDetails(prices, stocks_common.Enums.Asset.Stocks));
+
+                    calculator = new StocksIncomeTaxes(); 
+                    calculator.CalculateIncomeTaxes(assetsIncomeTaxes, averageTradedPrices, stocks, monthMovements.Key);
                 }
-            };
 
-            AddBigBangDataSet(response);
-
-            BigBang bigBang = new(incomeTaxCalculator, averageTradedPriceRepository);
-            var taxesAndAverageTradedPrices = await bigBang.Execute(response, accountId);
-
-            await SaveBigBang(taxesAndAverageTradedPrices, accountId);
-
-            logger.LogInformation($"Big Bang executado com sucesso para o usuário {accountId}.");
-        } catch (Exception e)
-        {
-            logger.LogError($"Uma exceção ocorreu ao executar o Big Bang do usuário {accountId}." +
-                $"{e.Message}");
-
-            throw;
-        }
-    }
-
-    private static void AddBigBangDataSet(Movement.Root response)
-    {
-        response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
-        {
-            AssetType = "ETF - Exchange Traded Fund",
-            TickerSymbol = "BOVA11",
-            CorporationName = "BOVA 11 Corporation Inc.",
-            MovementType = "Compra",
-            OperationValue = 10.43,
-            EquitiesQuantity = 1,
-            ReferenceDate = new DateTime(2022, 01, 01)
-        });
-
-        response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
-        {
-            AssetType = "ETF - Exchange Traded Fund",
-            TickerSymbol = "BOVA11",
-            CorporationName = "BOVA 11 Corporation Inc.",
-            MovementType = "Compra",
-            OperationValue = 18.43,
-            EquitiesQuantity = 1,
-            ReferenceDate = new DateTime(2022, 01, 03)
-        });
-
-        response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
-        {
-            AssetType = "ETF - Exchange Traded Fund",
-            TickerSymbol = "BOVA11",
-            CorporationName = "BOVA 11 Corporation Inc.",
-            MovementType = "Venda",
-            OperationValue = 12.54,
-            UnitPrice = 12.54,
-            EquitiesQuantity = 1,
-            ReferenceDate = new DateTime(2022, 01, 08)
-        });
-
-        response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
-        {
-            AssetType = "ETF - Exchange Traded Fund",
-            TickerSymbol = "IVVB11",
-            CorporationName = "IVVB 11 Corporation Inc.",
-            MovementType = "Compra",
-            OperationValue = 245.65,
-            EquitiesQuantity = 1,
-            ReferenceDate = new DateTime(2022, 01, 09)
-        });
-
-        response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
-        {
-            AssetType = "ETF - Exchange Traded Fund",
-            TickerSymbol = "IVVB11",
-            CorporationName = "IVVB 11 Corporation Inc.",
-            MovementType = "Venda",
-            OperationValue = 304.54,
-            UnitPrice = 304.54,
-            EquitiesQuantity = 1,
-            ReferenceDate = new DateTime(2022, 01, 10)
-        });
-
-        response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
-        {
-            AssetType = "FII - Fundo de Investimento Imobiliário",
-            TickerSymbol = "KFOF11",
-            CorporationName = "KFOF11 Corporation Inc.",
-            MovementType = "Compra",
-            OperationValue = 231.34,
-            EquitiesQuantity = 1,
-            ReferenceDate = new DateTime(2022, 01, 16)
-        });
-
-        response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
-        {
-            AssetType = "FII - Fundo de Investimento Imobiliário",
-            TickerSymbol = "KFOF11",
-            CorporationName = "KFOF11 Corporation Inc.",
-            MovementType = "Venda",
-            OperationValue = 237.34,
-            UnitPrice = 237.34,
-            EquitiesQuantity = 1,
-            ReferenceDate = new DateTime(2022, 01, 28)
-        });
-
-        response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
-        {
-            AssetType = "Ações",
-            TickerSymbol = "AMER3",
-            CorporationName = "Americanas S/A",
-            MovementType = "Venda",
-            OperationValue = 234.43,
-            UnitPrice = 234.43,
-            EquitiesQuantity = 1,
-            ReferenceDate = new DateTime(2022, 02, 01)
-        });
-
-        response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
-        {
-            AssetType = "Ações",
-            TickerSymbol = "AMER3",
-            MovementType = "Compra",
-            CorporationName = "Americanas S/A",
-            OperationValue = 265.54,
-            EquitiesQuantity = 1,
-            ReferenceDate = new DateTime(2022, 02, 01)
-        });
-    }
-
-    private bool AlreadyHasAverageTradedPrice(Guid accountId) =>
-        averageTradedPriceRepository.AlreadyHasAverageTradedPrice(accountId);
-
-    private async Task SaveBigBang((List<AssetIncomeTaxes>, List<AverageTradedPriceDetails>) response, Guid accountId)
-    {
-        Account account = genericRepositoryAccount.GetById(accountId);
-
-        List<stocks_infrastructure.Models.IncomeTaxes> incomeTaxes = new();
-        CreateIncomeTaxes(response.Item1, incomeTaxes, account);
-
-        List<AverageTradedPrice> averageTradedPrices = new();
-        CreateAverageTradedPrices(response.Item2, averageTradedPrices, account);
-
-        await incomeTaxesRepository.AddAllAsync(incomeTaxes);
-        await averageTradedPriceRepository.AddAllAsync(averageTradedPrices);
-    }
-
-    private void CreateAverageTradedPrices(List<AverageTradedPriceDetails> response, List<AverageTradedPrice> averageTradedPrices, Account account)
-    {
-        foreach (var averageTradedPrice in response)
-        {
-            averageTradedPrices.Add(new AverageTradedPrice
-            (
-               averageTradedPrice.TickerSymbol,
-               averageTradedPrice.AverageTradedPrice,
-               averageTradedPrice.TradedQuantity,
-               account,
-               updatedAt: DateTime.UtcNow
-            ));
-        }
-    }
-
-    private void CreateIncomeTaxes(List<AssetIncomeTaxes> assets, List<stocks_infrastructure.Models.IncomeTaxes> incomeTaxes, Account account)
-    {
-        foreach (var asset in assets)
-        {
-            if (MovementHadProfitOrLoss(asset))
-            {
-                incomeTaxes.Add(new stocks_infrastructure.Models.IncomeTaxes
+                if (etfs.Any())
                 {
-                    Month = asset.Month,
-                    TotalTaxes = asset.Taxes,
-                    TotalSold = asset.TotalSold,
-                    SwingTradeProfit = asset.SwingTradeProfit,
-                    DayTradeProfit = asset.DayTradeProfit,
-                    TradedAssets = asset.TradedAssets,
-                    Account = account,
-                    AssetId = (int)asset.AssetTypeId
-                });
-            }
-        }
-    }
+                    var prices = await GetAverageTradedPrices(accountId, etfs);
+                    averageTradedPrices.AddRange(ToAverageTradedPriceDetails(prices, stocks_common.Enums.Asset.ETFs));
 
-    private bool MovementHadProfitOrLoss(AssetIncomeTaxes asset)
-    {
-        return asset.SwingTradeProfit != 0 || asset.DayTradeProfit != 0;
-    }
-
-    #endregion
-
-    #region Calcula o imposto de renda do mês atual.
-    public async Task<MonthTaxesResponse> CalculateCurrentMonthAssetsIncomeTaxes(Guid accountId)
-    {
-        try
-        {
-            // Caso seja dia 1, não há como obter os dados do mês atual já que a B3 disponibiliza os dados em D-1.
-            if (IsDayOne())
-            {
-                // Porém, sendo dia 1, o Worker já salvou os dados do mês passado na base.
-                return await CalculateSpecifiedMonthAssetsIncomeTaxes(DateTime.Now.ToString("yyyy-MM"), accountId);
-            }
-
-            string startDate = DateTime.Now.ToString("yyyy-MM-01");
-            string yesterday = DateTime.Now.AddDays(-1).ToString("yyyy-MM-dd");
-
-            Account account = await genericRepositoryAccount.GetByIdAsync(accountId);
-
-            // var b3Response = await b3Client.GetAccountMovement(account.CPF, startDate, , request.AccountId);
-
-            Movement.Root? b3Response = new()
-            {
-                Data = new()
-                {
-                    EquitiesPeriods = new()
-                    {
-                        EquitiesMovements = new()
-                    }
+                    calculator = new ETFsIncomeTaxes();
+                    calculator.CalculateIncomeTaxes(assetsIncomeTaxes, averageTradedPrices, etfs, monthMovements.Key);
                 }
-            };
 
-            AddCurrentMonthSet(b3Response);
+                if (fiis.Any())
+                {
+                    var prices = await GetAverageTradedPrices(accountId, fiis);
+                    averageTradedPrices.AddRange(ToAverageTradedPriceDetails(prices, stocks_common.Enums.Asset.FIIs));
 
-            BigBang bigBang = new(incomeTaxCalculator, averageTradedPriceRepository);
-            var response = await bigBang.Execute(b3Response, account.Id);
+                    calculator = new FIIsIncomeTaxes();
+                    calculator.CalculateIncomeTaxes(assetsIncomeTaxes, averageTradedPrices, fiis, monthMovements.Key);
+                }
 
-            return CurrentMonthToDto(response.Item1);
-        } catch (Exception e)
-        {
-            logger.LogError(e, $"Ocorreu um erro ao calcular o imposto mensal devido. {e.Message}");
-            throw;
-        }
-    }
+                if (bdrs.Any())
+                {
+                    var prices = await GetAverageTradedPrices(accountId, bdrs);
+                    averageTradedPrices.AddRange(ToAverageTradedPriceDetails(prices, stocks_common.Enums.Asset.BDRs));
 
-    private static bool IsDayOne()
-    {
-        // D-1
-        DateTime yesterday = DateTime.Now.AddDays(-1);
-        return yesterday.Month < DateTime.Now.Month;
-    }
+                    calculator = new BDRsIncomeTaxes();
+                    calculator.CalculateIncomeTaxes(assetsIncomeTaxes, averageTradedPrices, bdrs, monthMovements.Key);
+                }
 
-    private MonthTaxesResponse CurrentMonthToDto(List<AssetIncomeTaxes> item1)
-    {
-        double totalTaxes = item1.Select(x => x.Taxes).Sum();
-        List<stocks_core.Responses.Asset> tradedAssets = new();
+                if (gold.Any())
+                {
+                    var prices = await GetAverageTradedPrices(accountId, gold);
+                    averageTradedPrices.AddRange(ToAverageTradedPriceDetails(prices, stocks_common.Enums.Asset.Gold));
 
-        foreach (var item in item1)
-        {
-            tradedAssets.Add(new stocks_core.Responses.Asset(
-                item.AssetTypeId,
-                item.AssetName,
-                item.Taxes,
-                item.TotalSold,
-                item.SwingTradeProfit,
-                item.DayTradeProfit,
-                item.TradedAssets
-            ));
-        }
+                    calculator = new GoldIncomeTaxes();
+                    calculator.CalculateIncomeTaxes(assetsIncomeTaxes, averageTradedPrices, gold, monthMovements.Key);
+                }
 
-        return new MonthTaxesResponse(
-            taxes: totalTaxes,
-            tradedAssets
-        );
-    }
+                if (fundInvestments.Any())
+                {
+                    var prices = await GetAverageTradedPrices(accountId, fundInvestments);
+                    averageTradedPrices.AddRange(ToAverageTradedPriceDetails(prices, stocks_common.Enums.Asset.InvestmentsFunds));
 
-    private void AddCurrentMonthSet(Movement.Root response)
-    {
-        response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
-        {
-            AssetType = "ETF - Exchange Traded Fund",
-            TickerSymbol = "BOVA11",
-            CorporationName = "BOVA11 Corporation Inc.",
-            MovementType = "Compra",
-            OperationValue = 19.54,
-            EquitiesQuantity = 1,
-            ReferenceDate = new DateTime(2023, 01, 01)
-        });
-
-        response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
-        {
-            AssetType = "ETF - Exchange Traded Fund",
-            TickerSymbol = "BOVA11",
-            CorporationName = "BOVA11 Corporation Inc.",
-            MovementType = "Compra",
-            OperationValue = 34.65,
-            EquitiesQuantity = 1,
-            ReferenceDate = new DateTime(2023, 01, 03)
-        });
-
-        response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
-        {
-            AssetType = "ETF - Exchange Traded Fund",
-            TickerSymbol = "BOVA11",
-            CorporationName = "BOVA11 Corporation Inc.",
-            MovementType = "Venda",
-            OperationValue = 10.43,
-            UnitPrice = 10.43,
-            EquitiesQuantity = 1,
-            ReferenceDate = new DateTime(2023, 01, 08)
-        });
-
-        response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
-        {
-            AssetType = "FII - Fundo de Investimento Imobiliário",
-            TickerSymbol = "VISC11",
-            CorporationName = "VISC11 Corporation Inc.",
-            MovementType = "Compra",
-            OperationValue = 231.34,
-            EquitiesQuantity = 1,
-            ReferenceDate = new DateTime(2023, 01, 16)
-        });
-
-        response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
-        {
-            AssetType = "FII - Fundo de Investimento Imobiliário",
-            TickerSymbol = "VISC11",
-            CorporationName = "VISC11 Corporation Inc.",
-            MovementType = "Venda",
-            OperationValue = 304.43,
-            UnitPrice = 304.43,
-            EquitiesQuantity = 1,
-            ReferenceDate = new DateTime(2023, 01, 28)
-        });
-
-        response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
-        {
-            AssetType = "Ações",
-            TickerSymbol = "AMER3",
-            CorporationName = "Americanas S/A",
-            MovementType = "Compra",
-            OperationValue = 234.43,
-            EquitiesQuantity = 1,
-            ReferenceDate = new DateTime(2023, 01, 29)
-        });
-
-        response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
-        {
-            AssetType = "Ações",
-            TickerSymbol = "AMER3",
-            CorporationName = "Americanas S/A",
-            MovementType = "Venda",
-            OperationValue = 265.54,
-            UnitPrice = 265.54,
-            EquitiesQuantity = 1,
-            ReferenceDate = new DateTime(2023, 01, 29)
-        });
-    }
-    #endregion
-
-    #region Calcula o imposto de renda do mês especificado.
-    public async Task<MonthTaxesResponse> CalculateSpecifiedMonthAssetsIncomeTaxes(string month, Guid accountId)
-    {
-        try
-        {
-            if (WorkerDidNotSaveDataForThisMonthYet(month))
-            {
-                throw new InvalidBusinessRuleException("Para obter as informações de impostos do mês atual, acesse /assets/current.");
+                    calculator = new InvestmentsFundsIncomeTaxes();
+                    calculator.CalculateIncomeTaxes(assetsIncomeTaxes, averageTradedPrices, fundInvestments, monthMovements.Key);
+                }
             }
 
-            var response = await incomeTaxesRepository.GetSpecifiedMonthAssetsIncomeTaxes(System.Net.WebUtility.UrlDecode(month), accountId);
-
-            return SpecifiedMonthToDto(response);
-        } catch (Exception e)
-        {
-            logger.LogError(e, $"Ocorreu um erro ao calcular um imposto mensal devido especificado. {e.Message}");
-            throw;
-        }
-    }
-
-    private MonthTaxesResponse SpecifiedMonthToDto(IEnumerable<SpecifiedMonthAssetsIncomeTaxesDto> taxes)
-    {
-        double totalMonthTaxes = taxes.Select(x => x.Taxes).Sum();
-        List<stocks_core.Responses.Asset> tradedAssets = new();
-
-        foreach (var tax in taxes)
-        {
-            tradedAssets.Add(new stocks_core.Responses.Asset(
-                (stocks_common.Enums.Asset) tax.AssetTypeId,
-                tax.AssetName,
-                tax.Taxes,
-                tax.TotalSold,
-                tax.SwingTradeProfit,
-                tax.DayTradeProfit,
-                tax.TradedAssets
-            ));
+            return (assetsIncomeTaxes, averageTradedPrices);
         }
 
-        return new MonthTaxesResponse(
-            totalMonthTaxes,
-            tradedAssets
-        );
-    }
+        private IEnumerable<AverageTradedPriceDetails> ToAverageTradedPriceDetails(IEnumerable<AverageTradedPriceDto> prices, stocks_common.Enums.Asset assetType)
+        {
+            foreach (var price in prices)
+            {
+                yield return new AverageTradedPriceDetails(
+                    tickerSymbol: price.Ticker,
+                    averageTradedPrice: price.AverageTradedPrice,
+                    totalBought: price.AverageTradedPrice,
+                    tradedQuantity: price.Quantity,
+                    assetType
+                );
+            }
+        }
 
-    private bool WorkerDidNotSaveDataForThisMonthYet(string month)
-    {
-        string currentMonth = DateTime.Now.ToString("yyyy-MM");
-        return month == currentMonth;
+        private async Task <IEnumerable<AverageTradedPriceDto>> GetAverageTradedPrices(Guid accountId, IEnumerable<Movement.EquitMovement> movements)
+        {
+            return await averageTradedPriceRepository.GetAverageTradedPrices(accountId, movements.Select(x => x.TickerSymbol).ToList());
+        }
+
+        /// <summary>
+        /// Altera a propriedade booleana DayTraded para verdadeiro em operações de venda day-trade.
+        /// </summary>
+        private static void SetDayTradeOperations(List<Movement.EquitMovement> movements)
+        {
+            var buys = movements.Where(x => x.MovementType == B3ResponseConstants.Buy);
+            var sells = movements.Where(x => x.MovementType == B3ResponseConstants.Sell);
+
+            var dayTradeSellsOperationsIds = sells.Where(b => buys.Any(s =>
+                s.ReferenceDate == b.ReferenceDate &&
+                s.TickerSymbol == b.TickerSymbol
+            )).Select(x => x.Id);
+
+            foreach(var id in dayTradeSellsOperationsIds)
+            {
+                var dayTradeOperation = movements.Where(x => x.Id == id).Single();
+                dayTradeOperation.DayTraded = true;
+            }
+        }
     }
-    #endregion
 }

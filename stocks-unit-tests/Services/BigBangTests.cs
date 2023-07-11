@@ -3,19 +3,19 @@ using stocks_common.Exceptions;
 using stocks_common.Helpers;
 using stocks_core.Calculators;
 using stocks_core.Constants;
-using stocks_core.Services.BigBang;
+using stocks_core.Services.IncomeTaxes;
 using static stocks_core.DTOs.B3.Movement;
 
 namespace stocks_unit_tests.Services
 {
     public class BigBangTests
     {
-        private readonly IBigBang bigBang;
+        private readonly IIncomeTaxesService bigBang;
         private readonly IIncomeTaxesCalculator calculator;
 
         public BigBangTests()
         {
-            bigBang = new BigBang(calculator);
+            bigBang = new IncomeTaxes(calculator);
         }
 
         [Fact(DisplayName = "Se um investidor executar o Big Bang e não houver movimentos feitos anteriormente, uma exceção deve ser lançada.")]
