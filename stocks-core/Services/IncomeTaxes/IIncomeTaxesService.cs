@@ -1,18 +1,17 @@
+﻿using stocks_common.Models;
+using stocks_core.DTOs.B3;
 using stocks_core.Models;
-using stocks_core.Requests.BigBang;
 
-namespace stocks.Services.IncomeTaxes;
-
-public interface IIncomeTaxesService
+namespace stocks_core.Services.IncomeTaxes
 {
-    /// <summary>
-    /// Calcula a quantidade de imposto de renda a ser pago para cada ativo de renda variável no mês atual.
-    /// </summary>
-    Task<List<AssetIncomeTaxes>> CalculateCurrentMonthAssetsIncomeTaxes(Guid accountId);
-
-    /// <summary>
-    /// Calcula e armazena o imposto de renda a ser pago em todos os meses desde 01/11/2019 até D-1.
-    /// Também calcula e armazena o preço médio de todos os ativos.
-    /// </summary>
-    Task BigBang(Guid accountId, List<BigBangRequest> request);
+    public interface IIncomeTaxesService
+    {
+        /// <summary>
+        /// Retorna o imposto de renda a ser pago nas movimentações especificadas e o preço médio
+        /// de cada ativo movimentado.
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        Task<(List<AssetIncomeTaxes>, List<AverageTradedPriceDetails>)> Execute(Movement.Root? request, Guid accountId);
+    }
 }

@@ -33,7 +33,9 @@ namespace stocks_infrastructure.Models
         public Guid Id { get; protected set; } = Guid.NewGuid();
         public string Month { get; set; }
 
-        // https://www.youtube.com/watch?v=VMwqYLSPg_c
+        /// <summary>
+        /// https://www.youtube.com/watch?v=VMwqYLSPg_c
+        /// </summary>
         public double TotalTaxes { get; set; }
         public double TotalSold { get; set; }
         public double SwingTradeProfit { get; set; }
@@ -43,15 +45,18 @@ namespace stocks_infrastructure.Models
         /// Uma lista em formato JSON que representa os ativos negociados.
         /// </summary>
         public string TradedAssets { get; set; }
+
         /// <summary>
         /// Define se o prejuízo de swing trade já foi compensado em algum pagamento. É NULL caso
         /// o investidor não tenha tido prejuízo no mês.
         public bool? CompesatedSwingTradeLoss { get; set; }
+
         /// <summary>
         /// Define se o prejuízo de swing trade já foi compensado em algum pagamento. É NULL caso
         /// o investidor não tenha tido prejuízo no mês.
         public bool? CompesatedDayTradeLoss { get; set; }
         public Account Account { get; set; }
+
         /// <summary>
         /// Id do tipo de ativo que foi negociado no mês.
         /// </summary>

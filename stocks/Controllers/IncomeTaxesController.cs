@@ -11,23 +11,38 @@ namespace stocks.Controllers;
 [Tags("Income taxes")]
 public class IncomeTaxesController : BaseController
 {
-    private readonly IIncomeTaxesService service;
+    private readonly IAssetsService service;
 
-    public IncomeTaxesController(IIncomeTaxesService service)
+    public IncomeTaxesController(IAssetsService service)
     {
         this.service = service;
     }
 
     /// <summary>
-    /// Calcula o total de imposto de renda a ser pago em ativos de renda variável no mês atual. 
+    /// Calcula o total de imposto de renda a ser pago em ativos de renda variável no mês atual.
     /// </summary>
-    [HttpGet("assets")]
+    [HttpGet("assets/current/{accountId}")]
     public async Task<IActionResult> CalculateCurrentMonthAssetsIncomeTaxes(Guid accountId)
     {
         var response = await service.CalculateCurrentMonthAssetsIncomeTaxes(accountId);
 
-        if (response.IsNullOrEmpty()) return NotFound("Por enquanto não há nenhum imposto de renda a ser pago.");
+        if (response.TradedAssets.IsNullOrEmpty()) return NotFound("Por enquanto não há nenhum imposto de renda a ser pago.");
 
+        // TO-DO: alterar AssetId pelo nome do ativo.
+        return Ok(response);
+    }
+
+    /// <summary>
+    /// Retorna o total de imposto de renda a ser pago em ativos de renda variável no mês especificado.
+    /// </summary>
+    [HttpGet("assets/{month}/{accountId}")]
+    public async Task<IActionResult> CalculateSpecifiedMonthAssetsIncomeTaxes(string month, Guid accountId)
+    {
+        var response = await service.CalculateSpecifiedMonthAssetsIncomeTaxes(month, accountId);
+
+        if (response.TradedAssets.IsNullOrEmpty()) return NotFound("Nenhum imposto de renda foi encontrado para o mês especificado.");
+
+        // TO-DO: alterar AssetId pelo nome do ativo.
         return Ok(response);
     }
 
