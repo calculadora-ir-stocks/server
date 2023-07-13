@@ -55,7 +55,7 @@ public class AssetsService : IAssetsService
                 logger.LogInformation($"Big bang foi executado para o usuário {accountId}, mas ele já possui o preço médio e imposto de renda " +
                     $"calculado na base.");
 
-                return;
+                throw new InvalidBusinessRuleException("O preço médio e o imposto de renda para esse usuário já foram calculados.");
             }
 
             // A B3 apenas possui dados a partir de 01/11/2019.

@@ -36,8 +36,6 @@ namespace stocks_core.Calculators.Assets
                 DayTradeProfit = dayTradeProfit,
                 TradedAssets = JsonConvert.SerializeObject(ConcatOperations(dayTradeOperations, swingTradeOperations)),
             });
-
-            AddIntoAverageTradedPricesList(averageTradedPrices, Asset.ETFs);
         }
     }
 }

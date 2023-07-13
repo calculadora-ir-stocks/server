@@ -83,26 +83,6 @@ namespace stocks_core.Calculators
             return Array.Empty<OperationDetails>();
         }
 
-        public static void AddIntoAverageTradedPricesList(List<AverageTradedPriceDetails> averageTradedPrices, Asset assetType)
-        {
-            var prices = averageTradedPrices.Where(x => x.AssetType == assetType);
-
-            foreach (var price in prices)
-            {
-                bool contains = averageTradedPrices.Select(x => x.TickerSymbol).Contains(price.TickerSymbol);
-
-                if (contains)
-                {
-                    AverageTradedPriceDetails averageTradedPrice = averageTradedPrices.Where(x => x.TickerSymbol == price.TickerSymbol).First();
-                    averageTradedPrice.UpdateValues(price.TotalBought, price.TradedQuantity);
-                }
-                else
-                {
-                    averageTradedPrices.Add(price);
-                }
-            }
-        }
-
         private static void AddTickerIntoResponseDictionary(
             List<OperationDetails> dayTradeResponse,
             List<OperationDetails> swingTradeResponse,
@@ -135,7 +115,11 @@ namespace stocks_core.Calculators
                 swingTradeResponse.Select(x => x.TickerSymbol).Equals(movement.TickerSymbol);
         }
 
-        private static void UpdateAverageTradedPrice(Movement.EquitMovement movement, List<AverageTradedPriceDetails> averageTradedPrices)
+        private static void UpdateAverageTradedPrice(
+            Movement.EquitMovement movement,
+            List<AverageTradedPriceDetails> averageTradedPrices,
+            bool sellOperation = false
+        )
         {
             bool tickerHasAverageTradedPrice = averageTradedPrices.Select(x => x.TickerSymbol).Contains(movement.TickerSymbol);
 
@@ -143,10 +127,22 @@ namespace stocks_core.Calculators
             {
                 var ticker = averageTradedPrices.Where(x => x.TickerSymbol == movement.TickerSymbol).First();
 
-                double totalBought = ticker.TotalBought + movement.OperationValue;
-                double quantity = ticker.TradedQuantity + movement.EquitiesQuantity;
+                double totalBought;
+                double quantity;
+
+                if (sellOperation)
+                {
+                    totalBought = ticker.TotalBought - movement.OperationValue;
+                    quantity = ticker.TradedQuantity - movement.EquitiesQuantity;
+                } else
+                {
+                    totalBought = ticker.TotalBought + movement.OperationValue;
+                    quantity = ticker.TradedQuantity + movement.EquitiesQuantity;
+                }
 
                 ticker.UpdateValues(totalBought, (int)quantity);
+
+                if (ticker.SoldOut) averageTradedPrices.Remove(ticker);
             }
             else
             {
@@ -179,19 +175,21 @@ namespace stocks_core.Calculators
 
             if (AssetBoughtAfterB3MinimumDate(movement, averageTradedPrices))
             {
-                double averageTradedPrice = averageTradedPrices.Where(x => x.TickerSymbol == movement.TickerSymbol).First().AverageTradedPrice;
-                double profitPerShare = movement.UnitPrice - averageTradedPrice;
+                var averageTradedPrice = averageTradedPrices.Where(x => x.TickerSymbol == movement.TickerSymbol).First();
+
+                double profitPerShare = movement.UnitPrice - averageTradedPrice.AverageTradedPrice;
                 double totalProfit = profitPerShare * movement.EquitiesQuantity;
 
                 if (totalProfit > 0)
                 {
                     // TO-DO (MVP?): calcular IRRFs (e.g dedo-duro).
+                    // TO-DO (MVP?): calcular emolumentos.
                 }
 
                 asset.UpdateProfit(totalProfit, movement.ReferenceDate.Day.ToString());
                 asset.UpdateTotalSold(movement.OperationValue);
 
-                // TO-DO (MVP?): calcular emolumentos.
+                UpdateAverageTradedPrice(movement, averageTradedPrices, sellOperation: true);
             }
             else
             {
