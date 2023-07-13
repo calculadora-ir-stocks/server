@@ -1,4 +1,5 @@
 ﻿using stocks_common.Enums;
+using stocks_common.Models;
 
 namespace stocks_core.Models
 {
@@ -48,6 +49,6 @@ namespace stocks_core.Models
         /// <summary>
         /// Uma lista em formato JSON que representa os ativos negociados.
         /// </summary>
-        public string TradedAssets { get; set; } = string.Empty;
+        public IEnumerable<OperationDetails> TradedAssets { get; set; }
     }
 }

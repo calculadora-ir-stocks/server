@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using stocks.Clients.B3;
 using stocks.Exceptions;
 using stocks.Models;
@@ -245,7 +246,7 @@ public class AssetsService : IAssetsService
                     TotalSold = asset.TotalSold,
                     SwingTradeProfit = asset.SwingTradeProfit,
                     DayTradeProfit = asset.DayTradeProfit,
-                    TradedAssets = asset.TradedAssets,
+                    TradedAssets = JsonConvert.SerializeObject(asset.TradedAssets),
                     Account = account,
                     AssetId = (int)asset.AssetTypeId
                 });

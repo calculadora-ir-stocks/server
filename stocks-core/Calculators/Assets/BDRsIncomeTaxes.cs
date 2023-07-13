@@ -34,7 +34,7 @@ namespace stocks_core.Calculators.Assets
                 TotalSold = totalSold,
                 SwingTradeProfit = swingTradeProfit,
                 DayTradeProfit = dayTradeProfit,
-                TradedAssets = JsonConvert.SerializeObject(ConcatOperations(dayTradeOperations, swingTradeOperations)),
+                TradedAssets = ConcatOperations(dayTradeOperations, swingTradeOperations)
             });
         }
     }
