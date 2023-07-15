@@ -1,3 +1,4 @@
+using Hangfire;
 using stocks;
 using stocks.Middlewares;
 using stocks_common;
@@ -11,9 +12,11 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddServices(builder);
+builder.Services.AddHangFireRecurringJob(builder);
 builder.Services.Add3rdPartiesClientConfigurations();
 builder.Services.AddRepositories();
 builder.Services.AddJwtAuthentications(builder);
+
 // Obligatory lower case routing
 builder.Services.AddRouting(options => options.LowercaseUrls = true);
 builder.Services.AddDatabase(builder);
@@ -23,11 +26,12 @@ builder.Services.Configure<AppSettings>(builder.Configuration.GetSection("AppSet
 
 var app = builder.Build();
 
+app.UseHangfireDashboard("/dashboard");
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI();
 
     app.UseSwaggerUI(c => 
         c.SwaggerEndpoint("v1/swagger.json", "Stocks v1")

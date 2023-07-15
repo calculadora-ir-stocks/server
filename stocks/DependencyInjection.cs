@@ -1,4 +1,7 @@
-﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+﻿using Hangfire;
+using Hangfire.PostgreSql;
+using Hangfire.SqlServer;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -15,6 +18,7 @@ using stocks.Services.IncomeTaxes;
 using stocks_common;
 using stocks_core.Calculators;
 using stocks_core.Calculators.Assets;
+using stocks_core.Services.Hangfire;
 using stocks_core.Services.IncomeTaxes;
 using stocks_infrastructure.Repositories.AverageTradedPrice;
 using stocks_infrastructure.Repositories.IncomeTaxes;
@@ -27,7 +31,6 @@ namespace stocks
 {
     public static class DependencyInjection
     {
-        [Obsolete]
         public static void AddServices(this IServiceCollection services, WebApplicationBuilder builder)
         {
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
@@ -35,6 +38,7 @@ namespace stocks
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IAssetsService, AssetsService>();
             services.AddScoped<IIncomeTaxesService, IncomeTaxesService>();
+            services.AddScoped<IAverageTradedPriceUpdaterService, AverageTradedPriceUpdaterService>();
             services.AddSingleton<IB3Client, B3Client>();
             services.AddScoped<NotificationContext>();
 
@@ -48,8 +52,9 @@ namespace stocks
 
             services.AddTransient<IJwtCommon, JwtCommon>();
 
-            // TODO: SetCompatibilityVersion is deprecated, fix this.
+#pragma warning disable ASP5001 // Type or member is obsolete
             services.AddMvc(options => options.Filters.Add<NotificationFilter>()).SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
+#pragma warning restore ASP5001 // Type or member is obsolete
 
             services.Configure<AppSettings>(options =>
             {
@@ -57,6 +62,28 @@ namespace stocks
                 options.Issuer = builder.Configuration["Jwt:Issuer"];
                 options.Audience = builder.Configuration["Jwt:Audience"];
             });
+        }
+
+        public static void AddHangFireRecurringJob(this IServiceCollection services, WebApplicationBuilder builder)
+        {
+            services.AddHangfire(x => 
+                x.UsePostgreSqlStorage(builder.Configuration.GetConnectionString("DefaultConnection"))
+                .SetDataCompatibilityLevel(CompatibilityLevel.Version_170)
+                .UseSimpleAssemblyNameTypeSerializer()
+                .UseRecommendedSerializerSettings()
+            );
+
+            services.AddHangfireServer();
+
+            GlobalConfiguration.Configuration.UsePostgreSqlStorage(builder.Configuration.GetConnectionString("DefaultConnection"));
+
+            RecurringJob.RemoveIfExists(nameof(AverageTradedPriceUpdaterService));
+
+            RecurringJob.AddOrUpdate<IAverageTradedPriceUpdaterService>(
+                nameof(AverageTradedPriceUpdaterService),
+                x => x.Execute(),
+                Cron.Minutely
+            );
         }
 
         public static void Add3rdPartiesClientConfigurations(this IServiceCollection services) {

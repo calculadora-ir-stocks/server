@@ -14,13 +14,13 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Source", "Source", "{0EDE37
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{485454E1-D25F-4AE9-93FB-4B95EE874BB5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "stocks-unit-tests", "stocks-unit-tests\stocks-unit-tests.csproj", "{8BA88CB1-385C-4236-A598-AF4046ACE0F8}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "stocks-unit-tests", "stocks-unit-tests\stocks-unit-tests.csproj", "{8BA88CB1-385C-4236-A598-AF4046ACE0F8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "stocks-core", "stocks-core\stocks-core.csproj", "{CA35EDF3-FEF7-4CB2-82AF-333A64C619EE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "stocks-core", "stocks-core\stocks-core.csproj", "{CA35EDF3-FEF7-4CB2-82AF-333A64C619EE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "stocks-infrastructure", "stocks-infrastructure\stocks-infrastructure.csproj", "{D9D6C6EC-6FE0-433D-A5B6-2C92765F9A04}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "stocks-infrastructure", "stocks-infrastructure\stocks-infrastructure.csproj", "{D9D6C6EC-6FE0-433D-A5B6-2C92765F9A04}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "stocks-common", "stocks-common\stocks-common.csproj", "{D9E3576A-20F7-46DE-ACE0-304CCEF4683F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "stocks-common", "stocks-common\stocks-common.csproj", "{D9E3576A-20F7-46DE-ACE0-304CCEF4683F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
