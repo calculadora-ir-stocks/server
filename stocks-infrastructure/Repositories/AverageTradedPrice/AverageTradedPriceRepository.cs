@@ -1,8 +1,9 @@
-﻿using stocks.Database;
-using Dapper;
+﻿using Dapper;
 using Microsoft.EntityFrameworkCore;
-using stocks_infrastructure.Models;
+using stocks.Database;
+using stocks_common.Models;
 using stocks_infrastructure.Dtos;
+using stocks_infrastructure.Models;
 
 namespace stocks_infrastructure.Repositories.AverageTradedPrice
 {
@@ -46,13 +47,33 @@ namespace stocks_infrastructure.Repositories.AverageTradedPrice
             context.SaveChanges();
         }
 
-        public void Update(Guid id, string ticker)
+        public async Task UpdateTickers(Guid id, IEnumerable<AverageTradedPriceDetails> tickers)
         {
-            DateTime lastUpdated = 
-                context.AverageTradedPrices.Where(x => x.Account.Id == id && x.Ticker == ticker).First().UpdatedAt;
+            DynamicParameters parameters = new();
 
-            string lastUpdatedFormatted = lastUpdated.ToString("yyyy-MM-dd");
-            string referenceEndDate = DateTime.Now.AddDays(-1).ToString("yyyy-MM-dd");
+            parameters.Add("@AccountId", id);
+            parameters.Add("@Tickers", tickers.Select(x => x.TickerSymbol));
+            parameters.Add("@Prices", tickers.Select(x => x.AverageTradedPrice));
+            parameters.Add("@Quantities", tickers.Select(x => x.TradedQuantity));
+
+            string sql =
+                @"UPDATE ""AverageTradedPrices""
+                    SET
+                        ""AveragePrice"" = 
+                            CASE 
+                                WHEN (""Ticker"" IN (@Tickers)) THEN @Prices
+                                ELSE ""AveragePrice""
+                            END,
+                        ""Quantity"" =
+                            CASE
+                                WHEN(""Ticker"" IN (@Tickers) THEN @Quantities
+                                ELSE ""Quantity""
+                            END
+                    WHERE ""AccountId"" = @AccountId;
+                ";
+
+            var connection = context.Database.GetDbConnection();
+            await connection.QueryAsync(sql, parameters);
         }
 
         public async Task<IEnumerable<AverageTradedPriceDto>> GetAverageTradedPrices(Guid accountId, List<string>? tickers = null)

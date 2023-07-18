@@ -86,7 +86,8 @@ public class AssetsService : IAssetsService
             await SaveIncomeTaxes(taxesAndAverageTradedPrices, accountId);
 
             logger.LogInformation($"Big Bang executado com sucesso para o usuário {accountId}.");
-        } catch (Exception e)
+        }
+        catch (Exception e)
         {
             logger.LogError($"Uma exceção ocorreu ao executar o Big Bang do usuário {accountId}." +
                 $"{e.Message}");
@@ -147,6 +148,17 @@ public class AssetsService : IAssetsService
             AssetType = "ETF - Exchange Traded Fund",
             TickerSymbol = "IVVB11",
             CorporationName = "IVVB 11 Corporation Inc.",
+            MovementType = "Compra",
+            OperationValue = 246.65,
+            EquitiesQuantity = 1,
+            ReferenceDate = new DateTime(2022, 01, 09)
+        });
+
+        response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
+        {
+            AssetType = "ETF - Exchange Traded Fund",
+            TickerSymbol = "IVVB11",
+            CorporationName = "IVVB 11 Corporation Inc.",
             MovementType = "Venda",
             OperationValue = 304.54,
             UnitPrice = 304.54,
@@ -161,6 +173,17 @@ public class AssetsService : IAssetsService
             CorporationName = "KFOF11 Corporation Inc.",
             MovementType = "Compra",
             OperationValue = 231.34,
+            EquitiesQuantity = 1,
+            ReferenceDate = new DateTime(2022, 01, 16)
+        });
+
+        response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
+        {
+            AssetType = "FII - Fundo de Investimento Imobiliário",
+            TickerSymbol = "KFOF11",
+            CorporationName = "KFOF11 Corporation Inc.",
+            MovementType = "Compra",
+            OperationValue = 237.34,
             EquitiesQuantity = 1,
             ReferenceDate = new DateTime(2022, 01, 16)
         });
@@ -196,6 +219,17 @@ public class AssetsService : IAssetsService
             MovementType = "Compra",
             CorporationName = "Americanas S/A",
             OperationValue = 265.54,
+            EquitiesQuantity = 1,
+            ReferenceDate = new DateTime(2022, 02, 01)
+        });
+
+        response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
+        {
+            AssetType = "Ações",
+            TickerSymbol = "AMER3",
+            MovementType = "Compra",
+            CorporationName = "Americanas S/A",
+            OperationValue = 261.54,
             EquitiesQuantity = 1,
             ReferenceDate = new DateTime(2022, 02, 01)
         });
@@ -296,7 +330,8 @@ public class AssetsService : IAssetsService
             var response = await incomeTaxesService.Execute(b3Response, account.Id);
 
             return CurrentMonthToDto(response.Item1);
-        } catch (Exception e)
+        }
+        catch (Exception e)
         {
             logger.LogError(e, $"Ocorreu um erro ao calcular o imposto mensal devido. {e.Message}");
             throw;
@@ -431,7 +466,8 @@ public class AssetsService : IAssetsService
             var response = await incomeTaxesRepository.GetSpecifiedMonthAssetsIncomeTaxes(System.Net.WebUtility.UrlDecode(month), accountId);
 
             return SpecifiedMonthToDto(response);
-        } catch (Exception e)
+        }
+        catch (Exception e)
         {
             logger.LogError(e, $"Ocorreu um erro ao calcular um imposto mensal devido especificado. {e.Message}");
             throw;
@@ -446,7 +482,7 @@ public class AssetsService : IAssetsService
         foreach (var tax in taxes)
         {
             tradedAssets.Add(new stocks_core.Responses.Asset(
-                (stocks_common.Enums.Asset) tax.AssetTypeId,
+                (stocks_common.Enums.Asset)tax.AssetTypeId,
                 tax.AssetName,
                 tax.Taxes,
                 tax.TotalSold,

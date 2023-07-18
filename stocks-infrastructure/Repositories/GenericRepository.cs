@@ -51,6 +51,5 @@ namespace stocks.Repositories
         {
             return _context.Set<T>().Find(id);
         }
-
     }
 }

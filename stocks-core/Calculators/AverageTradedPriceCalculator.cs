@@ -34,7 +34,7 @@ namespace stocks_core.Calculators
                         break;
                     case B3ResponseConstants.Split:
                         CalculateSplitOperation(movement);
-                        break; 
+                        break;
                     case B3ResponseConstants.ReverseSplit:
                         CalculateReverseSplitOperation(movement);
                         break;
@@ -134,7 +134,8 @@ namespace stocks_core.Calculators
                 {
                     totalBought = ticker.TotalBought - movement.OperationValue;
                     quantity = ticker.TradedQuantity - movement.EquitiesQuantity;
-                } else
+                }
+                else
                 {
                     totalBought = ticker.TotalBought + movement.OperationValue;
                     quantity = ticker.TradedQuantity + movement.EquitiesQuantity;
@@ -232,36 +233,5 @@ namespace stocks_core.Calculators
             // TO-DO: entrar em contato com a B3 e tirar a dúvida de como funciona o response de bonificação.
             throw new NotImplementedException();
         }
-    }
-
-    public class Dto
-    {
-        public Dto(string day, string ticker, string corporationName, double profit)
-        {
-            Day = day;
-            Ticker = ticker;
-            CorporationName = corporationName;
-            Profit = profit;
-        }
-
-        /// <summary>
-        /// O dia em que a movimentação foi realizada.
-        /// </summary>
-        public string Day { get; init; }
-
-        /// <summary>
-        /// O nome do ticker sendo negociado.
-        /// </summary>
-        public string Ticker { get; init; }
-
-        /// <summary>
-        /// O nome da corporação sendo negociada.
-        /// </summary>
-        public string CorporationName { get; init; }
-
-        /// <summary>
-        /// Lucro ou prejuízo da operação.
-        /// </summary>
-        public double Profit { get; init; }
     }
 }

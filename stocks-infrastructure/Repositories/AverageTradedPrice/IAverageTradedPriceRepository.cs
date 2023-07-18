@@ -1,4 +1,5 @@
-﻿using stocks_infrastructure.Dtos;
+﻿using stocks_common.Models;
+using stocks_infrastructure.Dtos;
 
 namespace stocks_infrastructure.Repositories.AverageTradedPrice
 {
@@ -9,7 +10,7 @@ namespace stocks_infrastructure.Repositories.AverageTradedPrice
         Task Insert(Models.AverageTradedPrice averageTradedPrices);
         Models.AverageTradedPrice? GetAverageTradedPrice(string ticker, Guid accountId);
         Task<IEnumerable<AverageTradedPriceDto>> GetAverageTradedPrices(Guid accountId, List<string>? tickers = null);
-        void Update(Guid id, string ticker);
+        Task UpdateTickers(Guid id, IEnumerable<AverageTradedPriceDetails> tickers);
         Task AddAllAsync(List<Models.AverageTradedPrice> averageTradedPrices);
     }
 }

@@ -1,4 +1,5 @@
-﻿using stocks.Database;
+﻿using Dapper;
+using stocks.Database;
 
 namespace stocks.Repositories.Account
 {
@@ -15,6 +16,14 @@ namespace stocks.Repositories.Account
         public bool AccountExists(string email)
         {
             return _context.Accounts.Any(x => x.Email == email);
+        }
+
+        /// <summary>
+        /// Obtém todos os ids e seus respectivos CPFs.
+        /// </summary>
+        public IEnumerable<(Guid, string)> GetAllIdsAndCpf()
+        {
+            return _context.Accounts.AsList().Select(x => (x.Id, x.CPF));
         }
 
         public Models.Account? GetByEmail(string email)

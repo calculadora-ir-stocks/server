@@ -1,4 +1,8 @@
-﻿using Hangfire;
+﻿using System.Reflection;
+using System.Security.Authentication;
+using System.Security.Cryptography.X509Certificates;
+using System.Text;
+using Hangfire;
 using Hangfire.PostgreSql;
 using Hangfire.SqlServer;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -22,10 +26,6 @@ using stocks_core.Services.Hangfire;
 using stocks_core.Services.IncomeTaxes;
 using stocks_infrastructure.Repositories.AverageTradedPrice;
 using stocks_infrastructure.Repositories.IncomeTaxes;
-using System.Reflection;
-using System.Security.Authentication;
-using System.Security.Cryptography.X509Certificates;
-using System.Text;
 
 namespace stocks
 {
@@ -66,7 +66,7 @@ namespace stocks
 
         public static void AddHangFireRecurringJob(this IServiceCollection services, WebApplicationBuilder builder)
         {
-            services.AddHangfire(x => 
+            services.AddHangfire(x =>
                 x.UsePostgreSqlStorage(builder.Configuration.GetConnectionString("DefaultConnection"))
                 .SetDataCompatibilityLevel(CompatibilityLevel.Version_170)
                 .UseSimpleAssemblyNameTypeSerializer()
@@ -86,7 +86,8 @@ namespace stocks
             );
         }
 
-        public static void Add3rdPartiesClientConfigurations(this IServiceCollection services) {
+        public static void Add3rdPartiesClientConfigurations(this IServiceCollection services)
+        {
             var handler = new HttpClientHandler();
             AddCertificate(handler);
 
@@ -104,7 +105,7 @@ namespace stocks
 
             // C:\Users\Biscoitinho\Documents\Certificates
             // /home/dickmann/Documents/certificates/31788887000158.pfx
-            handler.ClientCertificates.Add(new X509Certificate2("C:\\Users\\Biscoitinho\\Documents\\Certificates\\31788887000158.pfx", "C3MOHH", X509KeyStorageFlags.PersistKeySet));
+            handler.ClientCertificates.Add(new X509Certificate2("/home/dickmann/Documents/certificates/31788887000158.pfx", "C3MOHH", X509KeyStorageFlags.PersistKeySet));
         }
 
         public static void AddRepositories(this IServiceCollection services)
@@ -117,7 +118,8 @@ namespace stocks
 
         public static void AddJwtAuthentications(this IServiceCollection services, WebApplicationBuilder builder)
         {
-            services.AddAuthentication(opt => {
+            services.AddAuthentication(opt =>
+            {
                 opt.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
                 opt.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
             })

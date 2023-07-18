@@ -2,7 +2,6 @@
 using Microsoft.EntityFrameworkCore;
 using stocks.Database;
 using stocks_infrastructure.Dtos;
-using System.Text;
 
 namespace stocks_infrastructure.Repositories.IncomeTaxes
 {
