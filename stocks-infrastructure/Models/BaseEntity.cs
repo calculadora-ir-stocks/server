@@ -2,7 +2,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace stocks.Models
+namespace stocks_infrastructure.Models
 {
     public abstract class BaseEntity
     {

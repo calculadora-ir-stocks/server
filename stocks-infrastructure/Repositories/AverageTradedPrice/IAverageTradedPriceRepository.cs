@@ -10,7 +10,8 @@ namespace stocks_infrastructure.Repositories.AverageTradedPrice
         Task Insert(Models.AverageTradedPrice averageTradedPrices);
         Models.AverageTradedPrice? GetAverageTradedPrice(string ticker, Guid accountId);
         Task<IEnumerable<AverageTradedPriceDto>> GetAverageTradedPrices(Guid accountId, List<string>? tickers = null);
-        Task UpdateTickers(Guid id, IEnumerable<AverageTradedPriceDetails> tickers);
+        Task UpdateAllAsync(List<Models.AverageTradedPrice> averageTradedPrices);
         Task AddAllAsync(List<Models.AverageTradedPrice> averageTradedPrices);
+        Task RemoveAllAsync(IEnumerable<string?> tickers, Guid id);
     }
 }

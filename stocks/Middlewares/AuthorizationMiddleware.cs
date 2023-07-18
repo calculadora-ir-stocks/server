@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Mvc;
-using stocks.Models;
+using stocks_infrastructure.Models;
 
 namespace stocks.Middlewares
 {

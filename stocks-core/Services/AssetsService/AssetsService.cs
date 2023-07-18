@@ -2,10 +2,8 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using stocks.Clients.B3;
 using stocks.Exceptions;
-using stocks.Models;
 using stocks.Repositories;
 using stocks_common.Models;
-using stocks_core.Calculators;
 using stocks_core.DTOs.B3;
 using stocks_core.Models;
 using stocks_core.Requests.BigBang;
@@ -182,17 +180,6 @@ public class AssetsService : IAssetsService
             AssetType = "FII - Fundo de Investimento Imobiliário",
             TickerSymbol = "KFOF11",
             CorporationName = "KFOF11 Corporation Inc.",
-            MovementType = "Compra",
-            OperationValue = 237.34,
-            EquitiesQuantity = 1,
-            ReferenceDate = new DateTime(2022, 01, 16)
-        });
-
-        response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
-        {
-            AssetType = "FII - Fundo de Investimento Imobiliário",
-            TickerSymbol = "KFOF11",
-            CorporationName = "KFOF11 Corporation Inc.",
             MovementType = "Venda",
             OperationValue = 237.34,
             UnitPrice = 237.34,
@@ -248,6 +235,7 @@ public class AssetsService : IAssetsService
         List<AverageTradedPrice> averageTradedPrices = new();
         CreateAverageTradedPrices(response.Item2, averageTradedPrices, account);
 
+        // TO-DO: unit of work
         await incomeTaxesRepository.AddAllAsync(incomeTaxes);
         await averageTradedPriceRepository.AddAllAsync(averageTradedPrices);
     }

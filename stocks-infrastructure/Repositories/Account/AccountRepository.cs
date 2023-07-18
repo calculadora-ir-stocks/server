@@ -21,12 +21,12 @@ namespace stocks.Repositories.Account
         /// <summary>
         /// Obtém todos os ids e seus respectivos CPFs.
         /// </summary>
-        public IEnumerable<(Guid, string)> GetAllIdsAndCpf()
+        public IEnumerable<stocks_infrastructure.Models.Account> GetAllAccounts()
         {
-            return _context.Accounts.AsList().Select(x => (x.Id, x.CPF));
+            return _context.Accounts.AsList();
         }
 
-        public Models.Account? GetByEmail(string email)
+        public stocks_infrastructure.Models.Account? GetByEmail(string email)
         {
             return _context.Accounts.AsEnumerable().SingleOrDefault(x => x.Email == email);
         }

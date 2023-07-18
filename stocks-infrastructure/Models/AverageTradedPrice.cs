@@ -1,5 +1,4 @@
-﻿using stocks.Models;
-using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.ComponentModel.DataAnnotations.Schema;
 using System.ComponentModel.DataAnnotations;
 
 namespace stocks_infrastructure.Models

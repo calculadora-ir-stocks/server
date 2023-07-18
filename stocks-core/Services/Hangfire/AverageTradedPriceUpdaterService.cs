@@ -1,18 +1,20 @@
-﻿using stocks.Clients.B3;
+﻿using Microsoft.IdentityModel.Tokens;
+using stocks.Clients.B3;
 using stocks.Repositories.Account;
-using stocks_core.Calculators;
+using stocks_common.Models;
 using stocks_core.DTOs.B3;
 using stocks_core.Services.IncomeTaxes;
+using stocks_infrastructure.Models;
 using stocks_infrastructure.Repositories.AverageTradedPrice;
 
 namespace stocks_core.Services.Hangfire
 {
     public class AverageTradedPriceUpdaterService : IAverageTradedPriceUpdaterService
     {
-        private readonly IIncomeTaxesService _incomeTaxesService;
-        private readonly IAverageTradedPriceRepostory _averageTradedPriceRepository;
-        private readonly IAccountRepository _accountRepository;
-        private readonly IB3Client _client;
+        private readonly IIncomeTaxesService incomeTaxesService;
+        private readonly IAverageTradedPriceRepostory averageTradedPriceRepository;
+        private readonly IAccountRepository accountRepository;
+        private readonly IB3Client client;
 
         public AverageTradedPriceUpdaterService
         (
@@ -22,24 +24,24 @@ namespace stocks_core.Services.Hangfire
             IB3Client client
         )
         {
-            _incomeTaxesService = incomeTaxesService;
-            _averageTradedPriceRepository = averageTradedPriceRepository;
-            _accountRepository = accountRepository;
-            _client = client;
+            this.incomeTaxesService = incomeTaxesService;
+            this.averageTradedPriceRepository = averageTradedPriceRepository;
+            this.accountRepository = accountRepository;
+            this.client = client;
         }
 
         public async Task Execute()
         {
-            var accountInfo = _accountRepository.GetAllIdsAndCpf();
+            var accounts = accountRepository.GetAllAccounts();
 
             // TO-DO: multithread
-            foreach (var account in accountInfo)
+            foreach (var account in accounts)
             {
                 string lastMonthFirstDay = GetLastMonthFirstDay();
                 string lastMonthFinalDay = GetLastMonthFinalDay();
 
                 // var lastMonthMovements =
-                // await _client.GetAccountMovement(account.Item2, lastMonthFirstDay, lastMonthFinalDay, account.Item1);
+                // await client.GetAccountMovement(account.Item2, lastMonthFirstDay, lastMonthFinalDay, account.Item1);
 
                 Movement.Root? mockData = new()
                 {
@@ -54,49 +56,108 @@ namespace stocks_core.Services.Hangfire
 
                 GenerateMockMovements(mockData);
 
-                var response = await _incomeTaxesService.Execute(mockData, account.Item1);
+                var response = await incomeTaxesService.Execute(mockData, account.Id);
                 var tradedTickers = response.Item2;
 
-                await _averageTradedPriceRepository.UpdateTickers(account.Item1, tradedTickers);
+                var tickersToAdd = await GetTradedTickersToAdd(tradedTickers, account.Id);
+                var tickersToUpdate = GetTradedTickersToUpdate(tickersToAdd!, tradedTickers);
+                var tickersToRemove = GetTradedTickersToRemove(mockData, tradedTickers);
+
+                if (!tickersToAdd.IsNullOrEmpty()) 
+                    await AddTradedTickers(tickersToAdd!, account);
+                 
+                if (!tickersToUpdate.IsNullOrEmpty())
+                    await UpdateTradedTickers(tickersToUpdate!, account);
+
+                if (!tickersToRemove.IsNullOrEmpty())
+                    await RemoveTradedTickers(tickersToRemove!, account.Id);
             }
+        }
+
+        private async Task RemoveTradedTickers(IEnumerable<string?> tickersToRemove, Guid id)
+        {
+            await averageTradedPriceRepository.RemoveAllAsync(tickersToRemove, id);
+        }
+
+        private async Task UpdateTradedTickers(IEnumerable<AverageTradedPriceDetails> tickersToUpdate, Account account)
+        {
+            List<AverageTradedPrice> pricesToUpdate = new();
+
+            foreach (var item in tickersToUpdate)
+            {
+                pricesToUpdate.Add(new AverageTradedPrice(
+                    item.TickerSymbol,
+                    item.AverageTradedPrice,
+                    item.TradedQuantity,
+                    account,
+                    updatedAt: DateTime.Now
+                ));
+            }
+
+            await averageTradedPriceRepository.UpdateAllAsync(pricesToUpdate);
+        }
+
+        private async Task AddTradedTickers(IEnumerable<AverageTradedPriceDetails> tickersToAdd, Account account)
+        {
+            List<AverageTradedPrice> pricesToAdd = new();
+
+            foreach (var item in tickersToAdd)
+            {
+                pricesToAdd.Add(new AverageTradedPrice(
+                    item.TickerSymbol,
+                    item.AverageTradedPrice,
+                    item.TradedQuantity,
+                    account,
+                    updatedAt: DateTime.Now
+                ));
+            }
+
+            await averageTradedPriceRepository.AddAllAsync(pricesToAdd);
+        }
+
+        private IEnumerable<string?> GetTradedTickersToRemove(Movement.Root lastMonthMovements, List<AverageTradedPriceDetails> tradedTickers)
+        {
+            if (lastMonthMovements is null) return Array.Empty<string>();
+
+            var movements = lastMonthMovements.Data.EquitiesPeriods.EquitiesMovements;
+            var tickers = movements.Select(x => x.TickerSymbol);
+
+            // O método _incomeTaxesService.Execute exclui da lista de preços médios os tickers que foram completamente vendidos.
+            // Nesse caso, comparar os tickers negociados no mês com os tickers que não estão no response é o suficiente para obter os tickers
+            // que precisam ser removidos da base de dados.
+            return tickers.Except(tradedTickers.Select(x => x.TickerSymbol));
+        }
+
+        private IEnumerable<AverageTradedPriceDetails?> GetTradedTickersToUpdate(IEnumerable<AverageTradedPriceDetails?> tradedTickersToAdd, List<AverageTradedPriceDetails> tradedTickers)
+        {
+            if (tradedTickersToAdd is null) return tradedTickers;
+
+            return tradedTickers.Except(tradedTickersToAdd);
+        }
+
+        private async Task<IEnumerable<AverageTradedPriceDetails>?> GetTradedTickersToAdd(List<AverageTradedPriceDetails> tradedAssets, Guid item1)
+        {
+            var tickersSymbol = tradedAssets.Select(x => x.TickerSymbol);
+            var tickersInvestorAlreadyHas = 
+                await averageTradedPriceRepository.GetAverageTradedPrices(item1, tickersSymbol.ToList());
+
+            var tickersSymbolInvestorAlreadyHas = tickersInvestorAlreadyHas.Select(x => x.Ticker);
+            var tickersInvestorDoesntHave = tickersSymbol.Except(tickersSymbolInvestorAlreadyHas);
+
+            List<AverageTradedPriceDetails> response = new();
+
+            foreach (var item in tickersInvestorDoesntHave)
+            {
+                AverageTradedPriceDetails asset = tradedAssets.Where(x => x.TickerSymbol == item).First();
+                response.Add(asset);
+            }
+
+            return response;
         }
 
         private static void GenerateMockMovements(Movement.Root response)
         {
-            response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
-            {
-                AssetType = "ETF - Exchange Traded Fund",
-                TickerSymbol = "BOVA11",
-                CorporationName = "BOVA 11 Corporation Inc.",
-                MovementType = "Compra",
-                OperationValue = 10.43,
-                EquitiesQuantity = 1,
-                ReferenceDate = new DateTime(2022, 01, 01)
-            });
-
-            response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
-            {
-                AssetType = "ETF - Exchange Traded Fund",
-                TickerSymbol = "IVVB11",
-                CorporationName = "IVVB 11 Corporation Inc.",
-                MovementType = "Compra",
-                OperationValue = 245.65,
-                EquitiesQuantity = 1,
-                ReferenceDate = new DateTime(2022, 01, 09)
-            });
-
-            response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
-            {
-                AssetType = "ETF - Exchange Traded Fund",
-                TickerSymbol = "IVVB11",
-                CorporationName = "IVVB 11 Corporation Inc.",
-                MovementType = "Venda",
-                OperationValue = 304.54,
-                UnitPrice = 304.54,
-                EquitiesQuantity = 1,
-                ReferenceDate = new DateTime(2022, 01, 10)
-            });
-
+            // ticker to add
             response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
             {
                 AssetType = "FII - Fundo de Investimento Imobiliário",
@@ -108,18 +169,19 @@ namespace stocks_core.Services.Hangfire
                 ReferenceDate = new DateTime(2022, 01, 16)
             });
 
+            // ticker to update
             response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
             {
-                AssetType = "FII - Fundo de Investimento Imobiliário",
-                TickerSymbol = "KFOF11",
-                CorporationName = "KFOF11 Corporation Inc.",
-                MovementType = "Venda",
-                OperationValue = 237.34,
-                UnitPrice = 237.34,
+                AssetType = "ETF - Exchange Traded Fund",
+                TickerSymbol = "IVVB11",
+                CorporationName = "IVVB 11 Corporation Inc.",
+                MovementType = "Compra",
+                OperationValue = 604.43,
                 EquitiesQuantity = 1,
-                ReferenceDate = new DateTime(2022, 01, 28)
+                ReferenceDate = new DateTime(2022, 01, 09)
             });
 
+            // ticker to remove
             response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
             {
                 AssetType = "Ações",
@@ -132,13 +194,28 @@ namespace stocks_core.Services.Hangfire
                 ReferenceDate = new DateTime(2022, 02, 01)
             });
 
+            // don't do anything
             response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
             {
                 AssetType = "Ações",
-                TickerSymbol = "AMER3",
-                MovementType = "Compra",
+                TickerSymbol = "DONT",
                 CorporationName = "Americanas S/A",
-                OperationValue = 265.54,
+                MovementType = "Compra",
+                OperationValue = 234.43,
+                UnitPrice = 234.43,
+                EquitiesQuantity = 1,
+                ReferenceDate = new DateTime(2022, 02, 01)
+            });
+
+            // don't do anything
+            response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
+            {
+                AssetType = "Ações",
+                TickerSymbol = "DONT",
+                CorporationName = "Americanas S/A",
+                MovementType = "Venda",
+                OperationValue = 234.43,
+                UnitPrice = 234.43,
                 EquitiesQuantity = 1,
                 ReferenceDate = new DateTime(2022, 02, 01)
             });

@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using stocks.Services.IncomeTaxes;
 using stocks_core.Requests.BigBang;
+using stocks_core.Services.Hangfire;
 
 namespace stocks.Controllers;
 
@@ -12,10 +13,19 @@ namespace stocks.Controllers;
 public class IncomeTaxesController : BaseController
 {
     private readonly IAssetsService service;
+    private readonly IAverageTradedPriceUpdaterService testService;
 
-    public IncomeTaxesController(IAssetsService service)
+    public IncomeTaxesController(IAssetsService service, IAverageTradedPriceUpdaterService testService)
     {
         this.service = service;
+        this.testService = testService;
+    }
+
+    [HttpPost("test-hangfire")]
+    public async Task<IActionResult> TestHangFire()
+    {
+        await testService.Execute();
+        return Ok();
     }
 
     /// <summary>

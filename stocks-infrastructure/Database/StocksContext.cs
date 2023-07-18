@@ -1,5 +1,4 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using stocks.Models;
 using stocks_infrastructure.Models;
 using System.Reflection;
 
