@@ -1,4 +1,6 @@
-﻿namespace stocks_infrastructure.Dtos
+﻿using stocks_common.Enums;
+
+namespace stocks_infrastructure.Dtos
 {
     public record AverageTradedPriceDto
     {
@@ -17,5 +19,5 @@
         public double AverageTradedPrice { get; init; }
         public int Quantity { get; init; }
     }
-        
+
 }

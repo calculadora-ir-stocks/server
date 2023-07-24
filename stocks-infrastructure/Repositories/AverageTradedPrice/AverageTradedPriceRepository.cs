@@ -1,7 +1,6 @@
-﻿using stocks.Database;
-using Dapper;
+﻿using Dapper;
 using Microsoft.EntityFrameworkCore;
-using stocks_infrastructure.Models;
+using stocks.Database;
 using stocks_infrastructure.Dtos;
 
 namespace stocks_infrastructure.Repositories.AverageTradedPrice
@@ -15,25 +14,7 @@ namespace stocks_infrastructure.Repositories.AverageTradedPrice
             this.context = context;
         }
 
-        public bool AlreadyHasAverageTradedPrice(Guid accountId)
-        {
-            return context.AverageTradedPrices.Where(x => x.Account.Id.Equals(accountId)).FirstOrDefault() != null;
-        }
-
-        public async Task AddAllAsync(List<Models.AverageTradedPrice> averageTradedPrices)
-        {
-            context.AddRange(averageTradedPrices);
-
-            context.AttachRange(averageTradedPrices.Select(x => x.Account));
-
-            await context.SaveChangesAsync();
-        }
-
-        public Models.AverageTradedPrice? GetAverageTradedPrice(string ticker, Guid accountId)
-        {
-            return context.AverageTradedPrices.Where(x => x.Ticker == ticker && x.Account.Id == accountId).FirstOrDefault();
-        }
-
+        #region INSERT
         public async Task Insert(Models.AverageTradedPrice averageTradedPrice)
         {
             await context.AverageTradedPrices.AddAsync(averageTradedPrice);
@@ -46,16 +27,26 @@ namespace stocks_infrastructure.Repositories.AverageTradedPrice
             context.SaveChanges();
         }
 
-        public void Update(Guid id, string ticker)
+        public async Task AddAllAsync(List<Models.AverageTradedPrice> averageTradedPrices)
         {
-            DateTime lastUpdated = 
-                context.AverageTradedPrices.Where(x => x.Account.Id == id && x.Ticker == ticker).First().UpdatedAt;
+            context.AddRange(averageTradedPrices);
 
-            string lastUpdatedFormatted = lastUpdated.ToString("yyyy-MM-dd");
-            string referenceEndDate = DateTime.Now.AddDays(-1).ToString("yyyy-MM-dd");
+            context.AttachRange(averageTradedPrices.Select(x => x.Account));
+
+            await context.SaveChangesAsync();
         }
+        #endregion
 
-        public async Task<IEnumerable<AverageTradedPriceDto>> GetAverageTradedPrices(Guid accountId, List<string>? tickers = null)
+        #region UPDATE
+        public async Task UpdateAllAsync(List<Models.AverageTradedPrice> averageTradedPrices)
+        {
+            context.AverageTradedPrices.UpdateRange(averageTradedPrices);
+            await context.SaveChangesAsync();
+        }
+        #endregion
+
+        #region GET
+        public async Task<IEnumerable<AverageTradedPriceDto>> GetAverageTradedPricesDto(Guid accountId, List<string>? tickers = null)
         {
             DynamicParameters parameters = new();
 
@@ -77,5 +68,42 @@ namespace stocks_infrastructure.Repositories.AverageTradedPrice
 
             return response;
         }
+
+        public List<Models.AverageTradedPrice>? GetAverageTradedPrices(Guid accountId, List<string>? tickers = null)
+        {
+            if (tickers is null) return context.AverageTradedPrices.Where(x => x.Account.Id == accountId).ToList();
+            return context.AverageTradedPrices.Where(x => tickers.Contains(x!.Ticker) && x.Account.Id.Equals(accountId)).ToList();
+        }
+
+        public bool AlreadyHasAverageTradedPrice(Guid accountId)
+        {
+            return context.AverageTradedPrices.Where(x => x.Account.Id.Equals(accountId)).FirstOrDefault() != null;
+        }
+
+        public Models.AverageTradedPrice? GetAverageTradedPrice(string ticker, Guid accountId)
+        {
+            return context.AverageTradedPrices.Where(x => x.Ticker == ticker && x.Account.Id == accountId).FirstOrDefault();
+        }
+        #endregion
+
+        #region DELETE
+        public async Task RemoveAllAsync(IEnumerable<string?> tickers, Guid id)
+        {
+            DynamicParameters parameters = new();
+
+            parameters.Add("@AccountId", id);
+            parameters.Add("@Tickers", tickers.ToList());
+
+            string sql =
+                @"DELETE 
+                    FROM ""AverageTradedPrices"" atp
+                  WHERE atp.""AccountId"" = @AccountId AND
+                  atp.""Ticker"" = ANY(@Tickers);
+                ";
+
+            var connection = context.Database.GetDbConnection();
+            await connection.QueryAsync<AverageTradedPriceDto>(sql, parameters);
+        }
+        #endregion
     }
 }

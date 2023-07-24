@@ -1,4 +1,5 @@
-﻿using stocks.Database;
+﻿using Dapper;
+using stocks.Database;
 
 namespace stocks.Repositories.Account
 {
@@ -17,7 +18,15 @@ namespace stocks.Repositories.Account
             return _context.Accounts.Any(x => x.Email == email);
         }
 
-        public Models.Account? GetByEmail(string email)
+        /// <summary>
+        /// Obtém todos os ids e seus respectivos CPFs.
+        /// </summary>
+        public IEnumerable<stocks_infrastructure.Models.Account> GetAllAccounts()
+        {
+            return _context.Accounts.AsList();
+        }
+
+        public stocks_infrastructure.Models.Account? GetByEmail(string email)
         {
             return _context.Accounts.AsEnumerable().SingleOrDefault(x => x.Email == email);
         }

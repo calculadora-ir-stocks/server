@@ -1,6 +1,6 @@
 using stocks.Commons.Jwt;
-using stocks.Models;
 using stocks.Repositories;
+using stocks_infrastructure.Models;
 
 namespace stocks.Middlewares;
 public class JwtMiddleware

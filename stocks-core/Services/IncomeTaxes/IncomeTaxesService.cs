@@ -87,16 +87,16 @@ namespace stocks_core.Services.IncomeTaxes
                 if (stocks.Any())
                 {
                     var prices = await GetAverageTradedPrices(accountId, stocks);
-                    averageTradedPrices.AddRange(ToAverageTradedPriceDetails(prices, stocks_common.Enums.Asset.Stocks));
+                    averageTradedPrices.AddRange(ToAverageTradedPriceDetails(prices));
 
-                    calculator = new StocksIncomeTaxes(); 
+                    calculator = new StocksIncomeTaxes();
                     calculator.CalculateIncomeTaxes(assetsIncomeTaxes, averageTradedPrices, stocks, monthMovements.Key);
                 }
 
                 if (etfs.Any())
                 {
                     var prices = await GetAverageTradedPrices(accountId, etfs);
-                    averageTradedPrices.AddRange(ToAverageTradedPriceDetails(prices, stocks_common.Enums.Asset.ETFs));
+                    averageTradedPrices.AddRange(ToAverageTradedPriceDetails(prices));
 
                     calculator = new ETFsIncomeTaxes();
                     calculator.CalculateIncomeTaxes(assetsIncomeTaxes, averageTradedPrices, etfs, monthMovements.Key);
@@ -105,7 +105,7 @@ namespace stocks_core.Services.IncomeTaxes
                 if (fiis.Any())
                 {
                     var prices = await GetAverageTradedPrices(accountId, fiis);
-                    averageTradedPrices.AddRange(ToAverageTradedPriceDetails(prices, stocks_common.Enums.Asset.FIIs));
+                    averageTradedPrices.AddRange(ToAverageTradedPriceDetails(prices));
 
                     calculator = new FIIsIncomeTaxes();
                     calculator.CalculateIncomeTaxes(assetsIncomeTaxes, averageTradedPrices, fiis, monthMovements.Key);
@@ -114,7 +114,7 @@ namespace stocks_core.Services.IncomeTaxes
                 if (bdrs.Any())
                 {
                     var prices = await GetAverageTradedPrices(accountId, bdrs);
-                    averageTradedPrices.AddRange(ToAverageTradedPriceDetails(prices, stocks_common.Enums.Asset.BDRs));
+                    averageTradedPrices.AddRange(ToAverageTradedPriceDetails(prices));
 
                     calculator = new BDRsIncomeTaxes();
                     calculator.CalculateIncomeTaxes(assetsIncomeTaxes, averageTradedPrices, bdrs, monthMovements.Key);
@@ -123,7 +123,7 @@ namespace stocks_core.Services.IncomeTaxes
                 if (gold.Any())
                 {
                     var prices = await GetAverageTradedPrices(accountId, gold);
-                    averageTradedPrices.AddRange(ToAverageTradedPriceDetails(prices, stocks_common.Enums.Asset.Gold));
+                    averageTradedPrices.AddRange(ToAverageTradedPriceDetails(prices));
 
                     calculator = new GoldIncomeTaxes();
                     calculator.CalculateIncomeTaxes(assetsIncomeTaxes, averageTradedPrices, gold, monthMovements.Key);
@@ -132,7 +132,7 @@ namespace stocks_core.Services.IncomeTaxes
                 if (fundInvestments.Any())
                 {
                     var prices = await GetAverageTradedPrices(accountId, fundInvestments);
-                    averageTradedPrices.AddRange(ToAverageTradedPriceDetails(prices, stocks_common.Enums.Asset.InvestmentsFunds));
+                    averageTradedPrices.AddRange(ToAverageTradedPriceDetails(prices));
 
                     calculator = new InvestmentsFundsIncomeTaxes();
                     calculator.CalculateIncomeTaxes(assetsIncomeTaxes, averageTradedPrices, fundInvestments, monthMovements.Key);
@@ -142,7 +142,7 @@ namespace stocks_core.Services.IncomeTaxes
             return (assetsIncomeTaxes, averageTradedPrices);
         }
 
-        private IEnumerable<AverageTradedPriceDetails> ToAverageTradedPriceDetails(IEnumerable<AverageTradedPriceDto> prices, stocks_common.Enums.Asset assetType)
+        private static IEnumerable<AverageTradedPriceDetails> ToAverageTradedPriceDetails(IEnumerable<AverageTradedPriceDto> prices)
         {
             foreach (var price in prices)
             {
@@ -150,15 +150,14 @@ namespace stocks_core.Services.IncomeTaxes
                     tickerSymbol: price.Ticker,
                     averageTradedPrice: price.AverageTradedPrice,
                     totalBought: price.AverageTradedPrice,
-                    tradedQuantity: price.Quantity,
-                    assetType
+                    tradedQuantity: price.Quantity
                 );
             }
         }
 
-        private async Task <IEnumerable<AverageTradedPriceDto>> GetAverageTradedPrices(Guid accountId, IEnumerable<Movement.EquitMovement> movements)
+        private async Task<IEnumerable<AverageTradedPriceDto>> GetAverageTradedPrices(Guid accountId, IEnumerable<Movement.EquitMovement> movements)
         {
-            return await averageTradedPriceRepository.GetAverageTradedPrices(accountId, movements.Select(x => x.TickerSymbol).ToList());
+            return await averageTradedPriceRepository.GetAverageTradedPricesDto(accountId, movements.Select(x => x.TickerSymbol).ToList());
         }
 
         /// <summary>
@@ -174,7 +173,7 @@ namespace stocks_core.Services.IncomeTaxes
                 s.TickerSymbol == b.TickerSymbol
             )).Select(x => x.Id);
 
-            foreach(var id in dayTradeSellsOperationsIds)
+            foreach (var id in dayTradeSellsOperationsIds)
             {
                 var dayTradeOperation = movements.Where(x => x.Id == id).Single();
                 dayTradeOperation.DayTraded = true;

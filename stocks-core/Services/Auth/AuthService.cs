@@ -3,10 +3,10 @@ using Microsoft.Extensions.Logging;
 using stocks.Commons.Jwt;
 using stocks.DTOs.Auth;
 using stocks.Exceptions;
-using stocks.Models;
 using stocks.Notification;
 using stocks.Repositories;
 using stocks.Repositories.Account;
+using stocks_infrastructure.Models;
 
 namespace stocks.Services.Auth
 {

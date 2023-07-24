@@ -4,7 +4,7 @@ using stocks.Enums;
 using stocks_infrastructure.Models;
 using System.Text.RegularExpressions;
 
-namespace stocks.Models
+namespace stocks_infrastructure.Models
 {
     public class Account : BaseEntity
     {
