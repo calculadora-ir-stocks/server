@@ -21,13 +21,6 @@ public class IncomeTaxesController : BaseController
         this.testService = testService;
     }
 
-    [HttpPost("test-hangfire")]
-    public async Task<IActionResult> TestHangFire()
-    {
-        await testService.Execute();
-        return Ok();
-    }
-
     /// <summary>
     /// Calcula o total de imposto de renda a ser pago em ativos de renda variável no mês atual.
     /// </summary>
@@ -72,7 +65,8 @@ public class IncomeTaxesController : BaseController
     /// Calcula o imposto de renda de criptomoedas.
     /// </summary>
     [HttpPost("cryptocurrency")]
-    public IActionResult CalculateCryptocurrency() {
+    public IActionResult CalculateCryptocurrency()
+    {
         return Ok();
     }
 
@@ -80,7 +74,8 @@ public class IncomeTaxesController : BaseController
     /// Calcula o imposto de renda de NFTs (kkkkk).
     /// </summary>
     [HttpPost("nfts")]
-    public IActionResult CalculateNFTs() {
+    public IActionResult CalculateNFTs()
+    {
         return Ok();
     }
 }
