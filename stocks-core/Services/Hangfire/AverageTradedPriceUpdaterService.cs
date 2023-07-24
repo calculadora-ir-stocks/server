@@ -1,77 +1,153 @@
-﻿using Microsoft.IdentityModel.Tokens;
+﻿using System.Diagnostics;
+using Microsoft.Extensions.Logging;
+using Microsoft.IdentityModel.Tokens;
 using stocks.Clients.B3;
 using stocks.Repositories.Account;
 using stocks_common.Models;
+using stocks_core.Calculators;
 using stocks_core.DTOs.B3;
 using stocks_core.Services.IncomeTaxes;
+using stocks_infrastructure.Dtos;
 using stocks_infrastructure.Models;
 using stocks_infrastructure.Repositories.AverageTradedPrice;
 
 namespace stocks_core.Services.Hangfire
 {
-    public class AverageTradedPriceUpdaterService : IAverageTradedPriceUpdaterService
+    public class AverageTradedPriceUpdaterService : AverageTradedPriceCalculator, IAverageTradedPriceUpdaterService
     {
         private readonly IIncomeTaxesService incomeTaxesService;
         private readonly IAverageTradedPriceRepostory averageTradedPriceRepository;
         private readonly IAccountRepository accountRepository;
         private readonly IB3Client client;
+        private readonly ILogger<AverageTradedPriceUpdaterService> logger;
 
         public AverageTradedPriceUpdaterService
         (
             IIncomeTaxesService incomeTaxesService,
             IAverageTradedPriceRepostory averageTradedPriceRepository,
             IAccountRepository accountRepository,
-            IB3Client client
+            IB3Client client,
+            ILogger<AverageTradedPriceUpdaterService> logger
         )
         {
             this.incomeTaxesService = incomeTaxesService;
             this.averageTradedPriceRepository = averageTradedPriceRepository;
             this.accountRepository = accountRepository;
             this.client = client;
+            this.logger = logger;
         }
 
         public async Task Execute()
         {
-            var accounts = accountRepository.GetAllAccounts();
-
-            // TO-DO: multithread
-            foreach (var account in accounts)
+            try
             {
-                string lastMonthFirstDay = GetLastMonthFirstDay();
-                string lastMonthFinalDay = GetLastMonthFinalDay();
-
-                // var lastMonthMovements =
-                // await client.GetAccountMovement(account.Item2, lastMonthFirstDay, lastMonthFinalDay, account.Item1);
-
-                Movement.Root? mockData = new()
+                // TO-DO: add retry policy
+                Parallel.ForEach(accountRepository.GetAllAccounts(), async account =>
                 {
-                    Data = new()
+                    Stopwatch timer = new();
+                    timer.Start();
+
+                    string lastMonthFirstDay = GetLastMonthFirstDay();
+                    string lastMonthFinalDay = GetLastMonthFinalDay();
+
+                    // var lastMonthMovements =
+                    // await client.GetAccountMovement(account.Item2, lastMonthFirstDay, lastMonthFinalDay, account.Item1);
+
+                    Movement.Root? mockData = new()
                     {
-                        EquitiesPeriods = new()
+                        Data = new()
                         {
-                            EquitiesMovements = new()
+                            EquitiesPeriods = new()
+                            {
+                                EquitiesMovements = new()
+                            }
                         }
-                    }
-                };
+                    };
 
-                GenerateMockMovements(mockData);
+                    GenerateMockMovements(mockData);
 
-                var response = await incomeTaxesService.Execute(mockData, account.Id);
-                var tradedTickers = response.Item2;
+                    var movements = mockData.Data.EquitiesPeriods.EquitiesMovements;
+                    var averageTradedPrices = await GetTradedAverageTradedPrices(movements, account.Id);
 
-                var tickersToAdd = await GetTradedTickersToAdd(tradedTickers, account.Id);
-                var tickersToUpdate = GetTradedTickersToUpdate(tickersToAdd!, tradedTickers);
-                var tickersToRemove = GetTradedTickersToRemove(mockData, tradedTickers);
+                    List<AverageTradedPriceDetails> updatedAverageTradedPrices = new();
+                    updatedAverageTradedPrices.AddRange(ToDtoAverageTradedPriceDetails(averageTradedPrices));
 
-                if (!tickersToAdd.IsNullOrEmpty()) 
-                    await AddTradedTickers(tickersToAdd!, account);
-                 
-                if (!tickersToUpdate.IsNullOrEmpty())
-                    await UpdateTradedTickers(tickersToUpdate!, account);
+                    var (_, _) = CalculateProfit(movements, updatedAverageTradedPrices);
 
-                if (!tickersToRemove.IsNullOrEmpty())
-                    await RemoveTradedTickers(tickersToRemove!, account.Id);
+                    // TODO: unit of work
+                    var tickersToAddIntoDatabase = await GetTradedTickersToAddIntoDatabase(updatedAverageTradedPrices, account);
+                    var tickersToUpdateFromDatabase = GetTradedTickersToUpdate(tickersToAddIntoDatabase!, updatedAverageTradedPrices, account);
+                    var tickersToRemoveFromDatabase = GetTradedTickersToRemove(movements, updatedAverageTradedPrices);
+
+                    await UpdateInvestorAverageTradedPrices(
+                        tickersToAddIntoDatabase,
+                        tickersToUpdateFromDatabase,
+                        updatedAverageTradedPrices,
+                        tickersToRemoveFromDatabase,
+                        account
+                    );
+
+                    timer.Stop();
+                    var timeTakenForEach = timer.Elapsed;
+
+                    logger.LogInformation("Tempo de execução do investidor {id}: {timeTaken}. " +
+                    "{add} tickers adicionados, {update} tickers atualizados e {remove} tickers removidos da base.",
+                        account.Id,
+                        timeTakenForEach,
+                        tickersToAddIntoDatabase is null ? 0 : tickersToAddIntoDatabase.Count(),
+                        tickersToUpdateFromDatabase is null ? 0 : tickersToUpdateFromDatabase.Count,
+                        tickersToRemoveFromDatabase is null ? 0 : tickersToRemoveFromDatabase.Count()
+                    );
+                });
             }
+            catch (Exception e)
+            {
+                logger.LogError(e.Message);
+            }
+        }
+
+        /// <summary>
+        /// Adiciona, atualiza e remove os preços médios da base de dados de um determinado
+        /// investidor.
+        /// </summary>
+        private async Task UpdateInvestorAverageTradedPrices(
+            IEnumerable<AverageTradedPrice>? tickersToAdd,
+            IEnumerable<AverageTradedPrice>? tickersToUpdate,
+            IEnumerable<AverageTradedPriceDetails> updatedAverageTradedPrices,
+            IEnumerable<string?> tickersToRemove,
+            Account account
+        )
+        {
+            if (!tickersToAdd.IsNullOrEmpty())
+                await AddTradedTickers(tickersToAdd!);
+
+            if (!tickersToUpdate.IsNullOrEmpty())
+                await UpdateTradedTickers(tickersToUpdate!, updatedAverageTradedPrices);
+
+            if (!tickersToRemove.IsNullOrEmpty())
+                await RemoveTradedTickers(tickersToRemove!, account.Id);
+        }
+
+        private static IEnumerable<AverageTradedPriceDetails> ToDtoAverageTradedPriceDetails(
+            IEnumerable<AverageTradedPriceDto> averageTradedPrices
+        )
+        {
+            foreach (var item in averageTradedPrices)
+            {
+                yield return new AverageTradedPriceDetails(
+                    item.Ticker,
+                    averageTradedPrice: item.AverageTradedPrice,
+                    totalBought: item.AverageTradedPrice,
+                    item.Quantity
+                );
+            }
+        }
+
+        private async Task<IEnumerable<AverageTradedPriceDto>> GetTradedAverageTradedPrices(
+            List<Movement.EquitMovement> movements, Guid id
+        )
+        {
+            return await averageTradedPriceRepository.GetAverageTradedPricesDto(id, movements.Select(x => x.TickerSymbol).ToList());
         }
 
         private async Task RemoveTradedTickers(IEnumerable<string?> tickersToRemove, Guid id)
@@ -79,77 +155,78 @@ namespace stocks_core.Services.Hangfire
             await averageTradedPriceRepository.RemoveAllAsync(tickersToRemove, id);
         }
 
-        private async Task UpdateTradedTickers(IEnumerable<AverageTradedPriceDetails> tickersToUpdate, Account account)
+        private async Task UpdateTradedTickers(
+            IEnumerable<AverageTradedPrice> tickersToUpdate,
+            IEnumerable<AverageTradedPriceDetails> updatedAverageTradedPrices
+        )
         {
-            List<AverageTradedPrice> pricesToUpdate = new();
-
             foreach (var item in tickersToUpdate)
             {
-                pricesToUpdate.Add(new AverageTradedPrice(
-                    item.TickerSymbol,
-                    item.AverageTradedPrice,
-                    item.TradedQuantity,
-                    account,
-                    updatedAt: DateTime.Now
-                ));
+                var updatedTicker = updatedAverageTradedPrices.Where(x => x.TickerSymbol == item.Ticker).First();
+
+                item.Quantity = updatedTicker.TradedQuantity;
+                item.AveragePrice = updatedTicker.AverageTradedPrice;
+                item.UpdatedAt = DateTime.Now;
             }
 
-            await averageTradedPriceRepository.UpdateAllAsync(pricesToUpdate);
+            await averageTradedPriceRepository.UpdateAllAsync(tickersToUpdate.ToList());
         }
 
-        private async Task AddTradedTickers(IEnumerable<AverageTradedPriceDetails> tickersToAdd, Account account)
+        private async Task AddTradedTickers(IEnumerable<AverageTradedPrice> tickersToAdd)
         {
-            List<AverageTradedPrice> pricesToAdd = new();
-
-            foreach (var item in tickersToAdd)
-            {
-                pricesToAdd.Add(new AverageTradedPrice(
-                    item.TickerSymbol,
-                    item.AverageTradedPrice,
-                    item.TradedQuantity,
-                    account,
-                    updatedAt: DateTime.Now
-                ));
-            }
-
-            await averageTradedPriceRepository.AddAllAsync(pricesToAdd);
+            await averageTradedPriceRepository.AddAllAsync(tickersToAdd.ToList());
         }
 
-        private IEnumerable<string?> GetTradedTickersToRemove(Movement.Root lastMonthMovements, List<AverageTradedPriceDetails> tradedTickers)
+        private static IEnumerable<string?> GetTradedTickersToRemove(
+            List<Movement.EquitMovement> movements, List<AverageTradedPriceDetails> updatedPrices
+        )
         {
-            if (lastMonthMovements is null) return Array.Empty<string>();
+            if (movements is null) return Array.Empty<string>();
 
-            var movements = lastMonthMovements.Data.EquitiesPeriods.EquitiesMovements;
-            var tickers = movements.Select(x => x.TickerSymbol);
+            var currentMonthTickers = movements.Select(x => x.TickerSymbol);
 
-            // O método _incomeTaxesService.Execute exclui da lista de preços médios os tickers que foram completamente vendidos.
+            // O método CalculateProfit() exclui da lista de preços médios os tickers que foram totalmente vendidos.
             // Nesse caso, comparar os tickers negociados no mês com os tickers que não estão no response é o suficiente para obter os tickers
             // que precisam ser removidos da base de dados.
-            return tickers.Except(tradedTickers.Select(x => x.TickerSymbol));
+            return currentMonthTickers.Except(updatedPrices.Select(x => x.TickerSymbol));
         }
 
-        private IEnumerable<AverageTradedPriceDetails?> GetTradedTickersToUpdate(IEnumerable<AverageTradedPriceDetails?> tradedTickersToAdd, List<AverageTradedPriceDetails> tradedTickers)
+        /// <summary>
+        /// Retorna os tickers que necessitam ser atualizados e já estão inseridos na base.
+        /// Para isso, compara os tickers que precisam ser adicionados com os tickers que foram negociados.
+        /// </summary>
+        private List<AverageTradedPrice>? GetTradedTickersToUpdate(
+            IEnumerable<AverageTradedPrice> tickersToAdd, List<AverageTradedPriceDetails> updatedPrices, Account account
+        )
         {
-            if (tradedTickersToAdd is null) return tradedTickers;
-
-            return tradedTickers.Except(tradedTickersToAdd);
+            var tickersToUpdate = updatedPrices.Select(x => x.TickerSymbol).Except(tickersToAdd.Select(x => x.Ticker)).ToList();
+            return averageTradedPriceRepository.GetAverageTradedPrices(account.Id, tickersToUpdate);
         }
 
-        private async Task<IEnumerable<AverageTradedPriceDetails>?> GetTradedTickersToAdd(List<AverageTradedPriceDetails> tradedAssets, Guid item1)
+        private async Task<IEnumerable<AverageTradedPrice>?> GetTradedTickersToAddIntoDatabase(
+            List<AverageTradedPriceDetails> tradedAssets, Account account
+        )
         {
-            var tickersSymbol = tradedAssets.Select(x => x.TickerSymbol);
-            var tickersInvestorAlreadyHas = 
-                await averageTradedPriceRepository.GetAverageTradedPrices(item1, tickersSymbol.ToList());
+            var tickersInvestorAlreadyHas =
+                await averageTradedPriceRepository.GetAverageTradedPricesDto(account.Id, tradedAssets.Select(x => x.TickerSymbol).ToList());
 
-            var tickersSymbolInvestorAlreadyHas = tickersInvestorAlreadyHas.Select(x => x.Ticker);
-            var tickersInvestorDoesntHave = tickersSymbol.Except(tickersSymbolInvestorAlreadyHas);
+            var tickersInvestorDoesntHave =
+            tradedAssets.Select(x => x.TickerSymbol).ToList().Except(tickersInvestorAlreadyHas.Select(x => x.Ticker));
 
-            List<AverageTradedPriceDetails> response = new();
+            // To dto
+            List<AverageTradedPrice> response = new();
 
             foreach (var item in tickersInvestorDoesntHave)
             {
                 AverageTradedPriceDetails asset = tradedAssets.Where(x => x.TickerSymbol == item).First();
-                response.Add(asset);
+
+                response.Add(new AverageTradedPrice(
+                    asset.TickerSymbol,
+                    asset.AverageTradedPrice,
+                    asset.TradedQuantity,
+                    account,
+                    DateTime.Now
+                ));
             }
 
             return response;
@@ -176,8 +253,8 @@ namespace stocks_core.Services.Hangfire
                 TickerSymbol = "IVVB11",
                 CorporationName = "IVVB 11 Corporation Inc.",
                 MovementType = "Compra",
-                OperationValue = 604.43,
-                EquitiesQuantity = 1,
+                OperationValue = 12376.43,
+                EquitiesQuantity = 4,
                 ReferenceDate = new DateTime(2022, 01, 09)
             });
 

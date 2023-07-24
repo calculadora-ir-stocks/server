@@ -1,9 +1,7 @@
 ﻿using Dapper;
 using Microsoft.EntityFrameworkCore;
 using stocks.Database;
-using stocks_common.Models;
 using stocks_infrastructure.Dtos;
-using stocks_infrastructure.Models;
 
 namespace stocks_infrastructure.Repositories.AverageTradedPrice
 {
@@ -43,15 +41,12 @@ namespace stocks_infrastructure.Repositories.AverageTradedPrice
         public async Task UpdateAllAsync(List<Models.AverageTradedPrice> averageTradedPrices)
         {
             context.AverageTradedPrices.UpdateRange(averageTradedPrices);
-
-            context.AttachRange(averageTradedPrices.Select(x => x.Account));
-
             await context.SaveChangesAsync();
         }
         #endregion
 
         #region GET
-        public async Task<IEnumerable<AverageTradedPriceDto>> GetAverageTradedPrices(Guid accountId, List<string>? tickers = null)
+        public async Task<IEnumerable<AverageTradedPriceDto>> GetAverageTradedPricesDto(Guid accountId, List<string>? tickers = null)
         {
             DynamicParameters parameters = new();
 
@@ -73,6 +68,13 @@ namespace stocks_infrastructure.Repositories.AverageTradedPrice
 
             return response;
         }
+
+        public List<Models.AverageTradedPrice>? GetAverageTradedPrices(Guid accountId, List<string>? tickers = null)
+        {
+            if (tickers is null) return context.AverageTradedPrices.Where(x => x.Account.Id == accountId).ToList();
+            return context.AverageTradedPrices.Where(x => tickers.Contains(x!.Ticker) && x.Account.Id.Equals(accountId)).ToList();
+        }
+
         public bool AlreadyHasAverageTradedPrice(Guid accountId)
         {
             return context.AverageTradedPrices.Where(x => x.Account.Id.Equals(accountId)).FirstOrDefault() != null;
@@ -100,7 +102,7 @@ namespace stocks_infrastructure.Repositories.AverageTradedPrice
                 ";
 
             var connection = context.Database.GetDbConnection();
-            var response = await connection.QueryAsync<AverageTradedPriceDto>(sql, parameters);
+            await connection.QueryAsync<AverageTradedPriceDto>(sql, parameters);
         }
         #endregion
     }

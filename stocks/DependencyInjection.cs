@@ -105,7 +105,7 @@ namespace stocks
 
             // C:\Users\Biscoitinho\Documents\Certificates\31788887000158.pfx
             // /home/dickmann/Documents/certificates/31788887000158.pfx
-            handler.ClientCertificates.Add(new X509Certificate2("C:\\Users\\Biscoitinho\\Documents\\Certificates\\31788887000158.pfx", "C3MOHH", X509KeyStorageFlags.PersistKeySet));
+            handler.ClientCertificates.Add(new X509Certificate2("/home/dickmann/Documents/certificates/31788887000158.pfx", "C3MOHH", X509KeyStorageFlags.PersistKeySet));
         }
 
         public static void AddRepositories(this IServiceCollection services)

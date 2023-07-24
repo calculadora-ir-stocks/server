@@ -3,7 +3,6 @@ using stocks_common.Helpers;
 using stocks_common.Models;
 using stocks_core.Constants;
 using stocks_core.DTOs.B3;
-using Asset = stocks_common.Enums.Asset;
 
 namespace stocks_core.Calculators
 {
@@ -143,7 +142,7 @@ namespace stocks_core.Calculators
 
                 ticker.UpdateValues(totalBought, (int)quantity);
 
-                if (ticker.SoldOut) averageTradedPrices.Remove(ticker);
+                if (InvestorSoldAllTickers(ticker)) averageTradedPrices.Remove(ticker);
             }
             else
             {
@@ -151,10 +150,14 @@ namespace stocks_core.Calculators
                     movement.TickerSymbol,
                     averageTradedPrice: movement.OperationValue / movement.EquitiesQuantity,
                     totalBought: movement.OperationValue,
-                    tradedQuantity: (int)movement.EquitiesQuantity,
-                    AssetTypeHelper.GetEnumByName(movement.AssetType)
+                    tradedQuantity: (int)movement.EquitiesQuantity
                 ));
             }
+        }
+
+        private static bool InvestorSoldAllTickers(AverageTradedPriceDetails ticker)
+        {
+            return ticker.TradedQuantity == 0;
         }
 
         private static void UpdateProfitOrLoss(
