@@ -8,8 +8,10 @@ using Hangfire.SqlServer;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Polly;
 using stocks.Clients.B3;
 using stocks.Commons.Jwt;
 using stocks.Database;
@@ -91,11 +93,15 @@ namespace stocks
             var handler = new HttpClientHandler();
             AddCertificate(handler);
 
-            services.AddHttpClient("B3", c => c.BaseAddress = new Uri("https://apib3i-cert.b3.com.br:2443/api/"))
-                .ConfigurePrimaryHttpMessageHandler(() => handler);
+            services.AddHttpClient("B3", c =>
+                c.BaseAddress = new Uri("https://apib3i-cert.b3.com.br:2443/api/")).ConfigurePrimaryHttpMessageHandler(() => handler)
+                .AddTransientHttpErrorPolicy(policy => policy.WaitAndRetryAsync(5, _ => TimeSpan.FromSeconds(10)))
+                .AddTransientHttpErrorPolicy(policy => policy.CircuitBreakerAsync(5, TimeSpan.FromSeconds(10)));
 
-            services.AddHttpClient("Microsoft", c => c.BaseAddress = new Uri("https://login.microsoftonline.com/"))
-                .ConfigurePrimaryHttpMessageHandler(() => handler);
+            services.AddHttpClient("Microsoft", c =>
+                c.BaseAddress = new Uri("https://login.microsoftonline.com/")).ConfigurePrimaryHttpMessageHandler(() => handler)
+                .AddTransientHttpErrorPolicy(policy => policy.WaitAndRetryAsync(5, _ => TimeSpan.FromSeconds(10)))
+                .AddTransientHttpErrorPolicy(policy => policy.CircuitBreakerAsync(5, TimeSpan.FromSeconds(10)));
         }
 
         private static void AddCertificate(HttpClientHandler handler)

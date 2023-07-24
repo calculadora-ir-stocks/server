@@ -6,7 +6,6 @@ using stocks.Repositories.Account;
 using stocks_common.Models;
 using stocks_core.Calculators;
 using stocks_core.DTOs.B3;
-using stocks_core.Services.IncomeTaxes;
 using stocks_infrastructure.Dtos;
 using stocks_infrastructure.Models;
 using stocks_infrastructure.Repositories.AverageTradedPrice;
@@ -15,7 +14,6 @@ namespace stocks_core.Services.Hangfire
 {
     public class AverageTradedPriceUpdaterService : AverageTradedPriceCalculator, IAverageTradedPriceUpdaterService
     {
-        private readonly IIncomeTaxesService incomeTaxesService;
         private readonly IAverageTradedPriceRepostory averageTradedPriceRepository;
         private readonly IAccountRepository accountRepository;
         private readonly IB3Client client;
@@ -23,14 +21,12 @@ namespace stocks_core.Services.Hangfire
 
         public AverageTradedPriceUpdaterService
         (
-            IIncomeTaxesService incomeTaxesService,
             IAverageTradedPriceRepostory averageTradedPriceRepository,
             IAccountRepository accountRepository,
             IB3Client client,
             ILogger<AverageTradedPriceUpdaterService> logger
         )
         {
-            this.incomeTaxesService = incomeTaxesService;
             this.averageTradedPriceRepository = averageTradedPriceRepository;
             this.accountRepository = accountRepository;
             this.client = client;
@@ -41,8 +37,9 @@ namespace stocks_core.Services.Hangfire
         {
             try
             {
-                // TO-DO: add retry policy
-                Parallel.ForEach(accountRepository.GetAllAccounts(), async account =>
+                var accounts = accountRepository.GetAllAccounts();
+
+                foreach (var account in accounts)
                 {
                     Stopwatch timer = new();
                     timer.Start();
@@ -50,8 +47,7 @@ namespace stocks_core.Services.Hangfire
                     string lastMonthFirstDay = GetLastMonthFirstDay();
                     string lastMonthFinalDay = GetLastMonthFinalDay();
 
-                    // var lastMonthMovements =
-                    // await client.GetAccountMovement(account.Item2, lastMonthFirstDay, lastMonthFinalDay, account.Item1);
+                    // var lastMonthMovements = await client.GetAccountMovement(account.CPF, lastMonthFirstDay, lastMonthFinalDay, account.Id);
 
                     Movement.Root? mockData = new()
                     {
@@ -74,7 +70,6 @@ namespace stocks_core.Services.Hangfire
 
                     var (_, _) = CalculateProfit(movements, updatedAverageTradedPrices);
 
-                    // TODO: unit of work
                     var tickersToAddIntoDatabase = await GetTradedTickersToAddIntoDatabase(updatedAverageTradedPrices, account);
                     var tickersToUpdateFromDatabase = GetTradedTickersToUpdate(tickersToAddIntoDatabase!, updatedAverageTradedPrices, account);
                     var tickersToRemoveFromDatabase = GetTradedTickersToRemove(movements, updatedAverageTradedPrices);
@@ -90,19 +85,15 @@ namespace stocks_core.Services.Hangfire
                     timer.Stop();
                     var timeTakenForEach = timer.Elapsed;
 
-                    logger.LogInformation("Tempo de execução do investidor {id}: {timeTaken}. " +
-                    "{add} tickers adicionados, {update} tickers atualizados e {remove} tickers removidos da base.",
+                    logger.LogInformation("Tempo de execução do investidor {id}: {timeTaken}.",
                         account.Id,
-                        timeTakenForEach,
-                        tickersToAddIntoDatabase is null ? 0 : tickersToAddIntoDatabase.Count(),
-                        tickersToUpdateFromDatabase is null ? 0 : tickersToUpdateFromDatabase.Count,
-                        tickersToRemoveFromDatabase is null ? 0 : tickersToRemoveFromDatabase.Count()
+                        timeTakenForEach
                     );
-                });
+                }
             }
             catch (Exception e)
             {
-                logger.LogError(e.Message);
+                logger.LogError(e.Message, e);
             }
         }
 
