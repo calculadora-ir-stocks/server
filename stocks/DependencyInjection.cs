@@ -82,7 +82,7 @@ namespace stocks
             RecurringJob.AddOrUpdate<IAverageTradedPriceUpdaterService>(
                 nameof(AverageTradedPriceUpdaterService),
                 x => x.Execute(),
-                Cron.Minutely
+                Cron.Monthly
             );
         }
 
