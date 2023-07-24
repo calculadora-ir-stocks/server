@@ -47,22 +47,9 @@ namespace stocks_core.Services.Hangfire
                     string lastMonthFirstDay = GetLastMonthFirstDay();
                     string lastMonthFinalDay = GetLastMonthFinalDay();
 
-                    // var lastMonthMovements = await client.GetAccountMovement(account.CPF, lastMonthFirstDay, lastMonthFinalDay, account.Id);
+                    var lastMonthMovements = await client.GetAccountMovement(account.CPF, lastMonthFirstDay, lastMonthFinalDay, account.Id);
 
-                    Movement.Root? mockData = new()
-                    {
-                        Data = new()
-                        {
-                            EquitiesPeriods = new()
-                            {
-                                EquitiesMovements = new()
-                            }
-                        }
-                    };
-
-                    GenerateMockMovements(mockData);
-
-                    var movements = mockData.Data.EquitiesPeriods.EquitiesMovements;
+                    var movements = lastMonthMovements.Data.EquitiesPeriods.EquitiesMovements;
                     var averageTradedPrices = await GetTradedAverageTradedPrices(movements, account.Id);
 
                     List<AverageTradedPriceDetails> updatedAverageTradedPrices = new();
