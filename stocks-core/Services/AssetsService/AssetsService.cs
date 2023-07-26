@@ -1,3 +1,4 @@
+using common.Models;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using stocks.Clients.B3;
@@ -51,8 +52,8 @@ public class AssetsService : IAssetsService
         {
             if (AlreadyHasAverageTradedPrice(accountId))
             {
-                logger.LogInformation($"Big bang foi executado para o usuário {accountId}, mas ele já possui o preço médio e imposto de renda " +
-                    $"calculado na base.");
+                logger.LogInformation("Big bang foi executado para o usuário {accountId}, mas ele já possui o preço médio e imposto de renda " +
+                    $"calculado na base.", accountId);
 
                 throw new InvalidBusinessRuleException("O preço médio e o imposto de renda para esse usuário já foram calculados.");
             }
@@ -83,12 +84,12 @@ public class AssetsService : IAssetsService
 
             await SaveIncomeTaxes(taxesAndAverageTradedPrices, accountId);
 
-            logger.LogInformation($"Big Bang executado com sucesso para o usuário {accountId}.");
+            logger.LogInformation("Big Bang executado com sucesso para o usuário {accountId}.", accountId);
         }
         catch (Exception e)
         {
-            logger.LogError($"Uma exceção ocorreu ao executar o Big Bang do usuário {accountId}." +
-                $"{e.Message}");
+            logger.LogError("Uma exceção ocorreu ao executar o Big Bang do usuário {accountId}." +
+                "{e.Message}", accountId, e.Message);
 
             throw;
         }
@@ -104,7 +105,7 @@ public class AssetsService : IAssetsService
             MovementType = "Compra",
             OperationValue = 10.43,
             EquitiesQuantity = 1,
-            ReferenceDate = new DateTime(2022, 01, 01)
+            ReferenceDate = new DateTime(2023, 01, 01)
         });
 
         response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
@@ -115,7 +116,7 @@ public class AssetsService : IAssetsService
             MovementType = "Compra",
             OperationValue = 18.43,
             EquitiesQuantity = 1,
-            ReferenceDate = new DateTime(2022, 01, 03)
+            ReferenceDate = new DateTime(2023, 01, 03)
         });
 
         response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
@@ -127,7 +128,7 @@ public class AssetsService : IAssetsService
             OperationValue = 12.54,
             UnitPrice = 12.54,
             EquitiesQuantity = 1,
-            ReferenceDate = new DateTime(2022, 01, 08)
+            ReferenceDate = new DateTime(2023, 01, 08)
         });
 
         response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
@@ -138,7 +139,7 @@ public class AssetsService : IAssetsService
             MovementType = "Compra",
             OperationValue = 245.65,
             EquitiesQuantity = 1,
-            ReferenceDate = new DateTime(2022, 01, 09)
+            ReferenceDate = new DateTime(2023, 01, 09)
         });
 
         response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
@@ -149,7 +150,7 @@ public class AssetsService : IAssetsService
             MovementType = "Compra",
             OperationValue = 246.65,
             EquitiesQuantity = 1,
-            ReferenceDate = new DateTime(2022, 01, 09)
+            ReferenceDate = new DateTime(2023, 01, 09)
         });
 
         response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
@@ -161,7 +162,7 @@ public class AssetsService : IAssetsService
             OperationValue = 304.54,
             UnitPrice = 304.54,
             EquitiesQuantity = 1,
-            ReferenceDate = new DateTime(2022, 01, 10)
+            ReferenceDate = new DateTime(2023, 01, 10)
         });
 
         response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
@@ -172,7 +173,7 @@ public class AssetsService : IAssetsService
             MovementType = "Compra",
             OperationValue = 231.34,
             EquitiesQuantity = 1,
-            ReferenceDate = new DateTime(2022, 01, 16)
+            ReferenceDate = new DateTime(2023, 01, 16)
         });
 
         response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
@@ -184,7 +185,7 @@ public class AssetsService : IAssetsService
             OperationValue = 237.34,
             UnitPrice = 237.34,
             EquitiesQuantity = 1,
-            ReferenceDate = new DateTime(2022, 01, 28)
+            ReferenceDate = new DateTime(2023, 01, 28)
         });
 
         response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
@@ -196,7 +197,7 @@ public class AssetsService : IAssetsService
             OperationValue = 234.43,
             UnitPrice = 234.43,
             EquitiesQuantity = 1,
-            ReferenceDate = new DateTime(2022, 02, 01)
+            ReferenceDate = new DateTime(2023, 02, 01)
         });
 
         response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
@@ -207,7 +208,7 @@ public class AssetsService : IAssetsService
             CorporationName = "Americanas S/A",
             OperationValue = 265.54,
             EquitiesQuantity = 1,
-            ReferenceDate = new DateTime(2022, 02, 01)
+            ReferenceDate = new DateTime(2023, 02, 01)
         });
 
         response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
@@ -218,7 +219,7 @@ public class AssetsService : IAssetsService
             CorporationName = "Americanas S/A",
             OperationValue = 261.54,
             EquitiesQuantity = 1,
-            ReferenceDate = new DateTime(2022, 02, 01)
+            ReferenceDate = new DateTime(2023, 02, 01)
         });
     }
 
@@ -321,7 +322,7 @@ public class AssetsService : IAssetsService
         }
         catch (Exception e)
         {
-            logger.LogError(e, $"Ocorreu um erro ao calcular o imposto mensal devido. {e.Message}");
+            logger.LogError(e, "Ocorreu um erro ao calcular o imposto mensal devido. {e.Message}", e.Message);
             throw;
         }
     }
@@ -457,7 +458,7 @@ public class AssetsService : IAssetsService
         }
         catch (Exception e)
         {
-            logger.LogError(e, $"Ocorreu um erro ao calcular um imposto mensal devido especificado. {e.Message}");
+            logger.LogError(e, "Ocorreu um erro ao calcular um imposto mensal devido especificado. {e.Message}", e.Message);
             throw;
         }
     }
@@ -476,7 +477,7 @@ public class AssetsService : IAssetsService
                 tax.TotalSold,
                 tax.SwingTradeProfit,
                 tax.DayTradeProfit,
-                tax.TradedAssets
+                JsonConvert.DeserializeObject<IEnumerable<OperationDetailsNew>>(tax.TradedAssets)
             ));
         }
 

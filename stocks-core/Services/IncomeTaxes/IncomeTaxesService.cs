@@ -161,7 +161,7 @@ namespace stocks_core.Services.IncomeTaxes
         }
 
         /// <summary>
-        /// Altera a propriedade booleana DayTraded para verdadeiro em operações de venda day-trade.
+        /// Altera a propriedade booleana DayTraded para verdadeiro em operações de compra e venda day-trade.
         /// </summary>
         private static void SetDayTradeOperations(List<Movement.EquitMovement> movements)
         {
@@ -174,6 +174,17 @@ namespace stocks_core.Services.IncomeTaxes
             )).Select(x => x.Id);
 
             foreach (var id in dayTradeSellsOperationsIds)
+            {
+                var dayTradeOperation = movements.Where(x => x.Id == id).Single();
+                dayTradeOperation.DayTraded = true;
+            }
+
+            var dayTradeBuysOperationsIds = buys.Where(b => sells.Any(s =>
+                s.ReferenceDate == b.ReferenceDate &&
+                s.TickerSymbol == b.TickerSymbol
+            )).Select(x => x.Id);
+
+            foreach (var id in dayTradeBuysOperationsIds)
             {
                 var dayTradeOperation = movements.Where(x => x.Id == id).Single();
                 dayTradeOperation.DayTraded = true;

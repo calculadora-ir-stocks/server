@@ -1,5 +1,4 @@
-﻿using Newtonsoft.Json;
-using stocks_common.Enums;
+﻿using stocks_common.Enums;
 using stocks_common.Helpers;
 using stocks_common.Models;
 using stocks_core.Constants;
@@ -37,7 +36,7 @@ namespace stocks_core.Calculators.Assets
                 TotalSold = totalSold,
                 SwingTradeProfit = swingTradeProfit,
                 DayTradeProfit = dayTradeProfit,
-                TradedAssets = ConcatOperations(dayTradeOperations, swingTradeOperations)
+                TradedAssets = operationDetails
             });
         }
     }

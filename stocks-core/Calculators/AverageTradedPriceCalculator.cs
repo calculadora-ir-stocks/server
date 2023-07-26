@@ -1,4 +1,6 @@
-﻿using Microsoft.IdentityModel.Tokens;
+﻿using common.Helpers;
+using common.Models;
+using Microsoft.IdentityModel.Tokens;
 using stocks_common.Helpers;
 using stocks_common.Models;
 using stocks_core.Constants;
@@ -12,14 +14,18 @@ namespace stocks_core.Calculators
     /// </summary>
     public abstract class AverageTradedPriceCalculator
     {
+        protected static List<OperationDetailsNew>? operationDetails = null;
+
         /// <summary>
         /// Calcula o lucro das movimentações especificadas levando em consideração o preço médio dos ativos.
         /// </summary>
-        public static (List<OperationDetails> dayTrade, List<OperationDetails> swingTrade) CalculateProfit
+        public static (List<MovementProperties> dayTrade, List<MovementProperties> swingTrade) CalculateProfit
             (IEnumerable<Movement.EquitMovement> movements, List<AverageTradedPriceDetails> movementsAverageTradedPrices)
         {
-            List<OperationDetails> dayTrade = new();
-            List<OperationDetails> swingTrade = new();
+            List<MovementProperties> dayTrade = new();
+            List<MovementProperties> swingTrade = new();
+
+            operationDetails = new();
 
             foreach (var movement in movements)
             {
@@ -27,8 +33,10 @@ namespace stocks_core.Calculators
                 {
                     case B3ResponseConstants.Buy:
                         UpdateAverageTradedPrice(movement, movementsAverageTradedPrices!);
+                        AddMovementDetails(movement);
                         break;
                     case B3ResponseConstants.Sell:
+                        AddTickerIntoResponseDictionary(dayTrade, swingTrade, movement);
                         UpdateProfitOrLoss(dayTrade, swingTrade, movement, movements, movementsAverageTradedPrices);
                         break;
                     case B3ResponseConstants.Split:
@@ -44,6 +52,22 @@ namespace stocks_core.Calculators
             }
 
             return (dayTrade, swingTrade);
+        }
+
+        private static void AddMovementDetails(Movement.EquitMovement movement, double profit = 0)
+        {
+            if (operationDetails is null) throw new NullReferenceException();
+
+            operationDetails.Add(new OperationDetailsNew(
+                movement.ReferenceDate.Day.ToString(),
+                movement.TickerSymbol,
+                movement.CorporationName,
+                DayOfTheWeekHelper.GetDayOfTheWeek((int)movement.ReferenceDate.DayOfWeek),
+                movement.MovementType,
+                (int)movement.EquitiesQuantity,
+                movement.OperationValue,
+                profit
+            ));
         }
 
         public static decimal CalculateIncomeTaxes(double swingTradeProfit, double dayTradeProfit, int aliquot)
@@ -65,50 +89,38 @@ namespace stocks_core.Calculators
         /// <summary>
         /// Retorna as operações day-trade e swing-trade concatenadas.
         /// </summary>
-        public static IEnumerable<OperationDetails> ConcatOperations(
-            List<OperationDetails>? dayTradeMovements,
-            List<OperationDetails>? swingTradeMovements
+        public static IEnumerable<MovementProperties> ConcatOperations(
+            List<MovementProperties>? dayTrade,
+            List<MovementProperties>? swingTrade
         )
         {
-            if (!dayTradeMovements.IsNullOrEmpty() && !swingTradeMovements.IsNullOrEmpty())
+            if (!dayTrade.IsNullOrEmpty() && !swingTrade.IsNullOrEmpty())
             {
-                return dayTradeMovements!.Concat(swingTradeMovements!);
+                return dayTrade!.Concat(swingTrade!);
             }
 
-            if (!dayTradeMovements.IsNullOrEmpty()) return dayTradeMovements;
+            if (!dayTrade.IsNullOrEmpty()) return dayTrade;
 
-            if (!swingTradeMovements.IsNullOrEmpty()) return swingTradeMovements;
+            if (!swingTrade.IsNullOrEmpty()) return swingTrade;
 
-            return Array.Empty<OperationDetails>();
+            return Array.Empty<MovementProperties>();
         }
 
         private static void AddTickerIntoResponseDictionary(
-            List<OperationDetails> dayTradeResponse,
-            List<OperationDetails> swingTradeResponse,
+            List<MovementProperties> dayTradeResponse,
+            List<MovementProperties> swingTradeResponse,
             Movement.EquitMovement movement
         )
         {
             if (TickerAlreadyAdded(dayTradeResponse, swingTradeResponse, movement)) return;
 
             if (movement.DayTraded)
-            {
-                dayTradeResponse.Add(new OperationDetails(
-                    movement.ReferenceDate.Day.ToString(),
-                    movement.TickerSymbol,
-                    movement.CorporationName
-                ));
-            }
+                dayTradeResponse.Add(new(movement.TickerSymbol));
             else
-            {
-                swingTradeResponse.Add(new OperationDetails(
-                    movement.ReferenceDate.Day.ToString(),
-                    movement.TickerSymbol,
-                    movement.CorporationName
-                ));
-            }
+                swingTradeResponse.Add(new(movement.TickerSymbol));
         }
 
-        private static bool TickerAlreadyAdded(List<OperationDetails> dayTradeResponse, List<OperationDetails> swingTradeResponse, Movement.EquitMovement movement)
+        private static bool TickerAlreadyAdded(List<MovementProperties> dayTradeResponse, List<MovementProperties> swingTradeResponse, Movement.EquitMovement movement)
         {
             return dayTradeResponse.Select(x => x.TickerSymbol).Equals(movement.TickerSymbol) ||
                 swingTradeResponse.Select(x => x.TickerSymbol).Equals(movement.TickerSymbol);
@@ -161,21 +173,19 @@ namespace stocks_core.Calculators
         }
 
         private static void UpdateProfitOrLoss(
-            List<OperationDetails> dayTradeResponse,
-            List<OperationDetails> swingTradeResponse,
+            List<MovementProperties> dayTrade,
+            List<MovementProperties> swingTrade,
             Movement.EquitMovement movement,
             IEnumerable<Movement.EquitMovement> movements,
             List<AverageTradedPriceDetails> averageTradedPrices
         )
         {
-            AddTickerIntoResponseDictionary(dayTradeResponse, swingTradeResponse, movement);
-
-            OperationDetails? asset = null;
+            MovementProperties? asset = null;
 
             if (movement.DayTraded)
-                asset = dayTradeResponse.First(x => x.TickerSymbol == movement.TickerSymbol);
+                asset = dayTrade.First(x => x.TickerSymbol == movement.TickerSymbol);
             else
-                asset = swingTradeResponse.First(x => x.TickerSymbol == movement.TickerSymbol);
+                asset = swingTrade.First(x => x.TickerSymbol == movement.TickerSymbol);
 
             if (AssetBoughtAfterB3MinimumDate(movement, averageTradedPrices))
             {
@@ -190,10 +200,10 @@ namespace stocks_core.Calculators
                     // TO-DO (MVP?): calcular emolumentos.
                 }
 
-                asset.UpdateProfit(totalProfit, movement.ReferenceDate.Day.ToString());
-                asset.UpdateTotalSold(movement.OperationValue);
+                asset.UpdateProfit(totalProfit);
 
                 UpdateAverageTradedPrice(movement, averageTradedPrices, sellOperation: true);
+                AddMovementDetails(movement, asset.Profit);
             }
             else
             {
