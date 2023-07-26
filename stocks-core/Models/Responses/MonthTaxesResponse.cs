@@ -1,5 +1,4 @@
-﻿using common.Models;
-using stocks_common.Models;
+﻿using stocks_core.Models;
 
 namespace stocks_core.Responses
 {

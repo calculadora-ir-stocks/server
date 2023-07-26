@@ -1,4 +1,4 @@
-namespace common.Models;
+namespace stocks_core.Models;
 
 public class OperationDetails
 {

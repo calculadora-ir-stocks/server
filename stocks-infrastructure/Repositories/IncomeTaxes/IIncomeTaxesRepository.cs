@@ -1,5 +1,4 @@
-﻿using stocks_core.Responses;
-using stocks_infrastructure.Dtos;
+﻿using stocks_infrastructure.Dtos;
 
 namespace stocks_infrastructure.Repositories.IncomeTaxes
 {

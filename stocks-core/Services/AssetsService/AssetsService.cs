@@ -1,10 +1,8 @@
-using common.Models;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using stocks.Clients.B3;
 using stocks.Exceptions;
 using stocks.Repositories;
-using stocks_common.Models;
 using stocks_core.DTOs.B3;
 using stocks_core.Models;
 using stocks_core.Requests.BigBang;
@@ -143,7 +141,9 @@ public class AssetsService : IAssetsService
                     DayTradeProfit = asset.DayTradeProfit,
                     TradedAssets = JsonConvert.SerializeObject(asset.TradedAssets),
                     Account = account,
-                    AssetId = (int)asset.AssetTypeId
+                    AssetId = (int)asset.AssetTypeId,
+                    CompesatedSwingTradeLoss = asset.SwingTradeProfit < 0 ? false : null,
+                    CompesatedDayTradeLoss = asset.DayTradeProfit < 0 ? false : null
                 });
             }
         }

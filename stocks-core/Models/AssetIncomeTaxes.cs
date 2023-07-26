@@ -1,5 +1,4 @@
-﻿using common.Models;
-using stocks_common.Enums;
+﻿using stocks_common.Enums;
 
 namespace stocks_core.Models
 {
