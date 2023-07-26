@@ -477,7 +477,7 @@ public class AssetsService : IAssetsService
                 tax.TotalSold,
                 tax.SwingTradeProfit,
                 tax.DayTradeProfit,
-                JsonConvert.DeserializeObject<IEnumerable<OperationDetails>>(tax.TradedAssets)
+                JsonConvert.DeserializeObject<IEnumerable<OperationDetails>>(tax.TradedAssets)!
             ));
         }
 
