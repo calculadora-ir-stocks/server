@@ -61,7 +61,7 @@ namespace stocks_core.Services.IncomeTaxes
         /// Ordena as operações por ordem crescente através da data - a B3 retorna em ordem decrescente - e
         /// ordena operações de compra antes das operações de venda em operações day trade.
         /// </summary>
-        private List<Movement.EquitMovement> OrderMovementsByDateAndMovementType(IList<Movement.EquitMovement> movements)
+        private static List<Movement.EquitMovement> OrderMovementsByDateAndMovementType(IList<Movement.EquitMovement> movements)
         {
             // TODO: a premissa da descrição do método está correta?
             return movements.OrderBy(x => x.MovementType).OrderBy(x => x.ReferenceDate).ToList();
@@ -90,7 +90,7 @@ namespace stocks_core.Services.IncomeTaxes
                     averageTradedPrices.AddRange(ToAverageTradedPriceDetails(prices));
 
                     calculator = new StocksIncomeTaxes();
-                    calculator.CalculateIncomeTaxes(assetsIncomeTaxes, averageTradedPrices, stocks, monthMovements.Key);
+                    calculator.Execute(assetsIncomeTaxes, averageTradedPrices, stocks, monthMovements.Key);
                 }
 
                 if (etfs.Any())
@@ -99,7 +99,7 @@ namespace stocks_core.Services.IncomeTaxes
                     averageTradedPrices.AddRange(ToAverageTradedPriceDetails(prices));
 
                     calculator = new ETFsIncomeTaxes();
-                    calculator.CalculateIncomeTaxes(assetsIncomeTaxes, averageTradedPrices, etfs, monthMovements.Key);
+                    calculator.Execute(assetsIncomeTaxes, averageTradedPrices, etfs, monthMovements.Key);
                 }
 
                 if (fiis.Any())
@@ -108,7 +108,7 @@ namespace stocks_core.Services.IncomeTaxes
                     averageTradedPrices.AddRange(ToAverageTradedPriceDetails(prices));
 
                     calculator = new FIIsIncomeTaxes();
-                    calculator.CalculateIncomeTaxes(assetsIncomeTaxes, averageTradedPrices, fiis, monthMovements.Key);
+                    calculator.Execute(assetsIncomeTaxes, averageTradedPrices, fiis, monthMovements.Key);
                 }
 
                 if (bdrs.Any())
@@ -117,7 +117,7 @@ namespace stocks_core.Services.IncomeTaxes
                     averageTradedPrices.AddRange(ToAverageTradedPriceDetails(prices));
 
                     calculator = new BDRsIncomeTaxes();
-                    calculator.CalculateIncomeTaxes(assetsIncomeTaxes, averageTradedPrices, bdrs, monthMovements.Key);
+                    calculator.Execute(assetsIncomeTaxes, averageTradedPrices, bdrs, monthMovements.Key);
                 }
 
                 if (gold.Any())
@@ -126,7 +126,7 @@ namespace stocks_core.Services.IncomeTaxes
                     averageTradedPrices.AddRange(ToAverageTradedPriceDetails(prices));
 
                     calculator = new GoldIncomeTaxes();
-                    calculator.CalculateIncomeTaxes(assetsIncomeTaxes, averageTradedPrices, gold, monthMovements.Key);
+                    calculator.Execute(assetsIncomeTaxes, averageTradedPrices, gold, monthMovements.Key);
                 }
 
                 if (fundInvestments.Any())
@@ -135,7 +135,7 @@ namespace stocks_core.Services.IncomeTaxes
                     averageTradedPrices.AddRange(ToAverageTradedPriceDetails(prices));
 
                     calculator = new InvestmentsFundsIncomeTaxes();
-                    calculator.CalculateIncomeTaxes(assetsIncomeTaxes, averageTradedPrices, fundInvestments, monthMovements.Key);
+                    calculator.Execute(assetsIncomeTaxes, averageTradedPrices, fundInvestments, monthMovements.Key);
                 }
             }
 
@@ -174,17 +174,6 @@ namespace stocks_core.Services.IncomeTaxes
             )).Select(x => x.Id);
 
             foreach (var id in dayTradeSellsOperationsIds)
-            {
-                var dayTradeOperation = movements.Where(x => x.Id == id).Single();
-                dayTradeOperation.DayTraded = true;
-            }
-
-            var dayTradeBuysOperationsIds = buys.Where(b => sells.Any(s =>
-                s.ReferenceDate == b.ReferenceDate &&
-                s.TickerSymbol == b.TickerSymbol
-            )).Select(x => x.Id);
-
-            foreach (var id in dayTradeBuysOperationsIds)
             {
                 var dayTradeOperation = movements.Where(x => x.Id == id).Single();
                 dayTradeOperation.DayTraded = true;

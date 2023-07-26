@@ -12,7 +12,7 @@ using stocks_infrastructure.Repositories.AverageTradedPrice;
 
 namespace stocks_core.Services.Hangfire
 {
-    public class AverageTradedPriceUpdaterService : AverageTradedPriceCalculator, IAverageTradedPriceUpdaterService
+    public class AverageTradedPriceUpdaterService : ProfitCalculator, IAverageTradedPriceUpdaterService
     {
         private readonly IAverageTradedPriceRepostory averageTradedPriceRepository;
         private readonly IAccountRepository accountRepository;
@@ -68,7 +68,7 @@ namespace stocks_core.Services.Hangfire
                     List<AverageTradedPriceDetails> updatedAverageTradedPrices = new();
                     updatedAverageTradedPrices.AddRange(ToDtoAverageTradedPriceDetails(averageTradedPrices));
 
-                    var (_, _) = CalculateProfit(movements, updatedAverageTradedPrices);
+                    var (_, _) = Calculate(movements, updatedAverageTradedPrices);
 
                     var tickersToAddIntoDatabase = await GetTradedTickersToAddIntoDatabase(updatedAverageTradedPrices, account);
                     var tickersToUpdateFromDatabase = GetTradedTickersToUpdate(tickersToAddIntoDatabase!, updatedAverageTradedPrices, account);

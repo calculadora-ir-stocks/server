@@ -21,7 +21,7 @@ namespace stocks_core.Responses
     public class Asset
     {
         public Asset(stocks_common.Enums.Asset assetTypeId, string assetName, double taxes, double totalSold,
-            double swingTradeProfit, double dayTradeProfit, IEnumerable<OperationDetailsNew> tradedAssets)
+            double swingTradeProfit, double dayTradeProfit, IEnumerable<OperationDetails> tradedAssets)
         {
             AssetTypeId = assetTypeId;
             AssetName = assetName;
@@ -66,6 +66,6 @@ namespace stocks_core.Responses
         /// <summary>
         /// Uma lista em formato JSON que representa os ativos negociados.
         /// </summary>
-        public IEnumerable<OperationDetailsNew> TradedAssets { get; init; }
+        public IEnumerable<OperationDetails> TradedAssets { get; init; }
     }
 }

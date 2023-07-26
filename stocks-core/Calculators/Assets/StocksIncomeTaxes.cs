@@ -7,16 +7,16 @@ using stocks_core.Models;
 
 namespace stocks_core.Calculators.Assets
 {
-    public class StocksIncomeTaxes : AverageTradedPriceCalculator, IIncomeTaxesCalculator
+    public class StocksIncomeTaxes : ProfitCalculator, IIncomeTaxesCalculator
     {
-        public void CalculateIncomeTaxes(
+        public void Execute(
             List<AssetIncomeTaxes> assetsIncomeTaxes,
             List<AverageTradedPriceDetails> averageTradedPrices,
             IEnumerable<Movement.EquitMovement> movements,
             string month
         )
         {
-            var (dayTradeOperations, swingTradeOperations) = CalculateProfit(movements, averageTradedPrices);
+            var (dayTradeOperations, swingTradeOperations) = Calculate(movements, averageTradedPrices);
 
             var dayTradeProfit = dayTradeOperations.Select(x => x.Profit).Sum();
             var swingTradeProfit = swingTradeOperations.Select(x => x.Profit).Sum();
@@ -27,16 +27,17 @@ namespace stocks_core.Calculators.Assets
             bool sellsSuperiorThan20000 = totalSold >= AliquotConstants.LimitForStocksSelling;
 
             bool paysIncomeTaxes = (sellsSuperiorThan20000 && swingTradeProfit > 0) || (dayTradeProfit > 0);
-            double taxes = paysIncomeTaxes ? (double)CalculateIncomeTaxes(swingTradeProfit, dayTradeProfit, AliquotConstants.IncomeTaxesForStocks) : 0;
 
-            assetsIncomeTaxes.Add(new AssetIncomeTaxes(month, AssetTypeHelper.GetNameByAssetType(Asset.Stocks))
+            assetsIncomeTaxes.Add(new AssetIncomeTaxes
+            (
+                month, AssetTypeHelper.GetNameByAssetType(Asset.Stocks), GetOperationDetails()
+            )
             {
                 AssetTypeId = Asset.Stocks,
-                Taxes = taxes,
+                Taxes = paysIncomeTaxes ? (double)CalculateIncomeTaxes(swingTradeProfit, dayTradeProfit, AliquotConstants.IncomeTaxesForStocks) : 0,
                 TotalSold = totalSold,
                 SwingTradeProfit = swingTradeProfit,
-                DayTradeProfit = dayTradeProfit,
-                TradedAssets = operationDetails
+                DayTradeProfit = dayTradeProfit
             });
         }
     }

@@ -5,10 +5,11 @@ namespace stocks_core.Models
 {
     public class AssetIncomeTaxes
     {
-        public AssetIncomeTaxes(string month, string assetName)
+        public AssetIncomeTaxes(string month, string assetName, IEnumerable<OperationDetails> tradedAssets)
         {
             Month = month;
             AssetName = assetName;
+            TradedAssets = tradedAssets;
         }
 
         /// <summary>
@@ -49,6 +50,6 @@ namespace stocks_core.Models
         /// <summary>
         /// Uma lista em formato JSON que representa os ativos negociados.
         /// </summary>
-        public IEnumerable<OperationDetailsNew> TradedAssets { get; set; }
+        public IEnumerable<OperationDetails> TradedAssets { get; set; }
     }
 }

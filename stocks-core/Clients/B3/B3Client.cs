@@ -1,11 +1,11 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using System.Diagnostics;
+using System.Net;
+using System.Net.Http.Headers;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using stocks.Clients.B3;
 using stocks.DTOs.Auth;
 using stocks_core.DTOs.B3;
-using System.Diagnostics;
-using System.Net;
-using System.Net.Http.Headers;
 
 namespace stocks.Services.B3
 {
@@ -83,8 +83,8 @@ namespace stocks.Services.B3
             int? total = assets?.Data.EquitiesPeriods.EquitiesMovements.Count;
             long seconds = watch.ElapsedMilliseconds / 1000;
 
-            logger.LogInformation($"O usuário {accountId} executou o big bang e importou um total de {total} movimentações. O tempo" +
-                $"de execução foi de {seconds} segundos.");
+            logger.LogInformation("O usuário {accountId} executou o big bang e importou um total de {total} movimentações. O tempo" +
+                "de execução foi de {seconds} segundos.", accountId, total, seconds);
 
             return assets;
         }
@@ -128,18 +128,20 @@ namespace stocks.Services.B3
 
                 root.Links.Next = assets.Links.Next;
                 root.Data.EquitiesPeriods.EquitiesMovements.AddRange(assets.Data.EquitiesPeriods.EquitiesMovements);
-            } catch (Exception e) when (e is OperationCanceledException || e is TaskCanceledException)
+            }
+            catch (Exception e) when (e is OperationCanceledException || e is TaskCanceledException)
             {
                 TripCircuit(reason: $"Timed out");
                 return;
-            } finally
+            }
+            finally
             {
                 GetAllMovementsSemaphore.Release();
-            }                
+            }
 
             // https://t.ly/p27y
             await GetAccountMovementsInAllPages(root);
-        }       
+        }
 
         public async Task<Position.Root> GetAccountPosition(string cpf, string referenceDate, string? nextUrl = null)
         {

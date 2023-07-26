@@ -95,6 +95,65 @@ public class AssetsService : IAssetsService
         }
     }
 
+    private bool AlreadyHasAverageTradedPrice(Guid accountId) =>
+        averageTradedPriceRepository.AlreadyHasAverageTradedPrice(accountId);
+
+    private async Task SaveIncomeTaxes((List<AssetIncomeTaxes>, List<AverageTradedPriceDetails>) response, Guid accountId)
+    {
+        Account account = genericRepositoryAccount.GetById(accountId);
+
+        List<stocks_infrastructure.Models.IncomeTaxes> incomeTaxes = new();
+        CreateIncomeTaxes(response.Item1, incomeTaxes, account);
+
+        List<AverageTradedPrice> averageTradedPrices = new();
+        CreateAverageTradedPrices(response.Item2, averageTradedPrices, account);
+
+        // TO-DO: unit of work
+        await incomeTaxesRepository.AddAllAsync(incomeTaxes);
+        await averageTradedPriceRepository.AddAllAsync(averageTradedPrices);
+    }
+
+    private static void CreateAverageTradedPrices(List<AverageTradedPriceDetails> response, List<AverageTradedPrice> averageTradedPrices, Account account)
+    {
+        foreach (var averageTradedPrice in response)
+        {
+            averageTradedPrices.Add(new AverageTradedPrice
+            (
+               averageTradedPrice.TickerSymbol,
+               averageTradedPrice.AverageTradedPrice,
+               averageTradedPrice.TradedQuantity,
+               account,
+               updatedAt: DateTime.UtcNow
+            ));
+        }
+    }
+
+    private static void CreateIncomeTaxes(List<AssetIncomeTaxes> assets, List<stocks_infrastructure.Models.IncomeTaxes> incomeTaxes, Account account)
+    {
+        foreach (var asset in assets)
+        {
+            if (MovementHadProfitOrLoss(asset))
+            {
+                incomeTaxes.Add(new stocks_infrastructure.Models.IncomeTaxes
+                {
+                    Month = asset.Month,
+                    TotalTaxes = asset.Taxes,
+                    TotalSold = asset.TotalSold,
+                    SwingTradeProfit = asset.SwingTradeProfit,
+                    DayTradeProfit = asset.DayTradeProfit,
+                    TradedAssets = JsonConvert.SerializeObject(asset.TradedAssets),
+                    Account = account,
+                    AssetId = (int)asset.AssetTypeId
+                });
+            }
+        }
+    }
+
+    private static bool MovementHadProfitOrLoss(AssetIncomeTaxes asset)
+    {
+        return asset.SwingTradeProfit != 0 || asset.DayTradeProfit != 0;
+    }
+
     private static void AddBigBangDataSet(Movement.Root response)
     {
         response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
@@ -223,65 +282,6 @@ public class AssetsService : IAssetsService
         });
     }
 
-    private bool AlreadyHasAverageTradedPrice(Guid accountId) =>
-        averageTradedPriceRepository.AlreadyHasAverageTradedPrice(accountId);
-
-    private async Task SaveIncomeTaxes((List<AssetIncomeTaxes>, List<AverageTradedPriceDetails>) response, Guid accountId)
-    {
-        Account account = genericRepositoryAccount.GetById(accountId);
-
-        List<stocks_infrastructure.Models.IncomeTaxes> incomeTaxes = new();
-        CreateIncomeTaxes(response.Item1, incomeTaxes, account);
-
-        List<AverageTradedPrice> averageTradedPrices = new();
-        CreateAverageTradedPrices(response.Item2, averageTradedPrices, account);
-
-        // TO-DO: unit of work
-        await incomeTaxesRepository.AddAllAsync(incomeTaxes);
-        await averageTradedPriceRepository.AddAllAsync(averageTradedPrices);
-    }
-
-    private void CreateAverageTradedPrices(List<AverageTradedPriceDetails> response, List<AverageTradedPrice> averageTradedPrices, Account account)
-    {
-        foreach (var averageTradedPrice in response)
-        {
-            averageTradedPrices.Add(new AverageTradedPrice
-            (
-               averageTradedPrice.TickerSymbol,
-               averageTradedPrice.AverageTradedPrice,
-               averageTradedPrice.TradedQuantity,
-               account,
-               updatedAt: DateTime.UtcNow
-            ));
-        }
-    }
-
-    private void CreateIncomeTaxes(List<AssetIncomeTaxes> assets, List<stocks_infrastructure.Models.IncomeTaxes> incomeTaxes, Account account)
-    {
-        foreach (var asset in assets)
-        {
-            if (MovementHadProfitOrLoss(asset))
-            {
-                incomeTaxes.Add(new stocks_infrastructure.Models.IncomeTaxes
-                {
-                    Month = asset.Month,
-                    TotalTaxes = asset.Taxes,
-                    TotalSold = asset.TotalSold,
-                    SwingTradeProfit = asset.SwingTradeProfit,
-                    DayTradeProfit = asset.DayTradeProfit,
-                    TradedAssets = JsonConvert.SerializeObject(asset.TradedAssets),
-                    Account = account,
-                    AssetId = (int)asset.AssetTypeId
-                });
-            }
-        }
-    }
-
-    private bool MovementHadProfitOrLoss(AssetIncomeTaxes asset)
-    {
-        return asset.SwingTradeProfit != 0 || asset.DayTradeProfit != 0;
-    }
-
     #endregion
 
     #region Calcula o imposto de renda do mês atual.
@@ -334,7 +334,7 @@ public class AssetsService : IAssetsService
         return yesterday.Month < DateTime.Now.Month;
     }
 
-    private MonthTaxesResponse CurrentMonthToDto(List<AssetIncomeTaxes> item1)
+    private static MonthTaxesResponse CurrentMonthToDto(List<AssetIncomeTaxes> item1)
     {
         double totalTaxes = item1.Select(x => x.Taxes).Sum();
         List<stocks_core.Responses.Asset> tradedAssets = new();
@@ -358,7 +358,7 @@ public class AssetsService : IAssetsService
         );
     }
 
-    private void AddCurrentMonthSet(Movement.Root response)
+    private static void AddCurrentMonthSet(Movement.Root response)
     {
         response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
         {
@@ -463,7 +463,7 @@ public class AssetsService : IAssetsService
         }
     }
 
-    private MonthTaxesResponse SpecifiedMonthToDto(IEnumerable<SpecifiedMonthAssetsIncomeTaxesDto> taxes)
+    private static MonthTaxesResponse SpecifiedMonthToDto(IEnumerable<SpecifiedMonthAssetsIncomeTaxesDto> taxes)
     {
         double totalMonthTaxes = taxes.Select(x => x.Taxes).Sum();
         List<stocks_core.Responses.Asset> tradedAssets = new();
@@ -477,7 +477,7 @@ public class AssetsService : IAssetsService
                 tax.TotalSold,
                 tax.SwingTradeProfit,
                 tax.DayTradeProfit,
-                JsonConvert.DeserializeObject<IEnumerable<OperationDetailsNew>>(tax.TradedAssets)
+                JsonConvert.DeserializeObject<IEnumerable<OperationDetails>>(tax.TradedAssets)
             ));
         }
 
@@ -487,7 +487,7 @@ public class AssetsService : IAssetsService
         );
     }
 
-    private bool WorkerDidNotSaveDataForThisMonthYet(string month)
+    private static bool WorkerDidNotSaveDataForThisMonthYet(string month)
     {
         string currentMonth = DateTime.Now.ToString("yyyy-MM");
         return month == currentMonth;

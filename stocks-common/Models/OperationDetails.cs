@@ -1,8 +1,8 @@
 namespace common.Models;
 
-public class OperationDetailsNew
+public class OperationDetails
 {
-    public OperationDetailsNew(
+    public OperationDetails(
         string day,
         string tickerSymbol,
         string corporationName,
