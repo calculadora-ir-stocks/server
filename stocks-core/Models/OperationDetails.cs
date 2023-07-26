@@ -4,9 +4,9 @@ public class OperationDetails
 {
     public OperationDetails(
         string day,
+        string dayOfTheWeek,
         string tickerSymbol,
         string corporationName,
-        string dayOfTheWeek,
         string operation,
         int quantity,
         double value,
@@ -14,9 +14,9 @@ public class OperationDetails
     )
     {
         Day = day;
+        DayOfTheWeek = dayOfTheWeek;
         TickerSymbol = tickerSymbol;
         CorporationName = corporationName;
-        DayOfTheWeek = dayOfTheWeek;
         Operation = operation;
         Quantity = quantity;
         Value = value;
@@ -24,9 +24,9 @@ public class OperationDetails
     }
 
     public string Day { get; protected set; }
+    public string DayOfTheWeek { get; init; }
     public string TickerSymbol { get; init; }
     public string CorporationName { get; init; }
-    public string DayOfTheWeek { get; init; }
     public string Operation { get; init; }
     public int Quantity { get; init; }
     public double Value { get; init; }

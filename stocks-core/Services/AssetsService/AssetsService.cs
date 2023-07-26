@@ -353,7 +353,7 @@ public class AssetsService : IAssetsService
         }
 
         return new MonthTaxesResponse(
-            taxes: totalTaxes,
+            totalTaxes: totalTaxes,
             tradedAssets
         );
     }
