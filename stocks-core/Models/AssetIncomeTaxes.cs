@@ -1,14 +1,14 @@
 ﻿using stocks_common.Enums;
-using stocks_common.Models;
 
 namespace stocks_core.Models
 {
     public class AssetIncomeTaxes
     {
-        public AssetIncomeTaxes(string month, string assetName)
+        public AssetIncomeTaxes(string month, string assetName, IEnumerable<OperationDetails> tradedAssets)
         {
             Month = month;
             AssetName = assetName;
+            TradedAssets = tradedAssets;
         }
 
         /// <summary>

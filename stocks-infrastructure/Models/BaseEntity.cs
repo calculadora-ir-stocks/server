@@ -1,6 +1,6 @@
-﻿using FluentValidation;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using FluentValidation;
 
 namespace stocks_infrastructure.Models
 {
@@ -14,8 +14,10 @@ namespace stocks_infrastructure.Models
         // Notification pattern validations.
         [NotMapped]
         public FluentValidation.Results.ValidationResult ValidationResult { get; private set; }
+
         [NotMapped]
         public bool IsValid { get; protected set; }
+
         [NotMapped]
         public bool IsInvalid => !IsValid;
 

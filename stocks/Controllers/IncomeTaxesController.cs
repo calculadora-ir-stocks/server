@@ -13,12 +13,10 @@ namespace stocks.Controllers;
 public class IncomeTaxesController : BaseController
 {
     private readonly IAssetsService service;
-    private readonly IAverageTradedPriceUpdaterService testService;
 
-    public IncomeTaxesController(IAssetsService service, IAverageTradedPriceUpdaterService testService)
+    public IncomeTaxesController(IAssetsService service)
     {
         this.service = service;
-        this.testService = testService;
     }
 
     /// <summary>

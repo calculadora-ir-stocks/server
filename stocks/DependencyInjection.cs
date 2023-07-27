@@ -52,9 +52,7 @@ namespace stocks
 
             services.AddTransient<IJwtCommon, JwtCommon>();
 
-#pragma warning disable ASP5001 // Type or member is obsolete
-            services.AddMvc(options => options.Filters.Add<NotificationFilter>()).SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
-#pragma warning restore ASP5001 // Type or member is obsolete
+            services.AddMvc(options => options.Filters.Add<NotificationFilter>());
 
             services.Configure<AppSettings>(options =>
             {

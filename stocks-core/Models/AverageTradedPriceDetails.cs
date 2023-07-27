@@ -1,6 +1,4 @@
-﻿using stocks_common.Enums;
-
-namespace stocks_common.Models
+﻿namespace stocks_core.Models
 {
     public class AverageTradedPriceDetails
     {
@@ -23,11 +21,6 @@ namespace stocks_common.Models
             TotalBought = totalBought;
             TradedQuantity = tradedQuantity;
             AverageTradedPrice = totalBought / tradedQuantity;
-        }
-
-        public void UpdateQuantity(int quantity)
-        {
-            TradedQuantity = quantity;
         }
     }
 }

@@ -84,11 +84,7 @@ namespace stocks.Services.B3
             long seconds = watch.ElapsedMilliseconds / 1000;
 
             logger.LogInformation("O usuário {accountId} executou o big bang e importou um total de {total} movimentações. O tempo" +
-                "de execução foi de {seconds} segundos.",
-                accountId,
-                total,
-                seconds
-            );
+                "de execução foi de {seconds} segundos.", accountId, total, seconds);
 
             return assets;
         }

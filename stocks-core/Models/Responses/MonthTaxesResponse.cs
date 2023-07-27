@@ -1,34 +1,34 @@
-﻿using stocks_common.Models;
+﻿using stocks_core.Models;
 
 namespace stocks_core.Responses
 {
     public class MonthTaxesResponse
     {
-        public MonthTaxesResponse(double taxes, List<Asset> tradedAssets)
+        public MonthTaxesResponse(double totalTaxes, List<Asset> tradedAssets)
         {
-            Taxes = taxes;
+            TotalTaxes = totalTaxes;
             TradedAssets = tradedAssets;
         }
 
         /// <summary>
         /// O total de imposto a ser pago.
         /// </summary>
-        public double Taxes { get; init; }
+        public double TotalTaxes { get; init; }
         public List<Asset> TradedAssets { get; init; }
     }
 
     public class Asset
     {
-        public Asset(stocks_common.Enums.Asset assetTypeId, string assetName, double taxes, double totalSold,
-            double swingTradeProfit, double dayTradeProfit, IEnumerable<OperationDetails> tradedAssets)
+        public Asset(stocks_common.Enums.Asset assetTypeId, string assetTypeName, double taxes, double totalSold,
+            double swingTradeProfit, double dayTradeProfit, IEnumerable<OperationDetails> assets)
         {
             AssetTypeId = assetTypeId;
-            AssetName = assetName;
+            AssetTypeName = assetTypeName;
             Taxes = taxes;
             TotalSold = totalSold;
             SwingTradeProfit = swingTradeProfit;
             DayTradeProfit = dayTradeProfit;
-            TradedAssets = tradedAssets;
+            Assets = assets;
         }
 
 
@@ -40,7 +40,7 @@ namespace stocks_core.Responses
         /// <summary>
         /// O nome do tipo de ativo sendo negociado.
         /// </summary>
-        public string AssetName { get; init; }
+        public string AssetTypeName { get; init; }
 
         /// <summary>
         /// Total a ser pago em imposto de renda referente a um ativo.
@@ -65,6 +65,6 @@ namespace stocks_core.Responses
         /// <summary>
         /// Uma lista em formato JSON que representa os ativos negociados.
         /// </summary>
-        public IEnumerable<OperationDetails> TradedAssets { get; init; }
+        public IEnumerable<OperationDetails> Assets { get; init; }
     }
 }

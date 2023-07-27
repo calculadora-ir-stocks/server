@@ -3,16 +3,16 @@ using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using stocks.Clients.B3;
 using stocks.Repositories.Account;
-using stocks_common.Models;
 using stocks_core.Calculators;
 using stocks_core.DTOs.B3;
+using stocks_core.Models;
 using stocks_infrastructure.Dtos;
 using stocks_infrastructure.Models;
 using stocks_infrastructure.Repositories.AverageTradedPrice;
 
 namespace stocks_core.Services.Hangfire
 {
-    public class AverageTradedPriceUpdaterService : AverageTradedPriceCalculator, IAverageTradedPriceUpdaterService
+    public class AverageTradedPriceUpdaterService : ProfitCalculator, IAverageTradedPriceUpdaterService
     {
         private readonly IAverageTradedPriceRepostory averageTradedPriceRepository;
         private readonly IAccountRepository accountRepository;
@@ -55,7 +55,7 @@ namespace stocks_core.Services.Hangfire
                     List<AverageTradedPriceDetails> updatedAverageTradedPrices = new();
                     updatedAverageTradedPrices.AddRange(ToDtoAverageTradedPriceDetails(averageTradedPrices));
 
-                    var (_, _) = CalculateProfit(movements, updatedAverageTradedPrices);
+                    var (_, _) = Calculate(movements, updatedAverageTradedPrices);
 
                     var tickersToAddIntoDatabase = await GetTradedTickersToAddIntoDatabase(updatedAverageTradedPrices, account);
                     var tickersToUpdateFromDatabase = GetTradedTickersToUpdate(tickersToAddIntoDatabase!, updatedAverageTradedPrices, account);
