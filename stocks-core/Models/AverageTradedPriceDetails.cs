@@ -22,10 +22,5 @@
             TradedQuantity = tradedQuantity;
             AverageTradedPrice = totalBought / tradedQuantity;
         }
-
-        public void UpdateQuantity(int quantity)
-        {
-            TradedQuantity = quantity;
-        }
     }
 }

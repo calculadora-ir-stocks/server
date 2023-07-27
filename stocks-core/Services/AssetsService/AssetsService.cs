@@ -56,6 +56,8 @@ public class AssetsService : IAssetsService
                 throw new InvalidBusinessRuleException("O preço médio e o imposto de renda para esse usuário já foram calculados.");
             }
 
+            Account account = await genericRepositoryAccount.GetByIdAsync(accountId);
+
             // A B3 apenas possui dados a partir de 01/11/2019.
             string startDate = "2019-11-01";
 
@@ -63,22 +65,10 @@ public class AssetsService : IAssetsService
                 .AddMonths(-1)
                 .ToString("yyyy-MM-dd");
 
-            // var b3Response = await b3Client.GetAccountMovement(account.CPF, startDate, yesterday, accountId);
+            // var b3Response = await b3Client.GetAccountMovement(account.CPF, startDate, lastMonth, accountId);
+            var b3Response = GetBigBangMockedDataBeforeB3Contract();
 
-            Movement.Root? response = new()
-            {
-                Data = new()
-                {
-                    EquitiesPeriods = new()
-                    {
-                        EquitiesMovements = new()
-                    }
-                }
-            };
-
-            AddBigBangDataSet(response);
-
-            var taxesAndAverageTradedPrices = await incomeTaxesService.Execute(response, accountId);
+            var taxesAndAverageTradedPrices = await incomeTaxesService.Execute(b3Response, accountId);
 
             await SaveIncomeTaxes(taxesAndAverageTradedPrices, accountId);
 
@@ -91,6 +81,24 @@ public class AssetsService : IAssetsService
 
             throw;
         }
+    }
+
+    private static Movement.Root? GetBigBangMockedDataBeforeB3Contract()
+    {
+        Movement.Root? b3Response = new()
+        {
+            Data = new()
+            {
+                EquitiesPeriods = new()
+                {
+                    EquitiesMovements = new()
+                }
+            }
+        };
+
+        AddBigBangDataSet(b3Response);
+
+        return b3Response;
     }
 
     private bool AlreadyHasAverageTradedPrice(Guid accountId) =>
@@ -305,20 +313,9 @@ public class AssetsService : IAssetsService
 
             Account account = await genericRepositoryAccount.GetByIdAsync(accountId);
 
-            // var b3Response = await b3Client.GetAccountMovement(account.CPF, startDate, , request.AccountId);
+            // var b3Response = await b3Client.GetAccountMovement(account.CPF, startDate, yesterday, account.Id);
+            var b3Response = GetCurrentMonthMockedDataBeforeB3Contract();
 
-            Movement.Root? b3Response = new()
-            {
-                Data = new()
-                {
-                    EquitiesPeriods = new()
-                    {
-                        EquitiesMovements = new()
-                    }
-                }
-            };
-
-            AddCurrentMonthSet(b3Response);
 
             var response = await incomeTaxesService.Execute(b3Response, account.Id);
 
@@ -329,6 +326,24 @@ public class AssetsService : IAssetsService
             logger.LogError(e, "Ocorreu um erro ao calcular o imposto mensal devido. {e.Message}", e.Message);
             throw;
         }
+    }
+
+    private static Movement.Root? GetCurrentMonthMockedDataBeforeB3Contract()
+    {
+        Movement.Root? b3Response = new()
+        {
+            Data = new()
+            {
+                EquitiesPeriods = new()
+                {
+                    EquitiesMovements = new()
+                }
+            }
+        };
+
+        AddCurrentMonthSet(b3Response);
+
+        return b3Response;
     }
 
     private static bool IsDayOne()

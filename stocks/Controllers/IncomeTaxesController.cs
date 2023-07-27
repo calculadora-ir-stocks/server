@@ -13,19 +13,10 @@ namespace stocks.Controllers;
 public class IncomeTaxesController : BaseController
 {
     private readonly IAssetsService service;
-    private readonly IAverageTradedPriceUpdaterService testService;
 
-    public IncomeTaxesController(IAssetsService service, IAverageTradedPriceUpdaterService testService)
+    public IncomeTaxesController(IAssetsService service)
     {
         this.service = service;
-        this.testService = testService;
-    }
-
-    [HttpPost("test-hangfire")]
-    public async Task<IActionResult> TestHangFire()
-    {
-        await testService.Execute();
-        return Ok();
     }
 
     /// <summary>
@@ -72,7 +63,8 @@ public class IncomeTaxesController : BaseController
     /// Calcula o imposto de renda de criptomoedas.
     /// </summary>
     [HttpPost("cryptocurrency")]
-    public IActionResult CalculateCryptocurrency() {
+    public IActionResult CalculateCryptocurrency()
+    {
         return Ok();
     }
 
@@ -80,7 +72,8 @@ public class IncomeTaxesController : BaseController
     /// Calcula o imposto de renda de NFTs (kkkkk).
     /// </summary>
     [HttpPost("nfts")]
-    public IActionResult CalculateNFTs() {
+    public IActionResult CalculateNFTs()
+    {
         return Ok();
     }
 }
