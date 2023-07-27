@@ -154,6 +154,10 @@ public class AssetsService : IAssetsService
         return asset.SwingTradeProfit != 0 || asset.DayTradeProfit != 0;
     }
 
+    /// <summary>
+    /// Retorna dados mockados da API da B3 para testes locais antes da contratação.
+    /// Deve ser removido após a implementação do serviço de produção.
+    /// </summary>
     private static void AddBigBangDataSet(Movement.Root response)
     {
         response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
@@ -358,6 +362,10 @@ public class AssetsService : IAssetsService
         );
     }
 
+    /// <summary>
+    /// Retorna dados mockados da API da B3 para testes locais antes da contratação.
+    /// Deve ser removido após a implementação do serviço de produção.
+    /// </summary>
     private static void AddCurrentMonthSet(Movement.Root response)
     {
         response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
