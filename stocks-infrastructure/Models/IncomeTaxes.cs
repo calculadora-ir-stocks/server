@@ -46,12 +46,12 @@ namespace stocks_infrastructure.Models
         public string TradedAssets { get; set; }
 
         /// <summary>
-        /// Define se o prejuízo de swing trade já foi compensado em algum pagamento. É NULL caso
+        /// Define se o prejuízo de swing-trade já foi compensado em algum pagamento. É NULL caso
         /// o investidor não tenha tido prejuízo no mês.
         public bool? CompesatedSwingTradeLoss { get; set; }
 
         /// <summary>
-        /// Define se o prejuízo de swing trade já foi compensado em algum pagamento. É NULL caso
+        /// Define se o prejuízo de day-trade já foi compensado em algum pagamento. É NULL caso
         /// o investidor não tenha tido prejuízo no mês.
         public bool? CompesatedDayTradeLoss { get; set; }
         public Account Account { get; set; }

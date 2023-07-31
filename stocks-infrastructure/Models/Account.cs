@@ -1,8 +1,7 @@
-﻿using DevOne.Security.Cryptography.BCrypt;
+﻿using System.Text.RegularExpressions;
+using DevOne.Security.Cryptography.BCrypt;
 using FluentValidation;
 using stocks.Enums;
-using stocks_infrastructure.Models;
-using System.Text.RegularExpressions;
 
 namespace stocks_infrastructure.Models
 {
