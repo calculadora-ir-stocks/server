@@ -16,7 +16,7 @@ namespace stocks_core.Calculators.Assets
             string month
         )
         {
-            var (dayTradeOperations, swingTradeOperations) = Calculate(movements, averageTradedPrices);
+            var (dayTradeOperations, swingTradeOperations) = CalculateProfit(movements, averageTradedPrices);
 
             double dayTradeProfit = dayTradeOperations.Select(x => x.Profit).Sum();
             double swingTradeProfit = swingTradeOperations.Select(x => x.Profit).Sum();

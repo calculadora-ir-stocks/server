@@ -55,7 +55,7 @@ namespace stocks_core.Services.Hangfire
                     List<AverageTradedPriceDetails> updatedAverageTradedPrices = new();
                     updatedAverageTradedPrices.AddRange(ToDtoAverageTradedPriceDetails(averageTradedPrices));
 
-                    var (_, _) = Calculate(movements, updatedAverageTradedPrices);
+                    var (_, _) = CalculateProfit(movements, updatedAverageTradedPrices);
 
                     var tickersToAddIntoDatabase = await GetTradedTickersToAddIntoDatabase(updatedAverageTradedPrices, account);
                     var tickersToUpdateFromDatabase = GetTradedTickersToUpdate(tickersToAddIntoDatabase!, updatedAverageTradedPrices, account);

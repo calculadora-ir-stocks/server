@@ -16,7 +16,7 @@ namespace stocks_core.Calculators
         /// <summary>
         /// Retorna o lucro de todas as movimentações especificadas em operações swing-trade e day-trade.
         /// </summary>
-        public static (List<MovementProperties> dayTrade, List<MovementProperties> swingTrade) Calculate
+        public static (List<MovementProperties> dayTrade, List<MovementProperties> swingTrade) CalculateProfit
             (IEnumerable<Movement.EquitMovement> movements, List<AverageTradedPriceDetails> movementsAverageTradedPrices)
         {
             List<MovementProperties> dayTrade = new();

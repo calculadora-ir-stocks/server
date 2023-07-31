@@ -48,7 +48,7 @@ public class AssetsService : IAssetsService
     {
         try
         {
-            if (AlreadyHasAverageTradedPrice(accountId))
+            if (AlreadyExecutedBigBang(accountId))
             {
                 logger.LogInformation("Big bang foi executado para o usuário {accountId}, mas ele já possui o preço médio e imposto de renda " +
                     $"calculado na base.", accountId);
@@ -101,7 +101,7 @@ public class AssetsService : IAssetsService
         return b3Response;
     }
 
-    private bool AlreadyHasAverageTradedPrice(Guid accountId) =>
+    private bool AlreadyExecutedBigBang(Guid accountId) =>
         averageTradedPriceRepository.AlreadyHasAverageTradedPrice(accountId);
 
     private async Task SaveIncomeTaxes((List<AssetIncomeTaxes>, List<AverageTradedPriceDetails>) response, Guid accountId)
