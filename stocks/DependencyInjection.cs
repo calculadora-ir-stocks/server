@@ -87,7 +87,8 @@ namespace stocks
         public static void Add3rdPartiesClientConfigurations(this IServiceCollection services)
         {
             var handler = new HttpClientHandler();
-            AddCertificate(handler);
+            // TO-DO: uncomment for production
+            // AddCertificate(handler);
 
             services.AddHttpClient("B3", c =>
                 c.BaseAddress = new Uri("https://apib3i-cert.b3.com.br:2443/api/")).ConfigurePrimaryHttpMessageHandler(() => handler)
