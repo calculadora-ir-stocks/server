@@ -8,7 +8,7 @@ namespace stocks.Controllers;
 /// <summary>
 /// Responsável por calcular o imposto de renda dos ativos de renda variável.
 /// </summary>
-[Tags("Income taxes")]
+[Tags("Taxes")]
 public class TaxesController : BaseController
 {
     private readonly IAssetsService service;
@@ -19,9 +19,9 @@ public class TaxesController : BaseController
     }
 
     /// <summary>
-    /// Retorna todas as informações referentes a impostos em renda variável do mês atual.
+    /// Retorna todas as informações referentes a impostos do mês atual.
     /// </summary>
-    [HttpGet("assets/current/{accountId}")]
+    [HttpGet("current/{accountId}")]
     public async Task<IActionResult> GetCurrentMonthTaxes(Guid accountId)
     {
         var response = await service.GetCurrentMonthTaxes(accountId);
@@ -33,10 +33,10 @@ public class TaxesController : BaseController
     }
 
     /// <summary>
-    /// Retorna todas as informações referentes a impostos em renda variável no mês especificado.
+    /// Retorna todas as informações referentes a impostos no mês especificado.
     /// Formato: MM-yyyy
     /// </summary>
-    [HttpGet("assets/month/{month}/{accountId}")]
+    [HttpGet("month/{month}/{accountId}")]
     public async Task<IActionResult> GetSpecifiedMonthTaxes(string month, Guid accountId)
     {
         var response = await service.GetSpecifiedMonthTaxes(month, accountId);
@@ -47,10 +47,10 @@ public class TaxesController : BaseController
     }
 
     /// <summary>
-    /// Retorna todas as informações referentes a impostos em renda variável no ano especificado.
+    /// Retorna todas os meses em que há imposto a ser pago no ano especificado.
     /// Formato: yyyy
     /// </summary>
-    [HttpGet("assets/year/{year}/{accountId}")]
+    [HttpGet("year/{year}/{accountId}")]
     public async Task<IActionResult> GetSpecifiedYearTaxes(string year, Guid accountId)
     {
         var response = await service.GetSpecifiedYearTaxes(year, accountId);
@@ -61,10 +61,10 @@ public class TaxesController : BaseController
     }
 
     /// <summary>
-    /// Altera o mês especificado como pago/não pago.\n
+    /// Altera o mês especificado como pago/não pago.
     /// Formato: MM-yyyy
     /// </summary>
-    [HttpPut("assets/set-paid-or-unpaid/{month}/{accountId}")]
+    [HttpPut("set-paid-or-unpaid/{month}/{accountId}")]
     public async Task<IActionResult> SetMonthAsPaid(string month, Guid accountId)
     {
         await service.SetMonthAsPaidOrUnpaid(month, accountId);

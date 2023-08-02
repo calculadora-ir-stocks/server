@@ -12,7 +12,7 @@ using stocks_core.Services.IncomeTaxes;
 using stocks_infrastructure.Dtos;
 using stocks_infrastructure.Models;
 using stocks_infrastructure.Repositories.AverageTradedPrice;
-using stocks_infrastructure.Repositories.IncomeTaxes;
+using stocks_infrastructure.Repositories.Taxes;
 
 namespace stocks.Services.IncomeTaxes;
 
@@ -21,7 +21,7 @@ public class AssetsService : IAssetsService
     private readonly IIncomeTaxesService incomeTaxesService;
 
     private readonly IGenericRepository<Account> genericRepositoryAccount;
-    private readonly IIncomeTaxesRepository incomeTaxesRepository;
+    private readonly ITaxesRepository taxesRepository;
     private readonly IAverageTradedPriceRepostory averageTradedPriceRepository;
 
     private readonly IB3Client b3Client;
@@ -29,7 +29,7 @@ public class AssetsService : IAssetsService
 
     public AssetsService(IIncomeTaxesService incomeTaxesService,
         IGenericRepository<Account> genericRepositoryAccount,
-        IIncomeTaxesRepository incomeTaxesRepository,
+        ITaxesRepository incomeTaxesRepository,
         IAverageTradedPriceRepostory averageTradedPriceRepository,
         IB3Client b3Client,
         ILogger<AssetsService> logger
@@ -37,7 +37,7 @@ public class AssetsService : IAssetsService
     {
         this.incomeTaxesService = incomeTaxesService;
         this.genericRepositoryAccount = genericRepositoryAccount;
-        this.incomeTaxesRepository = incomeTaxesRepository;
+        this.taxesRepository = incomeTaxesRepository;
         this.averageTradedPriceRepository = averageTradedPriceRepository;
         this.b3Client = b3Client;
         this.logger = logger;
@@ -115,7 +115,7 @@ public class AssetsService : IAssetsService
         CreateAverageTradedPrices(response.Item2, averageTradedPrices, account);
 
         // TO-DO: unit of work
-        await incomeTaxesRepository.AddAllAsync(incomeTaxes);
+        await taxesRepository.AddAllAsync(incomeTaxes);
         await averageTradedPriceRepository.AddAllAsync(averageTradedPrices);
     }
 
@@ -352,12 +352,12 @@ public class AssetsService : IAssetsService
         return yesterday.Month < DateTime.Now.Month;
     }
 
-    private static MonthTaxesResponse CurrentMonthToDto(List<AssetIncomeTaxes> item1)
+    private static MonthTaxesResponse CurrentMonthToDto(List<AssetIncomeTaxes> assets)
     {
-        double totalTaxes = item1.Select(x => x.Taxes).Sum();
+        double totalTaxes = assets.Select(x => x.Taxes).Sum();
         List<stocks_core.Responses.Asset> tradedAssets = new();
 
-        foreach (var item in item1)
+        foreach (var item in assets)
         {
             tradedAssets.Add(new stocks_core.Responses.Asset(
                 item.AssetTypeId,
@@ -474,7 +474,7 @@ public class AssetsService : IAssetsService
                 throw new InvalidBusinessRuleException("Para obter as informações de impostos do mês atual, acesse /assets/current.");
             }
 
-            var response = await incomeTaxesRepository.GetSpecifiedMonthAssetsIncomeTaxes(System.Net.WebUtility.UrlDecode(month), accountId);
+            var response = await taxesRepository.GetSpecifiedMonthTaxes(System.Net.WebUtility.UrlDecode(month), accountId);
 
             return SpecifiedMonthToDto(response);
         }
@@ -521,7 +521,7 @@ public class AssetsService : IAssetsService
     {
         try
         {
-            var response = await incomeTaxesRepository.GetSpecifiedYearAssetsIncomeTaxes(System.Net.WebUtility.UrlDecode(year), accountId);
+            var response = await taxesRepository.GetSpecifiedYearTaxes(System.Net.WebUtility.UrlDecode(year), accountId);
             return ToSpecifiedYearDto(response);
         }
         catch (Exception e)
@@ -571,7 +571,7 @@ public class AssetsService : IAssetsService
     {
         try
         {
-            await incomeTaxesRepository.SetMonthAsPaidOrUnpaid(System.Net.WebUtility.UrlDecode(month), accountId);
+            await taxesRepository.SetMonthAsPaidOrUnpaid(System.Net.WebUtility.UrlDecode(month), accountId);
         }
         catch (Exception e)
         {

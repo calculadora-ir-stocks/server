@@ -3,13 +3,13 @@ using Microsoft.EntityFrameworkCore;
 using stocks.Database;
 using stocks_infrastructure.Dtos;
 
-namespace stocks_infrastructure.Repositories.IncomeTaxes
+namespace stocks_infrastructure.Repositories.Taxes
 {
-    public class IncomeTaxesRepository : IIncomeTaxesRepository
+    public class TaxesRepository : ITaxesRepository
     {
         private readonly StocksContext context;
 
-        public IncomeTaxesRepository(StocksContext context)
+        public TaxesRepository(StocksContext context)
         {
             this.context = context;
         }
@@ -29,7 +29,7 @@ namespace stocks_infrastructure.Repositories.IncomeTaxes
             await context.SaveChangesAsync();
         }
 
-        public async Task<IEnumerable<SpecifiedMonthTaxesDto>> GetSpecifiedMonthAssetsIncomeTaxes(string month, Guid accountId)
+        public async Task<IEnumerable<SpecifiedMonthTaxesDto>> GetSpecifiedMonthTaxes(string month, Guid accountId)
         {
             DynamicParameters parameters = new();
 
@@ -56,7 +56,7 @@ namespace stocks_infrastructure.Repositories.IncomeTaxes
             return response;
         }
 
-        public async Task<IEnumerable<SpecifiedYearTaxesDto>> GetSpecifiedYearAssetsIncomeTaxes(string year, Guid accountId)
+        public async Task<IEnumerable<SpecifiedYearTaxesDto>> GetSpecifiedYearTaxes(string year, Guid accountId)
         {
             DynamicParameters parameters = new();
 

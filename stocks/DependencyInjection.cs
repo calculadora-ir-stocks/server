@@ -25,7 +25,7 @@ using stocks_core.Calculators.Assets;
 using stocks_core.Services.Hangfire;
 using stocks_core.Services.IncomeTaxes;
 using stocks_infrastructure.Repositories.AverageTradedPrice;
-using stocks_infrastructure.Repositories.IncomeTaxes;
+using stocks_infrastructure.Repositories.Taxes;
 
 namespace stocks
 {
@@ -116,7 +116,7 @@ namespace stocks
             services.AddTransient(typeof(IGenericRepository<>), typeof(GenericRepository<>));
             services.AddTransient<IAccountRepository, AccountRepository>();
             services.AddTransient<IAverageTradedPriceRepostory, AverageTradedPriceRepository>();
-            services.AddTransient<IIncomeTaxesRepository, IncomeTaxesRepository>();
+            services.AddTransient<ITaxesRepository, TaxesRepository>();
         }
 
         public static void AddJwtAuthentications(this IServiceCollection services, WebApplicationBuilder builder)
@@ -164,7 +164,7 @@ namespace stocks
                 options.SwaggerDoc("v1", new OpenApiInfo
                 {
                     Version = "v1",
-                    Title = "Stocks - plataforma para pagamento e declaração de IR.",
+                    Title = "Stocks - plataforma para pagamento de imposto na bolsa de valores.",
                 });
 
                 options.AddSecurityDefinition(jwtSecurityScheme.Reference.Id, jwtSecurityScheme);
