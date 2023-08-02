@@ -5,6 +5,7 @@ using stocks.Exceptions;
 using stocks.Repositories;
 using stocks_core.DTOs.B3;
 using stocks_core.Models;
+using stocks_core.Models.Responses;
 using stocks_core.Requests.BigBang;
 using stocks_core.Responses;
 using stocks_core.Services.IncomeTaxes;
@@ -24,7 +25,6 @@ public class AssetsService : IAssetsService
     private readonly IAverageTradedPriceRepostory averageTradedPriceRepository;
 
     private readonly IB3Client b3Client;
-
     private readonly ILogger<AssetsService> logger;
 
     public AssetsService(IIncomeTaxesService incomeTaxesService,
@@ -297,7 +297,7 @@ public class AssetsService : IAssetsService
     #endregion
 
     #region Calcula o imposto de renda do mês atual.
-    public async Task<MonthTaxesResponse> CalculateCurrentMonthAssetsIncomeTaxes(Guid accountId)
+    public async Task<MonthTaxesResponse> GetCurrentMonthTaxes(Guid accountId)
     {
         try
         {
@@ -305,7 +305,7 @@ public class AssetsService : IAssetsService
             if (IsDayOne())
             {
                 // Porém, sendo dia 1, o Worker já salvou os dados do mês passado na base.
-                return await CalculateSpecifiedMonthAssetsIncomeTaxes(DateTime.Now.ToString("yyyy-MM"), accountId);
+                return await GetSpecifiedMonthTaxes(DateTime.Now.ToString("yyyy-MM"), accountId);
             }
 
             string startDate = DateTime.Now.ToString("yyyy-MM-01");
@@ -466,7 +466,7 @@ public class AssetsService : IAssetsService
     #endregion
 
     #region Calcula o imposto de renda do mês especificado.
-    public async Task<MonthTaxesResponse> CalculateSpecifiedMonthAssetsIncomeTaxes(string month, Guid accountId)
+    public async Task<MonthTaxesResponse> GetSpecifiedMonthTaxes(string month, Guid accountId)
     {
         try
         {
@@ -486,7 +486,7 @@ public class AssetsService : IAssetsService
         }
     }
 
-    private static MonthTaxesResponse SpecifiedMonthToDto(IEnumerable<SpecifiedMonthAssetsIncomeTaxesDto> taxes)
+    private static MonthTaxesResponse SpecifiedMonthToDto(IEnumerable<SpecifiedMonthTaxesDto> taxes)
     {
         double totalMonthTaxes = taxes.Select(x => x.Taxes).Sum();
         List<stocks_core.Responses.Asset> tradedAssets = new();
@@ -514,6 +514,55 @@ public class AssetsService : IAssetsService
     {
         string currentMonth = DateTime.Now.ToString("yyyy-MM");
         return month == currentMonth;
+    }
+    #endregion
+
+    #region Calcula o imposto de renda do ano especificado
+    public async Task<IEnumerable<YearTaxesResponse>> GetSpecifiedYearTaxes(string year, Guid accountId)
+    {
+        try
+        {
+            var response = await incomeTaxesRepository.GetSpecifiedYearAssetsIncomeTaxes(System.Net.WebUtility.UrlDecode(year), accountId);
+            return ToSpecifiedYearDto(response);
+        }
+        catch (Exception e)
+        {
+            logger.LogError(e, "Ocorreu um erro ao calcular um imposto mensal devido especificado. {e.Message}", e.Message);
+            throw;
+        }
+    }
+
+    private static IEnumerable<YearTaxesResponse> ToSpecifiedYearDto(IEnumerable<SpecifiedYearTaxesDto> taxes)
+    {
+        List<YearTaxesResponse> response = new();
+
+        foreach (var item in taxes)
+        {
+            if (MonthAlreadyAdded(response, item)) continue;
+
+            // Há registros duplicados para cada mês referente a cada ativo. O front-end
+            // espera o valor total de imposto a ser pago no mês, e não para cada ativo. Por conta disso,
+            // é feito o agrupamento.
+            var taxesByMonth = taxes.Where(x => x.Month == item.Month);
+
+            double totalTaxes = taxesByMonth.Select(x => x.Taxes).Sum();
+            double totalSwingTradeProfit = taxesByMonth.Select(x => x.SwingTradeProfit).Sum();
+            double totalDayTradeProfit = taxesByMonth.Select(x => x.DayTradeProfit).Sum();
+
+            response.Add(new YearTaxesResponse(
+                item.Month,
+                totalTaxes,
+                totalSwingTradeProfit,
+                totalDayTradeProfit
+            ));
+        }
+
+        return response;
+    }
+
+    private static bool MonthAlreadyAdded(IEnumerable<YearTaxesResponse> response, SpecifiedYearTaxesDto item)
+    {
+        return response.Select(x => x.Month).Contains(item.Month);
     }
     #endregion
 }

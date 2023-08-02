@@ -2,7 +2,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using stocks.Services.IncomeTaxes;
 using stocks_core.Requests.BigBang;
-using stocks_core.Services.Hangfire;
 
 namespace stocks.Controllers;
 
@@ -10,22 +9,22 @@ namespace stocks.Controllers;
 /// Responsável por calcular o imposto de renda dos ativos de renda variável.
 /// </summary>
 [Tags("Income taxes")]
-public class IncomeTaxesController : BaseController
+public class TaxesController : BaseController
 {
     private readonly IAssetsService service;
 
-    public IncomeTaxesController(IAssetsService service)
+    public TaxesController(IAssetsService service)
     {
         this.service = service;
     }
 
     /// <summary>
-    /// Calcula o total de imposto de renda a ser pago em ativos de renda variável no mês atual.
+    /// Retorna todas as informações referentes a impostos em renda variável do mês atual.
     /// </summary>
     [HttpGet("assets/current/{accountId}")]
-    public async Task<IActionResult> CalculateCurrentMonthAssetsIncomeTaxes(Guid accountId)
+    public async Task<IActionResult> GetCurrentMonthTaxes(Guid accountId)
     {
-        var response = await service.CalculateCurrentMonthAssetsIncomeTaxes(accountId);
+        var response = await service.GetCurrentMonthTaxes(accountId);
 
         if (response.TradedAssets.IsNullOrEmpty()) return NotFound("Por enquanto não há nenhum imposto de renda a ser pago.");
 
@@ -34,16 +33,28 @@ public class IncomeTaxesController : BaseController
     }
 
     /// <summary>
-    /// Retorna o total de imposto de renda a ser pago em ativos de renda variável no mês especificado.
+    /// Retorna todas as informações referentes a impostos em renda variável no mês especificado.
     /// </summary>
-    [HttpGet("assets/{month}/{accountId}")]
-    public async Task<IActionResult> CalculateSpecifiedMonthAssetsIncomeTaxes(string month, Guid accountId)
+    [HttpGet("assets/month/{month}/{accountId}")]
+    public async Task<IActionResult> GetSpecifiedMonthTaxes(string month, Guid accountId)
     {
-        var response = await service.CalculateSpecifiedMonthAssetsIncomeTaxes(month, accountId);
+        var response = await service.GetSpecifiedMonthTaxes(month, accountId);
 
         if (response.TradedAssets.IsNullOrEmpty()) return NotFound("Nenhum imposto de renda foi encontrado para o mês especificado.");
 
-        // TO-DO: alterar AssetId pelo nome do ativo.
+        return Ok(response);
+    }
+
+    /// <summary>
+    /// Retorna todas as informações referentes a impostos em renda variável no ano especificado.
+    /// </summary>
+    [HttpGet("assets/year/{year}/{accountId}")]
+    public async Task<IActionResult> GetSpecifiedYearTaxes(string year, Guid accountId)
+    {
+        var response = await service.GetSpecifiedYearTaxes(year, accountId);
+
+        if (response.IsNullOrEmpty()) return NotFound("Nenhum imposto de renda foi encontrado para o ano especificado.");
+
         return Ok(response);
     }
 

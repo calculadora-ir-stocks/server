@@ -57,7 +57,7 @@ namespace stocks_core.Calculators
 
             operationDetails.Add(new OperationDetails(
                 movement.ReferenceDate.Day.ToString(),
-                DayOfTheWeekHelper.GetDayOfTheWeek((int)movement.ReferenceDate.DayOfWeek),
+                UtilsHelper.GetDayOfTheWeekName((int)movement.ReferenceDate.DayOfWeek),
                 movement.TickerSymbol,
                 movement.CorporationName,
                 movement.MovementType,
