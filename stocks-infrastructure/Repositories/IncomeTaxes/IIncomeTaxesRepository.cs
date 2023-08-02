@@ -8,5 +8,6 @@ namespace stocks_infrastructure.Repositories.IncomeTaxes
         Task AddAsync(Models.IncomeTaxes incomeTaxes);
         Task<IEnumerable<SpecifiedMonthTaxesDto>> GetSpecifiedMonthAssetsIncomeTaxes(string month, Guid accountId);
         Task<IEnumerable<SpecifiedYearTaxesDto>> GetSpecifiedYearAssetsIncomeTaxes(string year, Guid accountId);
+        Task SetMonthAsPaidOrUnpaid(string month, Guid accountId);
     }
 }

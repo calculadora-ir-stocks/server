@@ -37,9 +37,10 @@ if (app.Environment.IsDevelopment())
         c.SwaggerEndpoint("v1/swagger.json", "Stocks v1")
     );
 
-    app.UseMiddleware<JwtMiddleware>();
-    app.UseMiddleware<CustomExceptionHandlerMiddleware>();
 }
+
+app.UseMiddleware<JwtMiddleware>();
+app.UseMiddleware<CustomExceptionHandlerMiddleware>();
 
 // app.UseHttpsRedirection();
 

@@ -43,7 +43,7 @@ public class AssetsService : IAssetsService
         this.logger = logger;
     }
 
-    #region Calcula todos os impostos de renda retroativos.
+    #region Calcula todos os impostos de renda retroativos (Big Bang).
     public async Task BigBang(Guid accountId, List<BigBangRequest> request)
     {
         try
@@ -316,7 +316,6 @@ public class AssetsService : IAssetsService
             // var b3Response = await b3Client.GetAccountMovement(account.CPF, startDate, yesterday, account.Id);
             var b3Response = GetCurrentMonthMockedDataBeforeB3Contract();
 
-
             var response = await incomeTaxesService.Execute(b3Response, account.Id);
 
             return CurrentMonthToDto(response.Item1);
@@ -563,6 +562,22 @@ public class AssetsService : IAssetsService
     private static bool MonthAlreadyAdded(IEnumerable<YearTaxesResponse> response, SpecifiedYearTaxesDto item)
     {
         return response.Select(x => x.Month).Contains(item.Month);
+    }
+
+    #endregion
+
+    #region Altera um mês como pago/não pago
+    public async Task SetMonthAsPaidOrUnpaid(string month, Guid accountId)
+    {
+        try
+        {
+            await incomeTaxesRepository.SetMonthAsPaidOrUnpaid(System.Net.WebUtility.UrlDecode(month), accountId);
+        }
+        catch (Exception e)
+        {
+            logger.LogError(e, "Ocorreu uma exceção ao marcar um mês como pago/não pago. {message}", e.Message);
+            throw;
+        }
     }
     #endregion
 }

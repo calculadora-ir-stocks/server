@@ -81,5 +81,26 @@ namespace stocks_infrastructure.Repositories.IncomeTaxes
 
             return response;
         }
+
+        public async Task SetMonthAsPaidOrUnpaid(string month, Guid accountId)
+        {
+            DynamicParameters parameters = new();
+
+            parameters.Add("@Month", month);
+            parameters.Add("@AccountId", accountId);
+
+            string sql = @"
+                UPDATE ""IncomeTaxes"" i
+                SET ""Paid"" =
+                    (CASE
+                        WHEN i.""Paid"" = TRUE THEN FALSE
+                        ELSE TRUE
+                    END)
+                WHERE i.""Month"" = @Month AND i.""AccountId"" = @AccountId;
+            ";
+
+            var connection = context.Database.GetDbConnection();
+            await connection.QueryAsync(sql, parameters);
+        }
     }
 }

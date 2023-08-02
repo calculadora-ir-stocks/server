@@ -27,4 +27,8 @@ public interface IAssetsService
     /// </summary>
     Task BigBang(Guid accountId, List<BigBangRequest> request);
 
+    /// <summary>
+    /// Marca o mês especificado como pago/não pago.
+    /// </summary>
+    Task SetMonthAsPaidOrUnpaid(string month, Guid accountId);
 }

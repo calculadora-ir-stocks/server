@@ -34,6 +34,7 @@ public class TaxesController : BaseController
 
     /// <summary>
     /// Retorna todas as informações referentes a impostos em renda variável no mês especificado.
+    /// Formato: MM-yyyy
     /// </summary>
     [HttpGet("assets/month/{month}/{accountId}")]
     public async Task<IActionResult> GetSpecifiedMonthTaxes(string month, Guid accountId)
@@ -47,6 +48,7 @@ public class TaxesController : BaseController
 
     /// <summary>
     /// Retorna todas as informações referentes a impostos em renda variável no ano especificado.
+    /// Formato: yyyy
     /// </summary>
     [HttpGet("assets/year/{year}/{accountId}")]
     public async Task<IActionResult> GetSpecifiedYearTaxes(string year, Guid accountId)
@@ -59,7 +61,17 @@ public class TaxesController : BaseController
     }
 
     /// <summary>
-    /// (Deve ser executado uma única vez quando um usuário cadastrar-se na plataforma)
+    /// Altera o mês especificado como pago/não pago.\n
+    /// Formato: MM-yyyy
+    /// </summary>
+    [HttpPut("assets/set-paid-or-unpaid/{month}/{accountId}")]
+    public async Task<IActionResult> SetMonthAsPaid(string month, Guid accountId)
+    {
+        await service.SetMonthAsPaidOrUnpaid(month, accountId);
+        return Ok("O mês especificado foi alterado para pago/não pago com sucesso.");
+    }
+
+    /// <summary>
     /// Calcula e armazena o imposto de renda a ser pago em todos os meses retroativos.
     /// Também calcula e armazena o preço médio de todos os ativos até a data atual.
     /// </summary>
