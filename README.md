@@ -39,3 +39,5 @@ O código-fonte pode ser desenvolvido, rodado e publicado em todas as multiplata
    ```
    $ dotnet run
    ```
+
+Toda a documentação de request body, responses e rotas dos endpoints estão documentadas no Swagger UI. Para visualizá-lo, acesse `http://localhost:5252/swagger/index.html`
