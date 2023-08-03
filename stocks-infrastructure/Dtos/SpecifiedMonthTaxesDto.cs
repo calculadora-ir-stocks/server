@@ -1,8 +1,8 @@
 ﻿namespace stocks_infrastructure.Dtos
 {
-    public record SpecifiedMonthAssetsIncomeTaxesDto
+    public record SpecifiedMonthTaxesDto
     {
-        public SpecifiedMonthAssetsIncomeTaxesDto(double taxes, double totalSold, double swingTradeProfit, double dayTradeProfit, string tradedAssets, int assetTypeId, string assetName)
+        public SpecifiedMonthTaxesDto(double taxes, double totalSold, double swingTradeProfit, double dayTradeProfit, string tradedAssets, int assetTypeId, string assetName)
         {
             Taxes = taxes;
             TotalSold = totalSold;
@@ -13,7 +13,7 @@
             AssetName = assetName;
         }
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
-        public SpecifiedMonthAssetsIncomeTaxesDto() { }
+        public SpecifiedMonthTaxesDto() { }
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
 
 

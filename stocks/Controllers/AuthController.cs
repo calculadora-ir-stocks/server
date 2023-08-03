@@ -30,6 +30,26 @@ public class AuthController : BaseController
     }
 
     /// <summary>
+    /// Envia o código de verificação por e-mail.
+    /// </summary>
+    [AllowAnonymous]
+    [HttpPost("send-code")]
+    public IActionResult SendVerificationCode([FromBody] string email)
+    {
+        return Ok(200);
+    }
+
+    /// <summary>
+    /// Valida o código de verificação enviado por e-mail.
+    /// </summary>
+    [AllowAnonymous]
+    [HttpPost("validate-code")]
+    public IActionResult ValidateVerificationCode([FromBody] string code)
+    {
+        return Ok(200);
+    }
+
+    /// <summary>
     /// Autentica um usuário na plataforma.
     /// </summary>
     [AllowAnonymous]

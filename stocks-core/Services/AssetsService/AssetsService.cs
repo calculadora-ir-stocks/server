@@ -5,13 +5,14 @@ using stocks.Exceptions;
 using stocks.Repositories;
 using stocks_core.DTOs.B3;
 using stocks_core.Models;
+using stocks_core.Models.Responses;
 using stocks_core.Requests.BigBang;
 using stocks_core.Responses;
 using stocks_core.Services.IncomeTaxes;
 using stocks_infrastructure.Dtos;
 using stocks_infrastructure.Models;
 using stocks_infrastructure.Repositories.AverageTradedPrice;
-using stocks_infrastructure.Repositories.IncomeTaxes;
+using stocks_infrastructure.Repositories.Taxes;
 
 namespace stocks.Services.IncomeTaxes;
 
@@ -20,16 +21,15 @@ public class AssetsService : IAssetsService
     private readonly IIncomeTaxesService incomeTaxesService;
 
     private readonly IGenericRepository<Account> genericRepositoryAccount;
-    private readonly IIncomeTaxesRepository incomeTaxesRepository;
+    private readonly ITaxesRepository taxesRepository;
     private readonly IAverageTradedPriceRepostory averageTradedPriceRepository;
 
     private readonly IB3Client b3Client;
-
     private readonly ILogger<AssetsService> logger;
 
     public AssetsService(IIncomeTaxesService incomeTaxesService,
         IGenericRepository<Account> genericRepositoryAccount,
-        IIncomeTaxesRepository incomeTaxesRepository,
+        ITaxesRepository incomeTaxesRepository,
         IAverageTradedPriceRepostory averageTradedPriceRepository,
         IB3Client b3Client,
         ILogger<AssetsService> logger
@@ -37,13 +37,13 @@ public class AssetsService : IAssetsService
     {
         this.incomeTaxesService = incomeTaxesService;
         this.genericRepositoryAccount = genericRepositoryAccount;
-        this.incomeTaxesRepository = incomeTaxesRepository;
+        this.taxesRepository = incomeTaxesRepository;
         this.averageTradedPriceRepository = averageTradedPriceRepository;
         this.b3Client = b3Client;
         this.logger = logger;
     }
 
-    #region Calcula todos os impostos de renda retroativos.
+    #region Calcula todos os impostos de renda retroativos (Big Bang).
     public async Task BigBang(Guid accountId, List<BigBangRequest> request)
     {
         try
@@ -115,7 +115,7 @@ public class AssetsService : IAssetsService
         CreateAverageTradedPrices(response.Item2, averageTradedPrices, account);
 
         // TO-DO: unit of work
-        await incomeTaxesRepository.AddAllAsync(incomeTaxes);
+        await taxesRepository.AddAllAsync(incomeTaxes);
         await averageTradedPriceRepository.AddAllAsync(averageTradedPrices);
     }
 
@@ -297,7 +297,7 @@ public class AssetsService : IAssetsService
     #endregion
 
     #region Calcula o imposto de renda do mês atual.
-    public async Task<MonthTaxesResponse> CalculateCurrentMonthAssetsIncomeTaxes(Guid accountId)
+    public async Task<MonthTaxesResponse> GetCurrentMonthTaxes(Guid accountId)
     {
         try
         {
@@ -305,7 +305,7 @@ public class AssetsService : IAssetsService
             if (IsDayOne())
             {
                 // Porém, sendo dia 1, o Worker já salvou os dados do mês passado na base.
-                return await CalculateSpecifiedMonthAssetsIncomeTaxes(DateTime.Now.ToString("yyyy-MM"), accountId);
+                return await GetSpecifiedMonthTaxes(DateTime.Now.ToString("yyyy-MM"), accountId);
             }
 
             string startDate = DateTime.Now.ToString("yyyy-MM-01");
@@ -315,7 +315,6 @@ public class AssetsService : IAssetsService
 
             // var b3Response = await b3Client.GetAccountMovement(account.CPF, startDate, yesterday, account.Id);
             var b3Response = GetCurrentMonthMockedDataBeforeB3Contract();
-
 
             var response = await incomeTaxesService.Execute(b3Response, account.Id);
 
@@ -353,12 +352,12 @@ public class AssetsService : IAssetsService
         return yesterday.Month < DateTime.Now.Month;
     }
 
-    private static MonthTaxesResponse CurrentMonthToDto(List<AssetIncomeTaxes> item1)
+    private static MonthTaxesResponse CurrentMonthToDto(List<AssetIncomeTaxes> assets)
     {
-        double totalTaxes = item1.Select(x => x.Taxes).Sum();
+        double totalTaxes = assets.Select(x => x.Taxes).Sum();
         List<stocks_core.Responses.Asset> tradedAssets = new();
 
-        foreach (var item in item1)
+        foreach (var item in assets)
         {
             tradedAssets.Add(new stocks_core.Responses.Asset(
                 item.AssetTypeId,
@@ -466,7 +465,7 @@ public class AssetsService : IAssetsService
     #endregion
 
     #region Calcula o imposto de renda do mês especificado.
-    public async Task<MonthTaxesResponse> CalculateSpecifiedMonthAssetsIncomeTaxes(string month, Guid accountId)
+    public async Task<MonthTaxesResponse> GetSpecifiedMonthTaxes(string month, Guid accountId)
     {
         try
         {
@@ -475,7 +474,7 @@ public class AssetsService : IAssetsService
                 throw new InvalidBusinessRuleException("Para obter as informações de impostos do mês atual, acesse /assets/current.");
             }
 
-            var response = await incomeTaxesRepository.GetSpecifiedMonthAssetsIncomeTaxes(System.Net.WebUtility.UrlDecode(month), accountId);
+            var response = await taxesRepository.GetSpecifiedMonthTaxes(System.Net.WebUtility.UrlDecode(month), accountId);
 
             return SpecifiedMonthToDto(response);
         }
@@ -486,7 +485,7 @@ public class AssetsService : IAssetsService
         }
     }
 
-    private static MonthTaxesResponse SpecifiedMonthToDto(IEnumerable<SpecifiedMonthAssetsIncomeTaxesDto> taxes)
+    private static MonthTaxesResponse SpecifiedMonthToDto(IEnumerable<SpecifiedMonthTaxesDto> taxes)
     {
         double totalMonthTaxes = taxes.Select(x => x.Taxes).Sum();
         List<stocks_core.Responses.Asset> tradedAssets = new();
@@ -514,6 +513,71 @@ public class AssetsService : IAssetsService
     {
         string currentMonth = DateTime.Now.ToString("yyyy-MM");
         return month == currentMonth;
+    }
+    #endregion
+
+    #region Calcula o imposto de renda do ano especificado
+    public async Task<IEnumerable<YearTaxesResponse>> GetSpecifiedYearTaxes(string year, Guid accountId)
+    {
+        try
+        {
+            var response = await taxesRepository.GetSpecifiedYearTaxes(System.Net.WebUtility.UrlDecode(year), accountId);
+            return ToSpecifiedYearDto(response);
+        }
+        catch (Exception e)
+        {
+            logger.LogError(e, "Ocorreu um erro ao calcular um imposto mensal devido especificado. {e.Message}", e.Message);
+            throw;
+        }
+    }
+
+    private static IEnumerable<YearTaxesResponse> ToSpecifiedYearDto(IEnumerable<SpecifiedYearTaxesDto> taxes)
+    {
+        List<YearTaxesResponse> response = new();
+
+        foreach (var item in taxes)
+        {
+            if (MonthAlreadyAdded(response, item)) continue;
+
+            // Há registros duplicados para cada mês referente a cada ativo. O front-end
+            // espera o valor total de imposto a ser pago no mês, e não para cada ativo. Por conta disso,
+            // é feito o agrupamento.
+            var taxesByMonth = taxes.Where(x => x.Month == item.Month);
+
+            double totalTaxes = taxesByMonth.Select(x => x.Taxes).Sum();
+            double totalSwingTradeProfit = taxesByMonth.Select(x => x.SwingTradeProfit).Sum();
+            double totalDayTradeProfit = taxesByMonth.Select(x => x.DayTradeProfit).Sum();
+
+            response.Add(new YearTaxesResponse(
+                item.Month,
+                totalTaxes,
+                totalSwingTradeProfit,
+                totalDayTradeProfit
+            ));
+        }
+
+        return response;
+    }
+
+    private static bool MonthAlreadyAdded(IEnumerable<YearTaxesResponse> response, SpecifiedYearTaxesDto item)
+    {
+        return response.Select(x => x.Month).Contains(item.Month);
+    }
+
+    #endregion
+
+    #region Altera um mês como pago/não pago
+    public async Task SetMonthAsPaidOrUnpaid(string month, Guid accountId)
+    {
+        try
+        {
+            await taxesRepository.SetMonthAsPaidOrUnpaid(System.Net.WebUtility.UrlDecode(month), accountId);
+        }
+        catch (Exception e)
+        {
+            logger.LogError(e, "Ocorreu uma exceção ao marcar um mês como pago/não pago. {message}", e.Message);
+            throw;
+        }
     }
     #endregion
 }

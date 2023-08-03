@@ -30,14 +30,23 @@ namespace stocks_infrastructure.Models
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.None)]
         public Guid Id { get; protected set; } = Guid.NewGuid();
+
         public string Month { get; set; }
 
         /// <summary>
         /// https://www.youtube.com/watch?v=VMwqYLSPg_c
         /// </summary>
         public double TotalTaxes { get; set; }
+
         public double TotalSold { get; set; }
+
+        /// <summary>
+        /// Define se o imposto do mês específico já foi pago.
+        /// </summary>
+        public bool Paid { get; set; } = false;
+
         public double SwingTradeProfit { get; set; }
+
         public double DayTradeProfit { get; set; }
 
         /// <summary>
@@ -54,6 +63,7 @@ namespace stocks_infrastructure.Models
         /// Define se o prejuízo de day-trade já foi compensado em algum pagamento. É NULL caso
         /// o investidor não tenha tido prejuízo no mês.
         public bool? CompesatedDayTradeLoss { get; set; }
+
         public Account Account { get; set; }
 
         /// <summary>
