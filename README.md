@@ -3,7 +3,7 @@
 O *stocks-server* é a aplicação server-side do Stocks. Possui as principais APIs, bancos de dados e outros componentes relacionados à infraestrutura do projeto que são obrigatórios para o funcionamento
 do *stocks-client*.  
 
-A aplicação é escrita em C#, utiliza o framework [.NET Core 6](https://dotnet.microsoft.com/en-us/download/dotnet/6.0) e o banco de dados relacional e código-aberto utilizado é o Postgres.    
+A aplicação é escrita em C#, utiliza o framework [.NET Core 6](https://dotnet.microsoft.com/en-us/download/dotnet/6.0) e o banco de dados relacional e código-aberto Postgres.    
 
 O código-fonte pode ser desenvolvido, rodado e publicado em todas as multiplataformas tais como Windows, macOS e distribuições Linux.  
 
