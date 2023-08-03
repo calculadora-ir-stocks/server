@@ -27,9 +27,9 @@ namespace stocks_unit_tests.Business
             List<AssetIncomeTaxes> response = new();
             List<AverageTradedPriceDetails> averageTradedPrice = new();
 
-            stocksCalculator.CalculateIncomeTaxes(response, averageTradedPrice, movements, "1");
+            stocksCalculator.Execute(response, averageTradedPrice, movements, "1");
 
-            AssetIncomeTaxes stocksResponse = 
+            AssetIncomeTaxes stocksResponse =
                 response.Where(x => x.AssetTypeId == Asset.Stocks).Single();
 
             decimal twentyPercentTaxes = (AliquotConstants.IncomeTaxesForDayTrade / 100m) * (decimal)stocksResponse.DayTradeProfit;
@@ -78,7 +78,7 @@ namespace stocks_unit_tests.Business
             List<AssetIncomeTaxes> response = new();
             List<AverageTradedPriceDetails> averageTradedPrice = new();
 
-            stocksCalculator.CalculateIncomeTaxes(response, averageTradedPrice, movements, "1");
+            stocksCalculator.Execute(response, averageTradedPrice, movements, "1");
 
             AssetIncomeTaxes stocksResponse =
                 response.Where(x => x.AssetTypeId == Asset.Stocks).Single();
@@ -143,7 +143,7 @@ namespace stocks_unit_tests.Business
             List<AssetIncomeTaxes> response = new();
             List<AverageTradedPriceDetails> averageTradedPrice = new();
 
-            stocksCalculator.CalculateIncomeTaxes(response, averageTradedPrice, movements, "1");
+            stocksCalculator.Execute(response, averageTradedPrice, movements, "1");
 
             AssetIncomeTaxes stocksResponse =
                 response.Where(x => x.AssetTypeId == Asset.Stocks).Single();
