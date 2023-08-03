@@ -5,7 +5,7 @@ do *stocks-client*.
 
 A aplicação é escrita em C#, utiliza o framework [.NET Core 6](https://dotnet.microsoft.com/en-us/download/dotnet/6.0) e o banco de dados relacional e código-aberto Postgres.    
 
-O código-fonte pode ser desenvolvido, rodado e publicado em todas as multiplataformas tais como Windows, macOS e distribuições Linux.  
+O código-fonte pode ser desenvolvido, executado e publicado em todas as multiplataformas tais como Windows, macOS e distribuições Linux.  
 
 ## Documentação para desenvolvedores
 
