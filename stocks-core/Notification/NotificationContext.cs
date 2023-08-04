@@ -18,6 +18,14 @@ namespace stocks.Notification
             _notifications.Add(new Notification(message));
         }
 
+        public void AddNotifications(IEnumerable<string> messages)
+        {
+            foreach (var message in messages)
+            {
+                _notifications.Add(new Notification(message));
+            }
+        }
+
         public void AddNotifications(ValidationResult validationResult)
         {
             foreach (var error in validationResult.Errors)

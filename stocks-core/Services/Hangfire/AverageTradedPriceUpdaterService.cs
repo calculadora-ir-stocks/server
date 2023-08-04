@@ -49,6 +49,8 @@ namespace stocks_core.Services.Hangfire
 
                     var lastMonthMovements = await client.GetAccountMovement(account.CPF, lastMonthFirstDay, lastMonthFinalDay, account.Id);
 
+                    if (lastMonthMovements is null) return; 
+
                     var movements = lastMonthMovements.Data.EquitiesPeriods.EquitiesMovements;
                     var averageTradedPrices = await GetTradedAverageTradedPrices(movements, account.Id);
 
@@ -93,7 +95,7 @@ namespace stocks_core.Services.Hangfire
             IEnumerable<AverageTradedPrice>? tickersToUpdate,
             IEnumerable<AverageTradedPriceDetails> updatedAverageTradedPrices,
             IEnumerable<string?> tickersToRemove,
-            Account account
+            stocks_infrastructure.Models.Account account
         )
         {
             if (!tickersToAdd.IsNullOrEmpty())
@@ -174,7 +176,7 @@ namespace stocks_core.Services.Hangfire
         /// Para isso, compara os tickers que precisam ser adicionados com os tickers que foram negociados.
         /// </summary>
         private List<AverageTradedPrice>? GetTradedTickersToUpdate(
-            IEnumerable<AverageTradedPrice> tickersToAdd, List<AverageTradedPriceDetails> updatedPrices, Account account
+            IEnumerable<AverageTradedPrice> tickersToAdd, List<AverageTradedPriceDetails> updatedPrices, stocks_infrastructure.Models.Account account
         )
         {
             var tickersToUpdate = updatedPrices.Select(x => x.TickerSymbol).Except(tickersToAdd.Select(x => x.Ticker)).ToList();
@@ -182,7 +184,7 @@ namespace stocks_core.Services.Hangfire
         }
 
         private async Task<IEnumerable<AverageTradedPrice>?> GetTradedTickersToAddIntoDatabase(
-            List<AverageTradedPriceDetails> tradedAssets, Account account
+            List<AverageTradedPriceDetails> tradedAssets, stocks_infrastructure.Models.Account account
         )
         {
             var tickersInvestorAlreadyHas =

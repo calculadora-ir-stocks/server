@@ -1,8 +1,8 @@
 version: '3'
 
 services:
-  stocks-server:
-    container_name: stocks-server
+  app:
+    container_name: app
     build:
       context: .
       dockerfile: Dockerfile

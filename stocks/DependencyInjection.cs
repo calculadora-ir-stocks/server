@@ -22,6 +22,7 @@ using stocks.Services.IncomeTaxes;
 using stocks_common;
 using stocks_core.Calculators;
 using stocks_core.Calculators.Assets;
+using stocks_core.Services.Account;
 using stocks_core.Services.Hangfire;
 using stocks_core.Services.IncomeTaxes;
 using stocks_infrastructure.Repositories.AverageTradedPrice;
@@ -39,6 +40,7 @@ namespace stocks
             services.AddScoped<IAssetsService, AssetsService>();
             services.AddScoped<IIncomeTaxesService, IncomeTaxesService>();
             services.AddScoped<IAverageTradedPriceUpdaterService, AverageTradedPriceUpdaterService>();
+            services.AddScoped<IAccountService, AccountService>();
             services.AddSingleton<IB3Client, B3Client>();
             services.AddScoped<NotificationContext>();
 

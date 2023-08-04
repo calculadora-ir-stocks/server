@@ -9,6 +9,7 @@ namespace stocks.Controllers;
 /// Responsável por calcular o imposto de renda dos ativos de renda variável.
 /// </summary>
 [Tags("Taxes")]
+// TODO [Authorize]
 public class TaxesController : BaseController
 {
     private readonly IAssetsService service;

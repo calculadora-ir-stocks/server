@@ -19,25 +19,20 @@ builder.Services.AddJwtAuthentications(builder);
 // Obligatory lower case routing
 builder.Services.AddRouting(options => options.LowercaseUrls = true);
 builder.Services.AddDatabase(builder);
-builder.Services.AddHangFireRecurringJob(builder);
+//builder.Services.AddHangFireRecurringJob(builder);
 builder.Services.AddSwaggerConfiguration();
 
 builder.Services.Configure<AppSettings>(builder.Configuration.GetSection("AppSettings"));
 
 var app = builder.Build();
 
-app.UseHangfireDashboard("/dashboard");
+//app.UseHangfireDashboard("/dashboard");
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
+app.UseSwagger();
 
-    app.UseSwaggerUI(c =>
-        c.SwaggerEndpoint("v1/swagger.json", "Stocks v1")
-    );
-
-}
+app.UseSwaggerUI(c =>
+    c.SwaggerEndpoint("v1/swagger.json", "Stocks v1")
+);
 
 app.UseMiddleware<JwtMiddleware>();
 app.UseMiddleware<CustomExceptionHandlerMiddleware>();
