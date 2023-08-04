@@ -1,5 +1,6 @@
 ﻿using Dapper;
 using stocks.Database;
+using stocks_infrastructure.Models;
 
 namespace stocks.Repositories.Account
 {
@@ -18,9 +19,6 @@ namespace stocks.Repositories.Account
             return _context.Accounts.Any(x => x.Email == email);
         }
 
-        /// <summary>
-        /// Obtém todos os ids e seus respectivos CPFs.
-        /// </summary>
         public IEnumerable<stocks_infrastructure.Models.Account> GetAllAccounts()
         {
             return _context.Accounts.AsList();
@@ -31,9 +29,15 @@ namespace stocks.Repositories.Account
             return _context.Accounts.AsEnumerable().SingleOrDefault(x => x.Email == email);
         }
 
-        public void UpdatePassword(string currentPassword, string newPassword)
+        public stocks_infrastructure.Models.Account? GetById(Guid accountId)
         {
-            throw new NotImplementedException();
+            return _context.Accounts.Where(x => x.Id == accountId).FirstOrDefault();
+        }
+
+        public void UpdatePassword(Guid accountId, stocks_infrastructure.Models.Account account)
+        {
+            _context.Update(account);
+            _context.SaveChanges();
         }
     }
 }

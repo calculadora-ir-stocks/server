@@ -23,7 +23,7 @@ namespace stocks_infrastructure.Models
 
         public string Name { get; protected set; }
         public string Email { get; protected set; }
-        public string Password { get; protected set; }
+        public string Password { get; set; }
         public string CPF { get; protected set; }
         public ICollection<AverageTradedPrice>? AverageTradedPrices { get; protected set; }
         public ICollection<IncomeTaxes>? IncomeTaxes { get; set; }
@@ -31,6 +31,7 @@ namespace stocks_infrastructure.Models
 
         public void HashPassword(string password)
         {
+            // Move to object property set
             Password = BCryptHelper.HashPassword(password, BCryptHelper.GenerateSalt());
         }
     }
