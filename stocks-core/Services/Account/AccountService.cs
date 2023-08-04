@@ -34,6 +34,7 @@ namespace stocks_core.Services.Account
                 if (account is null) throw new NullReferenceException($"O usuário de id {accountId} não foi encontrado na base de dados.");
                 if (account.Password == password) throw new InvalidBusinessRuleException("A nova senha não pode ser igual a senha atual.");
 
+                // TODO: create helper to validate password
                 account.Password = password;
 
                 AccountValidator validator = new();
