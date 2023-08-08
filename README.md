@@ -30,3 +30,9 @@ A execução da aplicação pode ser feita através do Docker. Para isso, certif
    ```
 
 O Swagger UI é utilizado para a documentação de todos os endpoints do servidor. Para visualizá-lo, acesse `http://localhost:8080/swagger/index.html`.
+
+## Custos técnicos da aplicação
+
+[Hangfire](https://www.hangfire.io/) utilizado para a atualização de preço médio de todos os investidores mensalmente no dia 01.   
+[SendGrind](https://sendgrid.com/) utilizado para o envio de código para verificar o e-mail no cadastro e autorizar a exclusão de uma conta.   
+[PagSeguro](https://pagseguro.uol.com.br/) utilizado para processar o pagamento dos planos pagos.
