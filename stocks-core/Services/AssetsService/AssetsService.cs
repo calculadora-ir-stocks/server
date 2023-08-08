@@ -374,6 +374,30 @@ public class AssetsService : IAssetsService
             totalTaxes: totalTaxes,
             tradedAssets
         );
+
+        /*
+         * "A vida não é só isso."
+         * 
+         * Na verdade, essa frase é verdadeira em absolutamente qualquer cenário possível. A vida não se resume à ciência da computação
+         * e isso vale para mim. Se você é um botânico, a vida não se resume a biologia; se você é um engenheiro,
+         * a vida não se resume a engenharia; se você é um físico, a vida não se resume a matemática.
+         * 
+         * Todos os exemplos são únicos campos de estudo. Mesmo assim, a premissa prevalence mesmo se você for um polímata. Se
+         * você for um cientista da computação, botânico, engenheiro e físico, ainda assim estará distante da sociologia, da filosofia
+         * e da retórica - ou seja, a vida continua não sendo apenas isso.
+         * 
+         * Se a vida não é o que escolhemos nos dedicar a estudar, o que mais resta para sê-la?
+         * 
+         * Mesmo quando aproveitamos pequenos e especiais momentos, estamos deixando de lado muitas outras coisas - então a premissa
+         * principal ainda prevalece - ou seja, a vida não é o seu campo de estudo nem os seus pequenos proveitos e lazeres.
+         * 
+         * Alguns argumentam que a vida é estudo, mas ainda resta o que ser vivido.
+         * Alguns argumentam que a vida é aproveitar os momentos, mas ainda resta o que ser vivido.
+         * Alguns argumentam que a vida é vencer, mas vencer é subjetivo quando já se vence.
+         * Alguns argumentam que a vida é prazer, como Salomão, mas ainda sim o prazer é subjetivo.
+         * 
+         * Vai ver a vida é apenas sentir e refletir sobre ela.
+         * */
     }
 
     /// <summary>
