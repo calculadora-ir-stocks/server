@@ -2,6 +2,7 @@
 using stocks.Exceptions;
 using stocks.Notification;
 using stocks.Repositories.Account;
+using stocks.Services.B3;
 using stocks_infrastructure.Models;
 
 namespace stocks_core.Services.Account
@@ -20,9 +21,20 @@ namespace stocks_core.Services.Account
             this.logger = logger;
         }
 
-        public void DeleteAccount(Guid accountId)
+        public void Delete(Guid accountId)
         {
-            throw new NotImplementedException();
+            try
+            {
+                var account = repository.GetById(accountId);
+                if (account is null) throw new NullReferenceException($"O usuário de id {accountId} não foi encontrado na base de dados.");
+
+                repository.Delete(account);
+            }
+            catch (Exception e)
+            {
+                logger.LogError(e, "Ocorreu um erro ao alterar a senha do usuário, {error}", e.Message);
+                throw;
+            }
         }
 
         public void UpdatePassword(Guid accountId, string password)
@@ -30,11 +42,10 @@ namespace stocks_core.Services.Account
             try
             {
                 var account = repository.GetById(accountId);
-
                 if (account is null) throw new NullReferenceException($"O usuário de id {accountId} não foi encontrado na base de dados.");
-                if (account.Password == password) throw new InvalidBusinessRuleException("A nova senha não pode ser igual a senha atual.");
 
-                // TODO: create helper to validate password
+                ValidateNewPassword(account, password);                
+
                 account.Password = password;
 
                 AccountValidator validator = new();
@@ -42,8 +53,8 @@ namespace stocks_core.Services.Account
 
                 if (validatorResult.Errors.Any())
                 {
-                    IEnumerable<string> messageErrors = validatorResult.Errors.Select(x => x.ErrorMessage);
-                    notificationContext.AddNotifications(messageErrors);
+                    IEnumerable<string> messageError = validatorResult.Errors.Select(x => x.ErrorMessage);
+                    notificationContext.AddNotifications(messageError);
                 }
 
                 account.HashPassword(password);
@@ -53,6 +64,11 @@ namespace stocks_core.Services.Account
                 logger.LogError(e, "Ocorreu um erro ao alterar a senha do usuário, {error}", e.Message);
                 throw;
             }
+        }
+
+        private void ValidateNewPassword(stocks_infrastructure.Models.Account account, string password)
+        {
+            if (account.Password == password) throw new InvalidBusinessRuleException("A nova senha não pode ser igual à senha atual.");
         }
     }
 }

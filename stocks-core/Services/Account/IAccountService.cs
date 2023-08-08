@@ -10,7 +10,6 @@
         /// <summary>
         /// Deleta fisicamente o usuário da base e desvincula sua conta com a B3.
         /// </summary>
-        /// <param name="accountId"></param>
-        void DeleteAccount(Guid accountId);
+        void Delete(Guid accountId);
     }
 }
