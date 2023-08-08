@@ -1,6 +1,5 @@
 ﻿using Dapper;
 using stocks.Database;
-using stocks_infrastructure.Models;
 
 namespace stocks.Repositories.Account
 {
@@ -17,6 +16,12 @@ namespace stocks.Repositories.Account
         public bool AccountExists(string email)
         {
             return _context.Accounts.Any(x => x.Email == email);
+        }
+
+        public void Delete(stocks_infrastructure.Models.Account account)
+        {
+            _context.Accounts.Remove(account);
+            _context.SaveChanges();
         }
 
         public IEnumerable<stocks_infrastructure.Models.Account> GetAllAccounts()
