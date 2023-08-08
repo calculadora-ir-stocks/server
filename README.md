@@ -3,41 +3,30 @@
 O *stocks-server* é a aplicação server-side do Stocks. Possui as principais APIs, bancos de dados e outros componentes relacionados à infraestrutura do projeto que são obrigatórios para o funcionamento
 do *stocks-client*.  
 
-A aplicação é escrita em C#, utiliza o framework [.NET Core 6](https://dotnet.microsoft.com/en-us/download/dotnet/6.0) e o banco de dados relacional e código-aberto utilizado é o Postgres.    
+A aplicação é escrita em C#, utiliza o framework [.NET Core 6](https://dotnet.microsoft.com/en-us/download/dotnet/6.0) e o banco de dados relacional e código-aberto Postgres.    
 
-O código-fonte pode ser desenvolvido, rodado e publicado em todas as multiplataformas tais como Windows, macOS e distribuições Linux.  
+O código-fonte pode ser desenvolvido, executado e publicado em todas as multiplataformas tais como Windows, macOS e distribuições Linux.  
 
 ## Documentação para desenvolvedores
 
-1. Certifique-se que você possui o .NET Core 6 instalado em sua máquina. Para isso, [realize o download](https://dotnet.microsoft.com/en-us/download/dotnet/6.0) na página oficial da Microsoft.
+A execução da aplicação pode ser feita através do Docker. Para isso, certifique-se que você possui o [Docker instalado](https://www.docker.com/products/docker-desktop/) em sua máquina.
    
-2. Faça o download da aplicação na sua máquina local:
+1. Faça o download da aplicação na sua máquina local:
    
    ```
    git clone https://github.com/calculadora-ir-stocks/stocks-server.git  
    ```
   
-3. Acesse o diretório da aplicação:
+2. Acesse o diretório da aplicação:
 
    ```
    $ cd stocks-server/
    ```
    
-4. Restaure todas as dependências do projeto:
+3. Execute a aplicação através do Docker Compose na raíz do projeto:
 
    ```
-   $ dotnet restore
-   ```
-  
-5. Acesse o diretório Web da aplicação:
-
-   ```
-   $ cd stocks/
+   $ docker compose up app
    ```
 
-6. Por fim, rode a aplicação (dentro do diretório Web):
-   ```
-   $ dotnet run
-   ```
-
-Toda a documentação de request body, responses e rotas dos endpoints estão documentadas no Swagger UI. Para visualizá-lo, acesse `http://localhost:5252/swagger/index.html`
+O Swagger UI é utilizado para a documentação de todos os endpoints do servidor. Para visualizá-lo, acesse `http://localhost:8080/swagger/index.html`.
