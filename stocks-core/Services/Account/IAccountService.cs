@@ -11,5 +11,7 @@
         /// Deleta fisicamente o usuário da base e desvincula sua conta com a B3.
         /// </summary>
         void Delete(Guid accountId);
+        Task SendEmailVerification(Guid accountId);
+        bool IsEmailVerificationCodeValid(Guid accountId, string code);
     }
 }

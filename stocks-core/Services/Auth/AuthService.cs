@@ -6,6 +6,7 @@ using stocks.Exceptions;
 using stocks.Notification;
 using stocks.Repositories;
 using stocks.Repositories.Account;
+using stocks_core.Services.EmailSender;
 using stocks_infrastructure.Models;
 
 namespace stocks.Services.Auth
@@ -15,19 +16,25 @@ namespace stocks.Services.Auth
 
         private readonly IAccountRepository accountRepository;
         private readonly IGenericRepository<Account> accountGenericRepository;
-        private readonly IJwtCommon _jwtUtils;
+        private readonly IJwtCommon jwtUtils;
 
-        private readonly NotificationContext _notificationContext;
+
+        private readonly NotificationContext notificationContext;
 
         private readonly ILogger<AuthService> logger;
 
-        public AuthService(IAccountRepository accountRepository, IGenericRepository<Account> accountGenericRepository,
-            IJwtCommon jwtUtils, NotificationContext notificationContext, ILogger<AuthService> logger)
+        public AuthService(
+            IAccountRepository accountRepository,
+            IGenericRepository<Account> accountGenericRepository,
+            IJwtCommon jwtUtils,
+            NotificationContext notificationContext,
+            ILogger<AuthService> logger
+        )
         {
             this.accountRepository = accountRepository;
             this.accountGenericRepository = accountGenericRepository;
-            _jwtUtils = jwtUtils;
-            _notificationContext = notificationContext;
+            this.jwtUtils = jwtUtils;
+            this.notificationContext = notificationContext;
             this.logger = logger;
         }
 
@@ -40,9 +47,12 @@ namespace stocks.Services.Auth
                 if (account is null)
                     return null;
 
+                if (!account.AuthenticationCodeValidated) 
+                    throw new InvalidBusinessRuleException("Você ainda não confirmou o seu e-mail no cadastro da sua conta.");
+
                 if (BCryptHelper.CheckPassword(request.Password, account?.Password))
                 {
-                    return _jwtUtils.GenerateToken(new stocks_common.Models.AccountDto
+                    return jwtUtils.GenerateToken(new stocks_common.Models.AccountDto
                     (
                         account!.Id,
                         account!.Name,
@@ -66,17 +76,16 @@ namespace stocks.Services.Auth
         {
             Account account = new(request.Name, request.Email, request.Password, request.CPF);
 
-            if (IsValidSignUp(account))
-            {
-                account.HashPassword(account.Password);
+            if (!IsValidSignUp(account)) return;
 
-                try
-                {
-                    accountGenericRepository.Add(account);
-                } catch(Exception e)
-                {
-                    logger.LogError($"Ocorreu um erro ao tentar registrar o usuário {account.Id}. {e.Message}");
-                }
+            account.HashPassword(account.Password);
+
+            try
+            {
+                accountGenericRepository.Add(account);
+            } catch(Exception e)
+            {
+                logger.LogError($"Ocorreu um erro ao tentar registrar o usuário {account.Id}. {e.Message}");
             }
         }
 
@@ -89,9 +98,10 @@ namespace stocks.Services.Auth
 
                 if (account.IsInvalid)
                 {
-                    _notificationContext.AddNotifications(account.ValidationResult);
+                    notificationContext.AddNotifications(account.ValidationResult);
                     return false;
                 }
+
             } catch (Exception e)
             {
                 logger.LogError($"Ocorreu um erro tentar validar se o usuário {account.Id} já está cadastrado" +

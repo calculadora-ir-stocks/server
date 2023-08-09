@@ -23,9 +23,11 @@ using stocks_common;
 using stocks_core.Calculators;
 using stocks_core.Calculators.Assets;
 using stocks_core.Services.Account;
+using stocks_core.Services.EmailSender;
 using stocks_core.Services.Hangfire;
 using stocks_core.Services.IncomeTaxes;
 using stocks_infrastructure.Repositories.AverageTradedPrice;
+using stocks_infrastructure.Repositories.EmailCode;
 using stocks_infrastructure.Repositories.Taxes;
 
 namespace stocks
@@ -41,6 +43,7 @@ namespace stocks
             services.AddScoped<IIncomeTaxesService, IncomeTaxesService>();
             services.AddScoped<IAverageTradedPriceUpdaterService, AverageTradedPriceUpdaterService>();
             services.AddScoped<IAccountService, AccountService>();
+            services.AddScoped<IEmailSenderService, EmailSenderService>();
             services.AddSingleton<IB3Client, B3Client>();
             services.AddScoped<NotificationContext>();
 
@@ -118,6 +121,7 @@ namespace stocks
             services.AddTransient(typeof(IGenericRepository<>), typeof(GenericRepository<>));
             services.AddTransient<IAccountRepository, AccountRepository>();
             services.AddTransient<IAverageTradedPriceRepostory, AverageTradedPriceRepository>();
+            services.AddTransient<IEmailSenderRepository, EmailSenderRepository>();
             services.AddTransient<ITaxesRepository, TaxesRepository>();
         }
 

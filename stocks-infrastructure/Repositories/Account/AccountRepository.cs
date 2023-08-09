@@ -39,6 +39,12 @@ namespace stocks.Repositories.Account
             return _context.Accounts.Where(x => x.Id == accountId).FirstOrDefault();
         }
 
+        public void Update(stocks_infrastructure.Models.Account account)
+        {
+            _context.Accounts.Update(account);
+            _context.SaveChanges();
+        }
+
         public void UpdatePassword(Guid accountId, stocks_infrastructure.Models.Account account)
         {
             _context.Update(account);

@@ -5,6 +5,7 @@ using stocks.Enums;
 
 namespace stocks_infrastructure.Models
 {
+#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
     public class Account : BaseEntity
     {
         public Account(string name, string email, string password, string cpf)
@@ -17,9 +18,7 @@ namespace stocks_infrastructure.Models
             Validate(this, new AccountValidator());
         }
 
-#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
         private Account() { }
-#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
 
         public string Name { get; protected set; }
         public string Email { get; protected set; }
@@ -27,6 +26,8 @@ namespace stocks_infrastructure.Models
         public string CPF { get; protected set; }
         public ICollection<AverageTradedPrice>? AverageTradedPrices { get; protected set; }
         public ICollection<IncomeTaxes>? IncomeTaxes { get; set; }
+        public EmailCode EmailCode { get; set; }
+        public bool AuthenticationCodeValidated { get; set; } = false;
         public Plan Plan { get; protected set; } = Plan.Default;
 
         public void HashPassword(string password)
