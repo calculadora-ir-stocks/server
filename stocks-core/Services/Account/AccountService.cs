@@ -83,10 +83,13 @@ namespace stocks_core.Services.Account
         {
             try
             {
+                if (!emailSenderService.CanSendEmailForUser(accountId))
+                    throw new InvalidBusinessRuleException($"O usuário de id {accountId} já enviou um código de verificação há pelo menos 10 minutos atrás.");
+
                 var account = repository.GetById(accountId);
                 if (account is null) throw new NullReferenceException($"O usuário de id {accountId} não foi encontrado na base de dados.");
 
-                ValidateNewPassword(account, password);                
+                ValidateNewPassword(account, password);
 
                 account.Password = password;
 
@@ -107,7 +110,6 @@ namespace stocks_core.Services.Account
                 throw;
             }
         }
-
 
         private void ValidateNewPassword(stocks_infrastructure.Models.Account account, string password)
         {
