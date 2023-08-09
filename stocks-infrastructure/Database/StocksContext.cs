@@ -10,6 +10,7 @@ namespace stocks.Database
         public DbSet<Asset> Assets { get; } = null!;
         public DbSet<AverageTradedPrice> AverageTradedPrices { get; set; } = null!;
         public DbSet<IncomeTaxes> IncomeTaxes { get; set; } = null!;
+        public DbSet<EmailCode> EmailCodes { get; set; } = null!;
 
         public StocksContext()
         {
@@ -50,6 +51,10 @@ namespace stocks.Database
             modelBuilder.Entity<IncomeTaxes>()
                 .HasOne(ap => ap.Account)
                 .WithMany(ap => ap.IncomeTaxes);
+
+            modelBuilder.Entity<EmailCode>()
+                .HasOne(ap => ap.Account)
+                .WithOne(ap => ap.EmailCode);
 
             modelBuilder.Entity<AverageTradedPrice>()
                 .HasOne(ap => ap.Account)

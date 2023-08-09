@@ -23,9 +23,12 @@ using stocks_common;
 using stocks_core.Calculators;
 using stocks_core.Calculators.Assets;
 using stocks_core.Services.Account;
-using stocks_core.Services.Hangfire;
+using stocks_core.Services.EmailSender;
+using stocks_core.Services.Hangfire.AverageTradedPriceUpdater;
+using stocks_core.Services.Hangfire.EmailCodeRemover;
 using stocks_core.Services.IncomeTaxes;
 using stocks_infrastructure.Repositories.AverageTradedPrice;
+using stocks_infrastructure.Repositories.EmailCode;
 using stocks_infrastructure.Repositories.Taxes;
 
 namespace stocks
@@ -38,9 +41,10 @@ namespace stocks
 
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IAssetsService, AssetsService>();
-            services.AddScoped<IIncomeTaxesService, IncomeTaxesService>();
-            services.AddScoped<IAverageTradedPriceUpdaterService, AverageTradedPriceUpdaterService>();
+            services.AddScoped<IIncomeTaxesService, IncomeTaxesService>();            
+
             services.AddScoped<IAccountService, AccountService>();
+            services.AddScoped<IEmailSenderService, EmailSenderService>();
             services.AddSingleton<IB3Client, B3Client>();
             services.AddScoped<NotificationContext>();
 
@@ -64,6 +68,12 @@ namespace stocks
             });
         }
 
+        public static void AddHangfireServices(this IServiceCollection services, WebApplicationBuilder builder)
+        {
+            services.AddScoped<IAverageTradedPriceUpdaterService, AverageTradedPriceUpdaterService>();
+            services.AddScoped<IEmailCodeRemoverService, EmailCodeRemoverService>();
+        }
+
         public static void AddHangFireRecurringJob(this IServiceCollection services, WebApplicationBuilder builder)
         {
             services.AddHangfire(x =>
@@ -78,15 +88,22 @@ namespace stocks
             GlobalConfiguration.Configuration.UsePostgreSqlStorage(builder.Configuration.GetConnectionString("DefaultConnection"));
 
             RecurringJob.RemoveIfExists(nameof(AverageTradedPriceUpdaterService));
+            RecurringJob.RemoveIfExists(nameof(EmailCodeRemoverService));
 
             RecurringJob.AddOrUpdate<IAverageTradedPriceUpdaterService>(
                 nameof(AverageTradedPriceUpdaterService),
                 x => x.Execute(),
                 Cron.Monthly
             );
+
+            RecurringJob.AddOrUpdate<IEmailCodeRemoverService>(
+                nameof(EmailCodeRemoverService),
+                x => x.Execute(),
+                Cron.Minutely
+            );
         }
 
-        public static void Add3rdPartiesClientConfigurations(this IServiceCollection services)
+        public static void Add3rdPartiesClientServices(this IServiceCollection services)
         {
             var handler = new HttpClientHandler();
             // TO-DO: uncomment for production
@@ -118,6 +135,7 @@ namespace stocks
             services.AddTransient(typeof(IGenericRepository<>), typeof(GenericRepository<>));
             services.AddTransient<IAccountRepository, AccountRepository>();
             services.AddTransient<IAverageTradedPriceRepostory, AverageTradedPriceRepository>();
+            services.AddTransient<IEmailCodeRepository, EmailCodeRepository>();
             services.AddTransient<ITaxesRepository, TaxesRepository>();
         }
 

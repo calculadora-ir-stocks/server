@@ -7,6 +7,7 @@ namespace stocks_infrastructure.Models
     /// Tabela para armazenar o preço médio de um determinado ativo de um investidor.
     /// A B3 não disponibiliza o preço médio dos ativos - eles precisam ser calculados manualmente.
     /// </summary>
+#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
     public class AverageTradedPrice
     {
         public AverageTradedPrice(string ticker, double averagePrice, int quantity, Account account, DateTime updatedAt)
@@ -18,9 +19,7 @@ namespace stocks_infrastructure.Models
             UpdatedAt = updatedAt;
         }
 
-#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
         public AverageTradedPrice()
-#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
         {
         }
 

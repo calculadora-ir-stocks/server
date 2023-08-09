@@ -6,6 +6,7 @@ namespace stocks_infrastructure.Models
     /// <summary>
     /// Tabela para armazenar o imposto de renda a ser pago em um determinado mês.
     /// </summary>
+#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
     public class IncomeTaxes
     {
         public IncomeTaxes(string month, double totalTaxes, double totalSold, double swingTradeProfit, double dayTradeProfit,
@@ -23,9 +24,7 @@ namespace stocks_infrastructure.Models
             AssetId = assetId;
         }
 
-#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
         public IncomeTaxes() { }
-#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
 
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.None)]

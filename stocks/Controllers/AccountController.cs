@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using stocks_core.Services.Account;
 
@@ -11,6 +12,28 @@ public class AccountController : BaseController
     public AccountController(IAccountService service)
     {
         this.service = service;
+    }
+
+    /// <summary>
+    /// Envia um código de verificação por e-mail.
+    /// </summary>
+    [AllowAnonymous]
+    [HttpPost("send-code/{id}")]
+    public async Task<IActionResult> SendEmailVerification([FromRoute] Guid id)
+    {
+        await service.SendEmailVerification(id);
+        return Ok($"E-mail enviado para o usuário de id {id}");
+    }
+
+    /// <summary>
+    /// Retorna verdadeiro caso o código de validação seja válido, falso caso contrário.
+    /// </summary>
+    [AllowAnonymous]
+    [HttpPost("validate-code/{accountId}")]
+    public IActionResult IsEmailVerificationCodeValid([FromBody] string code, [FromRoute] Guid accountId)
+    {
+        bool isValid = service.IsEmailVerificationCodeValid(accountId, code);
+        return Ok(isValid);
     }
 
     /// <summary>

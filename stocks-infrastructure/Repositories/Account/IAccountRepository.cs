@@ -10,5 +10,6 @@ namespace stocks.Repositories.Account
         void UpdatePassword(Guid accountId, stocks_infrastructure.Models.Account account);
         IEnumerable<stocks_infrastructure.Models.Account> GetAllAccounts();
         void Delete(stocks_infrastructure.Models.Account account);
+        void Update(stocks_infrastructure.Models.Account account);
     }
 }
