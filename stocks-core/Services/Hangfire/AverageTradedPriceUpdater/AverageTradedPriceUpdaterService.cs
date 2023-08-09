@@ -10,7 +10,7 @@ using stocks_infrastructure.Dtos;
 using stocks_infrastructure.Models;
 using stocks_infrastructure.Repositories.AverageTradedPrice;
 
-namespace stocks_core.Services.Hangfire
+namespace stocks_core.Services.Hangfire.AverageTradedPriceUpdater
 {
     public class AverageTradedPriceUpdaterService : ProfitCalculator, IAverageTradedPriceUpdaterService
     {
@@ -49,7 +49,7 @@ namespace stocks_core.Services.Hangfire
 
                     var lastMonthMovements = await client.GetAccountMovement(account.CPF, lastMonthFirstDay, lastMonthFinalDay, account.Id);
 
-                    if (lastMonthMovements is null) return; 
+                    if (lastMonthMovements is null) return;
 
                     var movements = lastMonthMovements.Data.EquitiesPeriods.EquitiesMovements;
                     var averageTradedPrices = await GetTradedAverageTradedPrices(movements, account.Id);

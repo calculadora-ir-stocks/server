@@ -1,4 +1,4 @@
-﻿namespace stocks_core.Services.Hangfire
+﻿namespace stocks_core.Services.Hangfire.AverageTradedPriceUpdater
 {
     public interface IAverageTradedPriceUpdaterService
     {

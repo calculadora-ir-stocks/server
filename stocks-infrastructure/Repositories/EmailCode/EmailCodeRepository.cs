@@ -1,13 +1,14 @@
-﻿using stocks.Database;
+﻿using Dapper;
+using stocks.Database;
 using stocks_infrastructure.Models;
 
 namespace stocks_infrastructure.Repositories.EmailCode
 {
-    public class EmailSenderRepository : IEmailSenderRepository
+    public class EmailCodeRepository : IEmailCodeRepository
     {
         private readonly StocksContext context;
 
-        public EmailSenderRepository(StocksContext context)
+        public EmailCodeRepository(StocksContext context)
         {
             this.context = context;
         }
@@ -25,6 +26,11 @@ namespace stocks_infrastructure.Repositories.EmailCode
         {
             context.EmailCodes.Remove(emailSender);
             context.SaveChanges();
+        }
+
+        public IEnumerable<Models.EmailCode> GetAll()
+        {
+            return context.EmailCodes.AsList();
         }
 
         public Models.EmailCode? GetByAccountId(Guid accountId)

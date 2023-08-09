@@ -12,21 +12,23 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddServices(builder);
-builder.Services.Add3rdPartiesClientConfigurations();
+builder.Services.AddHangfireServices(builder);
+builder.Services.Add3rdPartiesClientServices();
+
 builder.Services.AddRepositories();
 builder.Services.AddJwtAuthentications(builder);
 
 // Obligatory lower case routing
 builder.Services.AddRouting(options => options.LowercaseUrls = true);
 builder.Services.AddDatabase(builder);
-//builder.Services.AddHangFireRecurringJob(builder);
+builder.Services.AddHangFireRecurringJob(builder);
 builder.Services.AddSwaggerConfiguration();
 
 builder.Services.Configure<AppSettings>(builder.Configuration.GetSection("AppSettings"));
 
 var app = builder.Build();
 
-//app.UseHangfireDashboard("/dashboard");
+app.UseHangfireDashboard("/dashboard");
 
 app.UseSwagger();
 

@@ -11,10 +11,10 @@ namespace stocks_core.Services.EmailSender
         private const string StocksEmail = "calculadorastocks@gmail.com";
         private const string StocksName = "Stocks";
 
-        private readonly IEmailSenderRepository emailCodeRepository;
+        private readonly IEmailCodeRepository emailCodeRepository;
         private readonly IAccountRepository accountRepository;
 
-        public EmailSenderService(IEmailSenderRepository emailCodeRepository, IAccountRepository accountRepository)
+        public EmailSenderService(IEmailCodeRepository emailCodeRepository, IAccountRepository accountRepository)
         {
             this.emailCodeRepository = emailCodeRepository;
             this.accountRepository = accountRepository;

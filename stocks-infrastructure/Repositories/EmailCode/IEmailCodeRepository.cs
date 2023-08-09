@@ -2,10 +2,11 @@
 
 namespace stocks_infrastructure.Repositories.EmailCode
 {
-    public interface IEmailSenderRepository
+    public interface IEmailCodeRepository
     {
         Models.EmailCode? GetByAccountId(Guid accountId);
         Task Create(string code, Account account);
         void Delete(Models.EmailCode emailSender);
+        IEnumerable<Models.EmailCode> GetAll();
     }
 }
