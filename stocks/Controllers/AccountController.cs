@@ -18,11 +18,11 @@ public class AccountController : BaseController
     /// Envia um código de verificação por e-mail.
     /// </summary>
     [AllowAnonymous]
-    [HttpPost("send-code/{id}")]
-    public async Task<IActionResult> SendEmailVerification([FromRoute] Guid id)
+    [HttpPost("send-code/{accountId}")]
+    public async Task<IActionResult> SendEmailVerification([FromRoute] Guid accountId)
     {
-        await service.SendEmailVerification(id);
-        return Ok($"E-mail enviado para o usuário de id {id}");
+        await service.SendEmailVerification(accountId);
+        return Ok($"E-mail enviado para o usuário de id {accountId}");
     }
 
     /// <summary>

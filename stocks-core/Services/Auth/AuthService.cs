@@ -1,12 +1,12 @@
 ﻿using DevOne.Security.Cryptography.BCrypt;
 using Microsoft.Extensions.Logging;
-using stocks.Commons.Jwt;
 using stocks.DTOs.Auth;
 using stocks.Exceptions;
 using stocks.Notification;
 using stocks.Repositories;
 using stocks.Repositories.Account;
-using stocks_core.Services.EmailSender;
+using stocks.Services.Jwt;
+using stocks_common.Models;
 using stocks_infrastructure.Models;
 
 namespace stocks.Services.Auth
@@ -17,7 +17,6 @@ namespace stocks.Services.Auth
         private readonly IAccountRepository accountRepository;
         private readonly IGenericRepository<Account> accountGenericRepository;
         private readonly IJwtCommon jwtUtils;
-
 
         private readonly NotificationContext notificationContext;
 
@@ -52,7 +51,8 @@ namespace stocks.Services.Auth
 
                 if (BCryptHelper.CheckPassword(request.Password, account?.Password))
                 {
-                    return jwtUtils.GenerateToken(new stocks_common.Models.AccountDto
+                    //TODO: return only account.Id
+                    return jwtUtils.GenerateToken(new AccountDto
                     (
                         account!.Id,
                         account!.Name,

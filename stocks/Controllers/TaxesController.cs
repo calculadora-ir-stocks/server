@@ -76,10 +76,10 @@ public class TaxesController : BaseController
     /// Calcula e armazena o imposto de renda a ser pago em todos os meses retroativos.
     /// Também calcula e armazena o preço médio de todos os ativos até a data atual.
     /// </summary>
-    [HttpPost("big-bang/{id}")]
-    public async Task<IActionResult> BigBang(Guid id, [FromBody] List<BigBangRequest> request)
-    {
-        await service.BigBang(id, request);
+    [HttpPost("big-bang/{accountId}")]
+    public async Task<IActionResult> BigBang(Guid accountId, [FromBody] List<BigBangRequest> request)
+    { 
+        await service.BigBang(accountId, request);
         return Ok("Imposto de renda e preço médio mais recente calculados e armazenados com sucesso.");
     }
 

@@ -6,7 +6,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 
-namespace stocks.Commons.Jwt
+namespace stocks.Services.Jwt
 {
     public class JwtCommon : IJwtCommon
     {

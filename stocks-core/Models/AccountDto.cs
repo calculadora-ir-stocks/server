@@ -1,4 +1,4 @@
-﻿using stocks.Enums;
+﻿using stocks_infrastructure.Models;
 
 namespace stocks_common.Models
 {
@@ -14,11 +14,11 @@ namespace stocks_common.Models
             Plan = plan;
         }
 
-        public Guid Id { get; protected set; }
-        public string Name { get; protected set; }
-        public string Email { get; protected set; }
-        public string Password { get; protected set; }
-        public string CPF { get; protected set; }
-        public Plan Plan { get; protected set; } = Plan.Default;
+        public Guid Id { get; init; }
+        public string Name { get; init; }
+        public string Email { get; init; }
+        public string Password { get; init; }
+        public string CPF { get; init; }
+        public Plan Plan { get; init; }
     }
 }

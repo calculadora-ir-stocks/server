@@ -1,7 +1,9 @@
-﻿using System.Text.RegularExpressions;
+﻿using System.ComponentModel;
+using System.Text.RegularExpressions;
 using DevOne.Security.Cryptography.BCrypt;
 using FluentValidation;
-using stocks.Enums;
+using stocks_common.Constants;
+using stocks_common.Helpers;
 
 namespace stocks_infrastructure.Models
 {
@@ -20,15 +22,59 @@ namespace stocks_infrastructure.Models
 
         private Account() { }
 
+        #region Registration information
         public string Name { get; protected set; }
         public string Email { get; protected set; }
         public string Password { get; set; }
         public string CPF { get; protected set; }
+        #endregion
+
+        #region Relationships
+        /// <summary>
+        /// Relação dos preços médios dos ativos negociados do investidor.
+        /// </summary>
         public ICollection<AverageTradedPrice>? AverageTradedPrices { get; protected set; }
+
+        /// <summary>
+        /// Relação dos impostos devidos pelo investidor.
+        /// </summary>
         public ICollection<IncomeTaxes>? IncomeTaxes { get; set; }
+
+        /// <summary>
+        /// Código enviado para o e-mail para confirmar veracidade da conta.
+        /// Pode ser um código de autenticação ou um código para alteração de senha.
+        /// </summary>
         public EmailCode EmailCode { get; set; }
+        #endregion
+
         public bool AuthenticationCodeValidated { get; set; } = false;
-        public Plan Plan { get; protected set; } = Plan.Default;
+
+        #region Plans
+        public Plan Plan { get; protected set; }
+
+        /// <summary>
+        /// Inicialmente, todos os investidores iniciarão com o plano gratuito.
+        /// </summary>
+        public int PlanId { get; protected set; } = PlansConstants.Free;
+
+        private DateTime planStartDate = DateTime.UtcNow;
+
+        /// <summary>
+        /// Data de início do plano.
+        /// É atualizado toda vez que um usuário assina um plano.
+        /// </summary>
+        public DateTime PlanStartDate
+        {
+            set
+            {
+                planStartDate = value;
+                IsPlanExpired = false;
+            }
+            get { return planStartDate; }
+        }
+
+        public bool IsPlanExpired { get; set; } = false;
+        #endregion
 
         public void HashPassword(string password)
         {
