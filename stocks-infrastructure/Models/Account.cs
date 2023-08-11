@@ -1,9 +1,7 @@
-﻿using System.ComponentModel;
-using System.Text.RegularExpressions;
-using DevOne.Security.Cryptography.BCrypt;
+﻿using DevOne.Security.Cryptography.BCrypt;
 using FluentValidation;
 using stocks_common.Constants;
-using stocks_common.Helpers;
+using System.Text.RegularExpressions;
 
 namespace stocks_infrastructure.Models
 {
