@@ -11,6 +11,7 @@ namespace stocks.Services.Jwt
     public class JwtCommon : IJwtCommon
     {
         private readonly AppSettings _appSettings;
+        private const string Plan = "Plan";
 
         public JwtCommon(IOptions<AppSettings> appSettings)
         {
@@ -23,7 +24,8 @@ namespace stocks.Services.Jwt
             var signinCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature);
 
             var claims = new[] {
-                new Claim(ClaimTypes.NameIdentifier, account.Id.ToString())
+                new Claim(ClaimTypes.NameIdentifier, account.Id.ToString()),
+                new Claim(Plan, account.PlanId.ToString())
             };
 
             var token = new JwtSecurityToken(

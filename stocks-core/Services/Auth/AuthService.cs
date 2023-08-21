@@ -51,15 +51,10 @@ namespace stocks.Services.Auth
 
                 if (BCryptHelper.CheckPassword(request.Password, account?.Password))
                 {
-                    //TODO: return only account.Id
                     return jwtUtils.GenerateToken(new AccountDto
                     (
                         account!.Id,
-                        account!.Name,
-                        account!.Email,
-                        account!.Password,
-                        account!.CPF,
-                        account!.Plan
+                        account!.PlanId
                     ));
                 }
 

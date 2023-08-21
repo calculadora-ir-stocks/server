@@ -391,8 +391,8 @@ public class AssetsService : IAssetsService
          * Mesmo quando aproveitamos pequenos e especiais momentos, estamos deixando de lado muitas outras coisas - então a premissa
          * principal ainda prevalece - ou seja, a vida não é o seu campo de estudo nem os seus pequenos proveitos e lazeres.
          * 
-         * Alguns argumentam que a vida é estudo, mas ainda resta o que ser vivido.
-         * Alguns argumentam que a vida é aproveitar os momentos, mas ainda resta o que ser vivido.
+         * Alguns argumentam que a vida é estudo, mas ainda resta o que ser estudado.
+         * Alguns argumentam que a vida é aproveitar os momentos, mas ainda resta o que ser aproveitado.
          * Alguns argumentam que a vida é vencer, mas vencer é subjetivo quando já se vence.
          * Alguns argumentam que a vida é prazer, como Salomão, mas ainda sim o prazer é subjetivo.
          * 

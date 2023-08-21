@@ -55,7 +55,7 @@ namespace stocks_core.Services.Account
                 string verificationCode = new Random().Next(1000, 9999).ToString();
 
                 string Subject = "Confirme seu código de verificação";
-                string HtmlContext = $"Olá, {account.Name}! O seu código de verificação é: <strong>{verificationCode}</strong>";
+                string HtmlContext = $"Olá, {account.Name}, que surpresa agradável! O seu código de verificação é: <strong>{verificationCode}</strong>";
 
                 await emailSenderService.SendEmail(account, verificationCode, Subject, HtmlContext);
             }

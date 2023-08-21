@@ -27,6 +27,7 @@ using stocks_core.Services.EmailSender;
 using stocks_core.Services.Hangfire.AverageTradedPriceUpdater;
 using stocks_core.Services.Hangfire.EmailCodeRemover;
 using stocks_core.Services.IncomeTaxes;
+using stocks_core.Services.Plan;
 using stocks_infrastructure.Repositories.AverageTradedPrice;
 using stocks_infrastructure.Repositories.EmailCode;
 using stocks_infrastructure.Repositories.Taxes;
@@ -42,6 +43,7 @@ namespace stocks
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IAssetsService, AssetsService>();
             services.AddScoped<IIncomeTaxesService, IncomeTaxesService>();            
+            services.AddScoped<IPlanService, PlanService>();            
 
             services.AddScoped<IAccountService, AccountService>();
             services.AddScoped<IEmailSenderService, EmailSenderService>();
