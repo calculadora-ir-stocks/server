@@ -13,6 +13,7 @@ namespace stocks.Database
         public DbSet<IncomeTaxes> IncomeTaxes { get; set; } = null!;
         public DbSet<EmailCode> EmailCodes { get; set; } = null!;
         public DbSet<Plan> Plans { get; set; } = null!;
+        public DbSet<PremiumCode> PremiumCodes { get; set; } = null!;
 
         public StocksContext()
         {
@@ -81,6 +82,13 @@ namespace stocks.Database
                 new Plan(PlansConstants.Monthly, "Mensal", "R$39,99 por mês", 39.99, 1),
                 new Plan(PlansConstants.Semester, "Semestral", "R$29,99 por mês", 29.99, 6),
                 new Plan(PlansConstants.Anual, "Anual", "R$19,99 por mês", 19.99, 12)
+            );
+
+            modelBuilder.Entity<PremiumCode>().HasData
+            (
+                // TODO
+                // Based on the pre-launch waitlist, generate X premium codes.
+                new PremiumCode()
             );
         }
     }

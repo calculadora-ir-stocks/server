@@ -13,9 +13,14 @@ namespace stocks.Repositories.Account
             _context = context;
         }
 
-        public bool AccountExists(string email)
+        public bool EmailExists(string email)
         {
             return _context.Accounts.Any(x => x.Email == email);
+        }
+
+        public bool CPFExists(string cpf)
+        {
+            return _context.Accounts.Any(x => x.CPF == cpf);
         }
 
         public void Delete(stocks_infrastructure.Models.Account account)
@@ -31,7 +36,7 @@ namespace stocks.Repositories.Account
 
         public stocks_infrastructure.Models.Account? GetByEmail(string email)
         {
-            return _context.Accounts.AsEnumerable().SingleOrDefault(x => x.Email == email);
+            return _context.Accounts.AsEnumerable().SingleOrDefault(x => x.CPF == email);
         }
 
         public stocks_infrastructure.Models.Account? GetById(Guid accountId)
@@ -50,5 +55,6 @@ namespace stocks.Repositories.Account
             _context.Update(account);
             _context.SaveChanges();
         }
+
     }
 }

@@ -25,6 +25,7 @@ namespace stocks_infrastructure.Models
         public string Email { get; protected set; }
         public string Password { get; set; }
         public string CPF { get; protected set; }
+        public bool IsPremium { get; set; } = false;
         #endregion
 
         #region Relationships
@@ -103,7 +104,7 @@ namespace stocks_infrastructure.Models
                 .MaximumLength(NameMaxLength)
                 .WithMessage($"Nome de usuário deve conter no máximo {NameMaxLength} caracteres.");
 
-            RuleFor(c => c.Email)
+            RuleFor(c => c.CPF)
                 .Must(c => isValidEmail.IsMatch(c.ToString()))
                 .WithMessage($"O endereço de e-mail informado não é válido.");
 

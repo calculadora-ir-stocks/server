@@ -7,6 +7,7 @@ using stocks.Repositories;
 using stocks.Repositories.Account;
 using stocks.Services.Jwt;
 using stocks_common.Models;
+using stocks_core.Services.PremiumCode;
 using stocks_infrastructure.Models;
 
 namespace stocks.Services.Auth
@@ -16,6 +17,8 @@ namespace stocks.Services.Auth
 
         private readonly IAccountRepository accountRepository;
         private readonly IGenericRepository<Account> accountGenericRepository;
+        private readonly IPremiumCodeService premiumCodeService;
+
         private readonly IJwtCommon jwtUtils;
 
         private readonly NotificationContext notificationContext;
@@ -25,6 +28,7 @@ namespace stocks.Services.Auth
         public AuthService(
             IAccountRepository accountRepository,
             IGenericRepository<Account> accountGenericRepository,
+            IPremiumCodeService premiumCodeService,
             IJwtCommon jwtUtils,
             NotificationContext notificationContext,
             ILogger<AuthService> logger
@@ -32,6 +36,7 @@ namespace stocks.Services.Auth
         {
             this.accountRepository = accountRepository;
             this.accountGenericRepository = accountGenericRepository;
+            this.premiumCodeService = premiumCodeService;
             this.jwtUtils = jwtUtils;
             this.notificationContext = notificationContext;
             this.logger = logger;
@@ -75,6 +80,18 @@ namespace stocks.Services.Auth
 
             account.HashPassword(account.Password);
 
+            if (request.PremiumCode is not null)
+            {
+                if (premiumCodeService.IsValid(request.PremiumCode))
+                {
+                    account.IsPremium = true;
+                } else
+                {
+                    notificationContext.AddNotification("O código promocional inserido não é válido.");
+                    return;
+                }
+            }
+
             try
             {
                 accountGenericRepository.Add(account);
@@ -88,8 +105,11 @@ namespace stocks.Services.Auth
         {
             try
             {
-                if (accountRepository.AccountExists(account.Email))
-                    throw new InvalidBusinessRuleException($"Esse usuário já está cadastrado na plataforma.");
+                if (accountRepository.EmailExists(account.Email))
+                    throw new InvalidBusinessRuleException($"Um usuário com esse e-mail já está cadastrado na plataforma.");
+
+                if (accountRepository.CPFExists(account.CPF))
+                    throw new InvalidBusinessRuleException($"Um usuário com esse CPF já está cadastrado na plataforma.");
 
                 if (account.IsInvalid)
                 {
