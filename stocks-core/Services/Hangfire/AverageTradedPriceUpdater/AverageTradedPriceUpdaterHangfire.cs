@@ -12,19 +12,19 @@ using stocks_infrastructure.Repositories.AverageTradedPrice;
 
 namespace stocks_core.Services.Hangfire.AverageTradedPriceUpdater
 {
-    public class AverageTradedPriceUpdaterService : ProfitCalculator, IAverageTradedPriceUpdaterService
+    public class AverageTradedPriceUpdaterHangfire : ProfitCalculator, IAverageTradedPriceUpdaterHangfire
     {
         private readonly IAverageTradedPriceRepostory averageTradedPriceRepository;
         private readonly IAccountRepository accountRepository;
         private readonly IB3Client client;
-        private readonly ILogger<AverageTradedPriceUpdaterService> logger;
+        private readonly ILogger<AverageTradedPriceUpdaterHangfire> logger;
 
-        public AverageTradedPriceUpdaterService
+        public AverageTradedPriceUpdaterHangfire
         (
             IAverageTradedPriceRepostory averageTradedPriceRepository,
             IAccountRepository accountRepository,
             IB3Client client,
-            ILogger<AverageTradedPriceUpdaterService> logger
+            ILogger<AverageTradedPriceUpdaterHangfire> logger
         )
         {
             this.averageTradedPriceRepository = averageTradedPriceRepository;
@@ -37,7 +37,7 @@ namespace stocks_core.Services.Hangfire.AverageTradedPriceUpdater
         {
             try
             {
-                var accounts = accountRepository.GetAllAccounts();
+                var accounts = accountRepository.GetAll();
 
                 foreach (var account in accounts)
                 {

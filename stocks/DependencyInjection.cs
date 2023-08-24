@@ -74,8 +74,8 @@ namespace stocks
 
         public static void AddHangfireServices(this IServiceCollection services, WebApplicationBuilder builder)
         {
-            services.AddScoped<IAverageTradedPriceUpdaterService, AverageTradedPriceUpdaterService>();
-            services.AddScoped<IEmailCodeRemoverService, EmailCodeRemoverService>();
+            services.AddScoped<IAverageTradedPriceUpdaterHangfire, AverageTradedPriceUpdaterHangfire>();
+            services.AddScoped<IEmailCodeRemoverHangfire, EmailCodeRemoverHangfire>();
         }
 
         public static void AddHangFireRecurringJob(this IServiceCollection services, WebApplicationBuilder builder)
@@ -91,17 +91,17 @@ namespace stocks
 
             GlobalConfiguration.Configuration.UsePostgreSqlStorage(builder.Configuration.GetConnectionString("DefaultConnection"));
 
-            RecurringJob.RemoveIfExists(nameof(AverageTradedPriceUpdaterService));
-            RecurringJob.RemoveIfExists(nameof(EmailCodeRemoverService));
+            RecurringJob.RemoveIfExists(nameof(AverageTradedPriceUpdaterHangfire));
+            RecurringJob.RemoveIfExists(nameof(EmailCodeRemoverHangfire));
 
-            RecurringJob.AddOrUpdate<IAverageTradedPriceUpdaterService>(
-                nameof(AverageTradedPriceUpdaterService),
+            RecurringJob.AddOrUpdate<IAverageTradedPriceUpdaterHangfire>(
+                nameof(AverageTradedPriceUpdaterHangfire),
                 x => x.Execute(),
                 Cron.Monthly
             );
 
-            RecurringJob.AddOrUpdate<IEmailCodeRemoverService>(
-                nameof(EmailCodeRemoverService),
+            RecurringJob.AddOrUpdate<IEmailCodeRemoverHangfire>(
+                nameof(EmailCodeRemoverHangfire),
                 x => x.Execute(),
                 Cron.Minutely
             );

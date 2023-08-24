@@ -29,7 +29,7 @@ namespace stocks.Repositories.Account
             _context.SaveChanges();
         }
 
-        public IEnumerable<stocks_infrastructure.Models.Account> GetAllAccounts()
+        public IEnumerable<stocks_infrastructure.Models.Account> GetAll()
         {
             return _context.Accounts.AsList();
         }
@@ -56,5 +56,9 @@ namespace stocks.Repositories.Account
             _context.SaveChanges();
         }
 
+        public IEnumerable<stocks_infrastructure.Models.Account> GetAllPremiums()
+        {
+            return _context.Accounts.Where(x => x.IsPremium);
+        }
     }
 }

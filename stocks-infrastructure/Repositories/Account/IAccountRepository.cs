@@ -1,6 +1,4 @@
-﻿using stocks_infrastructure.Models;
-
-namespace stocks.Repositories.Account
+﻿namespace stocks.Repositories.Account
 {
     public interface IAccountRepository
     {
@@ -9,7 +7,8 @@ namespace stocks.Repositories.Account
         stocks_infrastructure.Models.Account? GetByEmail(string email);
         stocks_infrastructure.Models.Account? GetById(Guid accountId);
         void UpdatePassword(Guid accountId, stocks_infrastructure.Models.Account account);
-        IEnumerable<stocks_infrastructure.Models.Account> GetAllAccounts();
+        IEnumerable<stocks_infrastructure.Models.Account> GetAll();
+        IEnumerable<stocks_infrastructure.Models.Account> GetAllPremiums();
         void Delete(stocks_infrastructure.Models.Account account);
         void Update(stocks_infrastructure.Models.Account account);
     }

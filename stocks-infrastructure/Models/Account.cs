@@ -12,13 +12,13 @@ namespace stocks_infrastructure.Models
         {
             Name = name;
             Email = email;
-            Password = password;
+            Password = BCryptHelper.HashPassword(password, BCryptHelper.GenerateSalt());
             CPF = cpf;
 
             Validate(this, new AccountValidator());
         }
 
-        private Account() { }
+        public Account() { }
 
         #region Registration information
         public string Name { get; protected set; }
@@ -84,12 +84,12 @@ namespace stocks_infrastructure.Models
 
     public partial class AccountValidator : AbstractValidator<Account>
     {
-        private readonly Regex hasNumber = new("[0-9]+");
-        private readonly Regex hasUpperChar = new("[A-Z]+");
-        private readonly Regex hasLowerChar = new("[a-z]+");
-        private readonly Regex hasMinMaxChars = new(".{8,60}");
-        private readonly Regex isValidEmail = new(@"^([\w\.\-]+)@([\w\-]+)((\.(\w){2,3})+)$");
-        private readonly Regex isValidCPF = new(@"(^\d{3}\.\d{3}\.\d{3}\-\d{2}$)");
+        private readonly Regex HasNumber = new("[0-9]+");
+        private readonly Regex HasUpperChar = new("[A-Z]+");
+        private readonly Regex HasLowerChar = new("[a-z]+");
+        private readonly Regex HasMinMaxChars = new(".{8,60}");
+        private readonly Regex IsValidEmail = new(@"^([\w\.\-]+)@([\w\-]+)((\.(\w){2,3})+)$");
+        private readonly Regex IsValidCPF = new(@"(^\d{3}\.\d{3}\.\d{3}\-\d{2}$)");
 
         private const int NameMinLength = 3;
         private const int NameMaxLength = 20;
@@ -104,25 +104,25 @@ namespace stocks_infrastructure.Models
                 .MaximumLength(NameMaxLength)
                 .WithMessage($"Nome de usuário deve conter no máximo {NameMaxLength} caracteres.");
 
-            RuleFor(c => c.CPF)
-                .Must(c => isValidEmail.IsMatch(c.ToString()))
+            RuleFor(c => c.Email)
+                .Must(c => IsValidEmail.IsMatch(c.ToString()))
                 .WithMessage($"O endereço de e-mail informado não é válido.");
 
             RuleFor(c => c.CPF)
-                .Must(c => isValidCPF.IsMatch(c.ToString()))
+                .Must(c => IsValidCPF.IsMatch(c.ToString()))
                 .WithMessage($"O CPF informado não é válido.");
 
             RuleFor(c => c.Password)
-                .Must(c => hasNumber.IsMatch(c.ToString()))
+                .Must(c => HasNumber.IsMatch(c.ToString()))
                 .WithMessage($"A sua senha deve conter no mínimo um número.");
             RuleFor(c => c.Password)
-                .Must(c => hasUpperChar.IsMatch(c.ToString()))
+                .Must(c => HasUpperChar.IsMatch(c.ToString()))
                 .WithMessage($"A sua senha deve conter no mínimo uma letra maiúscula.");
             RuleFor(c => c.Password)
-                .Must(c => hasLowerChar.IsMatch(c.ToString()))
+                .Must(c => HasLowerChar.IsMatch(c.ToString()))
                 .WithMessage($"A sua senha deve conter no mínimo uma letra minúscula.");
             RuleFor(c => c.Password)
-                .Must(c => hasMinMaxChars.IsMatch(c.ToString()))
+                .Must(c => HasMinMaxChars.IsMatch(c.ToString()))
                 .WithMessage($"A sua senha deve conter no mínimo 8 dígitos.");
         }
     }

@@ -9,6 +9,7 @@ using stocks.Services.Jwt;
 using stocks_common.Models;
 using stocks_core.Services.PremiumCode;
 using stocks_infrastructure.Models;
+using System.Security.Principal;
 
 namespace stocks.Services.Auth
 {
@@ -78,18 +79,9 @@ namespace stocks.Services.Auth
 
             if (!IsValidSignUp(account)) return;
 
-            account.HashPassword(account.Password);
-
             if (request.PremiumCode is not null)
             {
-                if (premiumCodeService.IsValid(request.PremiumCode))
-                {
-                    account.IsPremium = true;
-                } else
-                {
-                    notificationContext.AddNotification("O código promocional inserido não é válido.");
-                    return;
-                }
+                ValidatePromotionalCode(request.PremiumCode, account);
             }
 
             try
@@ -99,6 +91,25 @@ namespace stocks.Services.Auth
             {
                 logger.LogError($"Ocorreu um erro ao tentar registrar o usuário {account.Id}. {e.Message}");
             }
+        }
+
+        private void ValidatePromotionalCode(string premiumCode, Account account)
+        {
+            if (!premiumCodeService.IsValid(premiumCode))
+            {
+                notificationContext.AddNotification("O código promocional inserido não é válido.");
+                return;
+
+            }
+
+            if (!premiumCodeService.Active(premiumCode))
+            {
+                notificationContext.AddNotification("O código promocional inserido é válido, porém já foi utilizado.");
+                return;
+            }
+
+            account.IsPremium = true;
+            premiumCodeService.DeactivatePremiumCode(premiumCode);
         }
 
         private bool IsValidSignUp(Account account)

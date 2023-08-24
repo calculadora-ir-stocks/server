@@ -2,13 +2,13 @@
 
 namespace stocks_core.Services.Hangfire.EmailCodeRemover
 {
-    public class EmailCodeRemoverService : IEmailCodeRemoverService
+    public class EmailCodeRemoverHangfire : IEmailCodeRemoverHangfire
     {
         private readonly IEmailCodeRepository repository;
 
         private const int MinutesToDelete = 10;
 
-        public EmailCodeRemoverService(IEmailCodeRepository repository)
+        public EmailCodeRemoverHangfire(IEmailCodeRepository repository)
         {
             this.repository = repository;
         }
