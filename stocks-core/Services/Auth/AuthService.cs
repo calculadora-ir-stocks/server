@@ -1,13 +1,15 @@
 ﻿using DevOne.Security.Cryptography.BCrypt;
 using Microsoft.Extensions.Logging;
-using stocks.Commons.Jwt;
 using stocks.DTOs.Auth;
 using stocks.Exceptions;
 using stocks.Notification;
 using stocks.Repositories;
 using stocks.Repositories.Account;
-using stocks_core.Services.EmailSender;
+using stocks.Services.Jwt;
+using stocks_common.Models;
+using stocks_core.Services.PremiumCode;
 using stocks_infrastructure.Models;
+using System.Security.Principal;
 
 namespace stocks.Services.Auth
 {
@@ -16,8 +18,9 @@ namespace stocks.Services.Auth
 
         private readonly IAccountRepository accountRepository;
         private readonly IGenericRepository<Account> accountGenericRepository;
-        private readonly IJwtCommon jwtUtils;
+        private readonly IPremiumCodeService premiumCodeService;
 
+        private readonly IJwtCommon jwtUtils;
 
         private readonly NotificationContext notificationContext;
 
@@ -26,6 +29,7 @@ namespace stocks.Services.Auth
         public AuthService(
             IAccountRepository accountRepository,
             IGenericRepository<Account> accountGenericRepository,
+            IPremiumCodeService premiumCodeService,
             IJwtCommon jwtUtils,
             NotificationContext notificationContext,
             ILogger<AuthService> logger
@@ -33,6 +37,7 @@ namespace stocks.Services.Auth
         {
             this.accountRepository = accountRepository;
             this.accountGenericRepository = accountGenericRepository;
+            this.premiumCodeService = premiumCodeService;
             this.jwtUtils = jwtUtils;
             this.notificationContext = notificationContext;
             this.logger = logger;
@@ -52,14 +57,10 @@ namespace stocks.Services.Auth
 
                 if (BCryptHelper.CheckPassword(request.Password, account?.Password))
                 {
-                    return jwtUtils.GenerateToken(new stocks_common.Models.AccountDto
+                    return jwtUtils.GenerateToken(new AccountDto
                     (
                         account!.Id,
-                        account!.Name,
-                        account!.Email,
-                        account!.Password,
-                        account!.CPF,
-                        account!.Plan
+                        account!.PlanId
                     ));
                 }
 
@@ -78,7 +79,10 @@ namespace stocks.Services.Auth
 
             if (!IsValidSignUp(account)) return;
 
-            account.HashPassword(account.Password);
+            if (request.PremiumCode is not null)
+            {
+                ValidatePromotionalCode(request.PremiumCode, account);
+            }
 
             try
             {
@@ -89,12 +93,34 @@ namespace stocks.Services.Auth
             }
         }
 
+        private void ValidatePromotionalCode(string premiumCode, Account account)
+        {
+            if (!premiumCodeService.IsValid(premiumCode))
+            {
+                notificationContext.AddNotification("O código promocional inserido não é válido.");
+                return;
+
+            }
+
+            if (!premiumCodeService.Active(premiumCode))
+            {
+                notificationContext.AddNotification("O código promocional inserido é válido, porém já foi utilizado.");
+                return;
+            }
+
+            account.IsPremium = true;
+            premiumCodeService.DeactivatePremiumCode(premiumCode);
+        }
+
         private bool IsValidSignUp(Account account)
         {
             try
             {
-                if (accountRepository.AccountExists(account.Email))
-                    throw new InvalidBusinessRuleException($"Esse usuário já está cadastrado na plataforma.");
+                if (accountRepository.EmailExists(account.Email))
+                    throw new InvalidBusinessRuleException($"Um usuário com esse e-mail já está cadastrado na plataforma.");
+
+                if (accountRepository.CPFExists(account.CPF))
+                    throw new InvalidBusinessRuleException($"Um usuário com esse CPF já está cadastrado na plataforma.");
 
                 if (account.IsInvalid)
                 {

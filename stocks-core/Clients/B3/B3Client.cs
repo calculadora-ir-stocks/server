@@ -12,6 +12,7 @@ namespace stocks.Services.B3
     public class B3Client : IB3Client
     {
         private readonly IHttpClientFactory clientFactory;
+
         private readonly HttpClient b3Client;
         private readonly HttpClient microsoftClient;
 

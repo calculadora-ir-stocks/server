@@ -11,7 +11,6 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Polly;
 using stocks.Clients.B3;
-using stocks.Commons.Jwt;
 using stocks.Database;
 using stocks.Notification;
 using stocks.Repositories;
@@ -19,6 +18,7 @@ using stocks.Repositories.Account;
 using stocks.Services.Auth;
 using stocks.Services.B3;
 using stocks.Services.IncomeTaxes;
+using stocks.Services.Jwt;
 using stocks_common;
 using stocks_core.Calculators;
 using stocks_core.Calculators.Assets;
@@ -26,10 +26,14 @@ using stocks_core.Services.Account;
 using stocks_core.Services.EmailSender;
 using stocks_core.Services.Hangfire.AverageTradedPriceUpdater;
 using stocks_core.Services.Hangfire.EmailCodeRemover;
+using stocks_core.Services.Hangfire.UserPlansValidity;
 using stocks_core.Services.IncomeTaxes;
+using stocks_core.Services.Plan;
+using stocks_core.Services.PremiumCode;
 using stocks_infrastructure.Repositories.AverageTradedPrice;
 using stocks_infrastructure.Repositories.EmailCode;
 using stocks_infrastructure.Repositories.Taxes;
+using Stripe;
 
 namespace stocks
 {
@@ -39,13 +43,16 @@ namespace stocks
         {
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 
-            services.AddScoped<IAuthService, AuthService>();
-            services.AddScoped<IAssetsService, AssetsService>();
-            services.AddScoped<IIncomeTaxesService, IncomeTaxesService>();            
-
-            services.AddScoped<IAccountService, AccountService>();
-            services.AddScoped<IEmailSenderService, EmailSenderService>();
             services.AddSingleton<IB3Client, B3Client>();
+
+            services.AddScoped<IAccountService, stocks_core.Services.Account.AccountService>();
+            services.AddScoped<IAssetsService, AssetsService>();
+            services.AddScoped<IPlanService, stocks_core.Services.Plan.PlanService>();
+            services.AddScoped<IAuthService, AuthService>();
+            services.AddScoped<IEmailSenderService, EmailSenderService>();
+            services.AddScoped<IIncomeTaxesService, IncomeTaxesService>();
+            services.AddScoped<IPremiumCodeService, PremiumCodeService>();
+
             services.AddScoped<NotificationContext>();
 
             // Classes responsáveis pelos algoritmos para cálculo de imposto de renda
@@ -68,10 +75,21 @@ namespace stocks
             });
         }
 
+        public static void AddStripeServices(this IServiceCollection services, IConfiguration configuration)
+        {
+            StripeConfiguration.ApiKey = configuration.GetValue<string>("StripeSettings:SecretKey");
+
+            services.AddScoped<ChargeService>();
+            services.AddScoped<CustomerService>();
+            services.AddScoped<TokenService>();
+        }
+
+
         public static void AddHangfireServices(this IServiceCollection services, WebApplicationBuilder builder)
         {
-            services.AddScoped<IAverageTradedPriceUpdaterService, AverageTradedPriceUpdaterService>();
-            services.AddScoped<IEmailCodeRemoverService, EmailCodeRemoverService>();
+            services.AddScoped<IAverageTradedPriceUpdaterHangfire, AverageTradedPriceUpdaterHangfire>();
+            services.AddScoped<IEmailCodeRemoverHangfire, EmailCodeRemoverHangfire>();
+            services.AddScoped<IUserPlansValidityHangfire, UserPlansValidityHangfire>();
         }
 
         public static void AddHangFireRecurringJob(this IServiceCollection services, WebApplicationBuilder builder)
@@ -87,19 +105,26 @@ namespace stocks
 
             GlobalConfiguration.Configuration.UsePostgreSqlStorage(builder.Configuration.GetConnectionString("DefaultConnection"));
 
-            RecurringJob.RemoveIfExists(nameof(AverageTradedPriceUpdaterService));
-            RecurringJob.RemoveIfExists(nameof(EmailCodeRemoverService));
+            RecurringJob.RemoveIfExists(nameof(AverageTradedPriceUpdaterHangfire));
+            RecurringJob.RemoveIfExists(nameof(EmailCodeRemoverHangfire));
+            RecurringJob.RemoveIfExists(nameof(UserPlansValidityHangfire));
 
-            RecurringJob.AddOrUpdate<IAverageTradedPriceUpdaterService>(
-                nameof(AverageTradedPriceUpdaterService),
+            RecurringJob.AddOrUpdate<IAverageTradedPriceUpdaterHangfire>(
+                nameof(AverageTradedPriceUpdaterHangfire),
                 x => x.Execute(),
                 Cron.Monthly
             );
 
-            RecurringJob.AddOrUpdate<IEmailCodeRemoverService>(
-                nameof(EmailCodeRemoverService),
+            RecurringJob.AddOrUpdate<IEmailCodeRemoverHangfire>(
+                nameof(EmailCodeRemoverHangfire),
                 x => x.Execute(),
                 Cron.Minutely
+            );
+
+            RecurringJob.AddOrUpdate<IUserPlansValidityHangfire>(
+                nameof(UserPlansValidityHangfire),
+                x => x.UpdateUsersPlanExpiration(),
+                Cron.Daily
             );
         }
 

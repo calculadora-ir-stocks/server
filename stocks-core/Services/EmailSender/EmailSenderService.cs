@@ -62,7 +62,7 @@ namespace stocks_core.Services.EmailSender
                 SendGridClient client = new(apiKey);
                 var from = new EmailAddress(StocksEmail, StocksName);
 
-                var to = new EmailAddress(account.Email, account.Name);
+                var to = new EmailAddress(account.CPF, account.Name);
 
                 var msg = MailHelper.CreateSingleEmail(from, to, subject, string.Empty, htmlContent);
                 var response = await client.SendEmailAsync(msg);

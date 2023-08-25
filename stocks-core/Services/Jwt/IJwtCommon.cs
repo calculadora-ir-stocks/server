@@ -1,6 +1,6 @@
 ﻿using stocks_common.Models;
 
-namespace stocks.Commons.Jwt
+namespace stocks.Services.Jwt
 {
     public interface IJwtCommon
     {

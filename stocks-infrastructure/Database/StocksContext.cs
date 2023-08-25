@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using stocks_common.Constants;
 using stocks_infrastructure.Models;
 using System.Reflection;
 
@@ -11,6 +12,8 @@ namespace stocks.Database
         public DbSet<AverageTradedPrice> AverageTradedPrices { get; set; } = null!;
         public DbSet<IncomeTaxes> IncomeTaxes { get; set; } = null!;
         public DbSet<EmailCode> EmailCodes { get; set; } = null!;
+        public DbSet<Plan> Plans { get; set; } = null!;
+        public DbSet<PremiumCode> PremiumCodes { get; set; } = null!;
 
         public StocksContext()
         {
@@ -48,6 +51,9 @@ namespace stocks.Database
                 .HasMany(ap => ap.AverageTradedPrices)
                 .WithOne(ap => ap.Account);
 
+            modelBuilder.Entity<Account>()
+                .HasOne(ap => ap.Plan);
+
             modelBuilder.Entity<IncomeTaxes>()
                 .HasOne(ap => ap.Account)
                 .WithMany(ap => ap.IncomeTaxes);
@@ -68,6 +74,21 @@ namespace stocks.Database
                 new Asset(4, "Fundos de Investimentos"),
                 new Asset(5, "BDR - Brazilian Depositary Receipts"),
                 new Asset(6, "Ouro")
+            );
+
+            modelBuilder.Entity<Plan>().HasData
+            (
+                new Plan(PlansConstants.Free, "Gratuito", "Plano gratuito", 0000, 1),
+                new Plan(PlansConstants.Monthly, "Mensal", "R$39,99 por mês", 3999, 1),
+                new Plan(PlansConstants.Semester, "Semestral", "R$29,99 por mês", 2999, 6),
+                new Plan(PlansConstants.Anual, "Anual", "R$19,99 por mês", 1999, 12)
+            );
+
+            modelBuilder.Entity<PremiumCode>().HasData
+            (
+                // TODO
+                // Based on the pre-launch waitlist, generate X premium codes.
+                new PremiumCode()
             );
         }
     }
