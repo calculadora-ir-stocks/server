@@ -9,5 +9,6 @@
         IEnumerable<T> GetAll();
         Task<T> GetByIdAsync(Guid id);
         public T GetById(Guid id);
+        public T GetById(int id);
     }
 }

@@ -29,7 +29,7 @@ public class AssetsService : IAssetsService
 
     public AssetsService(IIncomeTaxesService incomeTaxesService,
         IGenericRepository<Account> genericRepositoryAccount,
-        ITaxesRepository incomeTaxesRepository,
+        ITaxesRepository taxesRepository,
         IAverageTradedPriceRepostory averageTradedPriceRepository,
         IB3Client b3Client,
         ILogger<AssetsService> logger
@@ -37,7 +37,7 @@ public class AssetsService : IAssetsService
     {
         this.incomeTaxesService = incomeTaxesService;
         this.genericRepositoryAccount = genericRepositoryAccount;
-        this.taxesRepository = incomeTaxesRepository;
+        this.taxesRepository = taxesRepository;
         this.averageTradedPriceRepository = averageTradedPriceRepository;
         this.b3Client = b3Client;
         this.logger = logger;

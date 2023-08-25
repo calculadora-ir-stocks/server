@@ -78,10 +78,10 @@ namespace stocks.Database
 
             modelBuilder.Entity<Plan>().HasData
             (
-                new Plan(PlansConstants.Free, "Gratuito", "Plano gratuito", 0.00, 1),
-                new Plan(PlansConstants.Monthly, "Mensal", "R$39,99 por mês", 39.99, 1),
-                new Plan(PlansConstants.Semester, "Semestral", "R$29,99 por mês", 29.99, 6),
-                new Plan(PlansConstants.Anual, "Anual", "R$19,99 por mês", 19.99, 12)
+                new Plan(PlansConstants.Free, "Gratuito", "Plano gratuito", 0000, 1),
+                new Plan(PlansConstants.Monthly, "Mensal", "R$39,99 por mês", 3999, 1),
+                new Plan(PlansConstants.Semester, "Semestral", "R$29,99 por mês", 2999, 6),
+                new Plan(PlansConstants.Anual, "Anual", "R$19,99 por mês", 1999, 12)
             );
 
             modelBuilder.Entity<PremiumCode>().HasData

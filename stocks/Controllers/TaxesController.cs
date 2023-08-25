@@ -37,7 +37,7 @@ public class TaxesController : BaseController
     /// Retorna todas as informações referentes a impostos no mês especificado.
     /// Formato: MM-yyyy
     /// </summary>
-    [HttpGet("{month}/{accountId}")]
+    [HttpGet("month/{month}/{accountId}")]
     public async Task<IActionResult> GetSpecifiedMonthTaxes(string month, Guid accountId)
     {
         var response = await service.GetSpecifiedMonthTaxes(month, accountId);
@@ -51,7 +51,7 @@ public class TaxesController : BaseController
     /// Retorna todas os meses em que há imposto a ser pago no ano especificado.
     /// Formato: yyyy
     /// </summary>
-    [HttpGet("{year}/{accountId}")]
+    [HttpGet("year/{year}/{accountId}")]
     public async Task<IActionResult> GetSpecifiedYearTaxes(string year, Guid accountId)
     {
         var response = await service.GetSpecifiedYearTaxes(year, accountId);

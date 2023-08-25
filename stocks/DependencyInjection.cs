@@ -33,6 +33,7 @@ using stocks_core.Services.PremiumCode;
 using stocks_infrastructure.Repositories.AverageTradedPrice;
 using stocks_infrastructure.Repositories.EmailCode;
 using stocks_infrastructure.Repositories.Taxes;
+using Stripe;
 
 namespace stocks
 {
@@ -42,15 +43,16 @@ namespace stocks
         {
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 
-            services.AddScoped<IAuthService, AuthService>();
+            services.AddSingleton<IB3Client, B3Client>();
+
+            services.AddScoped<IAccountService, stocks_core.Services.Account.AccountService>();
             services.AddScoped<IAssetsService, AssetsService>();
+            services.AddScoped<IPlanService, stocks_core.Services.Plan.PlanService>();
+            services.AddScoped<IAuthService, AuthService>();
+            services.AddScoped<IEmailSenderService, EmailSenderService>();
             services.AddScoped<IIncomeTaxesService, IncomeTaxesService>();
-            services.AddScoped<IPlanService, PlanService>();
             services.AddScoped<IPremiumCodeService, PremiumCodeService>();
 
-            services.AddScoped<IAccountService, AccountService>();
-            services.AddScoped<IEmailSenderService, EmailSenderService>();
-            services.AddSingleton<IB3Client, B3Client>();
             services.AddScoped<NotificationContext>();
 
             // Classes responsáveis pelos algoritmos para cálculo de imposto de renda
@@ -72,6 +74,16 @@ namespace stocks
                 options.Audience = builder.Configuration["Jwt:Audience"];
             });
         }
+
+        public static void AddStripeServices(this IServiceCollection services, IConfiguration configuration)
+        {
+            StripeConfiguration.ApiKey = configuration.GetValue<string>("StripeSettings:SecretKey");
+
+            services.AddScoped<ChargeService>();
+            services.AddScoped<CustomerService>();
+            services.AddScoped<TokenService>();
+        }
+
 
         public static void AddHangfireServices(this IServiceCollection services, WebApplicationBuilder builder)
         {

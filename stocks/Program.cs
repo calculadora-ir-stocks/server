@@ -11,6 +11,7 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddHttpContextAccessor();
 
+builder.Services.AddStripeServices(builder.Configuration);
 builder.Services.AddServices(builder);
 // builder.Services.AddHangfireServices(builder);
 builder.Services.Add3rdPartiesClientServices();

@@ -51,5 +51,10 @@ namespace stocks.Repositories
         {
             return _context.Set<T>().Find(id);
         }
+
+        public T GetById(int id)
+        {
+            return _context.Set<T>().Find(id);
+        }
     }
 }
