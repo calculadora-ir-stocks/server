@@ -1,4 +1,4 @@
-﻿namespace stocks_core.Services.Hangfire.EmailCodeRemover
+﻿namespace Core.Services.Hangfire.EmailCodeRemover
 {
     public interface IEmailCodeRemoverHangfire
     {

@@ -1,9 +1,9 @@
 ﻿using common.Helpers;
-using stocks_core.Constants;
-using stocks_core.DTOs.B3;
-using stocks_core.Models;
+using Core.Constants;
+using Core.DTOs.B3;
+using Core.Models;
 
-namespace stocks_core.Calculators
+namespace Core.Calculators
 {
     /// <summary>
     /// Responsável por calcular o lucro de movimentações de compra e venda, levando em consideração o preço médio.

@@ -1,4 +1,4 @@
-﻿namespace stocks_common.Models
+﻿namespace Common.Models
 {
     public class AccountDto
     {

@@ -1,9 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using stocks_common.Constants;
-using stocks_infrastructure.Models;
+using Common.Constants;
+using Infrastructure.Models;
 using System.Reflection;
 
-namespace stocks.Database
+namespace Api.Database
 {
     public class StocksContext : DbContext
     {

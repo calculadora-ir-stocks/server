@@ -1,9 +1,9 @@
 ﻿using Dapper;
 using Microsoft.EntityFrameworkCore;
-using stocks.Database;
-using stocks_infrastructure.Dtos;
+using Api.Database;
+using Infrastructure.Dtos;
 
-namespace stocks_infrastructure.Repositories.Taxes
+namespace Infrastructure.Repositories.Taxes
 {
     public class TaxesRepository : ITaxesRepository
     {

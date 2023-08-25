@@ -1,10 +1,10 @@
 ﻿using SendGrid;
 using SendGrid.Helpers.Errors.Model;
 using SendGrid.Helpers.Mail;
-using stocks.Repositories.Account;
-using stocks_infrastructure.Repositories.EmailCode;
+using Infrastructure.Repositories.EmailCode;
+using Infrastructure.Repositories.Account;
 
-namespace stocks_core.Services.EmailSender
+namespace Core.Services.EmailSender
 {
     public class EmailSenderService : IEmailSenderService
     {
@@ -53,7 +53,7 @@ namespace stocks_core.Services.EmailSender
 
         }
 
-        public async Task SendEmail(stocks_infrastructure.Models.Account account, string verificationCode, string subject, string htmlContent)
+        public async Task SendEmail(Infrastructure.Models.Account account, string verificationCode, string subject, string htmlContent)
         {
             try {
                 // TODO: criar variável de ambiente no Docker.

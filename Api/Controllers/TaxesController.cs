@@ -1,9 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
-using stocks.Services.IncomeTaxes;
-using stocks_core.Requests.BigBang;
+using Api.Services.IncomeTaxes;
+using Core.Requests.BigBang;
 
-namespace stocks.Controllers;
+namespace Api.Controllers;
 
 /// <summary>
 /// Responsável por calcular o imposto de renda dos ativos de renda variável.

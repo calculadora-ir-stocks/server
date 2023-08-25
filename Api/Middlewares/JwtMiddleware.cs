@@ -1,8 +1,8 @@
-using stocks.Repositories;
-using stocks.Services.Jwt;
-using stocks_infrastructure.Models;
+using Infrastructure.Repositories;
+using Api.Services.Jwt;
+using Infrastructure.Models;
 
-namespace stocks.Middlewares;
+namespace Api.Middlewares;
 public class JwtMiddleware
 {
 

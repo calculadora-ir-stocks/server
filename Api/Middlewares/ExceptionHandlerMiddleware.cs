@@ -1,9 +1,9 @@
 ﻿using Newtonsoft.Json;
-using stocks.Exceptions;
-using stocks_common.Exceptions;
+using Api.Exceptions;
+using Common.Exceptions;
 using System.Net;
 
-namespace stocks.Middlewares
+namespace Api.Middlewares
 {
     public class CustomExceptionHandlerMiddleware
     {

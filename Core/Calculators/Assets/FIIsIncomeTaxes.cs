@@ -1,11 +1,11 @@
-﻿using stocks_common.Enums;
-using stocks_common.Helpers;
-using stocks_common.Models;
-using stocks_core.Constants;
-using stocks_core.DTOs.B3;
-using stocks_core.Models;
+﻿using Common.Enums;
+using Common.Helpers;
+using Common.Models;
+using Core.Constants;
+using Core.DTOs.B3;
+using Core.Models;
 
-namespace stocks_core.Calculators.Assets
+namespace Core.Calculators.Assets
 {
     public class FIIsIncomeTaxes : ProfitCalculator, IIncomeTaxesCalculator
     {

@@ -1,8 +1,7 @@
 ﻿using Dapper;
-using stocks.Database;
-using stocks_infrastructure.Models;
+using Api.Database;
 
-namespace stocks_infrastructure.Repositories.EmailCode
+namespace Infrastructure.Repositories.EmailCode
 {
     public class EmailCodeRepository : IEmailCodeRepository
     {
@@ -13,7 +12,7 @@ namespace stocks_infrastructure.Repositories.EmailCode
             this.context = context;
         }
 
-        public async Task Create(string code, Account account)
+        public async Task Create(string code, Models.Account account)
         {
             await context.EmailCodes.AddAsync(new Models.EmailCode(code, account.Id, account));
 

@@ -1,11 +1,11 @@
-﻿namespace stocks_core.Services.EmailSender
+﻿namespace Core.Services.EmailSender
 {
     public interface IEmailSenderService
     {
         /// <summary>
         /// Envia um código de verificação para a conta especificada.
         /// </summary>
-        Task SendEmail(stocks_infrastructure.Models.Account account, string code, string subject, string htmlContent);
+        Task SendEmail(Infrastructure.Models.Account account, string code, string subject, string htmlContent);
 
         /// <summary>
         /// O usuário poderá enviar códigos de verificação a cada 10 minutos.

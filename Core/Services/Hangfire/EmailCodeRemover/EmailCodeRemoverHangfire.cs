@@ -1,6 +1,6 @@
-﻿using stocks_infrastructure.Repositories.EmailCode;
+﻿using Infrastructure.Repositories.EmailCode;
 
-namespace stocks_core.Services.Hangfire.EmailCodeRemover
+namespace Core.Services.Hangfire.EmailCodeRemover
 {
     public class EmailCodeRemoverHangfire : IEmailCodeRemoverHangfire
     {

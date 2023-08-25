@@ -1,4 +1,4 @@
-﻿namespace stocks_core.Constants
+﻿namespace Core.Constants
 {
     public class B3ResponseConstants
     {

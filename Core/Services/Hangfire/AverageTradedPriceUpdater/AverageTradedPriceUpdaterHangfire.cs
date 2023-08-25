@@ -1,16 +1,16 @@
 ﻿using System.Diagnostics;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
-using stocks.Clients.B3;
-using stocks.Repositories.Account;
-using stocks_core.Calculators;
-using stocks_core.DTOs.B3;
-using stocks_core.Models;
-using stocks_infrastructure.Dtos;
-using stocks_infrastructure.Models;
-using stocks_infrastructure.Repositories.AverageTradedPrice;
+using Api.Clients.B3;
+using Infrastructure.Repositories.Account;
+using Core.Calculators;
+using Core.DTOs.B3;
+using Core.Models;
+using Infrastructure.Dtos;
+using Infrastructure.Models;
+using Infrastructure.Repositories.AverageTradedPrice;
 
-namespace stocks_core.Services.Hangfire.AverageTradedPriceUpdater
+namespace Core.Services.Hangfire.AverageTradedPriceUpdater
 {
     public class AverageTradedPriceUpdaterHangfire : ProfitCalculator, IAverageTradedPriceUpdaterHangfire
     {
@@ -95,7 +95,7 @@ namespace stocks_core.Services.Hangfire.AverageTradedPriceUpdater
             IEnumerable<AverageTradedPrice>? tickersToUpdate,
             IEnumerable<AverageTradedPriceDetails> updatedAverageTradedPrices,
             IEnumerable<string?> tickersToRemove,
-            stocks_infrastructure.Models.Account account
+            Infrastructure.Models.Account account
         )
         {
             if (!tickersToAdd.IsNullOrEmpty())
@@ -176,7 +176,7 @@ namespace stocks_core.Services.Hangfire.AverageTradedPriceUpdater
         /// Para isso, compara os tickers que precisam ser adicionados com os tickers que foram negociados.
         /// </summary>
         private List<AverageTradedPrice>? GetTradedTickersToUpdate(
-            IEnumerable<AverageTradedPrice> tickersToAdd, List<AverageTradedPriceDetails> updatedPrices, stocks_infrastructure.Models.Account account
+            IEnumerable<AverageTradedPrice> tickersToAdd, List<AverageTradedPriceDetails> updatedPrices, Infrastructure.Models.Account account
         )
         {
             var tickersToUpdate = updatedPrices.Select(x => x.TickerSymbol).Except(tickersToAdd.Select(x => x.Ticker)).ToList();
@@ -184,7 +184,7 @@ namespace stocks_core.Services.Hangfire.AverageTradedPriceUpdater
         }
 
         private async Task<IEnumerable<AverageTradedPrice>?> GetTradedTickersToAddIntoDatabase(
-            List<AverageTradedPriceDetails> tradedAssets, stocks_infrastructure.Models.Account account
+            List<AverageTradedPriceDetails> tradedAssets, Infrastructure.Models.Account account
         )
         {
             var tickersInvestorAlreadyHas =

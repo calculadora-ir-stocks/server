@@ -1,8 +1,8 @@
 ﻿using Microsoft.Extensions.Logging;
-using stocks.Repositories.Account;
-using stocks_common.Constants;
+using Infrastructure.Repositories.Account;
+using Common.Constants;
 
-namespace stocks_core.Services.Hangfire.UserPlansValidity
+namespace Core.Services.Hangfire.UserPlansValidity
 {
     public class UserPlansValidityHangfire : IUserPlansValidityHangfire
     {
@@ -91,22 +91,22 @@ namespace stocks_core.Services.Hangfire.UserPlansValidity
             }
         }
 
-        private static bool IsAnualPlanExpired(stocks_infrastructure.Models.Account user)
+        private static bool IsAnualPlanExpired(Infrastructure.Models.Account user)
         {
             return DateTime.Now.AddMonths(-AnualPlan) > user.PlanStartDate;
         }
 
-        private static bool IsSemesterPlanExpired(stocks_infrastructure.Models.Account user)
+        private static bool IsSemesterPlanExpired(Infrastructure.Models.Account user)
         {
             return DateTime.Now.AddMonths(-SemesterPlan) > user.PlanStartDate;
         }
 
-        private static bool IsFreePlanExpired(stocks_infrastructure.Models.Account user)
+        private static bool IsFreePlanExpired(Infrastructure.Models.Account user)
         {
             return DateTime.Now.AddMonths(-FreePlan) > user.PlanStartDate;
         }
 
-        private static bool IsFreePremiumPlanExpired(stocks_infrastructure.Models.Account user)
+        private static bool IsFreePremiumPlanExpired(Infrastructure.Models.Account user)
         {
             return DateTime.Now.AddMonths(-FreePremiumPlan) > user.PlanStartDate;
         }

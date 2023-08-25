@@ -1,4 +1,4 @@
-﻿namespace stocks_core.Services.Hangfire.UserPlansValidity
+﻿namespace Core.Services.Hangfire.UserPlansValidity
 {
     /// <summary>
     /// Responsável por invalidar os planos pagos de usuários caso passe do prazo estipulado.

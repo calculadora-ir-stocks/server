@@ -1,6 +1,6 @@
-﻿using stocks.DTOs.Auth;
+﻿using Api.DTOs.Auth;
 
-namespace stocks.Services.Auth
+namespace Api.Services.Auth
 {
     public interface IAuthService
     {

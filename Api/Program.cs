@@ -1,7 +1,7 @@
 using Hangfire;
-using stocks;
-using stocks.Middlewares;
-using stocks_common;
+using Api;
+using Api.Middlewares;
+using Common;
 
 var builder = WebApplication.CreateBuilder(args);
 

@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json;
 
-namespace stocks_core.Models
+namespace Core.Models
 {
     public class MovementProperties
     {

@@ -1,11 +1,11 @@
-﻿using stocks_common.Enums;
-using stocks_common.Exceptions;
-using stocks_common.Helpers;
-using stocks_core.Calculators;
-using stocks_core.Constants;
-using stocks_core.Services.IncomeTaxes;
-using stocks_infrastructure.Repositories.AverageTradedPrice;
-using static stocks_core.DTOs.B3.Movement;
+﻿using Common.Enums;
+using Common.Exceptions;
+using Common.Helpers;
+using Core.Calculators;
+using Core.Constants;
+using Core.Services.IncomeTaxes;
+using Infrastructure.Repositories.AverageTradedPrice;
+using static Core.DTOs.B3.Movement;
 
 namespace stocks_unit_tests.Services
 {

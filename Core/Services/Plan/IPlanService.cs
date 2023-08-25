@@ -1,10 +1,10 @@
-﻿using stocks_core.Models.Requests.Plan;
+﻿using Core.Models.Requests.Plan;
 
-namespace stocks_core.Services.Plan
+namespace Core.Services.Plan
 {
     public interface IPlanService
     {
-        IEnumerable<stocks_infrastructure.Models.Plan> GetAll();
+        IEnumerable<Infrastructure.Models.Plan> GetAll();
         void Subscribe(PlanSubscribeRequest request, CancellationToken cancellationToken);
     }
 }

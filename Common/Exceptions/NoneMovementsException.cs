@@ -1,6 +1,6 @@
 ﻿using System.Runtime.Serialization;
 
-namespace stocks_common.Exceptions
+namespace Common.Exceptions
 {
     public class NoneMovementsException : Exception
     {

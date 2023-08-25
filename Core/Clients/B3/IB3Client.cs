@@ -1,6 +1,6 @@
-﻿using stocks_core.DTOs.B3;
+﻿using Core.DTOs.B3;
 
-namespace stocks.Clients.B3
+namespace Api.Clients.B3
 {
     public interface IB3Client
     {

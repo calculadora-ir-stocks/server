@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace stocks_infrastructure.Models
+namespace Infrastructure.Models
 {
     /// <summary>
     /// Tabela para armazenar o preço médio de um determinado ativo de um investidor.

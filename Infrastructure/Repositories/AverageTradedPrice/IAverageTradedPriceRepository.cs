@@ -1,6 +1,6 @@
-﻿using stocks_infrastructure.Dtos;
+﻿using Infrastructure.Dtos;
 
-namespace stocks_infrastructure.Repositories.AverageTradedPrice
+namespace Infrastructure.Repositories.AverageTradedPrice
 {
     public interface IAverageTradedPriceRepostory
     {

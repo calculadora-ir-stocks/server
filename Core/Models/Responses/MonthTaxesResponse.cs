@@ -1,6 +1,6 @@
-﻿using stocks_core.Models;
+﻿using Core.Models;
 
-namespace stocks_core.Responses
+namespace Core.Responses
 {
     public class MonthTaxesResponse
     {
@@ -19,7 +19,7 @@ namespace stocks_core.Responses
 
     public class Asset
     {
-        public Asset(stocks_common.Enums.Asset assetTypeId, string assetTypeName, double taxes, double totalSold,
+        public Asset(Common.Enums.Asset assetTypeId, string assetTypeName, double taxes, double totalSold,
             double swingTradeProfit, double dayTradeProfit, IEnumerable<OperationDetails> assets)
         {
             AssetTypeId = assetTypeId;
@@ -35,7 +35,7 @@ namespace stocks_core.Responses
         /// <summary>
         /// O id do tipo de ativo sendo negociado.
         /// </summary>
-        public stocks_common.Enums.Asset AssetTypeId { get; init; }
+        public Common.Enums.Asset AssetTypeId { get; init; }
 
         /// <summary>
         /// O nome do tipo de ativo sendo negociado.

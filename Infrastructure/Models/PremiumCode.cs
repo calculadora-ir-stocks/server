@@ -1,4 +1,4 @@
-﻿namespace stocks_infrastructure.Models
+﻿namespace Infrastructure.Models
 {
     public class PremiumCode : BaseEntity
     {

@@ -1,4 +1,4 @@
-﻿namespace stocks_core.Services.Account
+﻿namespace Core.Services.Account
 {
     public interface IAccountService
     {

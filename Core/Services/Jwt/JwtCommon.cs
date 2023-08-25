@@ -1,12 +1,12 @@
 ﻿using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
-using stocks_common;
-using stocks_common.Models;
+using Common;
+using Common.Models;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 
-namespace stocks.Services.Jwt
+namespace Api.Services.Jwt
 {
     public class JwtCommon : IJwtCommon
     {

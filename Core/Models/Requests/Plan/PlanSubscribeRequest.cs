@@ -1,6 +1,6 @@
-﻿using stocks_core.Models.Stripe;
+﻿using Core.Models.Stripe;
 
-namespace stocks_core.Models.Requests.Plan
+namespace Core.Models.Requests.Plan
 {
     public class PlanSubscribeRequest
     {

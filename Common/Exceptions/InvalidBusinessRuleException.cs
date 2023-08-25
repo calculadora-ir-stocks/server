@@ -1,6 +1,6 @@
 ﻿using System.Runtime.Serialization;
 
-namespace stocks.Exceptions
+namespace Api.Exceptions
 {
     public class InvalidBusinessRuleException : Exception
     {

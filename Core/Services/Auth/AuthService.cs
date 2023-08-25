@@ -1,17 +1,17 @@
 ﻿using DevOne.Security.Cryptography.BCrypt;
 using Microsoft.Extensions.Logging;
-using stocks.DTOs.Auth;
-using stocks.Exceptions;
-using stocks.Notification;
-using stocks.Repositories;
-using stocks.Repositories.Account;
-using stocks.Services.Jwt;
-using stocks_common.Models;
-using stocks_core.Services.PremiumCode;
-using stocks_infrastructure.Models;
+using Api.DTOs.Auth;
+using Api.Exceptions;
+using Api.Notification;
+using Infrastructure.Repositories;
+using Infrastructure.Repositories.Account;
+using Api.Services.Jwt;
+using Common.Models;
+using Core.Services.PremiumCode;
+using Infrastructure.Models;
 using System.Security.Principal;
 
-namespace stocks.Services.Auth
+namespace Api.Services.Auth
 {
     public class AuthService : IAuthService
     {

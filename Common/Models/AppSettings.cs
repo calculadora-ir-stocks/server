@@ -1,4 +1,4 @@
-﻿namespace stocks_common
+﻿namespace Common
 {
     public class AppSettings
     {

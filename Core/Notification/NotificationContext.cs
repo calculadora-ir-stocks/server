@@ -1,6 +1,6 @@
 ﻿using FluentValidation.Results;
 
-namespace stocks.Notification
+namespace Api.Notification
 {
     public class NotificationContext
     {

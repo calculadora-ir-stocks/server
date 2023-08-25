@@ -1,8 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using stocks_core.Models.Requests.Plan;
-using stocks_core.Services.Plan;
+using Core.Models.Requests.Plan;
+using Core.Services.Plan;
 
-namespace stocks.Controllers
+namespace Api.Controllers
 {
     // TODO [Authorize]
     public class PlanController : BaseController

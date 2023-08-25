@@ -1,15 +1,15 @@
 ﻿using Microsoft.IdentityModel.Tokens;
-using stocks_common.Exceptions;
-using stocks_common.Models;
-using stocks_core.Calculators;
-using stocks_core.Calculators.Assets;
-using stocks_core.Constants;
-using stocks_core.DTOs.B3;
-using stocks_core.Models;
-using stocks_infrastructure.Dtos;
-using stocks_infrastructure.Repositories.AverageTradedPrice;
+using Common.Exceptions;
+using Common.Models;
+using Core.Calculators;
+using Core.Calculators.Assets;
+using Core.Constants;
+using Core.DTOs.B3;
+using Core.Models;
+using Infrastructure.Dtos;
+using Infrastructure.Repositories.AverageTradedPrice;
 
-namespace stocks_core.Services.IncomeTaxes
+namespace Core.Services.IncomeTaxes
 {
     public class IncomeTaxesService : IIncomeTaxesService
     {

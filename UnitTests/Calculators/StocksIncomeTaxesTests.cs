@@ -1,10 +1,10 @@
-﻿using stocks_common.Enums;
-using stocks_common.Models;
-using stocks_core.Calculators;
-using stocks_core.Calculators.Assets;
-using stocks_core.Constants;
-using stocks_core.DTOs.B3;
-using stocks_core.Models;
+﻿using Common.Enums;
+using Common.Models;
+using Core.Calculators;
+using Core.Calculators.Assets;
+using Core.Constants;
+using Core.DTOs.B3;
+using Core.Models;
 
 namespace stocks_unit_tests.Business
 {

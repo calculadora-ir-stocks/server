@@ -1,7 +1,7 @@
 ﻿using Dapper;
-using stocks.Database;
+using Api.Database;
 
-namespace stocks.Repositories.Account
+namespace Infrastructure.Repositories.Account
 {
     public class AccountRepository : IAccountRepository
     {
@@ -23,40 +23,40 @@ namespace stocks.Repositories.Account
             return _context.Accounts.Any(x => x.CPF == cpf);
         }
 
-        public void Delete(stocks_infrastructure.Models.Account account)
+        public void Delete(Infrastructure.Models.Account account)
         {
             _context.Accounts.Remove(account);
             _context.SaveChanges();
         }
 
-        public IEnumerable<stocks_infrastructure.Models.Account> GetAll()
+        public IEnumerable<Infrastructure.Models.Account> GetAll()
         {
             return _context.Accounts.AsList();
         }
 
-        public stocks_infrastructure.Models.Account? GetByEmail(string email)
+        public Infrastructure.Models.Account? GetByEmail(string email)
         {
             return _context.Accounts.AsEnumerable().SingleOrDefault(x => x.CPF == email);
         }
 
-        public stocks_infrastructure.Models.Account? GetById(Guid accountId)
+        public Infrastructure.Models.Account? GetById(Guid accountId)
         {
             return _context.Accounts.Where(x => x.Id == accountId).FirstOrDefault();
         }
 
-        public void Update(stocks_infrastructure.Models.Account account)
+        public void Update(Infrastructure.Models.Account account)
         {
             _context.Accounts.Update(account);
             _context.SaveChanges();
         }
 
-        public void UpdatePassword(Guid accountId, stocks_infrastructure.Models.Account account)
+        public void UpdatePassword(Guid accountId, Infrastructure.Models.Account account)
         {
             _context.Update(account);
             _context.SaveChanges();
         }
 
-        public IEnumerable<stocks_infrastructure.Models.Account> GetAllPremiums()
+        public IEnumerable<Infrastructure.Models.Account> GetAllPremiums()
         {
             return _context.Accounts.Where(x => x.IsPremium);
         }

@@ -1,4 +1,4 @@
-﻿namespace stocks_common.Constants
+﻿namespace Common.Constants
 {
     public class PlansConstants
     {

@@ -1,20 +1,20 @@
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using stocks.Clients.B3;
-using stocks.Exceptions;
-using stocks.Repositories;
-using stocks_core.DTOs.B3;
-using stocks_core.Models;
-using stocks_core.Models.Responses;
-using stocks_core.Requests.BigBang;
-using stocks_core.Responses;
-using stocks_core.Services.IncomeTaxes;
-using stocks_infrastructure.Dtos;
-using stocks_infrastructure.Models;
-using stocks_infrastructure.Repositories.AverageTradedPrice;
-using stocks_infrastructure.Repositories.Taxes;
+using Api.Clients.B3;
+using Api.Exceptions;
+using Infrastructure.Repositories;
+using Core.DTOs.B3;
+using Core.Models;
+using Core.Models.Responses;
+using Core.Requests.BigBang;
+using Core.Responses;
+using Core.Services.IncomeTaxes;
+using Infrastructure.Dtos;
+using Infrastructure.Models;
+using Infrastructure.Repositories.AverageTradedPrice;
+using Infrastructure.Repositories.Taxes;
 
-namespace stocks.Services.IncomeTaxes;
+namespace Api.Services.IncomeTaxes;
 
 public class AssetsService : IAssetsService
 {
@@ -108,7 +108,7 @@ public class AssetsService : IAssetsService
     {
         Account account = genericRepositoryAccount.GetById(accountId);
 
-        List<stocks_infrastructure.Models.IncomeTaxes> incomeTaxes = new();
+        List<Infrastructure.Models.IncomeTaxes> incomeTaxes = new();
         CreateIncomeTaxes(response.Item1, incomeTaxes, account);
 
         List<AverageTradedPrice> averageTradedPrices = new();
@@ -134,13 +134,13 @@ public class AssetsService : IAssetsService
         }
     }
 
-    private static void CreateIncomeTaxes(List<AssetIncomeTaxes> assets, List<stocks_infrastructure.Models.IncomeTaxes> incomeTaxes, Account account)
+    private static void CreateIncomeTaxes(List<AssetIncomeTaxes> assets, List<Infrastructure.Models.IncomeTaxes> incomeTaxes, Account account)
     {
         foreach (var asset in assets)
         {
             if (MovementHadProfitOrLoss(asset))
             {
-                incomeTaxes.Add(new stocks_infrastructure.Models.IncomeTaxes
+                incomeTaxes.Add(new Infrastructure.Models.IncomeTaxes
                 {
                     Month = asset.Month,
                     TotalTaxes = asset.Taxes,
@@ -355,11 +355,11 @@ public class AssetsService : IAssetsService
     private static MonthTaxesResponse CurrentMonthToDto(List<AssetIncomeTaxes> assets)
     {
         double totalTaxes = assets.Select(x => x.Taxes).Sum();
-        List<stocks_core.Responses.Asset> tradedAssets = new();
+        List<Core.Responses.Asset> tradedAssets = new();
 
         foreach (var item in assets)
         {
-            tradedAssets.Add(new stocks_core.Responses.Asset(
+            tradedAssets.Add(new Core.Responses.Asset(
                 item.AssetTypeId,
                 item.AssetName,
                 item.Taxes,
@@ -512,12 +512,12 @@ public class AssetsService : IAssetsService
     private static MonthTaxesResponse SpecifiedMonthToDto(IEnumerable<SpecifiedMonthTaxesDto> taxes)
     {
         double totalMonthTaxes = taxes.Select(x => x.Taxes).Sum();
-        List<stocks_core.Responses.Asset> tradedAssets = new();
+        List<Core.Responses.Asset> tradedAssets = new();
 
         foreach (var tax in taxes)
         {
-            tradedAssets.Add(new stocks_core.Responses.Asset(
-                (stocks_common.Enums.Asset)tax.AssetTypeId,
+            tradedAssets.Add(new Core.Responses.Asset(
+                (Common.Enums.Asset)tax.AssetTypeId,
                 tax.AssetName,
                 tax.Taxes,
                 tax.TotalSold,

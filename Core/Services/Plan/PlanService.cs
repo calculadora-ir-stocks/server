@@ -1,14 +1,14 @@
-﻿using stocks.Repositories;
-using stocks_core.Models.Requests.Plan;
-using stocks_core.Models.Stripe;
+﻿using Infrastructure.Repositories;
+using Core.Models.Requests.Plan;
+using Core.Models.Stripe;
 using Stripe;
 
-namespace stocks_core.Services.Plan
+namespace Core.Services.Plan
 {
     public class PlanService : IPlanService
     {
-        private readonly IGenericRepository<stocks_infrastructure.Models.Plan> genericRepositoryPlan;
-        private readonly IGenericRepository<stocks_infrastructure.Models.Account> genericRepositoryAccount;
+        private readonly IGenericRepository<Infrastructure.Models.Plan> genericRepositoryPlan;
+        private readonly IGenericRepository<Infrastructure.Models.Account> genericRepositoryAccount;
 
         private readonly ChargeService chargeService;
         private readonly CustomerService customerService;
@@ -16,8 +16,8 @@ namespace stocks_core.Services.Plan
         private readonly TokenService tokenService;
 
         public PlanService(
-            IGenericRepository<stocks_infrastructure.Models.Plan> genericRepositoryPlan,
-            IGenericRepository<stocks_infrastructure.Models.Account> genericRepositoryAccount,
+            IGenericRepository<Infrastructure.Models.Plan> genericRepositoryPlan,
+            IGenericRepository<Infrastructure.Models.Account> genericRepositoryAccount,
             ChargeService chargeService,
             CustomerService customerService,
             TokenService tokenService
@@ -30,7 +30,7 @@ namespace stocks_core.Services.Plan
             this.tokenService = tokenService;
         }
 
-        public IEnumerable<stocks_infrastructure.Models.Plan> GetAll()
+        public IEnumerable<Infrastructure.Models.Plan> GetAll()
         {
             return genericRepositoryPlan.GetAll();
         }

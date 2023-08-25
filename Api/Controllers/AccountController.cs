@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using stocks_core.Services.Account;
+using Core.Services.Account;
 
-namespace stocks.Controllers;
+namespace Api.Controllers;
 
 // TODO [Authorize]
 public class AccountController : BaseController
@@ -15,18 +15,18 @@ public class AccountController : BaseController
     }
 
     /// <summary>
-    /// Envia um código de verificação por e-mail.
+    /// Envia um cï¿½digo de verificaï¿½ï¿½o por e-mail.
     /// </summary>
     [AllowAnonymous]
     [HttpPost("send-code/{accountId}")]
     public async Task<IActionResult> SendEmailVerification([FromRoute] Guid accountId)
     {
         await service.SendEmailVerification(accountId);
-        return Ok($"E-mail enviado para o usuário de id {accountId}");
+        return Ok($"E-mail enviado para o usuï¿½rio de id {accountId}");
     }
 
     /// <summary>
-    /// Retorna verdadeiro caso o código de validação seja válido, falso caso contrário.
+    /// Retorna verdadeiro caso o cï¿½digo de validaï¿½ï¿½o seja vï¿½lido, falso caso contrï¿½rio.
     /// </summary>
     [AllowAnonymous]
     [HttpPost("validate-code/{accountId}")]
@@ -43,7 +43,7 @@ public class AccountController : BaseController
     public IActionResult UpdatePassword(Guid accountId, string password)
     {
         service.UpdatePassword(accountId, password);
-        return Ok($"A senha do usuário {accountId} foi alterada com sucesso.");
+        return Ok($"A senha do usuï¿½rio {accountId} foi alterada com sucesso.");
     }
 
     /// <summary>
@@ -53,6 +53,6 @@ public class AccountController : BaseController
     public IActionResult Delete([FromRoute] Guid id)
     {
         service.Delete(id);
-        return Ok($"A conta do usuário {id} foi deletada com sucesso e sua conta foi desvinculada com a B3.");
+        return Ok($"A conta do usuï¿½rio {id} foi deletada com sucesso e sua conta foi desvinculada com a B3.");
     }
 }

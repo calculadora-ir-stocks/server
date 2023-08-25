@@ -1,4 +1,4 @@
-﻿namespace stocks.DTOs.Auth
+﻿namespace Api.DTOs.Auth
 {
     public class SignInRequest
     {

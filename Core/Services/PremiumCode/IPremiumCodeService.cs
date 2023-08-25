@@ -1,4 +1,4 @@
-﻿namespace stocks_core.Services.PremiumCode
+﻿namespace Core.Services.PremiumCode
 {
     public interface IPremiumCodeService
     {

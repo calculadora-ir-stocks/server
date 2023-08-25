@@ -1,6 +1,6 @@
-﻿using stocks_infrastructure.Dtos;
+﻿using Infrastructure.Dtos;
 
-namespace stocks_infrastructure.Repositories.Taxes
+namespace Infrastructure.Repositories.Taxes
 {
     public interface ITaxesRepository
     {

@@ -1,15 +1,15 @@
-﻿namespace stocks.Repositories.Account
+﻿namespace Infrastructure.Repositories.Account
 {
     public interface IAccountRepository
     {
         bool EmailExists(string email);
         bool CPFExists(string cpf);
-        stocks_infrastructure.Models.Account? GetByEmail(string email);
-        stocks_infrastructure.Models.Account? GetById(Guid accountId);
-        void UpdatePassword(Guid accountId, stocks_infrastructure.Models.Account account);
-        IEnumerable<stocks_infrastructure.Models.Account> GetAll();
-        IEnumerable<stocks_infrastructure.Models.Account> GetAllPremiums();
-        void Delete(stocks_infrastructure.Models.Account account);
-        void Update(stocks_infrastructure.Models.Account account);
+        Models.Account? GetByEmail(string email);
+        Models.Account? GetById(Guid accountId);
+        void UpdatePassword(Guid accountId, Models.Account account);
+        IEnumerable<Models.Account> GetAll();
+        IEnumerable<Models.Account> GetAllPremiums();
+        void Delete(Models.Account account);
+        void Update(Models.Account account);
     }
 }

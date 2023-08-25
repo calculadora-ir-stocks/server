@@ -1,9 +1,9 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Mvc;
-using stocks_infrastructure.Models;
+using Infrastructure.Models;
 
-namespace stocks.Middlewares
+namespace Api.Middlewares
 {
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method)]
     public class AuthorizationMiddleware : Attribute, IAuthorizationFilter

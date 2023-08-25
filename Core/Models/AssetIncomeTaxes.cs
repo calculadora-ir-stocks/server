@@ -1,6 +1,6 @@
-﻿using stocks_common.Enums;
+﻿using Common.Enums;
 
-namespace stocks_core.Models
+namespace Core.Models
 {
     public class AssetIncomeTaxes
     {

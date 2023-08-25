@@ -1,14 +1,14 @@
 ﻿using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
-using stocks.Repositories;
+using Infrastructure.Repositories;
 
-namespace stocks_core.Services.PremiumCode
+namespace Core.Services.PremiumCode
 {
     public class PremiumCodeService : IPremiumCodeService
     {
-        private readonly IGenericRepository<stocks_infrastructure.Models.PremiumCode> genericRepository;
+        private readonly IGenericRepository<Infrastructure.Models.PremiumCode> genericRepository;
 
-        public PremiumCodeService(IGenericRepository<stocks_infrastructure.Models.PremiumCode> genericRepository)
+        public PremiumCodeService(IGenericRepository<Infrastructure.Models.PremiumCode> genericRepository)
         {
             this.genericRepository = genericRepository;
         }

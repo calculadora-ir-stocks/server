@@ -1,8 +1,8 @@
-﻿using stocks_common.Models;
-using stocks_core.DTOs.B3;
-using stocks_core.Models;
+﻿using Common.Models;
+using Core.DTOs.B3;
+using Core.Models;
 
-namespace stocks_core.Services.IncomeTaxes
+namespace Core.Services.IncomeTaxes
 {
     public interface IIncomeTaxesService
     {

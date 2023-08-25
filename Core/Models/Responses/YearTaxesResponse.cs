@@ -1,4 +1,4 @@
-namespace stocks_core.Models.Responses;
+namespace Core.Models.Responses;
 
 public class YearTaxesResponse
 {

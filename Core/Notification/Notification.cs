@@ -1,4 +1,4 @@
-﻿namespace stocks.Notification
+﻿namespace Api.Notification
 {
     public class Notification
     {

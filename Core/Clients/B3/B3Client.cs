@@ -3,11 +3,11 @@ using System.Net;
 using System.Net.Http.Headers;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using stocks.Clients.B3;
-using stocks.DTOs.Auth;
-using stocks_core.DTOs.B3;
+using Api.Clients.B3;
+using Api.DTOs.Auth;
+using Core.DTOs.B3;
 
-namespace stocks.Services.B3
+namespace Api.Services.B3
 {
     public class B3Client : IB3Client
     {

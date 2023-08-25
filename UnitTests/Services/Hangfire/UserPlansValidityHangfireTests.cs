@@ -2,10 +2,10 @@
 using Castle.Core.Logging;
 using Microsoft.Extensions.Logging;
 using Moq;
-using stocks.Repositories.Account;
-using stocks_common.Constants;
-using stocks_core.Services.Hangfire.UserPlansValidity;
-using stocks_infrastructure.Models;
+using Infrastructure.Repositories.Account;
+using Common.Constants;
+using Core.Services.Hangfire.UserPlansValidity;
+using Infrastructure.Models;
 
 namespace stocks_unit_tests.Services.Hangfire
 {

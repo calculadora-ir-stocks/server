@@ -1,7 +1,7 @@
-﻿using stocks_common.Enums;
-using stocks_core.Constants;
+﻿using Common.Enums;
+using Core.Constants;
 
-namespace stocks_common.Helpers
+namespace Common.Helpers
 {
     public class AssetTypeHelper
     {

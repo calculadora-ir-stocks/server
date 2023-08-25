@@ -1,6 +1,6 @@
-﻿using stocks_infrastructure.Models;
+﻿using Infrastructure.Models;
 
-namespace stocks_infrastructure.Dtos
+namespace Infrastructure.Dtos
 {
     public record AverageTradedPriceDto
     {

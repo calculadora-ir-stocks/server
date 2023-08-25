@@ -1,6 +1,6 @@
 using common.Helpers;
 
-namespace stocks_infrastructure.Dtos;
+namespace Infrastructure.Dtos;
 
 public class SpecifiedYearTaxesDto
 {

@@ -1,4 +1,4 @@
-﻿namespace stocks_infrastructure.Dtos
+﻿namespace Infrastructure.Dtos
 {
     public record SpecifiedMonthTaxesDto
     {

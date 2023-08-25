@@ -2,7 +2,7 @@
 using System.ComponentModel.DataAnnotations.Schema;
 using FluentValidation;
 
-namespace stocks_infrastructure.Models
+namespace Infrastructure.Models
 {
     public abstract class BaseEntity
     {

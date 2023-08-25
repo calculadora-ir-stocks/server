@@ -1,4 +1,4 @@
-﻿namespace stocks_core.Models.Stripe
+﻿namespace Core.Models.Stripe
 {
     public record StripeCustomer(
         string Name,

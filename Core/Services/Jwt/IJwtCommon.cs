@@ -1,6 +1,6 @@
-﻿using stocks_common.Models;
+﻿using Common.Models;
 
-namespace stocks.Services.Jwt
+namespace Api.Services.Jwt
 {
     public interface IJwtCommon
     {

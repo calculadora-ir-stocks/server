@@ -10,32 +10,32 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Polly;
-using stocks.Clients.B3;
-using stocks.Database;
-using stocks.Notification;
-using stocks.Repositories;
-using stocks.Repositories.Account;
-using stocks.Services.Auth;
-using stocks.Services.B3;
-using stocks.Services.IncomeTaxes;
-using stocks.Services.Jwt;
-using stocks_common;
-using stocks_core.Calculators;
-using stocks_core.Calculators.Assets;
-using stocks_core.Services.Account;
-using stocks_core.Services.EmailSender;
-using stocks_core.Services.Hangfire.AverageTradedPriceUpdater;
-using stocks_core.Services.Hangfire.EmailCodeRemover;
-using stocks_core.Services.Hangfire.UserPlansValidity;
-using stocks_core.Services.IncomeTaxes;
-using stocks_core.Services.Plan;
-using stocks_core.Services.PremiumCode;
-using stocks_infrastructure.Repositories.AverageTradedPrice;
-using stocks_infrastructure.Repositories.EmailCode;
-using stocks_infrastructure.Repositories.Taxes;
+using Api.Clients.B3;
+using Api.Database;
+using Api.Notification;
+using Infrastructure.Repositories;
+using Infrastructure.Repositories.Account;
+using Api.Services.Auth;
+using Api.Services.B3;
+using Api.Services.IncomeTaxes;
+using Api.Services.Jwt;
+using Common;
+using Core.Calculators;
+using Core.Calculators.Assets;
+using Core.Services.Account;
+using Core.Services.EmailSender;
+using Core.Services.Hangfire.AverageTradedPriceUpdater;
+using Core.Services.Hangfire.EmailCodeRemover;
+using Core.Services.Hangfire.UserPlansValidity;
+using Core.Services.IncomeTaxes;
+using Core.Services.Plan;
+using Core.Services.PremiumCode;
+using Infrastructure.Repositories.AverageTradedPrice;
+using Infrastructure.Repositories.EmailCode;
+using Infrastructure.Repositories.Taxes;
 using Stripe;
 
-namespace stocks
+namespace Api
 {
     public static class DependencyInjection
     {
@@ -45,9 +45,9 @@ namespace stocks
 
             services.AddSingleton<IB3Client, B3Client>();
 
-            services.AddScoped<IAccountService, stocks_core.Services.Account.AccountService>();
+            services.AddScoped<IAccountService, Core.Services.Account.AccountService>();
             services.AddScoped<IAssetsService, AssetsService>();
-            services.AddScoped<IPlanService, stocks_core.Services.Plan.PlanService>();
+            services.AddScoped<IPlanService, Core.Services.Plan.PlanService>();
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IEmailSenderService, EmailSenderService>();
             services.AddScoped<IIncomeTaxesService, IncomeTaxesService>();

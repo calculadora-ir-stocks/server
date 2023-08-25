@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc.Filters;
 using Newtonsoft.Json;
 using System.Net;
 
-namespace stocks.Notification
+namespace Api.Notification
 {
     public class NotificationFilter : IAsyncResultFilter
     {

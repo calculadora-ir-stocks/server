@@ -1,9 +1,9 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using stocks.DTOs.Auth;
-using stocks.Services.Auth;
+using Api.DTOs.Auth;
+using Api.Services.Auth;
 
-namespace stocks.Controllers;
+namespace Api.Controllers;
 
 /// <summary>
 /// Responsável pelo registro e autenticação de usuários.

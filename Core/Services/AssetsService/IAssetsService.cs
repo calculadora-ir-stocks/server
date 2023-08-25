@@ -1,8 +1,8 @@
-using stocks_core.Models.Responses;
-using stocks_core.Requests.BigBang;
-using stocks_core.Responses;
+using Core.Models.Responses;
+using Core.Requests.BigBang;
+using Core.Responses;
 
-namespace stocks.Services.IncomeTaxes;
+namespace Api.Services.IncomeTaxes;
 
 public interface IAssetsService
 {

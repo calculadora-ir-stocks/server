@@ -1,11 +1,11 @@
 ﻿using Microsoft.Extensions.Logging;
-using stocks.Exceptions;
-using stocks.Notification;
-using stocks.Repositories.Account;
-using stocks_core.Services.EmailSender;
-using stocks_infrastructure.Models;
+using Api.Exceptions;
+using Api.Notification;
+using Infrastructure.Repositories.Account;
+using Core.Services.EmailSender;
+using Infrastructure.Models;
 
-namespace stocks_core.Services.Account
+namespace Core.Services.Account
 {
     public class AccountService : IAccountService
     {
@@ -111,7 +111,7 @@ namespace stocks_core.Services.Account
             }
         }
 
-        private void ValidateNewPassword(stocks_infrastructure.Models.Account account, string password)
+        private void ValidateNewPassword(Infrastructure.Models.Account account, string password)
         {
             if (account.Password == password) throw new InvalidBusinessRuleException("A nova senha não pode ser igual à senha atual.");
         }
