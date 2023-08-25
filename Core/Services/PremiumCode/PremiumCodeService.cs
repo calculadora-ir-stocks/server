@@ -1,6 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Infrastructure.Repositories;
 using Microsoft.IdentityModel.Tokens;
-using Infrastructure.Repositories;
 
 namespace Core.Services.PremiumCode
 {

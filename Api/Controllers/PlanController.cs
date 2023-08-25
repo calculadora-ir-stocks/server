@@ -1,10 +1,12 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Core.Models.Requests.Plan;
 using Core.Services.Plan;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Api.Controllers
 {
-    // TODO [Authorize]
+    [Authorize]
+    [Tags("Plans")]
     public class PlanController : BaseController
     {
         private readonly IPlanService service;

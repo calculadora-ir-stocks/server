@@ -6,11 +6,11 @@ namespace Api.Middlewares;
 public class JwtMiddleware
 {
 
-    private readonly RequestDelegate _next;
+    private readonly RequestDelegate next;
 
     public JwtMiddleware(RequestDelegate next)
     {
-        _next = next;
+        this.next = next;
     }
 
     public async Task Invoke(HttpContext context, IGenericRepository<Account> repository, IJwtCommon jwtCommon)
@@ -26,6 +26,6 @@ public class JwtMiddleware
             context.Items["User"] = repository.GetById(userId.Value);
         }
 
-        await _next(context);
+        await next(context);
     }
 }

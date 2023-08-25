@@ -7,18 +7,18 @@ namespace Api.Middlewares
 {
     public class CustomExceptionHandlerMiddleware
     {
-        private readonly RequestDelegate _next;
+        private readonly RequestDelegate next;
 
         public CustomExceptionHandlerMiddleware(RequestDelegate next)
         {
-            _next = next;
+            this.next = next;
         }
 
         public async Task Invoke(HttpContext context)
         {
             try
             {
-                await _next(context);
+                await next(context);
             }
             catch (Exception error)
             {

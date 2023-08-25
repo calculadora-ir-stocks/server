@@ -1,20 +1,6 @@
-﻿using System.Reflection;
-using System.Security.Authentication;
-using System.Security.Cryptography.X509Certificates;
-using System.Text;
-using Hangfire;
-using Hangfire.PostgreSql;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi.Models;
-using Polly;
-using Api.Clients.B3;
+﻿using Api.Clients.B3;
 using Api.Database;
 using Api.Notification;
-using Infrastructure.Repositories;
-using Infrastructure.Repositories.Account;
 using Api.Services.Auth;
 using Api.Services.B3;
 using Api.Services.IncomeTaxes;
@@ -30,10 +16,23 @@ using Core.Services.Hangfire.UserPlansValidity;
 using Core.Services.IncomeTaxes;
 using Core.Services.Plan;
 using Core.Services.PremiumCode;
+using Hangfire;
+using Hangfire.PostgreSql;
+using Infrastructure.Repositories;
+using Infrastructure.Repositories.Account;
 using Infrastructure.Repositories.AverageTradedPrice;
 using Infrastructure.Repositories.EmailCode;
 using Infrastructure.Repositories.Taxes;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
+using Polly;
 using Stripe;
+using System.Reflection;
+using System.Security.Authentication;
+using System.Security.Cryptography.X509Certificates;
+using System.Text;
 
 namespace Api
 {
@@ -43,7 +42,7 @@ namespace Api
         {
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 
-            services.AddSingleton<IB3Client, B3Client>();
+            services.AddScoped<IB3Client, B3Client>();
 
             services.AddScoped<IAccountService, Core.Services.Account.AccountService>();
             services.AddScoped<IAssetsService, AssetsService>();
@@ -55,13 +54,12 @@ namespace Api
 
             services.AddScoped<NotificationContext>();
 
-            // Classes responsáveis pelos algoritmos para cálculo de imposto de renda
-            services.AddScoped<IIncomeTaxesCalculator, BDRsIncomeTaxes>();
-            services.AddScoped<IIncomeTaxesCalculator, ETFsIncomeTaxes>();
-            services.AddScoped<IIncomeTaxesCalculator, FIIsIncomeTaxes>();
-            services.AddScoped<IIncomeTaxesCalculator, GoldIncomeTaxes>();
-            services.AddScoped<IIncomeTaxesCalculator, InvestmentsFundsIncomeTaxes>();
-            services.AddScoped<IIncomeTaxesCalculator, StocksIncomeTaxes>();
+            services.AddTransient<IIncomeTaxesCalculator, BDRsIncomeTaxes>();
+            services.AddTransient<IIncomeTaxesCalculator, ETFsIncomeTaxes>();
+            services.AddTransient<IIncomeTaxesCalculator, FIIsIncomeTaxes>();
+            services.AddTransient<IIncomeTaxesCalculator, GoldIncomeTaxes>();
+            services.AddTransient<IIncomeTaxesCalculator, InvestmentsFundsIncomeTaxes>();
+            services.AddTransient<IIncomeTaxesCalculator, StocksIncomeTaxes>();
 
             services.AddTransient<IJwtCommon, JwtCommon>();
 
@@ -73,6 +71,7 @@ namespace Api
                 options.Issuer = builder.Configuration["Jwt:Issuer"];
                 options.Audience = builder.Configuration["Jwt:Audience"];
             });
+
         }
 
         public static void AddStripeServices(this IServiceCollection services, IConfiguration configuration)
@@ -87,6 +86,8 @@ namespace Api
 
         public static void AddHangfireServices(this IServiceCollection services, WebApplicationBuilder builder)
         {
+            services.AddHangfireServer();
+
             services.AddScoped<IAverageTradedPriceUpdaterHangfire, AverageTradedPriceUpdaterHangfire>();
             services.AddScoped<IEmailCodeRemoverHangfire, EmailCodeRemoverHangfire>();
             services.AddScoped<IUserPlansValidityHangfire, UserPlansValidityHangfire>();
@@ -100,8 +101,6 @@ namespace Api
                 .UseSimpleAssemblyNameTypeSerializer()
                 .UseRecommendedSerializerSettings()
             );
-
-            services.AddHangfireServer();
 
             GlobalConfiguration.Configuration.UsePostgreSqlStorage(builder.Configuration.GetConnectionString("DefaultConnection"));
 

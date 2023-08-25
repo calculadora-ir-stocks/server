@@ -2,14 +2,15 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using Api.Services.IncomeTaxes;
 using Core.Requests.BigBang;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Api.Controllers;
 
 /// <summary>
 /// Responsável por calcular o imposto de renda dos ativos de renda variável.
 /// </summary>
+[Authorize]
 [Tags("Taxes")]
-// TODO [Authorize]
 public class TaxesController : BaseController
 {
     private readonly IAssetsService service;

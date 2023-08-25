@@ -4,7 +4,8 @@ using Core.Services.Account;
 
 namespace Api.Controllers;
 
-// TODO [Authorize]
+[Authorize]
+[Tags("Account")]
 public class AccountController : BaseController
 {
     private readonly IAccountService service;
@@ -15,7 +16,7 @@ public class AccountController : BaseController
     }
 
     /// <summary>
-    /// Envia um c�digo de verifica��o por e-mail.
+    /// Envia um código de verificação por e-mail.
     /// </summary>
     [AllowAnonymous]
     [HttpPost("send-code/{accountId}")]
@@ -26,7 +27,7 @@ public class AccountController : BaseController
     }
 
     /// <summary>
-    /// Retorna verdadeiro caso o c�digo de valida��o seja v�lido, falso caso contr�rio.
+    /// Retorna verdadeiro caso o código de validaçãoo seja válido, falso caso contrário.
     /// </summary>
     [AllowAnonymous]
     [HttpPost("validate-code/{accountId}")]
@@ -53,6 +54,6 @@ public class AccountController : BaseController
     public IActionResult Delete([FromRoute] Guid id)
     {
         service.Delete(id);
-        return Ok($"A conta do usu�rio {id} foi deletada com sucesso e sua conta foi desvinculada com a B3.");
+        return Ok($"A conta do usuário {id} foi deletada com sucesso e sua conta foi desvinculada com a B3.");
     }
 }

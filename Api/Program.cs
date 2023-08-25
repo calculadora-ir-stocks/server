@@ -25,7 +25,6 @@ builder.Services.AddDatabase(builder);
 // builder.Services.AddHangFireRecurringJob(builder);
 builder.Services.AddSwaggerConfiguration();
 
-builder.Services.Configure<AppSettings>(builder.Configuration.GetSection("AppSettings"));
 
 var app = builder.Build();
 
