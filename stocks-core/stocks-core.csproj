@@ -15,7 +15,7 @@
   
   <ItemGroup>
     <ProjectReference Include="..\stocks-infrastructure\stocks-infrastructure.csproj" />
-    <ProjectReference Include="..\stocks-common\stocks-common.csproj" />
+    <ProjectReference Include="..\Common\Common.csproj" />
   </ItemGroup>
 
 </Project>
