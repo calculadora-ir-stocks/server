@@ -24,7 +24,7 @@ namespace stocks_unit_tests.Services
         public void Should_throw_exception_if_investor_has_no_movements()
         {
             var emptyMovements = new Root();
-            Assert.ThrowsAsync<NoneMovementsException>(() => bigBang.Execute(emptyMovements, new Guid()));
+            Assert.ThrowsAsync<NoneMovementsException>(() => bigBang.GetB3ResponseDetails(emptyMovements, new Guid()));
         }
 
         #region Swing-trade
@@ -37,7 +37,7 @@ namespace stocks_unit_tests.Services
                 new EquitMovement("PETR4", B3ResponseConstants.Stocks, B3ResponseConstants.Sell, 23211, 1, new DateTime(2023, 01, 03))
             );
 
-            var response = bigBang.Execute(root, new Guid());
+            var response = bigBang.GetB3ResponseDetails(root, new Guid());
 
             //            foreach (var i in response.Item1)
             //            {
@@ -56,7 +56,7 @@ namespace stocks_unit_tests.Services
                 new EquitMovement("PETR4", B3ResponseConstants.Stocks, B3ResponseConstants.Sell, 20000, 1, new DateTime(2023, 01, 03))
             );
 
-            var response = bigBang.Execute(root, new Guid());
+            var response = bigBang.GetB3ResponseDetails(root, new Guid());
 
             //            foreach (var i in response.assets)
             //            {
@@ -75,7 +75,7 @@ namespace stocks_unit_tests.Services
                 new EquitMovement("VALE3", B3ResponseConstants.Stocks, B3ResponseConstants.Sell, 48000, 1, new DateTime(2023, 01, 11))
             );
 
-            var response = bigBang.Execute(root, new Guid());
+            var response = bigBang.GetB3ResponseDetails(root, new Guid());
 
             //foreach (var i in response.Item1)
             //{
@@ -99,7 +99,7 @@ namespace stocks_unit_tests.Services
                 new EquitMovement("VALE3", B3ResponseConstants.Stocks, B3ResponseConstants.Sell, 24432, 1, new DateTime(2023, 02, 07))
             );
 
-            var response = bigBang.Execute(root, new Guid());
+            var response = bigBang.GetB3ResponseDetails(root, new Guid());
             //TO-DO
         }
         #endregion

@@ -57,12 +57,12 @@ namespace Core.Services.EmailSender
         {
             try {
                 // TODO: criar variável de ambiente no Docker.
-                string? apiKey = Environment.GetEnvironmentVariable("SENDGRID_API_KEY");
+                string? apiKey = "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";
 
                 SendGridClient client = new(apiKey);
                 var from = new EmailAddress(StocksEmail, StocksName);
 
-                var to = new EmailAddress(account.CPF, account.Name);
+                var to = new EmailAddress(account.Email, account.Name);
 
                 var msg = MailHelper.CreateSingleEmail(from, to, subject, string.Empty, htmlContent);
                 var response = await client.SendEmailAsync(msg);

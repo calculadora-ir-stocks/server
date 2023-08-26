@@ -8,6 +8,7 @@ using Core.DTOs.B3;
 using Core.Models;
 using Infrastructure.Dtos;
 using Infrastructure.Repositories.AverageTradedPrice;
+using Core.Models.Responses;
 
 namespace Core.Services.IncomeTaxes
 {
@@ -22,7 +23,7 @@ namespace Core.Services.IncomeTaxes
             this.averageTradedPriceRepository = averageTradedPriceRepository;
         }
 
-        public async Task<(List<AssetIncomeTaxes>, List<AverageTradedPriceDetails>)> Execute(Movement.Root? request, Guid accountId)
+        public async Task<B3ResponseDetails> GetB3ResponseDetails(Movement.Root? request, Guid accountId)
         {
             var movements = GetInvestorMovements(request);
             if (movements.IsNullOrEmpty()) throw new NoneMovementsException("O usuário não possui nenhuma movimentação na bolsa até então.");
@@ -67,7 +68,7 @@ namespace Core.Services.IncomeTaxes
             return movements.OrderBy(x => x.MovementType).OrderBy(x => x.ReferenceDate).ToList();
         }
 
-        private async Task<(List<AssetIncomeTaxes>, List<AverageTradedPriceDetails>)> GetTaxesAndAverageTradedPrices(
+        private async Task<B3ResponseDetails> GetTaxesAndAverageTradedPrices(
             Dictionary<string, List<Movement.EquitMovement>> monthlyMovements, Guid accountId)
         {
             List<AssetIncomeTaxes> assetsIncomeTaxes = new();
@@ -139,7 +140,7 @@ namespace Core.Services.IncomeTaxes
                 }
             }
 
-            return (assetsIncomeTaxes, averageTradedPrices);
+            return new B3ResponseDetails(assetsIncomeTaxes, averageTradedPrices);
         }
 
         private static IEnumerable<AverageTradedPriceDetails> ToAverageTradedPriceDetails(IEnumerable<AverageTradedPriceDto> prices)

@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
-using Api.Services.IncomeTaxes;
 using Core.Requests.BigBang;
 using Microsoft.AspNetCore.Authorization;
+using Core.Services.TaxesService;
 
 namespace Api.Controllers;
 
@@ -13,9 +13,9 @@ namespace Api.Controllers;
 [Tags("Taxes")]
 public class TaxesController : BaseController
 {
-    private readonly IAssetsService service;
+    private readonly ITaxesService service;
 
-    public TaxesController(IAssetsService service)
+    public TaxesController(ITaxesService service)
     {
         this.service = service;
     }
@@ -41,7 +41,7 @@ public class TaxesController : BaseController
     [HttpGet("month/{month}/{accountId}")]
     public async Task<IActionResult> GetSpecifiedMonthTaxes(string month, Guid accountId)
     {
-        var response = await service.GetSpecifiedMonthTaxes(month, accountId);
+        var response = await service.GetTaxesByMonth(month, accountId);
 
         if (response.TradedAssets.IsNullOrEmpty()) return NotFound("Nenhum imposto de renda foi encontrado para o mês especificado.");
 
@@ -55,7 +55,7 @@ public class TaxesController : BaseController
     [HttpGet("year/{year}/{accountId}")]
     public async Task<IActionResult> GetSpecifiedYearTaxes(string year, Guid accountId)
     {
-        var response = await service.GetSpecifiedYearTaxes(year, accountId);
+        var response = await service.GetTaxesByYear(year, accountId);
 
         if (response.IsNullOrEmpty()) return NotFound("Nenhum imposto de renda foi encontrado para o ano especificado.");
 
@@ -69,18 +69,18 @@ public class TaxesController : BaseController
     [HttpPut("set-paid-or-unpaid/{month}/{accountId}")]
     public async Task<IActionResult> SetMonthAsPaid(string month, Guid accountId)
     {
-        await service.SetMonthAsPaidOrUnpaid(month, accountId);
+        await service.SetAsPaidOrUnpaid(month, accountId);
         return Ok("O mês especificado foi alterado para pago/não pago com sucesso.");
     }
 
     /// <summary>
-    /// Calcula e armazena o imposto de renda a ser pago em todos os meses retroativos.
-    /// Também calcula e armazena o preço médio de todos os ativos até a data atual.
+    /// Faz o cálculo de impostos retroativos e preço médio de todos os ativos da conta de um investidor.
+    /// Deve ser executado uma única vez quando um usuário cadastrar-se na plataforma.
     /// </summary>
     [HttpPost("big-bang/{accountId}")]
     public async Task<IActionResult> BigBang(Guid accountId, [FromBody] List<BigBangRequest> request)
     { 
-        await service.BigBang(accountId, request);
+        await service.ExecuteB3Sync(accountId, request);
         return Ok("Imposto de renda e preço médio mais recente calculados e armazenados com sucesso.");
     }
 

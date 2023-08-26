@@ -26,6 +26,11 @@ namespace Infrastructure.Models
         public string Password { get; set; }
         public string CPF { get; protected set; }
         public bool IsPremium { get; set; } = false;
+
+        /// <summary>
+        /// Define se a sincronização com os dados da B3 já foi realizada no cadastro do usuário.
+        /// </summary>
+        public bool IsB3SyncDone { get; set; } = false;
         #endregion
 
         #region Relationships

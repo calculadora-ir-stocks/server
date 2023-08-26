@@ -16,7 +16,12 @@ namespace Core.Services.Account
 
         private readonly ILogger<AccountService> logger;
 
-        public AccountService(IAccountRepository repository, IEmailSenderService emailSenderService, NotificationContext notificationContext, ILogger<AccountService> logger)
+        public AccountService(
+            IAccountRepository repository,
+            IEmailSenderService emailSenderService,
+            NotificationContext notificationContext,
+            ILogger<AccountService> logger
+        )
         {
             this.repository = repository;
             this.emailSenderService = emailSenderService;
@@ -103,7 +108,7 @@ namespace Core.Services.Account
                 }
 
                 account.HashPassword(password);
-                repository.UpdatePassword(accountId, account);
+                repository.Update(account);
             } catch (Exception e)
             {
                 logger.LogError(e, "Ocorreu um erro ao alterar a senha do usuário, {error}", e.Message);

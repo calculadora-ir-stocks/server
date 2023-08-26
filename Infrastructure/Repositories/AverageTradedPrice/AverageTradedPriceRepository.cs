@@ -75,11 +75,6 @@ namespace Infrastructure.Repositories.AverageTradedPrice
             return context.AverageTradedPrices.Where(x => tickers.Contains(x!.Ticker) && x.Account.Id.Equals(accountId)).ToList();
         }
 
-        public bool AlreadyHasAverageTradedPrice(Guid accountId)
-        {
-            return context.AverageTradedPrices.Where(x => x.Account.Id.Equals(accountId)).FirstOrDefault() != null;
-        }
-
         public Models.AverageTradedPrice? GetAverageTradedPrice(string ticker, Guid accountId)
         {
             return context.AverageTradedPrices.Where(x => x.Ticker == ticker && x.Account.Id == accountId).FirstOrDefault();

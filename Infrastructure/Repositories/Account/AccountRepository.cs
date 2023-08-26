@@ -23,40 +23,34 @@ namespace Infrastructure.Repositories.Account
             return _context.Accounts.Any(x => x.CPF == cpf);
         }
 
-        public void Delete(Infrastructure.Models.Account account)
+        public void Delete(Models.Account account)
         {
             _context.Accounts.Remove(account);
             _context.SaveChanges();
         }
 
-        public IEnumerable<Infrastructure.Models.Account> GetAll()
+        public IEnumerable<Models.Account> GetAll()
         {
             return _context.Accounts.AsList();
         }
 
-        public Infrastructure.Models.Account? GetByEmail(string email)
+        public Models.Account? GetByEmail(string email)
         {
-            return _context.Accounts.AsEnumerable().SingleOrDefault(x => x.CPF == email);
+            return _context.Accounts.AsEnumerable().SingleOrDefault(x => x.Email == email);
         }
 
-        public Infrastructure.Models.Account? GetById(Guid accountId)
+        public Models.Account? GetById(Guid accountId)
         {
             return _context.Accounts.Where(x => x.Id == accountId).FirstOrDefault();
         }
 
-        public void Update(Infrastructure.Models.Account account)
+        public void Update(Models.Account account)
         {
             _context.Accounts.Update(account);
             _context.SaveChanges();
         }
 
-        public void UpdatePassword(Guid accountId, Infrastructure.Models.Account account)
-        {
-            _context.Update(account);
-            _context.SaveChanges();
-        }
-
-        public IEnumerable<Infrastructure.Models.Account> GetAllPremiums()
+        public IEnumerable<Models.Account> GetAllPremiums()
         {
             return _context.Accounts.Where(x => x.IsPremium);
         }

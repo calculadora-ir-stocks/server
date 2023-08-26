@@ -3,7 +3,6 @@ using Api.Database;
 using Api.Notification;
 using Api.Services.Auth;
 using Api.Services.B3;
-using Api.Services.IncomeTaxes;
 using Api.Services.Jwt;
 using Common;
 using Core.Calculators;
@@ -16,6 +15,7 @@ using Core.Services.Hangfire.UserPlansValidity;
 using Core.Services.IncomeTaxes;
 using Core.Services.Plan;
 using Core.Services.PremiumCode;
+using Core.Services.TaxesService;
 using Hangfire;
 using Hangfire.PostgreSql;
 using Infrastructure.Repositories;
@@ -45,7 +45,7 @@ namespace Api
             services.AddScoped<IB3Client, B3Client>();
 
             services.AddScoped<IAccountService, Core.Services.Account.AccountService>();
-            services.AddScoped<IAssetsService, AssetsService>();
+            services.AddScoped<ITaxesService, TaxesService>();
             services.AddScoped<IPlanService, Core.Services.Plan.PlanService>();
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IEmailSenderService, EmailSenderService>();
@@ -156,11 +156,11 @@ namespace Api
 
         public static void AddRepositories(this IServiceCollection services)
         {
-            services.AddTransient(typeof(IGenericRepository<>), typeof(GenericRepository<>));
-            services.AddTransient<IAccountRepository, AccountRepository>();
-            services.AddTransient<IAverageTradedPriceRepostory, AverageTradedPriceRepository>();
-            services.AddTransient<IEmailCodeRepository, EmailCodeRepository>();
-            services.AddTransient<ITaxesRepository, TaxesRepository>();
+            services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
+            services.AddScoped<IAccountRepository, AccountRepository>();
+            services.AddScoped<IAverageTradedPriceRepostory, AverageTradedPriceRepository>();
+            services.AddScoped<IEmailCodeRepository, EmailCodeRepository>();
+            services.AddScoped<ITaxesRepository, TaxesRepository>();
         }
 
         public static void AddJwtAuthentications(this IServiceCollection services, WebApplicationBuilder builder)
