@@ -11,7 +11,6 @@ namespace Core.Calculators
         /// <para>Altera o <c>assets</c> com o imposto devido referente as movimentações <c>movements</c>.</para>
         /// <para>Altera o <c>averageTradedPrices</c> com o preço médio dos ativos negociados referente as movimentações <c>movements</c>.</para>
         /// </summary>
-        void Execute(List<AssetIncomeTaxes> assets, List<AverageTradedPriceDetails> averageTradedPrices,
-            IEnumerable<Movement.EquitMovement> movements, string month);
+        void Execute(InvestorMovementDetails investorMovementDetails, IEnumerable<Movement.EquitMovement> movements, string month);
     }
 }

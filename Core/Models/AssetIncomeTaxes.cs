@@ -17,14 +17,19 @@ namespace Core.Models
         public string Month { get; init; }
 
         /// <summary>
+        /// O nome do tipo de ativo sendo negociado.
+        /// </summary>
+        public string AssetName { get; init; }
+
+        /// <summary>
+        /// Uma lista em formato JSON que representa os ativos negociados.
+        /// </summary>
+        public IEnumerable<OperationDetails> TradedAssets { get; init; }
+
+        /// <summary>
         /// O id do tipo de ativo sendo negociado.
         /// </summary>
         public Asset AssetTypeId { get; set; }
-
-        /// <summary>
-        /// O nome do tipo de ativo sendo negociado.
-        /// </summary>
-        public string AssetName { get; set; }
 
         /// <summary>
         /// Total a ser pago em imposto de renda referente a um ativo.
@@ -44,11 +49,6 @@ namespace Core.Models
         /// <summary>
         /// O total de lucro ou prejuízo de um determinado ativo movimentado por day trade.
         /// </summary>
-        public double DayTradeProfit { get; set; } = 0;
-
-        /// <summary>
-        /// Uma lista em formato JSON que representa os ativos negociados.
-        /// </summary>
-        public IEnumerable<OperationDetails> TradedAssets { get; set; }
+        public double DayTradeProfit { get; set; } = 0;        
     }
 }

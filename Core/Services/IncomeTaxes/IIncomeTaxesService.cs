@@ -1,7 +1,6 @@
 ﻿using Common.Models;
 using Core.DTOs.B3;
 using Core.Models;
-using Core.Models.Responses;
 
 namespace Core.Services.IncomeTaxes
 {
@@ -14,6 +13,6 @@ namespace Core.Services.IncomeTaxes
         /// <param name="request"></param>
         /// <param name="accountId"></param>
         /// <returns>Detalhe dos impostos de cada mês e o preço médio de cada ativo negociado.</returns>
-        Task<B3ResponseDetails> GetB3ResponseDetails(Movement.Root? request, Guid accountId);
+        Task<InvestorMovementDetails?> GetB3ResponseDetails(Movement.Root? request, Guid accountId);
     }
 }

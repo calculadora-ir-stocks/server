@@ -382,6 +382,8 @@ public class TaxesService : ITaxesService
 
             var response = await incomeTaxesService.GetB3ResponseDetails(b3Response, accountId);
 
+            if (response is null) return;
+
             await SaveB3SyncData(response, account);
 
             logger.LogInformation("Big Bang executado com sucesso para o usuário {accountId}.", accountId);
@@ -413,7 +415,7 @@ public class TaxesService : ITaxesService
         return b3Response;
     }
 
-    private async Task SaveB3SyncData(B3ResponseDetails response, Infrastructure.Models.Account account)
+    private async Task SaveB3SyncData(InvestorMovementDetails response, Infrastructure.Models.Account account)
     {
         List<Infrastructure.Models.IncomeTaxes> incomeTaxes = new();
         CreateIncomeTaxes(response.Assets, incomeTaxes, account);

@@ -9,6 +9,7 @@ using Core.Models;
 using Infrastructure.Dtos;
 using Infrastructure.Models;
 using Infrastructure.Repositories.AverageTradedPrice;
+using SendGrid;
 
 namespace Core.Services.Hangfire.AverageTradedPriceUpdater
 {
@@ -52,21 +53,18 @@ namespace Core.Services.Hangfire.AverageTradedPriceUpdater
                     if (lastMonthMovements is null) return;
 
                     var movements = lastMonthMovements.Data.EquitiesPeriods.EquitiesMovements;
-                    var averageTradedPrices = await GetTradedAverageTradedPrices(movements, account.Id);
+                    var averageTradedPrices = await GetMonthTradedAverageTradedPrices(movements, account.Id);
 
-                    List<AverageTradedPriceDetails> updatedAverageTradedPrices = new();
-                    updatedAverageTradedPrices.AddRange(ToDtoAverageTradedPriceDetails(averageTradedPrices));
+                    var _ = CalculateProfit(movements, averageTradedPrices);
 
-                    var (_, _) = CalculateProfit(movements, updatedAverageTradedPrices);
-
-                    var tickersToAddIntoDatabase = await GetTradedTickersToAddIntoDatabase(updatedAverageTradedPrices, account);
-                    var tickersToUpdateFromDatabase = GetTradedTickersToUpdate(tickersToAddIntoDatabase!, updatedAverageTradedPrices, account);
-                    var tickersToRemoveFromDatabase = GetTradedTickersToRemove(movements, updatedAverageTradedPrices);
+                    var tickersToAddIntoDatabase = await GetTradedTickersToAddIntoDatabase(averageTradedPrices, account);
+                    var tickersToUpdateFromDatabase = GetTradedTickersToUpdate(tickersToAddIntoDatabase!, averageTradedPrices, account);
+                    var tickersToRemoveFromDatabase = GetTradedTickersToRemove(movements, averageTradedPrices);
 
                     await UpdateInvestorAverageTradedPrices(
                         tickersToAddIntoDatabase,
                         tickersToUpdateFromDatabase,
-                        updatedAverageTradedPrices,
+                        averageTradedPrices,
                         tickersToRemoveFromDatabase,
                         account
                     );
@@ -108,26 +106,15 @@ namespace Core.Services.Hangfire.AverageTradedPriceUpdater
                 await RemoveTradedTickers(tickersToRemove!, account.Id);
         }
 
-        private static IEnumerable<AverageTradedPriceDetails> ToDtoAverageTradedPriceDetails(
-            IEnumerable<AverageTradedPriceDto> averageTradedPrices
-        )
-        {
-            foreach (var item in averageTradedPrices)
-            {
-                yield return new AverageTradedPriceDetails(
-                    item.Ticker,
-                    averageTradedPrice: item.AverageTradedPrice,
-                    totalBought: item.AverageTradedPrice,
-                    item.Quantity
-                );
-            }
-        }
-
-        private async Task<IEnumerable<AverageTradedPriceDto>> GetTradedAverageTradedPrices(
+        private async Task<List<AverageTradedPriceDetails>> GetMonthTradedAverageTradedPrices(
             List<Movement.EquitMovement> movements, Guid id
         )
         {
-            return await averageTradedPriceRepository.GetAverageTradedPricesDto(id, movements.Select(x => x.TickerSymbol).ToList());
+            var response = await averageTradedPriceRepository.GetAverageTradedPricesDto(id, movements.Select(x => x.TickerSymbol).ToList());
+
+            return response
+                .Select(x => new AverageTradedPriceDetails(x.Ticker, x.AverageTradedPrice, x.AverageTradedPrice, x.Quantity))
+                .ToList();
         }
 
         private async Task RemoveTradedTickers(IEnumerable<string?> tickersToRemove, Guid id)

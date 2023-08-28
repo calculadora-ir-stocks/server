@@ -8,7 +8,6 @@ using Core.DTOs.B3;
 using Core.Models;
 using Infrastructure.Dtos;
 using Infrastructure.Repositories.AverageTradedPrice;
-using Core.Models.Responses;
 
 namespace Core.Services.IncomeTaxes
 {
@@ -23,7 +22,7 @@ namespace Core.Services.IncomeTaxes
             this.averageTradedPriceRepository = averageTradedPriceRepository;
         }
 
-        public async Task<B3ResponseDetails> GetB3ResponseDetails(Movement.Root? request, Guid accountId)
+        public async Task<InvestorMovementDetails?> GetB3ResponseDetails(Movement.Root? request, Guid accountId)
         {
             var movements = GetInvestorMovements(request);
             if (movements.IsNullOrEmpty()) throw new NoneMovementsException("O usuário não possui nenhuma movimentação na bolsa até então.");
@@ -44,7 +43,7 @@ namespace Core.Services.IncomeTaxes
 
         private static List<Movement.EquitMovement> GetInvestorMovements(Movement.Root? response)
         {
-            if (response is null || response.Data is null) return new List<Movement.EquitMovement>();
+            if (response is null || response.Data is null) return Array.Empty<Movement.EquitMovement>().ToList();
 
             var movements = response.Data.EquitiesPeriods.EquitiesMovements;
 
@@ -68,15 +67,19 @@ namespace Core.Services.IncomeTaxes
             return movements.OrderBy(x => x.MovementType).OrderBy(x => x.ReferenceDate).ToList();
         }
 
-        private async Task<B3ResponseDetails> GetTaxesAndAverageTradedPrices(
+        private async Task<InvestorMovementDetails?> GetTaxesAndAverageTradedPrices(
             Dictionary<string, List<Movement.EquitMovement>> monthlyMovements, Guid accountId)
         {
-            List<AssetIncomeTaxes> assetsIncomeTaxes = new();
-            List<AverageTradedPriceDetails> averageTradedPrices = new();
+            InvestorMovementDetails movementDetails = null!;
+
+            if (monthlyMovements.Any())
+            {
+                movementDetails = new();
+            }
 
             foreach (var monthMovements in monthlyMovements)
             {
-                SetDayTradeOperations(monthMovements.Value);
+                SetDayTradeMovementsAsDayTrade(monthMovements.Value);
 
                 var stocks = monthMovements.Value.Where(x => x.AssetType.Equals(B3ResponseConstants.Stocks));
                 var etfs = monthMovements.Value.Where(x => x.AssetType.Equals(B3ResponseConstants.ETFs));
@@ -87,84 +90,69 @@ namespace Core.Services.IncomeTaxes
 
                 if (stocks.Any())
                 {
-                    var prices = await GetAverageTradedPrices(accountId, stocks);
-                    averageTradedPrices.AddRange(ToAverageTradedPriceDetails(prices));
+                    movementDetails.AverageTradedPrices.AddRange(await GetAverageTradedPrices(accountId, stocks));
 
                     calculator = new StocksIncomeTaxes();
-                    calculator.Execute(assetsIncomeTaxes, averageTradedPrices, stocks, monthMovements.Key);
+                    calculator.Execute(movementDetails, stocks, monthMovements.Key);
                 }
 
                 if (etfs.Any())
                 {
-                    var prices = await GetAverageTradedPrices(accountId, etfs);
-                    averageTradedPrices.AddRange(ToAverageTradedPriceDetails(prices));
+                    movementDetails.AverageTradedPrices.AddRange(await GetAverageTradedPrices(accountId, etfs));
 
                     calculator = new ETFsIncomeTaxes();
-                    calculator.Execute(assetsIncomeTaxes, averageTradedPrices, etfs, monthMovements.Key);
+                    calculator.Execute(movementDetails, etfs, monthMovements.Key);
                 }
 
                 if (fiis.Any())
                 {
-                    var prices = await GetAverageTradedPrices(accountId, fiis);
-                    averageTradedPrices.AddRange(ToAverageTradedPriceDetails(prices));
+                    movementDetails.AverageTradedPrices.AddRange(await GetAverageTradedPrices(accountId, fiis));
 
                     calculator = new FIIsIncomeTaxes();
-                    calculator.Execute(assetsIncomeTaxes, averageTradedPrices, fiis, monthMovements.Key);
+                    calculator.Execute(movementDetails, fiis, monthMovements.Key);
                 }
 
                 if (bdrs.Any())
                 {
-                    var prices = await GetAverageTradedPrices(accountId, bdrs);
-                    averageTradedPrices.AddRange(ToAverageTradedPriceDetails(prices));
+                    movementDetails.AverageTradedPrices.AddRange(await GetAverageTradedPrices(accountId, bdrs));
 
                     calculator = new BDRsIncomeTaxes();
-                    calculator.Execute(assetsIncomeTaxes, averageTradedPrices, bdrs, monthMovements.Key);
+                    calculator.Execute(movementDetails, bdrs, monthMovements.Key);
                 }
 
                 if (gold.Any())
                 {
-                    var prices = await GetAverageTradedPrices(accountId, gold);
-                    averageTradedPrices.AddRange(ToAverageTradedPriceDetails(prices));
+                    movementDetails.AverageTradedPrices.AddRange(await GetAverageTradedPrices(accountId, gold));
 
                     calculator = new GoldIncomeTaxes();
-                    calculator.Execute(assetsIncomeTaxes, averageTradedPrices, gold, monthMovements.Key);
+                    calculator.Execute(movementDetails, gold, monthMovements.Key);
                 }
 
                 if (fundInvestments.Any())
                 {
-                    var prices = await GetAverageTradedPrices(accountId, fundInvestments);
-                    averageTradedPrices.AddRange(ToAverageTradedPriceDetails(prices));
+                    movementDetails.AverageTradedPrices.AddRange(await GetAverageTradedPrices(accountId, fundInvestments));
 
                     calculator = new InvestmentsFundsIncomeTaxes();
-                    calculator.Execute(assetsIncomeTaxes, averageTradedPrices, fundInvestments, monthMovements.Key);
+                    calculator.Execute(movementDetails, fundInvestments, monthMovements.Key);
                 }
             }
 
-            return new B3ResponseDetails(assetsIncomeTaxes, averageTradedPrices);
+            return movementDetails;
         }
 
-        private static IEnumerable<AverageTradedPriceDetails> ToAverageTradedPriceDetails(IEnumerable<AverageTradedPriceDto> prices)
+        private async Task<IEnumerable<AverageTradedPriceDetails>> GetAverageTradedPrices(Guid accountId, IEnumerable<Movement.EquitMovement> movements)
         {
-            foreach (var price in prices)
-            {
-                yield return new AverageTradedPriceDetails(
-                    tickerSymbol: price.Ticker,
-                    averageTradedPrice: price.AverageTradedPrice,
-                    totalBought: price.AverageTradedPrice,
-                    tradedQuantity: price.Quantity
-                );
-            }
-        }
+            var response = await averageTradedPriceRepository.GetAverageTradedPricesDto(accountId, movements.Select(x => x.TickerSymbol).ToList());
 
-        private async Task<IEnumerable<AverageTradedPriceDto>> GetAverageTradedPrices(Guid accountId, IEnumerable<Movement.EquitMovement> movements)
-        {
-            return await averageTradedPriceRepository.GetAverageTradedPricesDto(accountId, movements.Select(x => x.TickerSymbol).ToList());
+            return response
+                .Select(x => new AverageTradedPriceDetails(x.Ticker, x.AverageTradedPrice, x.AverageTradedPrice, x.Quantity))
+                .ToList();
         }
 
         /// <summary>
         /// Altera a propriedade booleana DayTraded para verdadeiro em operações de compra e venda day-trade.
         /// </summary>
-        private static void SetDayTradeOperations(List<Movement.EquitMovement> movements)
+        private static void SetDayTradeMovementsAsDayTrade(List<Movement.EquitMovement> movements)
         {
             var buys = movements.Where(x => x.MovementType == B3ResponseConstants.Buy);
             var sells = movements.Where(x => x.MovementType == B3ResponseConstants.Sell);
