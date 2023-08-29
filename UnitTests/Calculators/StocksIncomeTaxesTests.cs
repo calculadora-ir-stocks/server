@@ -24,13 +24,12 @@ namespace stocks_unit_tests.Business
         [MemberData(nameof(DayTradeData))]
         public void Should_be_day_trade_if_buy_and_sell_are_on_the_same_day(List<Movement.EquitMovement> movements)
         {
-            List<AssetIncomeTaxes> response = new();
-            List<AverageTradedPriceDetails> averageTradedPrice = new();
+            InvestorMovementDetails response = new();
 
-            stocksCalculator.Execute(response, averageTradedPrice, movements, "1");
+            stocksCalculator.Execute(response, movements, "1");
 
             AssetIncomeTaxes stocksResponse =
-                response.Where(x => x.AssetTypeId == Asset.Stocks).Single();
+                response.Assets.Where(x => x.AssetTypeId == Asset.Stocks).Single();
 
             decimal twentyPercentTaxes = (AliquotConstants.IncomeTaxesForDayTrade / 100m) * (decimal)stocksResponse.DayTradeProfit;
             double totalSold = movements.Where(x => x.MovementType.Equals(B3ResponseConstants.Sell)).Select(x => x.OperationValue).Sum();
@@ -75,13 +74,12 @@ namespace stocks_unit_tests.Business
         [MemberData(nameof(SwingTradeData))]
         public void Should_be_swing_trade_if_buy_and_sell_are_on_different_days(List<Movement.EquitMovement> movements)
         {
-            List<AssetIncomeTaxes> response = new();
-            List<AverageTradedPriceDetails> averageTradedPrice = new();
+            InvestorMovementDetails response = new();
 
-            stocksCalculator.Execute(response, averageTradedPrice, movements, "1");
+            stocksCalculator.Execute(response, movements, "1");
 
             AssetIncomeTaxes stocksResponse =
-                response.Where(x => x.AssetTypeId == Asset.Stocks).Single();
+                response.Assets.Where(x => x.AssetTypeId == Asset.Stocks).Single();
 
             decimal fifteenPercentTaxes = (AliquotConstants.IncomeTaxesForStocks / 100m) * (decimal)stocksResponse.SwingTradeProfit;
             double totalSold = movements.Where(x => x.MovementType.Equals(B3ResponseConstants.Sell)).Select(x => x.OperationValue).Sum();
@@ -140,13 +138,12 @@ namespace stocks_unit_tests.Business
         [MemberData(nameof(DayTradeAndSwingTradeData))]
         public void Should_calculate_day_trade_and_swing_trade_operations(List<Movement.EquitMovement> movements)
         {
-            List<AssetIncomeTaxes> response = new();
-            List<AverageTradedPriceDetails> averageTradedPrice = new();
+            InvestorMovementDetails response = new();
 
-            stocksCalculator.Execute(response, averageTradedPrice, movements, "1");
+            stocksCalculator.Execute(response, movements, "1");
 
             AssetIncomeTaxes stocksResponse =
-                response.Where(x => x.AssetTypeId == Asset.Stocks).Single();
+                response.Assets.Where(x => x.AssetTypeId == Asset.Stocks).Single();
 
             decimal swingTradeTaxes = (AliquotConstants.IncomeTaxesForStocks / 100m) * (decimal)stocksResponse.SwingTradeProfit;
             decimal dayTradeTaxes = (AliquotConstants.IncomeTaxesForDayTrade / 100m) * (decimal)stocksResponse.DayTradeProfit;

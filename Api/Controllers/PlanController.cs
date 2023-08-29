@@ -24,15 +24,5 @@ namespace Api.Controllers
         {
             return Ok(service.GetAll());
         }
-
-        /// <summary>
-        /// Assina um novo plano para o usuário especificado.
-        /// </summary>
-        [HttpPost]
-        public IActionResult Subscribe([FromBody] PlanSubscribeRequest request, CancellationToken cancellationToken)
-        {
-            service.Subscribe(request, cancellationToken);
-            return Ok();
-        }
-    }
+   }
 }
