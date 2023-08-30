@@ -1,7 +1,4 @@
 ﻿using Infrastructure.Repositories;
-using Core.Models.Requests.Plan;
-using Core.Models.Stripe;
-using Stripe;
 
 namespace Core.Services.Plan
 {

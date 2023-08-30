@@ -27,7 +27,7 @@ public class AccountController : BaseController
     }
 
     /// <summary>
-    /// Retorna verdadeiro caso o código de validaçãoo seja válido, falso caso contrário.
+    /// Retorna verdadeiro caso o código de validação seja válido, falso caso contrário.
     /// </summary>
     [AllowAnonymous]
     [HttpPost("validate-code/{accountId}")]

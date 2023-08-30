@@ -4,6 +4,7 @@ using Api.Notification;
 using Api.Services.Auth;
 using Api.Services.B3;
 using Api.Services.Jwt;
+using Billing.Services;
 using Common;
 using Core.Calculators;
 using Core.Calculators.Assets;
@@ -22,6 +23,7 @@ using Infrastructure.Repositories;
 using Infrastructure.Repositories.Account;
 using Infrastructure.Repositories.AverageTradedPrice;
 using Infrastructure.Repositories.EmailCode;
+using Infrastructure.Repositories.Stripe;
 using Infrastructure.Repositories.Taxes;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -51,6 +53,7 @@ namespace Api
             services.AddScoped<IEmailSenderService, EmailSenderService>();
             services.AddScoped<IIncomeTaxesService, IncomeTaxesService>();
             services.AddScoped<IPremiumCodeService, PremiumCodeService>();
+            services.AddScoped<IStripeService, StripeService>();
 
             services.AddScoped<NotificationContext>();
 

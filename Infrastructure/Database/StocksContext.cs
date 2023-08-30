@@ -66,6 +66,9 @@ namespace Api.Database
                 .HasOne(ap => ap.Account)
                 .WithMany(ap => ap.AverageTradedPrices);
 
+            modelBuilder.Entity<StripePaymentInfo>()
+                .HasOne(ap => ap.Account);
+
             modelBuilder.Entity<Asset>().HasData
             (
                 new Asset(1, "Ações"),
@@ -78,10 +81,10 @@ namespace Api.Database
 
             modelBuilder.Entity<Plan>().HasData
             (
-                new Plan(PlansConstants.Free, "Gratuito", "Plano gratuito", 0000, 1),
-                new Plan(PlansConstants.Monthly, "Mensal", "R$39,99 por mês", 3999, 1),
-                new Plan(PlansConstants.Semester, "Semestral", "R$29,99 por mês", 2999, 6),
-                new Plan(PlansConstants.Anual, "Anual", "R$19,99 por mês", 1999, 12)
+                new Plan(PlansConstants.Free, "Gratuito", "Plano gratuito", "price_1NkZ3XElcTcz6jitSpsX5bce"),
+                new Plan(PlansConstants.Monthly, "Mensal", "R$39,99 por mês", "price_1NioETElcTcz6jitFPhhg4HH"),
+                new Plan(PlansConstants.Semester, "Semestral", "R$29,99 por mês", "price_1Ninm4ElcTcz6jitB40ifv1V"),
+                new Plan(PlansConstants.Anual, "Anual", "R$19,99 por mês", "price_1NiniyElcTcz6jit3AKGk57n")
             );
 
             modelBuilder.Entity<PremiumCode>().HasData
