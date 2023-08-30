@@ -1,7 +1,8 @@
 ﻿using Common.Constants;
 using Infrastructure.Models;
 using Infrastructure.Repositories;
-using Newtonsoft.Json;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Stripe;
 using Stripe.Checkout;
 
@@ -10,52 +11,75 @@ namespace Billing.Services
     public class StripeService : IStripeService
     {
         private readonly IGenericRepository<Infrastructure.Models.Plan> genericRepositoryPlan;
-        private readonly IGenericRepository<StripePaymentInfo> genericRepositoryStripe;
+        private readonly IGenericRepository<Orders> genericRepositoryStripe;
 
-        public StripeService(IGenericRepository<Infrastructure.Models.Plan> genericRepositoryPlan, IGenericRepository<StripePaymentInfo> genericRepositoryStripe)
+        private readonly ILogger<StripeService> logger;
+
+        // TODO store secret on appSettings.json
+        private const string WebhookSecret = "whsec_19efbb10a933ae75a8f1dc3fce9f406e3b206d2df41d81204269373cf56755c5";
+
+        public StripeService(
+            IGenericRepository<Infrastructure.Models.Plan> genericRepositoryPlan,
+            IGenericRepository<Orders> genericRepositoryStripe,
+            ILogger<StripeService> logger
+        )
         {
             this.genericRepositoryPlan = genericRepositoryPlan;
             this.genericRepositoryStripe = genericRepositoryStripe;
+            this.logger = logger;
         }
 
-        public Session CreateCheckoutSession()
+        public async Task<Session> CreateCheckoutSession(string productId)
         {
-            var plans = genericRepositoryPlan.GetAll().Where(x => x.Id != PlansConstants.Free);
-
-            var items = new List<SessionLineItemOptions>();
-
-            foreach (var plan in plans)
-            {
-                items.Add(new SessionLineItemOptions { Price = plan.StripeProductId, Quantity = 1 });
-            }
+            // TODO remove it, only for testing purposes
+            productId = "price_1NioETElcTcz6jitFPhhg4HH";
 
             var options = new SessionCreateOptions
             {
-                LineItems = items,
-                Mode = "subscription",
-                SuccessUrl = "domain" + "?success=true&session_id={CHECKOUT_SESSION_ID}",
-                CancelUrl = "domain" + "?canceled=true",
+                LineItems = new List<SessionLineItemOptions>()
+                {
+                    new SessionLineItemOptions
+                    {
+                        Price = productId,
+                        Quantity = 1
+                    }
+                },
+                Mode = "payment",
+                SuccessUrl = "https://localhost:7274/stripe?success=true",
+                CancelUrl = "https://localhost:7274/stripe?canceled=true",
+                Currency = "BRL"
             };
 
-            var service = new SessionService();
-            Session session = service.Create(options);
+            try
+            {
+                var service = new SessionService();
+                var session = await service.CreateAsync(options);
 
-            return session;
+                return session;
+            } catch (StripeException s)
+            {
+                logger.LogError("Ocoprreu um erro ao criar o Checkout Session do Stripe. {e}", s.Message);
+                throw new Exception(s.Message);
+            }
         }
 
-        public void CreateCheckoutSessionForFreeTrial()
+        public async Task CreateCheckoutSessionForFreeTrial()
         {
             var freeTrialPlan = genericRepositoryPlan.GetAll().Where(x => x.Id == PlansConstants.Free).Single();
 
             var options = new SessionCreateOptions
             {
-                Mode = "subscription",
-                SuccessUrl = "domain" + "?success=true&session_id={CHECKOUT_SESSION_ID}",
-                CancelUrl = "domain" + "?canceled=true",
                 LineItems = new List<SessionLineItemOptions>
                 {
-                    new SessionLineItemOptions { Price = freeTrialPlan.StripeProductId, Quantity = 1 },
+                    new SessionLineItemOptions 
+                    { 
+                        Price = freeTrialPlan.StripeProductId,
+                        Quantity = 1 
+                    },
                 },
+                Mode = "payment",
+                SuccessUrl = "https://localhost:7274/stripe?success=true",
+                CancelUrl = "https://localhost:7274/stripe?canceled=true",
                 SubscriptionData = new SessionSubscriptionDataOptions
                 {
                     TrialSettings = new SessionSubscriptionDataTrialSettingsOptions
@@ -71,17 +95,20 @@ namespace Billing.Services
             };
 
             var service = new SessionService();
-            service.Create(options);
+            await service.CreateAsync(options);
         }
 
-        public async Task<Stripe.BillingPortal.Session> CreatePortalSession(string checkoutSessionCustomerId)
+        public async Task<Stripe.BillingPortal.Session> CreatePortalSession(string checkoutSessionId)
         {
-            string customerId = "Here CUSTOMER_ID refers to the customer ID created by a Checkout Session that you saved while" +
-                " processing the checkout.session.completed webhook. You can also set a default redirect link for the portal in the Dashboard.\r\n\r\n";
+            // TODO: are we going to use bills management?
+
+            var checkoutService = new SessionService();
+            var checkoutSession = await checkoutService.GetAsync(checkoutSessionId);
 
             var options = new Stripe.BillingPortal.SessionCreateOptions
             {
-                Customer = checkoutSessionCustomerId,
+                Customer = checkoutSession.CustomerId,
+                ReturnUrl = "This is the URL to which your customer will return after they are done managing billing in the Customer Portal.",
             };
 
             var service = new Stripe.BillingPortal.SessionService();
@@ -90,35 +117,58 @@ namespace Billing.Services
             return session;
         }
 
-        public async Task HandleUserPlansNotifications(string json, string stripeSignatureHeader)
+        public async Task<Session> GetServiceSessionById(string sessionId)
+        {
+            var service = new SessionService();
+            var session = await service.GetAsync(sessionId);
+
+            return session;
+        }
+
+        public void HandleUserPlansNotifications(string json, string stripeSignatureHeader)
         {
             Event stripeEvent;
 
             try
             {
-                string webhookSecret = "STRIPE_WEBHOOK_SECRET";
 
-                stripeEvent = EventUtility.ConstructEvent(json, stripeSignatureHeader, webhookSecret);
+                stripeEvent = EventUtility.ConstructEvent(json, stripeSignatureHeader, WebhookSecret);
 
-                Console.WriteLine($"Webhook notification with type: {stripeEvent.Type} found for {stripeEvent.Id}");
+                logger.LogInformation("Webhook do Stripe executado do tipo {stripeEvent.Type} de id {stripeEvent.Id} encontrado.", stripeEvent.Type, stripeEvent.Id);
             }
             catch (Exception e)
             {
-                Console.WriteLine($"Something failed {e}");
+                logger.LogError("Something failed {e}", e);
                 throw new Exception("Ocorreu um erro ao obter a atualização de plano de um usuário.");
             }
 
             switch (stripeEvent.Type)
             {
+                /**
+                 * Webhook event description:
+                 * Sent when a customer clicks the Pay or Subscribe button in Checkout, informing you of a new purchase.
+                 * */
                 case "checkout.session.completed":
-                    string? stripeObject = stripeEvent.Data.Object.ToString();
+                    var session = stripeEvent.Data.Object as Session;
 
-                    if (stripeObject is null) throw new Exception("O objeto de evento de Webhook do Stripe é nulo.");
+                    bool isOrderPaid = session!.PaymentStatus == "paid";
 
-                    // StripeEventId stripeEventCustomerId = JsonConvert.DeserializeObject<StripeEventId>(stripeObject!);
-                    // genericRepositoryStripe.Add(new StripePaymentInfo(stripeEventCustomerId.Id));
+                    if (isOrderPaid)
+                    {
+                        genericRepositoryStripe.Add(
+                            new Orders(session!.CustomerId, session.SubscriptionId)
+                        );
 
-                    // Sent when a customer clicks the Pay or Subscribe button in Checkout, informing you of a new purchase.
+                        var options = new SessionGetOptions();
+                        options.AddExpand("line_items");
+
+                        var service = new SessionService();
+
+                        Session sessionWithLineItems = service.Get(session.Id, options);
+                        StripeList<LineItem> lineItems = sessionWithLineItems.LineItems;
+
+                        SubscribeToPlan(lineItems);
+                    }
 
                     // Payment is successful and the subscription is created.
                     // You should provision the subscription and save the customer ID to your database.
@@ -145,6 +195,11 @@ namespace Billing.Services
                     break;
                     // Unhandled event type
             }
+        }
+
+        private void SubscribeToPlan(StripeList<LineItem> lineItems)
+        {
+            throw new NotImplementedException();
         }
     }
 }

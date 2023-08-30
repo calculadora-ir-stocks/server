@@ -1,21 +1,19 @@
 ﻿namespace Infrastructure.Models
 {
     /// <summary>
-    /// Quando um usuário faz uma autenticação com o Stripe para assinar um plano, por exemplo,
-    /// o Webhook do Stripe nos notifica com o <c>customer.id</c> que precisa ser salvo para ser usado posteriormente: .
+    /// Quando um usuário assinar um plano, um servidor dedicado do Stripe será criado - o servidor Checkout.
+    /// Toda vez que um servidor Checkout é criado, armazenamos na base de dados o pagamento.
     /// Leia mais em https://stripe.com/docs/billing/subscriptions/build-subscriptions?ui=checkout#create-pricing-model:~:text=To%20determine%20the,database%20for%20verification.
     /// </summary>
-    public class StripePaymentInfo
+    public class Orders
     {
-        public StripePaymentInfo(Guid accountId, Account account, string customerId)
+        public Orders(string customerId, string subscriptionId)
         {
-            AccountId = accountId;
-            Account = account;
             CustomerId = customerId;
+            SubscriptionId = subscriptionId;
         }
 
-        public Guid AccountId { get; set; }
-        public Account Account { get; set; }
-        public string? CustomerId { get; set; }
+        public string CustomerId { get; init; }
+        public string SubscriptionId { get; init; }
     }
 }

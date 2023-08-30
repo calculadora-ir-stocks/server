@@ -66,9 +66,6 @@ namespace Api.Database
                 .HasOne(ap => ap.Account)
                 .WithMany(ap => ap.AverageTradedPrices);
 
-            modelBuilder.Entity<StripePaymentInfo>()
-                .HasOne(ap => ap.Account);
-
             modelBuilder.Entity<Asset>().HasData
             (
                 new Asset(1, "Ações"),

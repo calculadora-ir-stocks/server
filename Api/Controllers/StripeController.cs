@@ -17,22 +17,31 @@ namespace Api.Controllers
         }
 
         [HttpPost("create-checkout-session/free-trial")]
-        public IActionResult CreateCheckoutSessionForFreeTrial()
+        public async Task<IActionResult> CreateCheckoutSessionForFreeTrial()
         {
-            stripeService.CreateCheckoutSessionForFreeTrial();
-            return Ok();
+            await stripeService.CreateCheckoutSessionForFreeTrial();
+            return StatusCode(303);
         }
 
         /// <summary>
         /// Retorna os planos e as formas de pagamento disponíveis (o plano gratuito não é retornado).
         /// </summary>
+        /// <param name="productId">O id do produto vinculado ao Stripe.</param>
+        /// <returns><c>CustomerId da sessão de Checkout criada.</c></returns>
         [HttpPost("create-checkout-session")]
-        public IActionResult CreateCheckoutSession()
+        public async Task <IActionResult> CreateCheckoutSession(string productId)
         {
-            Session session = stripeService.CreateCheckoutSession();
+            Session session = await stripeService.CreateCheckoutSession(productId);
 
             Response.Headers.Add("Location", session.Url);
-            return new StatusCodeResult(303);
+            return Ok(session.Url);
+        }
+
+        [HttpGet("checkout-session")]
+        public async Task<IActionResult> CheckoutSession(string sessionId)
+        {
+            Session session = await stripeService.GetServiceSessionById(sessionId);
+            return Ok(session);
         }
 
         /// <summary>
@@ -40,9 +49,9 @@ namespace Api.Controllers
         /// </summary>
         /// <returns></returns>
         [HttpPost("create-portal-session")]
-        public async Task <IActionResult> CreatePortalSession()
+        public async Task <IActionResult> CreatePortalSession([FromRoute] string checkoutSessionCustomerId)
         {
-            var session = await stripeService.CreatePortalSession();
+            var session = await stripeService.CreatePortalSession(checkoutSessionCustomerId);
 
             Response.Headers.Add("Location", session.Url);
             return new StatusCodeResult(303);
@@ -60,7 +69,8 @@ namespace Api.Controllers
                     "do Stripe no Header Stripe-Signature.");
             }
 
-            await stripeService.HandleUserPlansNotifications(json, stripeSignature);
+
+            stripeService.HandleUserPlansNotifications(json, stripeSignature);
             return Ok();
         }
     }

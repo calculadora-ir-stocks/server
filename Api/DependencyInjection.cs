@@ -23,7 +23,6 @@ using Infrastructure.Repositories;
 using Infrastructure.Repositories.Account;
 using Infrastructure.Repositories.AverageTradedPrice;
 using Infrastructure.Repositories.EmailCode;
-using Infrastructure.Repositories.Stripe;
 using Infrastructure.Repositories.Taxes;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
