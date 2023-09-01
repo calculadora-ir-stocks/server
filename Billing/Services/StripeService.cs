@@ -4,6 +4,7 @@ using Infrastructure.Repositories;
 using Microsoft.Extensions.Logging;
 using Stripe;
 using Stripe.Checkout;
+using static System.Net.WebRequestMethods;
 
 namespace Billing.Services
 {
@@ -105,17 +106,14 @@ namespace Billing.Services
             return session;
         }
 
-        public async Task<Stripe.BillingPortal.Session> CreatePortalSession(string checkoutSessionId)
+        public async Task<Stripe.BillingPortal.Session> CreatePortalSession(Guid accountId)
         {
-            // TODO: are we going to use bills management?
-
-            var checkoutService = new SessionService();
-            var checkoutSession = await checkoutService.GetAsync(checkoutSessionId);
+            var account = genericRepositoryAccount.GetById(accountId);
 
             var options = new Stripe.BillingPortal.SessionCreateOptions
             {
-                Customer = checkoutSession.CustomerId,
-                ReturnUrl = "This is the URL to which your customer will return after they are done managing billing in the Customer Portal.",
+                Customer = account.StripeCustomerId,
+                ReturnUrl = "https://localhost:7274/stripe?returned=true",
             };
 
             var service = new Stripe.BillingPortal.SessionService();
@@ -165,7 +163,7 @@ namespace Billing.Services
                         genericRepositoryStripe.Add(
                             new Order(session!.CustomerId, session.SubscriptionId)
                         );
-                            
+
                         var options = new SessionGetOptions();
                         options.AddExpand("line_items");
 
@@ -182,8 +180,7 @@ namespace Billing.Services
                     break;
                 case "invoice.payment_suceeded":
                     break;
-                case "invoice.paid":
-                    // Should we use this without automatic payment?
+                case "invoice.paid":                    
                     // Sent each billing interval when a payment succeeds.
 
                     // Continue to provision the subscription as payments continue to be made.

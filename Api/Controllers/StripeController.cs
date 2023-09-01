@@ -20,25 +20,25 @@ namespace Api.Controllers
         /// Retorna o plano gratuito sem nenhuma forma de pagamento vinculada.
         /// Deve ser retornado no onboarding do usuário na plataforma.
         /// </summary>
-        /// <param name="accountId"></param>
-        /// <returns><c>CustomerId</c> da sessão de Checkout criada e no Header <c>Location</c> a URL
-        /// do Checkout que o usuário deve ser direcionado.</returns>
+        /// <param name="accountId">O id da conta do usuário que está criando o Checkout do Stripe.</param>
+        /// <returns>Objeto <c>Session</c> da sessão de Checkout criada e no Header <c>Location</c> a URL
+        /// do Checkout que o usuário deve ser redirecionado.</returns>
         [HttpPost("create-checkout-session/free-trial/{accountId}")]
         public async Task<IActionResult> CreateCheckoutSessionForFreeTrial([FromRoute] Guid accountId)
         {
             var session = await stripeService.CreateCheckoutSessionForFreeTrial(accountId);
 
             Response.Headers.Add("Location", session.Url);
-            return Ok(session.Id);
+            return Ok(session);
         }
 
         /// <summary>
         /// Retorna os planos e as formas de pagamento disponíveis (o plano gratuito não é retornado).
         /// </summary>
         /// <param name="productId">O id do produto vinculado ao Stripe.</param>
-        /// <param name="accountId">O id da conta do usuário que está criando o Checkout do Stripe..</param>
-        /// <returns><c>CustomerId</c> da sessão de Checkout criada e no Header <c>Location</c> a URL
-        /// do Checkout que o usuário deve ser direcionado.</returns>
+        /// <param name="accountId">O id da conta do usuário que está criando o Checkout do Stripe.</param>
+        /// <returns>Objeto <c>Session</c> da sessão de Checkout criada e no Header <c>Location</c> a URL
+        /// do Checkout que o usuário deve ser redirecionado.</returns>
         [HttpPost("create-checkout-session/{productId}/{accountId}")]
         public async Task <IActionResult> CreateCheckoutSession([FromRoute] Guid accountId, string productId)
         {
@@ -56,18 +56,24 @@ namespace Api.Controllers
         }
 
         /// <summary>
-        /// Possibilita o usuário gerenciar os planos atuais e seus gastos.
+        /// Cria um Portal Session do Stripe onde é possível gerenciar todas as formas de pagamento
+        /// salvas (se alguma existir).
         /// </summary>
-        /// <returns></returns>
-        [HttpPost("create-portal-session")]
-        public async Task <IActionResult> CreatePortalSession([FromRoute] string checkoutSessionCustomerId)
+        /// <param name="accountId">O id da conta do usuário que está criando o Portal Session do Stripe.</param>
+        /// <returns>Objeto <c>Session</c> da sessão criada e no Header <c>Location</c> a URL
+        /// do Portal Session que o usuário deve ser redirecionado.</returns>
+        [HttpPost("create-portal-session/{accountId}")]
+        public async Task <IActionResult> CreatePortalSession([FromRoute] Guid accountId)
         {
-            var session = await stripeService.CreatePortalSession(checkoutSessionCustomerId);
+            var session = await stripeService.CreatePortalSession(accountId);
 
             Response.Headers.Add("Location", session.Url);
-            return new StatusCodeResult(303);
+            return Ok(session);
         }
 
+        /// <summary>
+        /// Endpoint utilizado para a comunicação com Webhooks do Stripe. Não deve ser utilizado internamente.
+        /// </summary>
         [HttpPost("webhook")]
         public async Task<IActionResult> Webhook()
         {
@@ -79,7 +85,6 @@ namespace Api.Controllers
                 return BadRequest("É necessário enviar o JSON no body da requisição e a assinatura digital" +
                     "do Stripe no Header Stripe-Signature.");
             }
-
 
             stripeService.HandleUserPlansNotifications(json, stripeSignature);
             return Ok();

@@ -8,11 +8,13 @@ namespace Billing.Services
         /// Cria um servidor dedicado do Stripe onde é possível analisar todos 
         /// os planos e as formas de pagamento disponíveis (o plano gratuito não é retornado).
         /// </summary>
+        /// <returns>O objeto <c>Session</c> criado do Stripe.</returns>
         Task<Session> CreateCheckoutSession(Guid accountId, string productId);
 
         /// <summary>
         /// Retorna o plano gratuito para inscrição.
         /// </summary>
+        /// <returns>O objeto <c>Session</c> criado do Stripe.</returns>
         Task<Session> CreateCheckoutSessionForFreeTrial(Guid accountId);
 
         /// <summary>
@@ -20,8 +22,9 @@ namespace Billing.Services
         /// disponíveis.
         /// </summary>
         /// <param name="checkoutSessionCustomerId">O </param>
-        /// <returns></returns>
-        Task<Stripe.BillingPortal.Session> CreatePortalSession(string checkoutSessionCustomerId);
+        /// <returns>O objeto <c>Session</c> criado do Stripe.</returns>
+        Task<Stripe.BillingPortal.Session> CreatePortalSession(Guid accountId);
+
         Task<Session> GetServiceSessionById(string sessionId);
 
         /// <summary>

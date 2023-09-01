@@ -128,7 +128,6 @@ namespace Api.Services.Auth
                     notificationContext.AddNotifications(account.ValidationResult);
                     return false;
                 }
-
             } catch (Exception e)
             {
                 logger.LogError($"Ocorreu um erro tentar validar se o usuário {account.Id} já está cadastrado" +
