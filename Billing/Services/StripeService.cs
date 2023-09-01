@@ -36,7 +36,7 @@ namespace Billing.Services
             var account = genericRepositoryAccount.GetById(accountId);
 
             // TODO remove it, only for testing purposes
-            productId = "price_1NioETElcTcz6jitFPhhg4HH";
+            productId = "price_1NlLp2ElcTcz6jit8GhUsjKM";
 
             var options = new SessionCreateOptions
             {
@@ -48,7 +48,7 @@ namespace Billing.Services
                         Quantity = 1
                     }
                 },
-                Mode = "payment",
+                Mode = "subscription",
                 SuccessUrl = "https://localhost:7274/stripe?success=true",
                 CancelUrl = "https://localhost:7274/stripe?canceled=true",
                 Currency = "BRL",
@@ -174,7 +174,7 @@ namespace Billing.Services
                         Session sessionWithLineItems = service.Get(session.Id, options);
                         StripeList<LineItem> lineItems = sessionWithLineItems.LineItems;
 
-                        SubscribeToPlan(lineItems);
+                        SubscribePlan(session!.CustomerId, lineItems);
                     }
 
                     // Payment is successful and the subscription is created.
@@ -206,7 +206,7 @@ namespace Billing.Services
             }
         }
 
-        private void SubscribeToPlan(StripeList<LineItem> lineItems)
+        private void SubscribePlan(string customerId, StripeList<LineItem> lineItems)
         {
             throw new NotImplementedException();
         }
