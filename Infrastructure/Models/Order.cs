@@ -5,9 +5,9 @@
     /// Toda vez que um servidor Checkout é criado, armazenamos na base de dados o pagamento.
     /// Leia mais em https://stripe.com/docs/billing/subscriptions/build-subscriptions?ui=checkout#create-pricing-model:~:text=To%20determine%20the,database%20for%20verification.
     /// </summary>
-    public class Orders
+    public class Order : BaseEntity
     {
-        public Orders(string customerId, string subscriptionId)
+        public Order(string customerId, string subscriptionId)
         {
             CustomerId = customerId;
             SubscriptionId = subscriptionId;

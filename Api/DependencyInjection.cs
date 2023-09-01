@@ -9,7 +9,7 @@ using Common;
 using Core.Calculators;
 using Core.Calculators.Assets;
 using Core.Services.Account;
-using Core.Services.EmailSender;
+using Core.Services.Email;
 using Core.Services.Hangfire.AverageTradedPriceUpdater;
 using Core.Services.Hangfire.EmailCodeRemover;
 using Core.Services.Hangfire.UserPlansValidity;
@@ -49,7 +49,7 @@ namespace Api
             services.AddScoped<ITaxesService, TaxesService>();
             services.AddScoped<IPlanService, Core.Services.Plan.PlanService>();
             services.AddScoped<IAuthService, AuthService>();
-            services.AddScoped<IEmailSenderService, EmailSenderService>();
+            services.AddScoped<IEmailService, EmailService>();
             services.AddScoped<IIncomeTaxesService, IncomeTaxesService>();
             services.AddScoped<IPremiumCodeService, PremiumCodeService>();
             services.AddScoped<IStripeService, StripeService>();

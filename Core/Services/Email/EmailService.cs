@@ -3,19 +3,28 @@ using SendGrid.Helpers.Errors.Model;
 using SendGrid.Helpers.Mail;
 using Infrastructure.Repositories.EmailCode;
 using Infrastructure.Repositories.Account;
+using Stripe;
 
-namespace Core.Services.EmailSender
+namespace Core.Services.Email
 {
-    public class EmailSenderService : IEmailSenderService
+    public class EmailService : IEmailService
     {
-        private const string StocksEmail = "calculadorastocks@gmail.com";
+        private const string StocksEmail = "calculadorastocks@gmail.com"; //TODO change it
         private const string StocksName = "Stocks";
+
+        private readonly CustomerService stripeCustomerService;
 
         private readonly IEmailCodeRepository emailCodeRepository;
         private readonly IAccountRepository accountRepository;
 
-        public EmailSenderService(IEmailCodeRepository emailCodeRepository, IAccountRepository accountRepository)
+        public EmailService(
+            CustomerService stripeCustomerService,
+            IEmailCodeRepository emailCodeRepository,
+            IAccountRepository accountRepository
+        )
+        
         {
+            this.stripeCustomerService = stripeCustomerService;
             this.emailCodeRepository = emailCodeRepository;
             this.accountRepository = accountRepository;
         }
@@ -42,7 +51,18 @@ namespace Core.Services.EmailSender
             {
                 if (account!.AuthenticationCodeValidated is false)
                 {
+                    // TODO unit of work
                     account.AuthenticationCodeValidated = true;
+
+                    var customer = stripeCustomerService.Create(new CustomerCreateOptions
+                    {
+                        Name = account.Name,
+                        Email = account.Email,
+                        Phone = null // TODO adicionar número de telefone para cadastro?
+                    });
+
+                    account.StripeCustomerId = customer.Id;
+
                     accountRepository.Update(account);
                 }
 
@@ -56,7 +76,7 @@ namespace Core.Services.EmailSender
         public async Task SendEmail(Infrastructure.Models.Account account, string verificationCode, string subject, string htmlContent)
         {
             try {
-                // TODO: criar variável de ambiente no Docker.
+                // TODO criar variável de ambiente no Docker.
                 string? apiKey = "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";
 
                 SendGridClient client = new(apiKey);

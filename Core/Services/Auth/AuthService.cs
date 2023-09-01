@@ -1,15 +1,15 @@
-﻿using DevOne.Security.Cryptography.BCrypt;
-using Microsoft.Extensions.Logging;
-using Api.DTOs.Auth;
+﻿using Api.DTOs.Auth;
 using Api.Exceptions;
 using Api.Notification;
-using Infrastructure.Repositories;
-using Infrastructure.Repositories.Account;
 using Api.Services.Jwt;
 using Common.Models;
 using Core.Services.PremiumCode;
+using DevOne.Security.Cryptography.BCrypt;
 using Infrastructure.Models;
-using System.Security.Principal;
+using Infrastructure.Repositories;
+using Infrastructure.Repositories.Account;
+using Microsoft.Extensions.Logging;
+using Stripe;
 
 namespace Api.Services.Auth
 {
@@ -17,7 +17,7 @@ namespace Api.Services.Auth
     {
 
         private readonly IAccountRepository accountRepository;
-        private readonly IGenericRepository<Account> accountGenericRepository;
+        private readonly IGenericRepository<Infrastructure.Models.Account> accountGenericRepository;
         private readonly IPremiumCodeService premiumCodeService;
 
         private readonly IJwtCommon jwtUtils;
@@ -28,7 +28,7 @@ namespace Api.Services.Auth
 
         public AuthService(
             IAccountRepository accountRepository,
-            IGenericRepository<Account> accountGenericRepository,
+            IGenericRepository<Infrastructure.Models.Account> accountGenericRepository,
             IPremiumCodeService premiumCodeService,
             IJwtCommon jwtUtils,
             NotificationContext notificationContext,
@@ -47,7 +47,7 @@ namespace Api.Services.Auth
         {
             try
             {
-                var account = accountRepository.GetByEmail(request.Email);
+                Infrastructure.Models.Account? account = accountRepository.GetByEmail(request.Email);
 
                 if (account is null)
                     return null;
@@ -75,7 +75,8 @@ namespace Api.Services.Auth
 
         public void SignUp(SignUpRequest request)
         {
-            Account account = new(request.Name, request.Email, request.Password, request.CPF);
+            Infrastructure.Models.Account account 
+                = new(request.Name, request.Email, request.Password, request.CPF);
 
             if (!IsValidSignUp(account)) return;
 
@@ -85,7 +86,7 @@ namespace Api.Services.Auth
             }
 
             try
-            {
+            {                
                 accountGenericRepository.Add(account);
             } catch(Exception e)
             {
@@ -93,7 +94,7 @@ namespace Api.Services.Auth
             }
         }
 
-        private void ValidatePromotionalCode(string premiumCode, Account account)
+        private void ValidatePromotionalCode(string premiumCode, Infrastructure.Models.Account account)
         {
             if (!premiumCodeService.IsValid(premiumCode))
             {
@@ -112,7 +113,7 @@ namespace Api.Services.Auth
             premiumCodeService.DeactivatePremiumCode(premiumCode);
         }
 
-        private bool IsValidSignUp(Account account)
+        private bool IsValidSignUp(Infrastructure.Models.Account account)
         {
             try
             {

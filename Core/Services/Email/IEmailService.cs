@@ -1,6 +1,6 @@
-﻿namespace Core.Services.EmailSender
+﻿namespace Core.Services.Email
 {
-    public interface IEmailSenderService
+    public interface IEmailService
     {
         /// <summary>
         /// Envia um código de verificação para a conta especificada.

@@ -2,15 +2,15 @@
 using Api.Exceptions;
 using Api.Notification;
 using Infrastructure.Repositories.Account;
-using Core.Services.EmailSender;
 using Infrastructure.Models;
+using Core.Services.Email;
 
 namespace Core.Services.Account
 {
     public class AccountService : IAccountService
     {
         private readonly IAccountRepository repository;
-        private readonly IEmailSenderService emailSenderService;
+        private readonly IEmailService emailSenderService;
 
         private readonly NotificationContext notificationContext;
 
@@ -18,7 +18,7 @@ namespace Core.Services.Account
 
         public AccountService(
             IAccountRepository repository,
-            IEmailSenderService emailSenderService,
+            IEmailService emailSenderService,
             NotificationContext notificationContext,
             ILogger<AccountService> logger
         )
@@ -60,7 +60,7 @@ namespace Core.Services.Account
                 string verificationCode = new Random().Next(1000, 9999).ToString();
 
                 string Subject = "Confirme seu código de verificação";
-                string HtmlContext = $"Olá, {account.Name}, que surpresa agradável! O seu código de verificação é: <strong>{verificationCode}</strong>";
+                string HtmlContext = $"Olá {account.Name}, que surpresa agradável! O seu código de verificação é: <strong>{verificationCode}</strong>";
 
                 await emailSenderService.SendEmail(account, verificationCode, Subject, HtmlContext);
             }

@@ -14,6 +14,7 @@ namespace Api.Database
         public DbSet<EmailCode> EmailCodes { get; set; } = null!;
         public DbSet<Plan> Plans { get; set; } = null!;
         public DbSet<PremiumCode> PremiumCodes { get; set; } = null!;
+        public DbSet<Order> Orders { get; set; } = null!;
 
         public StocksContext()
         {

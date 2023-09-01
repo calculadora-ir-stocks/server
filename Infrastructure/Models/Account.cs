@@ -21,37 +21,72 @@ namespace Infrastructure.Models
         public Account() { }
 
         #region Registration information
-        public string Name { get; protected set; }
-        public string Email { get; protected set; }
+        /// <summary>
+        /// Nome completo de uma conta cadastrada.
+        /// </summary>
+        public string Name { get; init; }
+
+        /// <summary>
+        /// Endereço de e-mail válido de uma conta cadastrada.
+        /// </summary>
+        public string Email { get; init; }
+
+        /// <summary>
+        /// Senha de uma conta cadastrada.
+        /// Deve conter no mínimo uma letra maiúscula, um número, um caractere especial e 8 dígitos.
+        /// </summary>
         public string Password { get; set; }
-        public string CPF { get; protected set; }
+
+        /// <summary>
+        /// CPF formatado (111.111.111-11) de uma conta cadastrada.
+        /// É utilizado principalmente para fazer o vínculo com a API da B3.
+        /// </summary>
+        public string CPF { get; init; }
+
+        /// <summary>
+        /// O id do objeto <c>Customer</c> criado pelo Stripe no registro de uma conta.
+        /// O objeto <c>Customer</c> do Stripe é utilizado para vincular pagamentos já existentes
+        /// a um usuário.
+        /// Para ler mais, acesse a <a
+        /// href="https://stripe.com/docs/api/checkout/sessions/create#create_checkout_session-payment_intent_data-setup_future_usage">documentação oficial</a>.
+        /// </summary>
+        public string? StripeCustomerId { get; set; } = null;
+
+        /// <summary>
+        /// Identifica um usuário que se cadastrou no pré-lançamento e possui descontos vitalícios.
+        /// </summary>
         public bool IsPremium { get; set; } = false;
 
         /// <summary>
         /// Define se a sincronização com os dados da B3 já foi realizada no cadastro do usuário.
         /// </summary>
         public bool IsB3SyncDone { get; set; } = false;
+
+        /// <summary>
+        /// Define se o código de validação de cadastro já foi confirmado pelo usuário.
+        /// </summary>
+        public bool AuthenticationCodeValidated { get; set; } = false;
+
         #endregion
 
         #region Relationships
         /// <summary>
-        /// Relação dos preços médios dos ativos negociados do investidor.
+        /// Um investidor possui diversos tickers com preços médios.
         /// </summary>
         public ICollection<AverageTradedPrice>? AverageTradedPrices { get; protected set; }
 
         /// <summary>
-        /// Relação dos impostos devidos pelo investidor.
+        /// Um investidor possui diversos meses com pagamentos de impostos pendentes.
         /// </summary>
         public ICollection<IncomeTaxes>? IncomeTaxes { get; set; }
 
         /// <summary>
-        /// Código enviado para o e-mail para confirmar veracidade da conta.
+        /// Um investidor possui um único código de confirmação de e-mail por vez.
+        /// Código enviado para o e-mail para confirmação.
         /// Pode ser um código de autenticação ou um código para alteração de senha.
         /// </summary>
         public EmailCode EmailCode { get; set; }
         #endregion
-
-        public bool AuthenticationCodeValidated { get; set; } = false;
 
         #region Plans
         public Plan Plan { get; protected set; }

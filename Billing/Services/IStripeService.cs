@@ -8,12 +8,12 @@ namespace Billing.Services
         /// Cria um servidor dedicado do Stripe onde é possível analisar todos 
         /// os planos e as formas de pagamento disponíveis (o plano gratuito não é retornado).
         /// </summary>
-        Task<Session> CreateCheckoutSession(string productId);
+        Task<Session> CreateCheckoutSession(Guid accountId, string productId);
 
         /// <summary>
         /// Retorna o plano gratuito para inscrição.
         /// </summary>
-        Task CreateCheckoutSessionForFreeTrial();
+        Task<Session> CreateCheckoutSessionForFreeTrial(Guid accountId);
 
         /// <summary>
         /// Cria um servidor dedicado do Stripe onde é possível gerenciar as formas de pagamento

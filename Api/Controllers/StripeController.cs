@@ -16,25 +16,36 @@ namespace Api.Controllers
             this.stripeService = stripeService;
         }
 
-        [HttpPost("create-checkout-session/free-trial")]
-        public async Task<IActionResult> CreateCheckoutSessionForFreeTrial()
+        /// <summary>
+        /// Retorna o plano gratuito sem nenhuma forma de pagamento vinculada.
+        /// Deve ser retornado no onboarding do usuário na plataforma.
+        /// </summary>
+        /// <param name="accountId"></param>
+        /// <returns><c>CustomerId</c> da sessão de Checkout criada e no Header <c>Location</c> a URL
+        /// do Checkout que o usuário deve ser direcionado.</returns>
+        [HttpPost("create-checkout-session/free-trial/{accountId}")]
+        public async Task<IActionResult> CreateCheckoutSessionForFreeTrial([FromRoute] Guid accountId)
         {
-            await stripeService.CreateCheckoutSessionForFreeTrial();
-            return StatusCode(303);
+            var session = await stripeService.CreateCheckoutSessionForFreeTrial(accountId);
+
+            Response.Headers.Add("Location", session.Url);
+            return Ok(session.Id);
         }
 
         /// <summary>
         /// Retorna os planos e as formas de pagamento disponíveis (o plano gratuito não é retornado).
         /// </summary>
         /// <param name="productId">O id do produto vinculado ao Stripe.</param>
-        /// <returns><c>CustomerId da sessão de Checkout criada.</c></returns>
-        [HttpPost("create-checkout-session")]
-        public async Task <IActionResult> CreateCheckoutSession(string productId)
+        /// <param name="accountId">O id da conta do usuário que está criando o Checkout do Stripe..</param>
+        /// <returns><c>CustomerId</c> da sessão de Checkout criada e no Header <c>Location</c> a URL
+        /// do Checkout que o usuário deve ser direcionado.</returns>
+        [HttpPost("create-checkout-session/{productId}/{accountId}")]
+        public async Task <IActionResult> CreateCheckoutSession([FromRoute] Guid accountId, string productId)
         {
-            Session session = await stripeService.CreateCheckoutSession(productId);
+            Session session = await stripeService.CreateCheckoutSession(accountId, productId);
 
             Response.Headers.Add("Location", session.Url);
-            return Ok(session.Url);
+            return Ok(session);
         }
 
         [HttpGet("checkout-session")]

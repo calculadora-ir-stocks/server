@@ -15,6 +15,6 @@
         public string Email { get; protected set; }
         public string CPF { get; protected set; }
         public string Password { get; protected set; }
-        public string? PremiumCode { get; }
+        public string? PremiumCode { get; } = null;
     }
 }

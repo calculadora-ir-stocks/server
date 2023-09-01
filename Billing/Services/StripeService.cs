@@ -2,7 +2,6 @@
 using Infrastructure.Models;
 using Infrastructure.Repositories;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using Stripe;
 using Stripe.Checkout;
 
@@ -11,7 +10,8 @@ namespace Billing.Services
     public class StripeService : IStripeService
     {
         private readonly IGenericRepository<Infrastructure.Models.Plan> genericRepositoryPlan;
-        private readonly IGenericRepository<Orders> genericRepositoryStripe;
+        private readonly IGenericRepository<Order> genericRepositoryStripe;
+        private readonly IGenericRepository<Infrastructure.Models.Account> genericRepositoryAccount;
 
         private readonly ILogger<StripeService> logger;
 
@@ -20,17 +20,21 @@ namespace Billing.Services
 
         public StripeService(
             IGenericRepository<Infrastructure.Models.Plan> genericRepositoryPlan,
-            IGenericRepository<Orders> genericRepositoryStripe,
+            IGenericRepository<Order> genericRepositoryStripe,
+            IGenericRepository<Infrastructure.Models.Account> genericRepositoryAccount,
             ILogger<StripeService> logger
         )
         {
             this.genericRepositoryPlan = genericRepositoryPlan;
             this.genericRepositoryStripe = genericRepositoryStripe;
+            this.genericRepositoryAccount = genericRepositoryAccount;
             this.logger = logger;
         }
 
-        public async Task<Session> CreateCheckoutSession(string productId)
+        public async Task<Session> CreateCheckoutSession(Guid accountId, string productId)
         {
+            var account = genericRepositoryAccount.GetById(accountId);
+
             // TODO remove it, only for testing purposes
             productId = "price_1NioETElcTcz6jitFPhhg4HH";
 
@@ -47,7 +51,8 @@ namespace Billing.Services
                 Mode = "payment",
                 SuccessUrl = "https://localhost:7274/stripe?success=true",
                 CancelUrl = "https://localhost:7274/stripe?canceled=true",
-                Currency = "BRL"
+                Currency = "BRL",
+                Customer = account.StripeCustomerId
             };
 
             try
@@ -63,7 +68,7 @@ namespace Billing.Services
             }
         }
 
-        public async Task CreateCheckoutSessionForFreeTrial()
+        public async Task<Session> CreateCheckoutSessionForFreeTrial(Guid accountId)
         {
             var freeTrialPlan = genericRepositoryPlan.GetAll().Where(x => x.Id == PlansConstants.Free).Single();
 
@@ -77,7 +82,7 @@ namespace Billing.Services
                         Quantity = 1 
                     },
                 },
-                Mode = "payment",
+                Mode = "subscription",
                 SuccessUrl = "https://localhost:7274/stripe?success=true",
                 CancelUrl = "https://localhost:7274/stripe?canceled=true",
                 SubscriptionData = new SessionSubscriptionDataOptions
@@ -95,7 +100,9 @@ namespace Billing.Services
             };
 
             var service = new SessionService();
-            await service.CreateAsync(options);
+            var session = await service.CreateAsync(options);
+
+            return session;
         }
 
         public async Task<Stripe.BillingPortal.Session> CreatePortalSession(string checkoutSessionId)
@@ -156,9 +163,9 @@ namespace Billing.Services
                     if (isOrderPaid)
                     {
                         genericRepositoryStripe.Add(
-                            new Orders(session!.CustomerId, session.SubscriptionId)
+                            new Order(session!.CustomerId, session.SubscriptionId)
                         );
-
+                            
                         var options = new SessionGetOptions();
                         options.AddExpand("line_items");
 
@@ -172,6 +179,8 @@ namespace Billing.Services
 
                     // Payment is successful and the subscription is created.
                     // You should provision the subscription and save the customer ID to your database.
+                    break;
+                case "invoice.payment_suceeded":
                     break;
                 case "invoice.paid":
                     // Should we use this without automatic payment?
