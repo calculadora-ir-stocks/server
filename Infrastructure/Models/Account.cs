@@ -94,25 +94,7 @@ namespace Infrastructure.Models
         /// <summary>
         /// Inicialmente, todos os investidores iniciarão com o plano gratuito.
         /// </summary>
-        public int PlanId { get; protected set; } = PlansConstants.Free;
-
-        private DateTime planStartDate = DateTime.UtcNow;
-
-        /// <summary>
-        /// Data de início do plano.
-        /// É atualizado toda vez que um usuário assina um plano.
-        /// </summary>
-        public DateTime PlanStartDate
-        {
-            set
-            {
-                planStartDate = value;
-                IsPlanExpired = false;
-            }
-            get { return planStartDate; }
-        }
-
-        public bool IsPlanExpired { get; set; } = false;
+        public int PlanId { get; set; } = PlansConstants.Free;
         #endregion
 
         public void HashPassword(string password)

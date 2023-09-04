@@ -33,6 +33,9 @@ namespace Api.Middlewares
                     case NoneMovementsException:
                         response.StatusCode = (int)HttpStatusCode.OK;
                         break;
+                    case RecordNotFoundException:
+                        response.StatusCode = (int)HttpStatusCode.NotFound;
+                        break;
                     case KeyNotFoundException _:
                         response.StatusCode = (int)HttpStatusCode.NotFound;
                         break;

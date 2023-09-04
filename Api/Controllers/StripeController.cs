@@ -1,6 +1,5 @@
 ﻿using Billing.Services;
 using Microsoft.AspNetCore.Mvc;
-using Stripe;
 using Stripe.Checkout;
 
 namespace Api.Controllers
@@ -29,7 +28,7 @@ namespace Api.Controllers
             var session = await stripeService.CreateCheckoutSessionForFreeTrial(accountId);
 
             Response.Headers.Add("Location", session.Url);
-            return Ok(session);
+            return Ok();
         }
 
         /// <summary>
@@ -45,14 +44,7 @@ namespace Api.Controllers
             Session session = await stripeService.CreateCheckoutSession(accountId, productId);
 
             Response.Headers.Add("Location", session.Url);
-            return Ok(session);
-        }
-
-        [HttpGet("checkout-session")]
-        public async Task<IActionResult> CheckoutSession(string sessionId)
-        {
-            Session session = await stripeService.GetServiceSessionById(sessionId);
-            return Ok(session);
+            return Ok();
         }
 
         /// <summary>

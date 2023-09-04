@@ -1,10 +1,11 @@
 ﻿using Common.Constants;
+using Common.Exceptions;
 using Infrastructure.Models;
 using Infrastructure.Repositories;
+using Infrastructure.Repositories.Account;
 using Microsoft.Extensions.Logging;
 using Stripe;
 using Stripe.Checkout;
-using static System.Net.WebRequestMethods;
 
 namespace Billing.Services
 {
@@ -12,7 +13,7 @@ namespace Billing.Services
     {
         private readonly IGenericRepository<Infrastructure.Models.Plan> genericRepositoryPlan;
         private readonly IGenericRepository<Order> genericRepositoryStripe;
-        private readonly IGenericRepository<Infrastructure.Models.Account> genericRepositoryAccount;
+        private readonly IAccountRepository accountRepository;
 
         private readonly ILogger<StripeService> logger;
 
@@ -22,23 +23,24 @@ namespace Billing.Services
         public StripeService(
             IGenericRepository<Infrastructure.Models.Plan> genericRepositoryPlan,
             IGenericRepository<Order> genericRepositoryStripe,
-            IGenericRepository<Infrastructure.Models.Account> genericRepositoryAccount,
+            IAccountRepository accountRepository,
             ILogger<StripeService> logger
         )
         {
             this.genericRepositoryPlan = genericRepositoryPlan;
             this.genericRepositoryStripe = genericRepositoryStripe;
-            this.genericRepositoryAccount = genericRepositoryAccount;
+            this.accountRepository = accountRepository;
             this.logger = logger;
         }
 
         public async Task<Session> CreateCheckoutSession(Guid accountId, string productId)
         {
-            var account = genericRepositoryAccount.GetById(accountId);
+            var account = accountRepository.GetById(accountId);
+            if (account is null) throw new RecordNotFoundException("Investidor", accountId.ToString());
 
             // TODO remove it, only for testing purposes
             productId = "price_1NlLp2ElcTcz6jit8GhUsjKM";
-
+             
             var options = new SessionCreateOptions
             {
                 LineItems = new List<SessionLineItemOptions>()
@@ -64,7 +66,7 @@ namespace Billing.Services
                 return session;
             } catch (StripeException s)
             {
-                logger.LogError("Ocoprreu um erro ao criar o Checkout Session do Stripe. {e}", s.Message);
+                logger.LogError("Ocorreu um erro ao criar o Checkout Session do Stripe. {e}", s.Message);
                 throw new Exception(s.Message);
             }
         }
@@ -108,7 +110,8 @@ namespace Billing.Services
 
         public async Task<Stripe.BillingPortal.Session> CreatePortalSession(Guid accountId)
         {
-            var account = genericRepositoryAccount.GetById(accountId);
+            var account = accountRepository.GetById(accountId);
+            if (account is null) throw new RecordNotFoundException("Investidor", accountId.ToString());
 
             var options = new Stripe.BillingPortal.SessionCreateOptions
             {
@@ -136,9 +139,7 @@ namespace Billing.Services
 
             try
             {
-
                 stripeEvent = EventUtility.ConstructEvent(json, stripeSignatureHeader, WebhookSecret);
-
                 logger.LogInformation("Webhook do Stripe executado do tipo {stripeEvent.Type} de id {stripeEvent.Id} encontrado.", stripeEvent.Type, stripeEvent.Id);
             }
             catch (Exception e)
@@ -149,36 +150,25 @@ namespace Billing.Services
 
             switch (stripeEvent.Type)
             {
-                /**
-                 * Webhook event description:
-                 * Sent when a customer clicks the Pay or Subscribe button in Checkout, informing you of a new purchase.
-                 * */
-                case "checkout.session.completed":
+                case Events.CheckoutSessionCompleted:
                     var session = stripeEvent.Data.Object as Session;
 
                     bool isOrderPaid = session!.PaymentStatus == "paid";
 
                     if (isOrderPaid)
                     {
-                        genericRepositoryStripe.Add(
-                            new Order(session!.CustomerId, session.SubscriptionId)
-                        );
-
-                        var options = new SessionGetOptions();
-                        options.AddExpand("line_items");
-
-                        var service = new SessionService();
-
-                        Session sessionWithLineItems = service.Get(session.Id, options);
-                        StripeList<LineItem> lineItems = sessionWithLineItems.LineItems;
-
-                        SubscribePlan(session!.CustomerId, lineItems);
+                        SubscribePlan(session);
+                    }
+                    else
+                    {
+                        // fuck you then
                     }
 
-                    // Payment is successful and the subscription is created.
-                    // You should provision the subscription and save the customer ID to your database.
                     break;
-                case "invoice.payment_suceeded":
+                case Events.CustomerSubscriptionDeleted:
+                    var subscription = stripeEvent.Data.Object as Subscription;
+                    ExpiresPlan(subscription!);
+
                     break;
                 case "invoice.paid":                    
                     // Sent each billing interval when a payment succeeds.
@@ -199,13 +189,40 @@ namespace Billing.Services
                     break;
                 default:
                     break;
-                    // Unhandled event type
             }
         }
 
-        private void SubscribePlan(string customerId, StripeList<LineItem> lineItems)
+        private void ExpiresPlan(Subscription subscription)
         {
-            throw new NotImplementedException();
+            var account = accountRepository.GetByStripeCustomerId(subscription.CustomerId);
+        }
+
+        private void SubscribePlan(Session session)
+        {
+            genericRepositoryStripe.Add(
+                new Order(session.CustomerId, session.SubscriptionId)
+            );
+
+            var options = new SessionGetOptions();
+            options.AddExpand("line_items");
+
+            var service = new SessionService();
+
+            Session sessionWithLineItems = service.Get(session.Id, options);
+
+            var lineItem = sessionWithLineItems.LineItems.Data.First();
+            string productId = lineItem!.Price.Id;
+
+            int planId = genericRepositoryPlan
+                .GetAll()
+                .Where(x => x.StripeProductId == productId)
+                .Select(x => x.Id)
+                .First();
+
+            var account = accountRepository.GetByStripeCustomerId(session.CustomerId);
+
+            account!.PlanId = planId;
+            accountRepository.Update(account);
         }
     }
 }

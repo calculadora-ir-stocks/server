@@ -14,6 +14,8 @@
 
         /// <summary>
         /// Valida o código de verificação fornecida pelo usuário especificado.
+        /// Se for válido, altera a propriedade <c>AuthenticationCodeValidated</c> para verdadeiro
+        /// e, em seguida, cria um Stripe Customer.
         /// </summary>
         bool IsVerificationEmailValid(Guid accountId, string code);
     }

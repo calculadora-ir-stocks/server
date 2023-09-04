@@ -70,7 +70,6 @@ namespace Core.Services.Email
             }
 
             return false;
-
         }
 
         public async Task SendEmail(Infrastructure.Models.Account account, string verificationCode, string subject, string htmlContent)

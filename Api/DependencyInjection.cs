@@ -12,7 +12,6 @@ using Core.Services.Account;
 using Core.Services.Email;
 using Core.Services.Hangfire.AverageTradedPriceUpdater;
 using Core.Services.Hangfire.EmailCodeRemover;
-using Core.Services.Hangfire.UserPlansValidity;
 using Core.Services.IncomeTaxes;
 using Core.Services.Plan;
 using Core.Services.PremiumCode;
@@ -92,7 +91,6 @@ namespace Api
 
             services.AddScoped<IAverageTradedPriceUpdaterHangfire, AverageTradedPriceUpdaterHangfire>();
             services.AddScoped<IEmailCodeRemoverHangfire, EmailCodeRemoverHangfire>();
-            services.AddScoped<IUserPlansValidityHangfire, UserPlansValidityHangfire>();
         }
 
         public static void AddHangFireRecurringJob(this IServiceCollection services, WebApplicationBuilder builder)
@@ -108,7 +106,6 @@ namespace Api
 
             RecurringJob.RemoveIfExists(nameof(AverageTradedPriceUpdaterHangfire));
             RecurringJob.RemoveIfExists(nameof(EmailCodeRemoverHangfire));
-            RecurringJob.RemoveIfExists(nameof(UserPlansValidityHangfire));
 
             RecurringJob.AddOrUpdate<IAverageTradedPriceUpdaterHangfire>(
                 nameof(AverageTradedPriceUpdaterHangfire),
@@ -120,12 +117,6 @@ namespace Api
                 nameof(EmailCodeRemoverHangfire),
                 x => x.Execute(),
                 Cron.Minutely
-            );
-
-            RecurringJob.AddOrUpdate<IUserPlansValidityHangfire>(
-                nameof(UserPlansValidityHangfire),
-                x => x.UpdateUsersPlanExpiration(),
-                Cron.Daily
             );
         }
 

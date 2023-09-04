@@ -1,5 +1,5 @@
-﻿using Dapper;
-using Api.Database;
+﻿using Api.Database;
+using Dapper;
 
 namespace Infrastructure.Repositories.Account
 {
@@ -42,6 +42,11 @@ namespace Infrastructure.Repositories.Account
         public Models.Account? GetById(Guid accountId)
         {
             return _context.Accounts.Where(x => x.Id == accountId).FirstOrDefault();
+        }
+
+        public Models.Account? GetByStripeCustomerId(string stripeCustomerId)
+        {
+            return _context.Accounts.Where(x => x.StripeCustomerId == stripeCustomerId).FirstOrDefault();
         }
 
         public void Update(Models.Account account)
