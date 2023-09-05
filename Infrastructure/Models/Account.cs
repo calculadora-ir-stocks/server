@@ -57,10 +57,16 @@ namespace Infrastructure.Models
         /// </summary>
         public bool IsPremium { get; set; } = false;
 
+        // TODO change to a table where stores accounts without sync done yet.
+        // then, when the sync is done, deletes the record.
+
         /// <summary>
         /// Define se a sincronização com os dados da B3 já foi realizada no cadastro do usuário.
         /// </summary>
         public bool IsB3SyncDone { get; set; } = false;
+
+        // TODO change to a table where stores accounts that didnt validate the code yet.
+        // then, when the accounts validates it, deletes the record.
 
         /// <summary>
         /// Define se o código de validação de cadastro já foi confirmado pelo usuário.
@@ -95,6 +101,14 @@ namespace Infrastructure.Models
         /// Inicialmente, todos os investidores iniciarão com o plano gratuito.
         /// </summary>
         public int PlanId { get; set; } = PlansConstants.Free;
+
+
+        /// <summary>
+        /// Define se um plano está expirado.
+        /// Esse evento é definido quando o webhook do Stripe é consumido no evento <c>customer.subscription.deleted</c>.
+        /// </summary>
+        public bool IsPlanExpired { get; set; } = false;
+
         #endregion
 
         public void HashPassword(string password)

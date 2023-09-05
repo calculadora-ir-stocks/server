@@ -36,12 +36,13 @@ namespace Api.Controllers
         /// </summary>
         /// <param name="productId">O id do produto vinculado ao Stripe.</param>
         /// <param name="accountId">O id da conta do usuário que está criando o Checkout do Stripe.</param>
+        /// <param name="couponId">O id de um cupom válido.</param>
         /// <returns>Objeto <c>Session</c> da sessão de Checkout criada e no Header <c>Location</c> a URL
         /// do Checkout que o usuário deve ser redirecionado.</returns>
         [HttpPost("create-checkout-session/{productId}/{accountId}")]
-        public async Task <IActionResult> CreateCheckoutSession([FromRoute] Guid accountId, string productId)
+        public async Task <IActionResult> CreateCheckoutSession([FromRoute] Guid accountId, string productId, string? couponId = null)
         {
-            Session session = await stripeService.CreateCheckoutSession(accountId, productId);
+            Session session = await stripeService.CreateCheckoutSession(accountId, productId, couponId);
 
             Response.Headers.Add("Location", session.Url);
             return Ok();

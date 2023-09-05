@@ -9,7 +9,7 @@ namespace Billing.Services
         /// os planos e as formas de pagamento disponíveis (o plano gratuito não é retornado).
         /// </summary>
         /// <returns>O objeto <c>Session</c> criado do Stripe.</returns>
-        Task<Session> CreateCheckoutSession(Guid accountId, string productId);
+        Task<Session> CreateCheckoutSession(Guid accountId, string productId, string? couponId = null);
 
         /// <summary>
         /// Retorna o plano gratuito para inscrição.

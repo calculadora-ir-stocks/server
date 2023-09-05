@@ -44,9 +44,9 @@ namespace Infrastructure.Repositories.Account
             return _context.Accounts.Where(x => x.Id == accountId).FirstOrDefault();
         }
 
-        public Models.Account? GetByStripeCustomerId(string stripeCustomerId)
+        public Models.Account GetByStripeCustomerId(string stripeCustomerId)
         {
-            return _context.Accounts.Where(x => x.StripeCustomerId == stripeCustomerId).FirstOrDefault();
+            return _context.Accounts.Where(x => x.StripeCustomerId == stripeCustomerId).First();
         }
 
         public void Update(Models.Account account)

@@ -33,14 +33,11 @@ namespace Billing.Services
             this.logger = logger;
         }
 
-        public async Task<Session> CreateCheckoutSession(Guid accountId, string productId)
+        public async Task<Session> CreateCheckoutSession(Guid accountId, string productId, string? couponId = null)
         {
             var account = accountRepository.GetById(accountId);
             if (account is null) throw new RecordNotFoundException("Investidor", accountId.ToString());
 
-            // TODO remove it, only for testing purposes
-            productId = "price_1NlLp2ElcTcz6jit8GhUsjKM";
-             
             var options = new SessionCreateOptions
             {
                 LineItems = new List<SessionLineItemOptions>()
@@ -57,6 +54,17 @@ namespace Billing.Services
                 Currency = "BRL",
                 Customer = account.StripeCustomerId
             };
+
+            if (couponId is not null)
+            {
+                options.Discounts = new List<SessionDiscountOptions>
+                {
+                    new SessionDiscountOptions
+                    {
+                        Coupon = couponId,
+                    }
+                };
+            }
 
             try
             {
@@ -157,7 +165,11 @@ namespace Billing.Services
 
                     if (isOrderPaid)
                     {
-                        SubscribePlan(session);
+                        genericRepositoryStripe.Add(
+                            new Order(session.CustomerId, session.SubscriptionId)
+                        );
+
+                        FulFillOrder(session);
                     }
                     else
                     {
@@ -167,15 +179,8 @@ namespace Billing.Services
                     break;
                 case Events.CustomerSubscriptionDeleted:
                     var subscription = stripeEvent.Data.Object as Subscription;
+
                     ExpiresPlan(subscription!);
-
-                    break;
-                case "invoice.paid":                    
-                    // Sent each billing interval when a payment succeeds.
-
-                    // Continue to provision the subscription as payments continue to be made.
-                    // Store the status in your database and check when a user accesses your service.
-                    // This approach helps you avoid hitting rate limits.
                     break;
                 case "invoice.payment_failed":
                     // Sent each billing interval if there is an issue with your customer’s payment method.
@@ -195,14 +200,13 @@ namespace Billing.Services
         private void ExpiresPlan(Subscription subscription)
         {
             var account = accountRepository.GetByStripeCustomerId(subscription.CustomerId);
+
+            account.IsPlanExpired = true;
+            accountRepository.Update(account);
         }
 
-        private void SubscribePlan(Session session)
-        {
-            genericRepositoryStripe.Add(
-                new Order(session.CustomerId, session.SubscriptionId)
-            );
-
+        private void FulFillOrder(Session session)
+        {            
             var options = new SessionGetOptions();
             options.AddExpand("line_items");
 
@@ -221,7 +225,7 @@ namespace Billing.Services
 
             var account = accountRepository.GetByStripeCustomerId(session.CustomerId);
 
-            account!.PlanId = planId;
+            account.PlanId = planId;
             accountRepository.Update(account);
         }
     }
