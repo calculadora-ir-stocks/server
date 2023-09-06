@@ -13,5 +13,6 @@
         void Delete(Guid accountId);
         Task SendEmailVerification(Guid accountId, Infrastructure.Models.Account? account = null);
         bool IsEmailVerificationCodeValid(Guid accountId, string code);
+        bool IsSynced(Guid accountId);
     }
 }

@@ -2,6 +2,10 @@
 
 namespace Common.Enums
 {
+    /// <summary>
+    /// Representa os status de uma conta cadastrada.
+    /// Os números representam uma sequência linear de eventos que uma conta obedece.
+    /// </summary>
     public enum AccountStatus
     {
         /// <summary>

@@ -19,7 +19,7 @@ public class AccountController : BaseController
     public async Task<IActionResult> SendEmailVerification([FromRoute] Guid accountId)
     {
         await service.SendEmailVerification(accountId);
-        return Ok($"E-mail enviado para o usu�rio de id {accountId}");
+        return Ok(new { message = $"E-mail enviado para o usu�rio de id {accountId}" });
     }
 
     /// <summary>
@@ -29,8 +29,20 @@ public class AccountController : BaseController
     [HttpPost("validate-code/{accountId}")]
     public IActionResult IsEmailVerificationCodeValid([FromBody] string code, [FromRoute] Guid accountId)
     {
-        bool isValid = service.IsEmailVerificationCodeValid(accountId, code);
-        return Ok(isValid);
+        bool response = service.IsEmailVerificationCodeValid(accountId, code);
+        return Ok(new { IsValid = response });
+    }
+
+    /// <summary>
+    /// Determina se uma conta foi ou não sincronizada com a B3.
+    /// </summary>
+    /// <param name="accountId"></param>
+    /// <returns></returns>
+    [HttpGet("/is-synced/{accountId}")]
+    public IActionResult IsSynced(Guid accountId)
+    {
+        var response = service.IsSynced(accountId);
+        return Ok(new { isSynced = response } );
     }
 
     /// <summary>
@@ -40,7 +52,7 @@ public class AccountController : BaseController
     public IActionResult UpdatePassword(Guid accountId, string password)
     {
         service.UpdatePassword(accountId, password);
-        return Ok($"A senha do usu�rio {accountId} foi alterada com sucesso.");
+        return Ok(new { message = $"A senha do usu�rio {accountId} foi alterada com sucesso." });
     }
 
     /// <summary>
@@ -50,6 +62,6 @@ public class AccountController : BaseController
     public IActionResult Delete([FromRoute] Guid id)
     {
         service.Delete(id);
-        return Ok($"A conta do usuário {id} foi deletada com sucesso e sua conta foi desvinculada com a B3.");
+        return Ok(new { message = $"A conta do usuário {id} foi deletada com sucesso e sua conta foi desvinculada com a B3." });
     }
 }

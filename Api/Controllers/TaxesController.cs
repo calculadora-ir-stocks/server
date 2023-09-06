@@ -36,7 +36,7 @@ public class TaxesController : BaseController
 
     /// <summary>
     /// Retorna todas as informações referentes a impostos no mês especificado.
-    /// Formato: MM-yyyy
+    /// Formato: MM/yyyy
     /// </summary>
     [HttpGet("month/{month}/{accountId}")]
     public async Task<IActionResult> GetSpecifiedMonthTaxes(string month, Guid accountId)
@@ -64,13 +64,13 @@ public class TaxesController : BaseController
 
     /// <summary>
     /// Altera o mês especificado como pago/não pago.
-    /// Formato: MM-yyyy
+    /// Formato: MM/yyyy
     /// </summary>
     [HttpPut("set-paid-or-unpaid/{month}/{accountId}")]
     public async Task<IActionResult> SetMonthAsPaid(string month, Guid accountId)
     {
         await service.SetAsPaidOrUnpaid(month, accountId);
-        return Ok("O mês especificado foi alterado para pago/não pago com sucesso.");
+        return Ok(new { message = "O mês especificado foi alterado para pago/não pago com sucesso." });
     }
 
     /// <summary>
@@ -81,7 +81,7 @@ public class TaxesController : BaseController
     public async Task<IActionResult> BigBang(Guid accountId, [FromBody] List<BigBangRequest> request)
     { 
         await service.ExecuteB3Sync(accountId, request);
-        return Ok("Imposto de renda e preço médio mais recente calculados e armazenados com sucesso.");
+        return Ok(new { message = "Imposto de renda e preço médio mais recente calculados e armazenados com sucesso." });
     }
 
     /// <summary>

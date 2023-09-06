@@ -26,7 +26,7 @@ public class AuthController : BaseController
     public async Task<IActionResult> SignUp([FromBody] SignUpRequest request)
     {
         await service.SignUp(request);
-        return Ok(200);
+        return Ok();
     }
 
     /// <summary>

@@ -4,6 +4,7 @@ using Api.Notification;
 using Infrastructure.Repositories.Account;
 using Infrastructure.Models;
 using Core.Services.Email;
+using Common.Exceptions;
 
 namespace Core.Services.Account
 {
@@ -119,6 +120,17 @@ namespace Core.Services.Account
         private void ValidateNewPassword(Infrastructure.Models.Account account, string password)
         {
             if (account.Password == password) throw new InvalidBusinessRuleException("A nova senha não pode ser igual à senha atual.");
+        }
+
+        public bool IsSynced(Guid accountId)
+        {
+            var account = repository.GetById(accountId);
+            if (account is null) throw new RecordNotFoundException("Investidor", accountId.ToString());
+
+            if (account.Status < Common.Enums.AccountStatus.Synced)
+                throw new InvalidBusinessRuleException("O Big Bang ainda não foi executado para esse usuário.");
+
+            return account.Status >= Common.Enums.AccountStatus.Synced;
         }
     }
 }
