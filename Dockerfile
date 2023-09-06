@@ -1,22 +1,15 @@
 # syntax=docker/dockerfile:1
 
-# Stage 1
-FROM mcr.microsoft.com/dotnet/sdk:6.0 as build-env
-
+FROM mcr.microsoft.com/dotnet/sdk:6.0-alpine as build-env
 WORKDIR /src
 
-COPY . ./
+COPY . .
 
-RUN dotnet build stocks.sln
+RUN dotnet restore
+RUN dotnet publish -c Release -o /publish
 
-RUN dotnet publish -c Release -o /publish stocks.sln
-
-# Stage
-FROM mcr.microsoft.com/dotnet/aspnet:6.0 as runtime
-
+FROM mcr.microsoft.com/dotnet/aspnet:6.0-alpine as runtime
 WORKDIR /publish
-
 COPY --from=build-env /publish .
-
 EXPOSE 80
-ENTRYPOINT ["dotnet", "stocks.dll"]
+ENTRYPOINT ["dotnet", "Api.dll"]
