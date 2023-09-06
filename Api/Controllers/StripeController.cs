@@ -5,7 +5,7 @@ using Stripe.Checkout;
 
 namespace Api.Controllers
 {
-    [Authorize]
+    // [Authorize]
     [Tags("Stripe")]
     public class StripeController : BaseController
     {

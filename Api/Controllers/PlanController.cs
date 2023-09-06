@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace Api.Controllers
 {
-    [Authorize]
+    // [Authorize]
     [Tags("Plans")]
     public class PlanController : BaseController
     {
