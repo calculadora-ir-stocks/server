@@ -4,7 +4,7 @@ namespace Api.Services.Auth
 {
     public interface IAuthService
     {
-        void SignUp(SignUpRequest request);
+        Task SignUp(SignUpRequest request);
         string? SignIn(SignInRequest request);
     }
 }

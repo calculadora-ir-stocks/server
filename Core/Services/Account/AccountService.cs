@@ -45,11 +45,11 @@ namespace Core.Services.Account
             }
         }
 
-        public async Task SendEmailVerification(Guid accountId)
+        public async Task SendEmailVerification(Guid accountId, Infrastructure.Models.Account? account = null)
         {
             try
             {
-                var account = repository.GetById(accountId);
+                account ??= repository.GetById(accountId);
 
                 if (account is null) throw new InvalidBusinessRuleException($"O usuário de id {accountId} não foi encontrado em nossa base.");
 

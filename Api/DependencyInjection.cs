@@ -14,7 +14,6 @@ using Core.Services.Hangfire.AverageTradedPriceUpdater;
 using Core.Services.Hangfire.EmailCodeRemover;
 using Core.Services.IncomeTaxes;
 using Core.Services.Plan;
-using Core.Services.PremiumCode;
 using Core.Services.TaxesService;
 using Hangfire;
 using Hangfire.PostgreSql;
@@ -50,7 +49,6 @@ namespace Api
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IEmailService, EmailService>();
             services.AddScoped<IIncomeTaxesService, IncomeTaxesService>();
-            services.AddScoped<IPremiumCodeService, PremiumCodeService>();
             services.AddScoped<IStripeService, StripeService>();
 
             services.AddScoped<NotificationContext>();

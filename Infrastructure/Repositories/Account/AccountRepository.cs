@@ -54,10 +54,5 @@ namespace Infrastructure.Repositories.Account
             _context.Accounts.Update(account);
             _context.SaveChanges();
         }
-
-        public IEnumerable<Models.Account> GetAllPremiums()
-        {
-            return _context.Accounts.Where(x => x.IsPremium);
-        }
     }
 }

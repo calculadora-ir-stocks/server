@@ -1,6 +1,7 @@
-﻿using DevOne.Security.Cryptography.BCrypt;
+﻿using Common.Constants;
+using Common.Enums;
+using DevOne.Security.Cryptography.BCrypt;
 using FluentValidation;
-using Common.Constants;
 using System.Text.RegularExpressions;
 
 namespace Infrastructure.Models
@@ -8,12 +9,13 @@ namespace Infrastructure.Models
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
     public class Account : BaseEntity
     {
-        public Account(string name, string email, string password, string cpf)
+        public Account(string name, string email, string password, string cpf, string phoneNumber)
         {
             Name = name;
             Email = email;
-            Password = BCryptHelper.HashPassword(password, BCryptHelper.GenerateSalt());
+            Password = password;
             CPF = cpf;
+            PhoneNumber = phoneNumber;
 
             Validate(this, new AccountValidator());
         }
@@ -44,6 +46,11 @@ namespace Infrastructure.Models
         public string CPF { get; init; }
 
         /// <summary>
+        /// Telefone pessoal formatado (+11 11 9 1111-1111) de uma conta cadastrada.
+        /// </summary>
+        public string PhoneNumber { get; init; }
+
+        /// <summary>
         /// O id do objeto <c>Customer</c> criado pelo Stripe no registro de uma conta.
         /// O objeto <c>Customer</c> do Stripe é utilizado para vincular pagamentos já existentes
         /// a um usuário.
@@ -53,26 +60,10 @@ namespace Infrastructure.Models
         public string? StripeCustomerId { get; set; } = null;
 
         /// <summary>
-        /// Identifica um usuário que se cadastrou no pré-lançamento e possui descontos vitalícios.
+        /// Define os status de uma conta cadastrada.
+        /// Quando um usuário é registrado, o status definido é <c>EmailNotConfirmed</c>.
         /// </summary>
-        public bool IsPremium { get; set; } = false;
-
-        // TODO change to a table where stores accounts without sync done yet.
-        // then, when the sync is done, deletes the record.
-
-        /// <summary>
-        /// Define se a sincronização com os dados da B3 já foi realizada no cadastro do usuário.
-        /// </summary>
-        public bool IsB3SyncDone { get; set; } = false;
-
-        // TODO change to a table where stores accounts that didnt validate the code yet.
-        // then, when the accounts validates it, deletes the record.
-
-        /// <summary>
-        /// Define se o código de validação de cadastro já foi confirmado pelo usuário.
-        /// </summary>
-        public bool AuthenticationCodeValidated { get; set; } = false;
-
+        public AccountStatus Status { get; set; } = AccountStatus.EmailNotConfirmed;
         #endregion
 
         #region Relationships
@@ -102,7 +93,6 @@ namespace Infrastructure.Models
         /// </summary>
         public int PlanId { get; set; } = PlansConstants.Free;
 
-
         /// <summary>
         /// Define se um plano está expirado.
         /// Esse evento é definido quando o webhook do Stripe é consumido no evento <c>customer.subscription.deleted</c>.
@@ -113,7 +103,6 @@ namespace Infrastructure.Models
 
         public void HashPassword(string password)
         {
-            // Move to object property set
             Password = BCryptHelper.HashPassword(password, BCryptHelper.GenerateSalt());
         }
     }
@@ -126,9 +115,11 @@ namespace Infrastructure.Models
         private readonly Regex HasMinMaxChars = new(".{8,60}");
         private readonly Regex IsValidEmail = new(@"^([\w\.\-]+)@([\w\-]+)((\.(\w){2,3})+)$");
         private readonly Regex IsValidCPF = new(@"(^\d{3}\.\d{3}\.\d{3}\-\d{2}$)");
+        private readonly Regex IsValidPhoneNumber = new(@"^\+\d{2} \d{2} \d \d{4}-\d{4}$");
 
         private const int NameMinLength = 3;
         private const int NameMaxLength = 20;
+
 
         public AccountValidator()
         {
@@ -147,6 +138,10 @@ namespace Infrastructure.Models
             RuleFor(c => c.CPF)
                 .Must(c => IsValidCPF.IsMatch(c.ToString()))
                 .WithMessage($"O CPF informado não é válido.");
+
+            RuleFor(c => c.PhoneNumber)
+                .Must(c => IsValidPhoneNumber.IsMatch(c.ToString()))
+                .WithMessage($"Número de telefone deve seguir o formato +11 11 1 1111-1111");
 
             RuleFor(c => c.Password)
                 .Must(c => HasNumber.IsMatch(c.ToString()))

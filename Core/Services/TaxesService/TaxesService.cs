@@ -1,5 +1,6 @@
 using Api.Clients.B3;
 using Api.Exceptions;
+using Common.Exceptions;
 using Core.DTOs.B3;
 using Core.Models;
 using Core.Models.Responses;
@@ -363,15 +364,24 @@ public class TaxesService : ITaxesService
         try
         {
             Infrastructure.Models.Account? account = accountRepository.GetById(accountId);
-            if (account is null) throw new Exception($"Usuário de id {accountId} não encontrado.");
+            if (account is null) throw new RecordNotFoundException("Investidor", accountId.ToString());
 
-            if (account.IsB3SyncDone)
+            if (account.Status == Common.Enums.AccountStatus.B3APIDataSyncDone)
             {
-                logger.LogInformation("A sincronização com a B3 já foi executada para o usuário {accountId}.", accountId);
+                logger.LogError("A sincronização com a B3 já foi executada para o usuário {accountId}, mas" +
+                    "o Big Bang foi executado mesmo assim.", accountId);
                 throw new InvalidBusinessRuleException($"A sincronização com a B3 já foi executada para o usuário {accountId}.");
             }
 
+            if (account.Status == Common.Enums.AccountStatus.EmailConfirmed)
+            {
+                account.Status = Common.Enums.AccountStatus.B3APIDataSyncNotDone;
+                accountRepository.Update(account);
+            }
+
+#pragma warning disable CS0219 // Variable is assigned but its value is never used
             string startDate = "2019-11-01";
+#pragma warning restore CS0219 // Variable is assigned but its value is never used
 
             string lastMonth = new DateTime(year: DateTime.Now.Year, month: DateTime.Now.Month, day: 1)
                 .AddMonths(-1)
@@ -384,7 +394,7 @@ public class TaxesService : ITaxesService
 
             if (response is null) return;
 
-            await SaveB3SyncData(response, account);
+            await SaveB3Data(response, account);
 
             logger.LogInformation("Big Bang executado com sucesso para o usuário {accountId}.", accountId);
         }
@@ -415,7 +425,7 @@ public class TaxesService : ITaxesService
         return b3Response;
     }
 
-    private async Task SaveB3SyncData(InvestorMovementDetails response, Infrastructure.Models.Account account)
+    private async Task SaveB3Data(InvestorMovementDetails response, Infrastructure.Models.Account account)
     {
         List<Infrastructure.Models.IncomeTaxes> incomeTaxes = new();
         CreateIncomeTaxes(response.Assets, incomeTaxes, account);
@@ -423,11 +433,11 @@ public class TaxesService : ITaxesService
         List<AverageTradedPrice> averageTradedPrices = new();
         CreateAverageTradedPrices(response.AverageTradedPrices, averageTradedPrices, account);
 
-        // TO-DO: unit of work
+        // TODO unit of work
         await taxesRepository.AddAllAsync(incomeTaxes);
         await averageTradedPriceRepository.AddAllAsync(averageTradedPrices);
 
-        account.IsB3SyncDone = true;
+        account.Status = Common.Enums.AccountStatus.B3APIDataSyncDone;
         accountRepository.Update(account);
     }
 
@@ -450,7 +460,7 @@ public class TaxesService : ITaxesService
     {
         foreach (var asset in assets)
         {
-            if (MovementHadProfitOrLoss(asset))
+            if (MonthHadProfitOrLoss(asset))
             {
                 incomeTaxes.Add(new Infrastructure.Models.IncomeTaxes
                 {
@@ -469,7 +479,7 @@ public class TaxesService : ITaxesService
         }
     }
 
-    private static bool MovementHadProfitOrLoss(AssetIncomeTaxes asset)
+    private static bool MonthHadProfitOrLoss(AssetIncomeTaxes asset)
     {
         return asset.SwingTradeProfit != 0 || asset.DayTradeProfit != 0;
     }

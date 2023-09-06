@@ -2,14 +2,14 @@
 using Api.Exceptions;
 using Api.Notification;
 using Api.Services.Jwt;
+using Common.Enums;
 using Common.Models;
-using Core.Services.PremiumCode;
+using Core.Services.Account;
+using Core.Services.Email;
 using DevOne.Security.Cryptography.BCrypt;
-using Infrastructure.Models;
 using Infrastructure.Repositories;
 using Infrastructure.Repositories.Account;
 using Microsoft.Extensions.Logging;
-using Stripe;
 
 namespace Api.Services.Auth
 {
@@ -18,7 +18,7 @@ namespace Api.Services.Auth
 
         private readonly IAccountRepository accountRepository;
         private readonly IGenericRepository<Infrastructure.Models.Account> accountGenericRepository;
-        private readonly IPremiumCodeService premiumCodeService;
+        private readonly IAccountService accountService;
 
         private readonly IJwtCommon jwtUtils;
 
@@ -29,7 +29,7 @@ namespace Api.Services.Auth
         public AuthService(
             IAccountRepository accountRepository,
             IGenericRepository<Infrastructure.Models.Account> accountGenericRepository,
-            IPremiumCodeService premiumCodeService,
+            IAccountService accountService,
             IJwtCommon jwtUtils,
             NotificationContext notificationContext,
             ILogger<AuthService> logger
@@ -37,7 +37,7 @@ namespace Api.Services.Auth
         {
             this.accountRepository = accountRepository;
             this.accountGenericRepository = accountGenericRepository;
-            this.premiumCodeService = premiumCodeService;
+            this.accountService = accountService;
             this.jwtUtils = jwtUtils;
             this.notificationContext = notificationContext;
             this.logger = logger;
@@ -52,15 +52,15 @@ namespace Api.Services.Auth
                 if (account is null)
                     return null;
 
-                if (!account.AuthenticationCodeValidated) 
+                if (account.Status == AccountStatus.EmailNotConfirmed) 
                     throw new InvalidBusinessRuleException("Você ainda não confirmou o seu e-mail no cadastro da sua conta.");
 
-                if (BCryptHelper.CheckPassword(request.Password, account?.Password))
+                if (BCryptHelper.CheckPassword(request.Password, account.Password))
                 {
                     return jwtUtils.GenerateToken(new AccountDto
                     (
-                        account!.Id,
-                        account!.PlanId
+                        account.Id,
+                        account.PlanId
                     ));
                 }
 
@@ -73,44 +73,21 @@ namespace Api.Services.Auth
             }
         }
 
-        public void SignUp(SignUpRequest request)
+        public async Task SignUp(SignUpRequest request)
         {
             Infrastructure.Models.Account account 
-                = new(request.Name, request.Email, request.Password, request.CPF);
+                = new(request.Name, request.Email, request.Password, request.CPF, request.PhoneNumber);
 
             if (!IsValidSignUp(account)) return;
 
-            if (request.PremiumCode is not null)
-            {
-                ValidatePromotionalCode(request.PremiumCode, account);
-            }
-
             try
-            {                
+            {
                 accountGenericRepository.Add(account);
+                await accountService.SendEmailVerification(account.Id, account);
             } catch(Exception e)
             {
                 logger.LogError($"Ocorreu um erro ao tentar registrar o usuário {account.Id}. {e.Message}");
             }
-        }
-
-        private void ValidatePromotionalCode(string premiumCode, Infrastructure.Models.Account account)
-        {
-            if (!premiumCodeService.IsValid(premiumCode))
-            {
-                notificationContext.AddNotification("O código promocional inserido não é válido.");
-                return;
-
-            }
-
-            if (!premiumCodeService.Active(premiumCode))
-            {
-                notificationContext.AddNotification("O código promocional inserido é válido, porém já foi utilizado.");
-                return;
-            }
-
-            account.IsPremium = true;
-            premiumCodeService.DeactivatePremiumCode(premiumCode);
         }
 
         private bool IsValidSignUp(Infrastructure.Models.Account account)

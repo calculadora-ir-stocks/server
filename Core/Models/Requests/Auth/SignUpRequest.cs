@@ -2,19 +2,19 @@
 {
     public record SignUpRequest
     {
-        public SignUpRequest(string name, string email, string cPF, string password, string premiumCode)
+        public SignUpRequest(string name, string email, string cPF, string password, string phoneNumber)
         {
             Name = name;
             Email = email;
             CPF = cPF;
             Password = password;
-            PremiumCode = premiumCode;
+            PhoneNumber = phoneNumber;
         }
 
         public string Name { get; protected set; }
         public string Email { get; protected set; }
         public string CPF { get; protected set; }
         public string Password { get; protected set; }
-        public string? PremiumCode { get; } = null;
+        public string PhoneNumber { get; protected set; }
     }
 }

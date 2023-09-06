@@ -13,7 +13,6 @@ namespace Api.Database
         public DbSet<IncomeTaxes> IncomeTaxes { get; set; } = null!;
         public DbSet<EmailCode> EmailCodes { get; set; } = null!;
         public DbSet<Plan> Plans { get; set; } = null!;
-        public DbSet<PremiumCode> PremiumCodes { get; set; } = null!;
         public DbSet<Order> Orders { get; set; } = null!;
 
         public StocksContext()
@@ -83,13 +82,6 @@ namespace Api.Database
                 new Plan(PlansConstants.Monthly, "Mensal", "R$39,99 por mês", "price_1NioETElcTcz6jitFPhhg4HH"),
                 new Plan(PlansConstants.Semester, "Semestral", "R$29,99 por mês", "price_1Ninm4ElcTcz6jitB40ifv1V"),
                 new Plan(PlansConstants.Anual, "Anual", "R$19,99 por mês", "price_1NiniyElcTcz6jit3AKGk57n")
-            );
-
-            modelBuilder.Entity<PremiumCode>().HasData
-            (
-                // TODO
-                // Based on the pre-launch waitlist, generate X premium codes.
-                new PremiumCode()
             );
         }
     }

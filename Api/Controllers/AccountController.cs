@@ -1,6 +1,6 @@
+using Core.Services.Account;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Core.Services.Account;
 
 namespace Api.Controllers;
 

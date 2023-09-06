@@ -1,7 +1,7 @@
-﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
-using Api.DTOs.Auth;
+﻿using Api.DTOs.Auth;
 using Api.Services.Auth;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Api.Controllers;
 
@@ -23,9 +23,9 @@ public class AuthController : BaseController
     /// </summary>
     [AllowAnonymous]
     [HttpPost("sign-up")]
-    public IActionResult SignUp([FromBody] SignUpRequest request)
+    public async Task<IActionResult> SignUp([FromBody] SignUpRequest request)
     {
-        service.SignUp(request);
+        await service.SignUp(request);
         return Ok(200);
     }
 

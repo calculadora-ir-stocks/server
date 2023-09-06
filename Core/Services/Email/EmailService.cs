@@ -43,22 +43,22 @@ namespace Core.Services.Email
         public bool IsVerificationEmailValid(Guid accountId, string code)
         {
             var emailSender = emailCodeRepository.GetByAccountId(accountId);
-            var account = accountRepository.GetById(accountId);
+            var account = accountRepository.GetById(accountId)!;
 
             if (emailSender is null) throw new NotFoundException();
 
             if (emailSender.Code == code)
             {
-                if (account!.AuthenticationCodeValidated is false)
+                if (account.Status == Common.Enums.AccountStatus.EmailNotConfirmed)
                 {
                     // TODO unit of work
-                    account.AuthenticationCodeValidated = true;
+                    account.Status = Common.Enums.AccountStatus.EmailConfirmed;
 
                     var customer = stripeCustomerService.Create(new CustomerCreateOptions
                     {
                         Name = account.Name,
                         Email = account.Email,
-                        Phone = null // TODO adicionar número de telefone para cadastro?
+                        Phone = account.PhoneNumber
                     });
 
                     account.StripeCustomerId = customer.Id;
