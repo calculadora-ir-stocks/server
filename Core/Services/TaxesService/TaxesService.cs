@@ -366,16 +366,17 @@ public class TaxesService : ITaxesService
             Infrastructure.Models.Account? account = accountRepository.GetById(accountId);
             if (account is null) throw new RecordNotFoundException("Investidor", accountId.ToString());
 
-            if (account.Status == Common.Enums.AccountStatus.B3APIDataSyncDone)
+            if (account.Status == Common.Enums.AccountStatus.Synced)
             {
                 logger.LogError("A sincronização com a B3 já foi executada para o usuário {accountId}, mas" +
                     "o Big Bang foi executado mesmo assim.", accountId);
+
                 throw new InvalidBusinessRuleException($"A sincronização com a B3 já foi executada para o usuário {accountId}.");
             }
 
             if (account.Status == Common.Enums.AccountStatus.EmailConfirmed)
             {
-                account.Status = Common.Enums.AccountStatus.B3APIDataSyncNotDone;
+                account.Status = Common.Enums.AccountStatus.Syncing;
                 accountRepository.Update(account);
             }
 
@@ -437,7 +438,7 @@ public class TaxesService : ITaxesService
         await taxesRepository.AddAllAsync(incomeTaxes);
         await averageTradedPriceRepository.AddAllAsync(averageTradedPrices);
 
-        account.Status = Common.Enums.AccountStatus.B3APIDataSyncDone;
+        account.Status = Common.Enums.AccountStatus.Synced;
         accountRepository.Update(account);
     }
 

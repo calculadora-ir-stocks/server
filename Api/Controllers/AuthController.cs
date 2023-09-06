@@ -41,6 +41,8 @@ public class AuthController : BaseController
         if (jwt is null)
             return BadRequest("Nome de usuário ou senha incorreto(s).");
 
-        return Ok(jwt);
+        Response.Headers["Authorization"] = jwt;
+
+        return Ok();
     }
 }

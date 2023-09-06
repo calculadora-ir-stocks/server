@@ -1,7 +1,5 @@
-using Hangfire;
 using Api;
 using Api.Middlewares;
-using Common;
 
 var builder = WebApplication.CreateBuilder(args);
 

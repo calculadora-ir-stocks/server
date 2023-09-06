@@ -17,7 +17,7 @@ public class JwtMiddleware
     {
         var token = context.Request.Headers["Authorization"].FirstOrDefault()?.Split(" ").Last();
 
-        // TO-DO: not working
+        // TODO never being invoked
 
         Guid? userId = jwtCommon.CreateToken(token);
 

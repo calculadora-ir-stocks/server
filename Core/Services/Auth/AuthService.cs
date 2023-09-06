@@ -83,6 +83,9 @@ namespace Api.Services.Auth
             try
             {
                 accountGenericRepository.Add(account);
+
+                account.HashPassword(account.Password);
+
                 await accountService.SendEmailVerification(account.Id, account);
             } catch(Exception e)
             {
