@@ -1,10 +1,11 @@
 ﻿using Billing.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Stripe.Checkout;
 
 namespace Api.Controllers
 {
-    // TODO [Authorize]
+    [Authorize]
     [Tags("Stripe")]
     public class StripeController : BaseController
     {
@@ -68,6 +69,7 @@ namespace Api.Controllers
         /// Endpoint utilizado para a comunicação com Webhooks do Stripe. Não deve ser utilizado internamente.
         /// </summary>
         [HttpPost("webhook")]
+        [AllowAnonymous]
         public async Task<IActionResult> Webhook()
         {
             string? json = await new StreamReader(HttpContext.Request.Body).ReadToEndAsync();

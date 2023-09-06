@@ -15,10 +15,6 @@ public class AccountController : BaseController
         this.service = service;
     }
 
-    /// <summary>
-    /// Envia um código de verificação por e-mail.
-    /// </summary>
-    [AllowAnonymous]
     [HttpPost("send-code/{accountId}")]
     public async Task<IActionResult> SendEmailVerification([FromRoute] Guid accountId)
     {

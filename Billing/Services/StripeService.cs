@@ -226,6 +226,8 @@ namespace Billing.Services
             var account = accountRepository.GetByStripeCustomerId(session.CustomerId);
 
             account.PlanId = planId;
+            account.IsPlanExpired = false;
+
             accountRepository.Update(account);
         }
     }
