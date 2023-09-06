@@ -1,10 +1,12 @@
 ﻿using Infrastructure.Models;
 using Infrastructure.Repositories;
 using Infrastructure.Repositories.Account;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Api.Controllers
 {
+    [AllowAnonymous]
     public class UtilsController : BaseController
     {
         private readonly IAccountRepository accountRepository;
