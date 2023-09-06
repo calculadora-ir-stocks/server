@@ -30,7 +30,6 @@ public class TaxesController : BaseController
 
         if (response.TradedAssets.IsNullOrEmpty()) return NotFound("Por enquanto não há nenhum imposto de renda a ser pago.");
 
-        // TO-DO: alterar AssetId pelo nome do ativo.
         return Ok(response);
     }
 
