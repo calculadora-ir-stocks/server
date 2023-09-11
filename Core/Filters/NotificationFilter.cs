@@ -1,9 +1,10 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Api.Notification;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Newtonsoft.Json;
 using System.Net;
 
-namespace Api.Notification
+namespace Core.Filters
 {
     public class NotificationFilter : IAsyncResultFilter
     {

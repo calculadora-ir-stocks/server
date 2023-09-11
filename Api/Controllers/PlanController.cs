@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Core.Models.Requests.Plan;
 using Core.Services.Plan;
 using Microsoft.AspNetCore.Authorization;
 

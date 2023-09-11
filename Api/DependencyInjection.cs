@@ -8,6 +8,7 @@ using Billing.Services;
 using Common;
 using Core.Calculators;
 using Core.Calculators.Assets;
+using Core.Filters;
 using Core.Services.Account;
 using Core.Services.Email;
 using Core.Services.Hangfire.AverageTradedPriceUpdater;
@@ -70,7 +71,6 @@ namespace Api
                 options.Issuer = builder.Configuration["Jwt:Issuer"];
                 options.Audience = builder.Configuration["Jwt:Audience"];
             });
-
         }
 
         public static void AddStripeServices(this IServiceCollection services, IConfiguration configuration)

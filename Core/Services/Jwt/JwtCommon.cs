@@ -10,28 +10,37 @@ namespace Api.Services.Jwt
 {
     public class JwtCommon : IJwtCommon
     {
-        private readonly AppSettings _appSettings;
-        private const string Plan = "Plan";
+        private readonly AppSettings appSettings;
+
+        /// <summary>
+        /// Claim que determina se o plano de um usuário está expirado.
+        /// </summary>
+        private const string IsPlanExpired = "pln";
 
         public JwtCommon(IOptions<AppSettings> appSettings)
         {
-            _appSettings = appSettings.Value;
+            this.appSettings = appSettings.Value;
         }
 
-        public string GenerateToken(AccountDto account)
+        public string GenerateToken(JwtDetails account)
         {
-            var key = Encoding.ASCII.GetBytes(_appSettings.Secret);
+            var key = Encoding.ASCII.GetBytes(appSettings.Secret);
             var signinCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature);
+
+            /** 
+             * TODO utilizar sistema de refresh token e verificar a validade do plano de um usuário
+             * através do claim pln ao invés de validar em cada request do controller TaxesController.
+             */
 
             var claims = new[] {
                 new Claim(ClaimTypes.NameIdentifier, account.Id.ToString()),
-                new Claim(Plan, account.PlanId.ToString())
+                new Claim(IsPlanExpired, account.IsPlanExpired.ToString()),
             };
 
             var token = new JwtSecurityToken(
-                issuer: _appSettings.Issuer,
-                audience: _appSettings.Audience,
-                expires: DateTime.Now.AddMonths(12),
+                issuer: appSettings.Issuer,
+                audience: appSettings.Audience,
+                expires: DateTime.Now.AddHours(24),
                 signingCredentials: signinCredentials,
                 claims: claims
             );
@@ -44,7 +53,7 @@ namespace Api.Services.Jwt
             if (token == null)
                 return null;
 
-            var key = Encoding.ASCII.GetBytes(_appSettings.Secret);
+            var key = Encoding.ASCII.GetBytes(appSettings.Secret);
             var signinCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature);
 
             var tokenHandler = new JwtSecurityTokenHandler();

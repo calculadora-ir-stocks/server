@@ -1,6 +1,4 @@
-﻿using Core.Models.Requests.Plan;
-
-namespace Core.Services.Plan
+﻿namespace Core.Services.Plan
 {
     public interface IPlanService
     {

@@ -57,10 +57,10 @@ namespace Api.Services.Auth
 
                 if (BCryptHelper.CheckPassword(request.Password, account.Password))
                 {
-                    return jwtUtils.GenerateToken(new AccountDto
+                    return jwtUtils.GenerateToken(new JwtDetails
                     (
                         account.Id,
-                        account.PlanId
+                        account.IsPlanExpired
                     ));
                 }
 
@@ -82,9 +82,8 @@ namespace Api.Services.Auth
 
             try
             {
-                accountGenericRepository.Add(account);
-
                 account.HashPassword(account.Password);
+                accountGenericRepository.Add(account);
 
                 await accountService.SendEmailVerification(account.Id, account);
             } catch(Exception e)
