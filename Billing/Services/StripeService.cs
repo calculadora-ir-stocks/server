@@ -83,7 +83,7 @@ namespace Billing.Services
 
         public async Task<Session> CreateCheckoutSessionForFreeTrial(Guid accountId)
         {
-            var freeTrialPlan = genericRepositoryPlan.GetAll().Where(x => x.Id == PlansConstants.Free).Single();
+            var annualPlan = genericRepositoryPlan.GetAll().Where(x => x.Id == PlansConstants.Anual).Single();
 
             var options = new SessionCreateOptions
             {
@@ -91,8 +91,8 @@ namespace Billing.Services
                 {
                     new SessionLineItemOptions 
                     { 
-                        Price = freeTrialPlan.StripeProductId,
-                        Quantity = 1 
+                        Price = annualPlan.StripeProductId,
+                        Quantity = 1
                     },
                 },
                 Mode = "subscription",
