@@ -4,6 +4,7 @@ using SendGrid.Helpers.Mail;
 using Infrastructure.Repositories.EmailCode;
 using Infrastructure.Repositories.Account;
 using Stripe;
+using Common.Helpers;
 
 namespace Core.Services.Email
 {
@@ -49,10 +50,10 @@ namespace Core.Services.Email
 
             if (emailSender.Code == code)
             {
-                if (account.Status == Common.Enums.AccountStatus.EmailNotConfirmed)
+                if (account.Status == EnumHelper.GetEnumDescription(Common.Enums.AccountStatus.EmailNotConfirmed))
                 {
                     // TODO unit of work
-                    account.Status = Common.Enums.AccountStatus.EmailConfirmed;
+                    account.Status = EnumHelper.GetEnumDescription(Common.Enums.AccountStatus.EmailConfirmed);
 
                     var customer = stripeCustomerService.Create(new CustomerCreateOptions
                     {

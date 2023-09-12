@@ -16,6 +16,7 @@ namespace Common.Enums
         /// </summary>
         [Description("EMAIL_NOT_CONFIRMED")] 
         EmailNotConfirmed = 0,
+
         /// <summary>
         /// O segundo estágio linear de Status.
         /// 
@@ -23,6 +24,7 @@ namespace Common.Enums
         /// </summary>
         [Description("EMAIL_CONFIRMED")]
         EmailConfirmed = 1,
+
         /// <summary>
         /// O terceiro estágio linear de Status
         /// 
@@ -31,12 +33,31 @@ namespace Common.Enums
         /// </summary>
         [Description("SYNCING")]
         Syncing = 2,
+
         /// <summary>
         /// O último estágio linear de Status.
         /// 
         /// Quando os preços médios e os impostos ainda estão sendo calculados, esse status é utilizado.
         /// </summary>
         [Description("SYNCED")]
-        Synced = 3
+        Synced = 3,
+
+        /// <summary>
+        /// Quando um plano é expirado, a conta é definida como <c>SUBSCRIPTION_EXPIRED</c>.
+        /// </summary>
+        [Description("SUBSCRIPTION_EXPIRED")]
+        SubscriptionExpired = 4,
+
+        /// <summary>
+        /// Quando um plano é pausado - geralmente por conta de pagamentos falhos -, a conta é definida como <c>SUBSCRIPTION_PAUSED</c>.
+        /// </summary>
+        [Description("SUBSCRIPTION_PAUSED")]
+        SubscriptionPaused = 5,
+
+        /// <summary>
+        /// Quando um plano ainda é válido, a conta é definida como <c>SUBSCRIPTION_VALID</c>.
+        /// </summary>
+        [Description("SUBSCRIPTION_VALID")]
+        SubscriptionValid = 6
     }
 }

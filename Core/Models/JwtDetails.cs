@@ -2,13 +2,13 @@
 {
     public class JwtDetails
     {
-        public JwtDetails(Guid id, bool isPlanExpired)
+        public JwtDetails(Guid id, string isPlanExpired)
         {
             Id = id;
             IsPlanExpired = isPlanExpired;
         }
 
         public Guid Id { get; init; }
-        public bool IsPlanExpired { get; init; }
+        public string IsPlanExpired { get; init; }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using Common.Constants;
 using Common.Enums;
+using Common.Helpers;
 using DevOne.Security.Cryptography.BCrypt;
 using FluentValidation;
 using System.Text.RegularExpressions;
@@ -63,7 +64,7 @@ namespace Infrastructure.Models
         /// Define os status de uma conta cadastrada.
         /// Quando um usuário é registrado, o status definido é <c>EmailNotConfirmed</c>.
         /// </summary>
-        public AccountStatus Status { get; set; } = AccountStatus.EmailNotConfirmed;
+        public string Status { get; set; } = EnumHelper.GetEnumDescription(AccountStatus.EmailNotConfirmed);
         #endregion
 
         #region Relationships
@@ -92,13 +93,6 @@ namespace Infrastructure.Models
         /// Inicialmente, todos os investidores iniciarão com o plano gratuito.
         /// </summary>
         public int PlanId { get; set; } = PlansConstants.Free;
-
-        /// <summary>
-        /// Define se um plano está expirado.
-        /// Esse evento é definido quando o webhook do Stripe é consumido no evento <c>customer.subscription.deleted</c>.
-        /// </summary>
-        public bool IsPlanExpired { get; set; } = false;
-
         #endregion
 
         public void HashPassword(string password)

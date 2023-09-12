@@ -1,5 +1,7 @@
 ﻿using Common.Constants;
+using Common.Enums;
 using Common.Exceptions;
+using Common.Helpers;
 using Infrastructure.Models;
 using Infrastructure.Repositories;
 using Infrastructure.Repositories.Account;
@@ -106,6 +108,7 @@ namespace Billing.Services
                         },
                     },
                     TrialPeriodDays = 30,
+                    Description = "Teste gratuitamente, nada mais justo. Se você achar útil, faça parte do Stocks!"
                 },
                 PaymentMethodCollection = "if_required",
             };
@@ -133,22 +136,14 @@ namespace Billing.Services
             return session;
         }
 
-        public async Task<Session> GetServiceSessionById(string sessionId)
-        {
-            var service = new SessionService();
-            var session = await service.GetAsync(sessionId);
-
-            return session;
-        }
-
         public void HandleUserPlansNotifications(string json, string stripeSignatureHeader)
         {
             Event stripeEvent;
+            Guid sessionId = Guid.NewGuid();            
 
             try
             {
                 stripeEvent = EventUtility.ConstructEvent(json, stripeSignatureHeader, WebhookSecret);
-                logger.LogInformation("Webhook do Stripe executado do tipo {stripeEvent.Type} de id {stripeEvent.Id} encontrado.", stripeEvent.Type, stripeEvent.Id);
             }
             catch (Exception e)
             {
@@ -156,79 +151,128 @@ namespace Billing.Services
                 throw new Exception("Ocorreu um erro ao obter a atualização de plano de um usuário.");
             }
 
+            logger.LogInformation("Iniciando sessão de Webhook do Stripe de id {sessionId}. " +
+                "Objeto Event do Stripe do tipo {type} de id {stripeId}",
+                sessionId.ToString(), stripeEvent.Type, stripeEvent.Id);
+
             switch (stripeEvent.Type)
             {
                 case Events.CheckoutSessionCompleted:
-                    var session = stripeEvent.Data.Object as Session;
+                    /** Sent when the subscription is created. The subscription status might be incomplete if customer authentication is required to
+                    complete the payment or if you set payment_behavior to default_incomplete. */
 
-                    bool isOrderPaid = session!.PaymentStatus == "paid";
+                    FulFillOrder(stripeEvent);
+                    break;
+                case Events.InvoicePaid:
+                    /** Continue to provision the subscription as payments continue to be made.
+                    Store the status in your database and check when a user accesses your service.
+                    This approach helps you avoid hitting rate limits. */
 
-                    if (isOrderPaid)
-                    {
-                        genericRepositoryStripe.Add(
-                            new Order(session.CustomerId, session.SubscriptionId)
-                        );
-
-                        FulFillOrder(session);
-                    }
-                    else
-                    {
-                        // fuck you then
-                    }
-
+                    ValidateAccountSubscription(stripeEvent);
                     break;
                 case Events.CustomerSubscriptionDeleted:
-                    var subscription = stripeEvent.Data.Object as Subscription;
+                    /** Sent when a customer’s subscription ends. */
 
-                    ExpiresPlan(subscription!);
+                    ExpiresAccountSubscription(stripeEvent);
                     break;
                 case "invoice.payment_failed":
-                    // Sent each billing interval if there is an issue with your customer’s payment method.
-
-                    // The payment failed or the customer does not have a valid payment method.
-                    // The subscription becomes past_due. Notify your customer and send them to the
-                    // customer portal to update their payment information.
-                    break;
-                case "customer.subscription.trial_will_end":
-                    // https://stripe.com/docs/payments/checkout/free-trials#customer-portal:~:text=You%20can%20also%20send%20the%20reminder%20email%20yourself%2C%20and%20redirect%20customers%20to%20the%20Billing%20customer%20portal%20to%20add%20their%20payment%20details.
+                    PausesAccountSubscription(stripeEvent);
                     break;
                 default:
                     break;
             }
         }
 
-        private void ExpiresPlan(Subscription subscription)
+        private void PausesAccountSubscription(Event stripeEvent)
         {
-            var account = accountRepository.GetByStripeCustomerId(subscription.CustomerId);
+            var subscription = stripeEvent.Data.Object as Invoice;
 
-            account.IsPlanExpired = true;
-            accountRepository.Update(account);
+            var account = accountRepository.GetByStripeCustomerId(subscription!.CustomerId);
+
+            if (FailedPaymentIsFromExistingPlan(subscription))
+            {
+                account.Status = EnumHelper.GetEnumDescription(AccountStatus.SubscriptionPaused);
+                accountRepository.Update(account);
+
+                logger.LogInformation("Usuário de id {id} teve um débito inválido e o plano agora está pausado.", account.Id);
+            }
         }
 
-        private void FulFillOrder(Session session)
-        {            
-            var options = new SessionGetOptions();
-            options.AddExpand("line_items");
+        /// <summary>
+        /// Há alguns cenários que ativam o Webhook de parâmetro <c>invoice_payment_failed</c>.
+        /// Um deles é quando um usuário vai comprar um plano e o cartão falha.
+        /// O outro é quando um usuário já possui um plano salvo e, na hora de debitar, o cartão falha.
+        /// 
+        /// Para pausar a inscrição de um usuário, o pagamento falho deve ser de uma inscrição já existente.
+        /// </summary>
+        private static bool FailedPaymentIsFromExistingPlan(Invoice subscription)
+        {
+            return subscription.BillingReason == "subscription_cycle";
+        }
 
-            var service = new SessionService();
+        private void ValidateAccountSubscription(Event stripeEvent)
+        {
+            var invoice = stripeEvent.Data.Object as Invoice;
+            var account = accountRepository.GetByStripeCustomerId(invoice!.CustomerId);
 
-            Session sessionWithLineItems = service.Get(session.Id, options);
-
-            var lineItem = sessionWithLineItems.LineItems.Data.First();
-            string productId = lineItem!.Price.Id;
-
-            int planId = genericRepositoryPlan
-                .GetAll()
-                .Where(x => x.StripeProductId == productId)
-                .Select(x => x.Id)
-                .First();
-
-            var account = accountRepository.GetByStripeCustomerId(session.CustomerId);
-
-            account.PlanId = planId;
-            account.IsPlanExpired = false;
-
+            account.Status = EnumHelper.GetEnumDescription(AccountStatus.SubscriptionValid);
             accountRepository.Update(account);
+
+            logger.LogInformation("Usuário de id {id} teve um débito válido e o plano continua sendo válido.", account.Id);
+        }
+
+        private void ExpiresAccountSubscription(Event stripeEvent)
+        {
+            var subscription = stripeEvent.Data.Object as Subscription;
+            var account = accountRepository.GetByStripeCustomerId(subscription!.CustomerId);
+
+            account.Status = EnumHelper.GetEnumDescription(AccountStatus.SubscriptionExpired);
+            accountRepository.Update(account);
+
+            logger.LogInformation("Usuário de id {id} teve o seu plano expirado.", account.Id);
+        }
+
+        private void FulFillOrder(Event stripeEvent)
+        {
+            var session = stripeEvent.Data.Object as Session;
+
+            bool isOrderPaid = session!.PaymentStatus == "paid";
+
+            if (isOrderPaid)
+            {
+                genericRepositoryStripe.Add(
+                    new Order(session.CustomerId, session.SubscriptionId)
+                );
+
+                var options = new SessionGetOptions();
+                options.AddExpand("line_items");
+
+                var service = new SessionService();
+
+                Session sessionWithLineItems = service.Get(session.Id, options);
+
+                var lineItem = sessionWithLineItems.LineItems.Data.First();
+                string productId = lineItem!.Price.Id;
+
+                int planId = genericRepositoryPlan
+                    .GetAll()
+                    .Where(x => x.StripeProductId == productId)
+                    .Select(x => x.Id)
+                    .First();
+
+                var account = accountRepository.GetByStripeCustomerId(session.CustomerId);
+
+                account.PlanId = planId;
+                account.Status = EnumHelper.GetEnumDescription(Common.Enums.AccountStatus.SubscriptionValid);
+
+                accountRepository.Update(account);
+
+                logger.LogInformation("Usuário de id {id} comprou o plano de id {planId}.", account.Id, planId);
+            }
+            else
+            {
+                // fuck you then
+            }
         }
     }
 }

@@ -2,6 +2,9 @@
 
 namespace Common.Exceptions
 {
+    /// <summary>
+    /// Exceção que retorna <c>Status Code 404 Not Found</c>,
+    /// </summary>
     public class RecordNotFoundException : Exception
     {
         /// <summary>

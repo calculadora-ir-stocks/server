@@ -3,6 +3,7 @@ using Api.Exceptions;
 using Api.Notification;
 using Api.Services.Jwt;
 using Common.Enums;
+using Common.Helpers;
 using Common.Models;
 using Core.Services.Account;
 using Core.Services.Email;
@@ -52,7 +53,7 @@ namespace Api.Services.Auth
                 if (account is null)
                     return null;
 
-                if (account.Status == AccountStatus.EmailNotConfirmed) 
+                if (account.Status == EnumHelper.GetEnumDescription(AccountStatus.EmailNotConfirmed))
                     throw new InvalidBusinessRuleException("Você ainda não confirmou o seu e-mail no cadastro da sua conta.");
 
                 if (BCryptHelper.CheckPassword(request.Password, account.Password))
@@ -60,7 +61,7 @@ namespace Api.Services.Auth
                     return jwtUtils.GenerateToken(new JwtDetails
                     (
                         account.Id,
-                        account.IsPlanExpired
+                        account.Status
                     ));
                 }
 

@@ -1,6 +1,8 @@
 using Api.Clients.B3;
 using Api.Exceptions;
+using Common.Enums;
 using Common.Exceptions;
+using Common.Helpers;
 using Core.DTOs.B3;
 using Core.Models;
 using Core.Models.Responses;
@@ -30,6 +32,14 @@ public class TaxesService : ITaxesService
 
     private readonly IB3Client b3Client;
     private readonly ILogger<TaxesService> logger;
+
+    /**
+     * TODO Atualmente, para validar se um usuário ainda possui um plano válido para acessar os recursos,
+     * está sendo feita uma validação manual SOMENTE nessa classe.
+     * 
+     * É necessário alterar esse processo para armazenar um bool de plano expirado no token JWT,
+     * usando a técnica de refresh token. É necessário discutir se o refresh token será armazenado no client ou no server.
+     * */
 
     public TaxesService(IIncomeTaxesService incomeTaxesService,
         IGenericRepository<Infrastructure.Models.Account> genericRepositoryAccount,
@@ -66,10 +76,20 @@ public class TaxesService : ITaxesService
 
             Infrastructure.Models.Account account = await genericRepositoryAccount.GetByIdAsync(accountId);
 
+            if (account.Status == EnumHelper.GetEnumDescription(AccountStatus.SubscriptionExpired)) 
+                throw new InvalidBusinessRuleException("O plano do usuário está expirado.");
+
+            if (account.Status == EnumHelper.GetEnumDescription(AccountStatus.SubscriptionPaused))
+                throw new InvalidBusinessRuleException("O plano do usuário está pausado por conta de uma falha de pagamento.");
+
             // var b3Response = await b3Client.GetAccountMovement(account.CPF, startDate, yesterday, account.Id);
             var b3Response = GetCurrentMonthMockedDataBeforeB3Contract();
 
             var response = await incomeTaxesService.GetB3ResponseDetails(b3Response, account.Id);
+            response = null;
+
+            if (response is null || response.Assets is null)
+                throw new RecordNotFoundException("Nenhuma movimentação foi feita no mês atual.");
 
             return CurrentMonthToDto(response.Assets);
         }
@@ -251,6 +271,14 @@ public class TaxesService : ITaxesService
                 throw new InvalidBusinessRuleException("Para obter as informações de impostos do mês atual, acesse /assets/current.");
             }
 
+            var account = genericRepositoryAccount.GetById(accountId);
+
+            if (account.Status == EnumHelper.GetEnumDescription(AccountStatus.SubscriptionExpired))
+                throw new InvalidBusinessRuleException("O plano do usuário está expirado.");
+
+            if (account.Status == EnumHelper.GetEnumDescription(AccountStatus.SubscriptionPaused))
+                throw new InvalidBusinessRuleException("O plano do usuário está pausado por conta de uma falha de pagamento.");
+
             var response = await taxesRepository.GetSpecifiedMonthTaxes(System.Net.WebUtility.UrlDecode(month), accountId);
 
             return SpecifiedMonthToDto(response);
@@ -298,7 +326,16 @@ public class TaxesService : ITaxesService
     {
         try
         {
+            var account = genericRepositoryAccount.GetById(accountId);
+
+            if (account.Status == EnumHelper.GetEnumDescription(AccountStatus.SubscriptionExpired))
+                throw new InvalidBusinessRuleException("O plano do usuário está expirado.");
+
+            if (account.Status == EnumHelper.GetEnumDescription(AccountStatus.SubscriptionPaused))
+                throw new InvalidBusinessRuleException("O plano do usuário está pausado por conta de uma falha de pagamento.");
+
             var response = await taxesRepository.GetSpecifiedYearTaxes(System.Net.WebUtility.UrlDecode(year), accountId);
+
             return ToSpecifiedYearDto(response);
         }
         catch (Exception e)
@@ -366,7 +403,7 @@ public class TaxesService : ITaxesService
             Infrastructure.Models.Account? account = accountRepository.GetById(accountId);
             if (account is null) throw new RecordNotFoundException("Investidor", accountId.ToString());
 
-            if (account.Status == Common.Enums.AccountStatus.Synced)
+            if (account.Status == EnumHelper.GetEnumDescription(Common.Enums.AccountStatus.Synced))
             {
                 logger.LogError("A sincronização com a B3 já foi executada para o usuário {accountId}, mas" +
                     "o Big Bang foi executado mesmo assim.", accountId);
@@ -374,10 +411,14 @@ public class TaxesService : ITaxesService
                 throw new InvalidBusinessRuleException($"A sincronização com a B3 já foi executada para o usuário {accountId}.");
             }
 
-            if (account.Status == Common.Enums.AccountStatus.EmailConfirmed)
+            if (AccountCanExecuteSyncing(account))
             {
-                account.Status = Common.Enums.AccountStatus.Syncing;
+                account.Status = EnumHelper.GetEnumDescription(Common.Enums.AccountStatus.Syncing);
                 accountRepository.Update(account);
+            } else
+            {
+                throw new InvalidBusinessRuleException("Antes de executar o Big Bang é necessário " +
+                    "confirmar o endereço de e-mail.");
             }
 
 #pragma warning disable CS0219 // Variable is assigned but its value is never used
@@ -406,6 +447,11 @@ public class TaxesService : ITaxesService
 
             throw;
         }
+    }
+
+    private static bool AccountCanExecuteSyncing(Infrastructure.Models.Account account)
+    {
+        return account.Status == EnumHelper.GetEnumDescription(AccountStatus.EmailConfirmed);
     }
 
     private static Movement.Root? GetBigBangMockedDataBeforeB3Contract()
@@ -438,7 +484,7 @@ public class TaxesService : ITaxesService
         await taxesRepository.AddAllAsync(incomeTaxes);
         await averageTradedPriceRepository.AddAllAsync(averageTradedPrices);
 
-        account.Status = Common.Enums.AccountStatus.Synced;
+        account.Status = EnumHelper.GetEnumDescription(Common.Enums.AccountStatus.Synced);
         accountRepository.Update(account);
     }
 

@@ -25,8 +25,6 @@ namespace Billing.Services
         /// <returns>O objeto <c>Session</c> criado do Stripe.</returns>
         Task<Stripe.BillingPortal.Session> CreatePortalSession(Guid accountId);
 
-        Task<Session> GetServiceSessionById(string sessionId);
-
         /// <summary>
         /// O Stripe envia através de um Webhook atualizações sobre inscrições, cancelamentos e outras informações
         /// sobre planos no geral.

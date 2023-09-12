@@ -1,5 +1,6 @@
 ﻿using Api.Database;
 using Dapper;
+using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Repositories.Account
 {

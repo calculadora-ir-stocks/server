@@ -5,6 +5,7 @@ using Infrastructure.Repositories.Account;
 using Infrastructure.Models;
 using Core.Services.Email;
 using Common.Exceptions;
+using Common.Helpers;
 
 namespace Core.Services.Account
 {
@@ -125,12 +126,16 @@ namespace Core.Services.Account
         public bool IsSynced(Guid accountId)
         {
             var account = repository.GetById(accountId);
+
             if (account is null) throw new RecordNotFoundException("Investidor", accountId.ToString());
 
-            if (account.Status < Common.Enums.AccountStatus.Synced)
+            if (account.Status == EnumHelper.GetEnumDescription(Common.Enums.AccountStatus.EmailNotConfirmed) ||
+                account.Status == EnumHelper.GetEnumDescription(Common.Enums.AccountStatus.EmailConfirmed))
+            {
                 throw new InvalidBusinessRuleException("O Big Bang ainda não foi executado para esse usuário.");
+            }
 
-            return account.Status >= Common.Enums.AccountStatus.Synced;
+            return account.Status != EnumHelper.GetEnumDescription(Common.Enums.AccountStatus.Syncing);
         }
     }
 }
