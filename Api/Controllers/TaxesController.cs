@@ -20,6 +20,19 @@ public class TaxesController : BaseController
     }
 
     /// <summary>
+    /// Gera uma DARF para o usuário especificado referente a um mês onde há impostos a ser pago.
+    /// </summary>
+    /// <param name="accountId">O id do usuário</param>
+    /// <param name="month">O mês onde há impostos a ser pago que a DARF será gerada</param>
+    /// <returns></returns>
+    [HttpGet("generate-darf")]
+    public async Task<IActionResult> GenerateDarf(Guid accountId, string month)
+    {
+        await service.GenerateDARF(accountId, month);
+        return Ok();
+    }
+
+    /// <summary>
     /// Retorna todas as informações referentes a impostos do mês atual.
     /// </summary>
     [HttpGet("current/{accountId}")]
@@ -34,8 +47,10 @@ public class TaxesController : BaseController
 
     /// <summary>
     /// Retorna todas as informações referentes a impostos no mês especificado.
-    /// Formato: MM/yyyy
     /// </summary>
+    /// <param name="month">Formato: MM/yyyy</param>
+    /// <param name="accountId"></param>
+    /// <returns></returns>
     [HttpGet("month/{month}/{accountId}")]
     public async Task<IActionResult> GetSpecifiedMonthTaxes(string month, Guid accountId)
     {
@@ -47,9 +62,11 @@ public class TaxesController : BaseController
     }
 
     /// <summary>
-    /// Retorna todas os meses em que há imposto a ser pago no ano especificado.
-    /// Formato: yyyy
+    /// Retorna todas as informações referentes a impostos no ano especificado.
     /// </summary>
+    /// <param name="year">Formato: yyyy</param>
+    /// <param name="accountId"></param>
+    /// <returns></returns>
     [HttpGet("year/{year}/{accountId}")]
     public async Task<IActionResult> GetSpecifiedYearTaxes(string year, Guid accountId)
     {
@@ -62,8 +79,10 @@ public class TaxesController : BaseController
 
     /// <summary>
     /// Altera o mês especificado como pago/não pago.
-    /// Formato: MM/yyyy
     /// </summary>
+    /// <param name="month">Formato: MM/yyyy</param>
+    /// <param name="accountId"></param>
+    /// <returns></returns>
     [HttpPut("set-paid-or-unpaid/{month}/{accountId}")]
     public async Task<IActionResult> SetMonthAsPaid(string month, Guid accountId)
     {
@@ -80,23 +99,5 @@ public class TaxesController : BaseController
     { 
         await service.ExecuteB3Sync(accountId, request);
         return Ok(new { message = "Imposto de renda e preço médio mais recente calculados e armazenados com sucesso." });
-    }
-
-    /// <summary>
-    /// Calcula o imposto de renda de criptomoedas.
-    /// </summary>
-    [HttpPost("cryptocurrency")]
-    public IActionResult CalculateCryptocurrency()
-    {
-        return Ok();
-    }
-
-    /// <summary>
-    /// Calcula o imposto de renda de NFTs (kkkkk).
-    /// </summary>
-    [HttpPost("nfts")]
-    public IActionResult CalculateNFTs()
-    {
-        return Ok();
     }
 }

@@ -1,11 +1,11 @@
-﻿using System.Diagnostics;
-using System.Net;
-using System.Net.Http.Headers;
+﻿using Api.Clients.B3;
+using Api.DTOs.Auth;
+using Core.Models.B3;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using Api.Clients.B3;
-using Api.DTOs.Auth;
-using Core.DTOs.B3;
+using System.Diagnostics;
+using System.Net;
+using System.Net.Http.Headers;
 
 namespace Api.Services.B3
 {
@@ -28,7 +28,6 @@ namespace Api.Services.B3
             microsoftClient = this.clientFactory.CreateClient("Microsoft");
 
             token = null!;
-
             this.logger = logger;
         }
 
@@ -38,7 +37,10 @@ namespace Api.Services.B3
         {
             Stopwatch watch = new();
 
-            HttpRequestMessage request = new(HttpMethod.Get, $"movement/v2/equities/investors/{cpf}?referenceStartDate={referenceStartDate}&referenceEndDate={referenceEndDate}");
+            HttpRequestMessage request = 
+                new(HttpMethod.Get,
+                $"movement/v2/equities/investors/{cpf}?referenceStartDate={referenceStartDate}&referenceEndDate={referenceEndDate}"
+            );
 
             if (nextUrl != null)
             {
@@ -124,8 +126,6 @@ namespace Api.Services.B3
         {
             try
             {
-                if (token is not null && !token.Expired) return token;
-
                 var request = new HttpRequestMessage(HttpMethod.Post, "4bee639f-5388-44c7-bbac-cb92a93911e6/oauth2/v2.0/token/")
                 {
                     Content = new FormUrlEncodedContent(new KeyValuePair<string?, string?>[]

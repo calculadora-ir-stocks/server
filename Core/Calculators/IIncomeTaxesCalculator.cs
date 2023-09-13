@@ -1,6 +1,5 @@
-﻿using Common.Models;
-using Core.DTOs.B3;
-using Core.Models;
+﻿using Core.Models;
+using Core.Models.B3;
 
 namespace Core.Calculators
 {

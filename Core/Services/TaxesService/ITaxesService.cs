@@ -34,4 +34,12 @@ public interface ITaxesService
     /// Marca o mês especificado como pago/não pago.
     /// </summary>
     Task SetAsPaidOrUnpaid(string month, Guid accountId);
+
+    /// <summary>
+    /// Cria uma DARF de um mês em que há imposto a ser pago para um determinado usuário.
+    /// </summary>
+    /// <param name="accountId"></param>
+    /// <param name="month"></param>
+    /// <returns></returns>
+    Task GenerateDARF(Guid accountId, string month);
 }

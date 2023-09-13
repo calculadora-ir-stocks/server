@@ -1,8 +1,8 @@
 ﻿using Common.Enums;
 using Common.Helpers;
 using Core.Constants;
-using Core.DTOs.B3;
 using Core.Models;
+using Core.Models.B3;
 
 namespace Core.Calculators.Assets
 {

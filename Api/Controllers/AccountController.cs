@@ -15,6 +15,11 @@ public class AccountController : BaseController
         this.service = service;
     }
 
+    /// <summary>
+    /// Envia um e-mail de verificação para um usuário. Para confirmar esse código,
+    /// acesse /api/account/validate-code/
+    /// </summary>
+    /// <param name="accountId">O id da conta</param>
     [HttpPost("send-code/{accountId}")]
     public async Task<IActionResult> SendEmailVerification([FromRoute] Guid accountId)
     {
@@ -25,6 +30,8 @@ public class AccountController : BaseController
     /// <summary>
     /// Retorna verdadeiro caso o código de validação seja válido, falso caso contrário.
     /// </summary>
+    /// <param name="code">O código que o usuário quer confirmar</param>
+    /// <param name="accountId">O id da conta</param>
     [AllowAnonymous]
     [HttpPost("validate-code/{accountId}")]
     public IActionResult IsEmailVerificationCodeValid([FromBody] string code, [FromRoute] Guid accountId)
@@ -36,7 +43,7 @@ public class AccountController : BaseController
     /// <summary>
     /// Determina se uma conta foi ou não sincronizada com a B3.
     /// </summary>
-    /// <param name="accountId"></param>
+    /// <param name="accountId">O id da conta</param>
     /// <returns></returns>
     [HttpGet("/is-synced/{accountId}")]
     public IActionResult IsSynced(Guid accountId)

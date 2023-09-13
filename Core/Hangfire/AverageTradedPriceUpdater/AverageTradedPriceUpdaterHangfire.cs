@@ -1,15 +1,13 @@
-﻿using System.Diagnostics;
+﻿using Api.Clients.B3;
+using Core.Calculators;
+using Core.Models;
+using Core.Models.B3;
+using Infrastructure.Models;
+using Infrastructure.Repositories.Account;
+using Infrastructure.Repositories.AverageTradedPrice;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
-using Api.Clients.B3;
-using Infrastructure.Repositories.Account;
-using Core.Calculators;
-using Core.DTOs.B3;
-using Core.Models;
-using Infrastructure.Dtos;
-using Infrastructure.Models;
-using Infrastructure.Repositories.AverageTradedPrice;
-using SendGrid;
+using System.Diagnostics;
 
 namespace Core.Services.Hangfire.AverageTradedPriceUpdater
 {

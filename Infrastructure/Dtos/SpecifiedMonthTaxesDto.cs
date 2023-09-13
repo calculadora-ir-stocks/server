@@ -2,9 +2,19 @@
 {
     public record SpecifiedMonthTaxesDto
     {
-        public SpecifiedMonthTaxesDto(double taxes, double totalSold, double swingTradeProfit, double dayTradeProfit, string tradedAssets, int assetTypeId, string assetName)
+        public SpecifiedMonthTaxesDto(
+            double taxes,
+            string month,
+            double totalSold,
+            double swingTradeProfit,
+            double dayTradeProfit,
+            string tradedAssets,
+            int assetTypeId,
+            string assetName
+        )
         {
             Taxes = taxes;
+            Month = month;
             TotalSold = totalSold;
             SwingTradeProfit = swingTradeProfit;
             DayTradeProfit = dayTradeProfit;
@@ -18,6 +28,7 @@
 
 
         public double Taxes { get; init; }
+        public string Month { get; init; }
         public double TotalSold { get; init; }
         public double SwingTradeProfit { get; init; }
         public double DayTradeProfit { get; init; }

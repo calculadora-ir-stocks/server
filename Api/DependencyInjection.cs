@@ -8,6 +8,7 @@ using Billing.Services;
 using Common;
 using Core.Calculators;
 using Core.Calculators.Assets;
+using Core.Clients.InfoSimples;
 using Core.Filters;
 using Core.Services.Account;
 using Core.Services.Email;
@@ -42,7 +43,9 @@ namespace Api
         {
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 
+            // 3rd parties
             services.AddScoped<IB3Client, B3Client>();
+            services.AddScoped<IInfoSimplesClient, InfoSimplesClient>();
 
             services.AddScoped<IAccountService, Core.Services.Account.AccountService>();
             services.AddScoped<ITaxesService, TaxesService>();
@@ -131,6 +134,11 @@ namespace Api
 
             services.AddHttpClient("Microsoft", c =>
                 c.BaseAddress = new Uri("https://login.microsoftonline.com/")).ConfigurePrimaryHttpMessageHandler(() => handler)
+                .AddTransientHttpErrorPolicy(policy => policy.WaitAndRetryAsync(5, _ => TimeSpan.FromSeconds(10)))
+                .AddTransientHttpErrorPolicy(policy => policy.CircuitBreakerAsync(5, TimeSpan.FromSeconds(10)));
+
+            services.AddHttpClient("Infosimples", c =>
+                c.BaseAddress = new Uri("https://api.infosimples.com/api/v2/consultas/")).ConfigurePrimaryHttpMessageHandler(() => handler)
                 .AddTransientHttpErrorPolicy(policy => policy.WaitAndRetryAsync(5, _ => TimeSpan.FromSeconds(10)))
                 .AddTransientHttpErrorPolicy(policy => policy.CircuitBreakerAsync(5, TimeSpan.FromSeconds(10)));
         }

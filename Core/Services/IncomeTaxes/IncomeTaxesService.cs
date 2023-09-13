@@ -1,13 +1,11 @@
-﻿using Microsoft.IdentityModel.Tokens;
-using Common.Exceptions;
-using Common.Models;
+﻿using Common.Exceptions;
 using Core.Calculators;
 using Core.Calculators.Assets;
 using Core.Constants;
-using Core.DTOs.B3;
 using Core.Models;
-using Infrastructure.Dtos;
+using Core.Models.B3;
 using Infrastructure.Repositories.AverageTradedPrice;
+using Microsoft.IdentityModel.Tokens;
 
 namespace Core.Services.IncomeTaxes
 {

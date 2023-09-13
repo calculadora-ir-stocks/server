@@ -1,4 +1,4 @@
-﻿using Core.DTOs.B3;
+﻿using Core.Models.B3;
 
 namespace Api.Clients.B3
 {

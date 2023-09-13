@@ -10,12 +10,13 @@ namespace Infrastructure.Models
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
     public class Account : BaseEntity
     {
-        public Account(string name, string email, string password, string cpf, string phoneNumber)
+        public Account(string name, string email, string password, string cpf, string birthDate, string phoneNumber)
         {
             Name = name;
             Email = email;
             Password = password;
             CPF = cpf;
+            BirthDate = birthDate;
             PhoneNumber = phoneNumber;
 
             Validate(this, new AccountValidator());
@@ -45,6 +46,11 @@ namespace Infrastructure.Models
         /// É utilizado principalmente para fazer o vínculo com a API da B3.
         /// </summary>
         public string CPF { get; init; }
+
+        /// <summary>
+        /// Data de nascimento formatada (dd/MM/yyyy) de um investidor.
+        /// </summary>
+        public string BirthDate { get; init; }
 
         /// <summary>
         /// Telefone pessoal formatado (+11 11 9 1111-1111) de uma conta cadastrada.
@@ -107,13 +113,14 @@ namespace Infrastructure.Models
         private readonly Regex HasUpperChar = new("[A-Z]+");
         private readonly Regex HasLowerChar = new("[a-z]+");
         private readonly Regex HasMinMaxChars = new(".{8,60}");
+
         private readonly Regex IsValidEmail = new(@"^([\w\.\-]+)@([\w\-]+)((\.(\w){2,3})+)$");
         private readonly Regex IsValidCPF = new(@"(^\d{3}\.\d{3}\.\d{3}\-\d{2}$)");
         private readonly Regex IsValidPhoneNumber = new(@"^\+\d{2} \d{2} \d \d{4}-\d{4}$");
+        private readonly Regex IsValidBirthDate = new(@"^\d{2}/\d{2}/\d{4}$");
 
         private const int NameMinLength = 3;
         private const int NameMaxLength = 20;
-
 
         public AccountValidator()
         {
@@ -136,6 +143,10 @@ namespace Infrastructure.Models
             RuleFor(c => c.PhoneNumber)
                 .Must(c => IsValidPhoneNumber.IsMatch(c.ToString()))
                 .WithMessage($"Número de telefone deve seguir o formato +11 11 1 1111-1111");
+
+            RuleFor(c => c.BirthDate)
+                .Must(c => IsValidBirthDate.IsMatch(c.ToString()))
+                .WithMessage($"A data de nascimento deve seguir o formato dd/MM/yyyy");
 
             RuleFor(c => c.Password)
                 .Must(c => HasNumber.IsMatch(c.ToString()))

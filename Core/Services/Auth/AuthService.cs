@@ -76,8 +76,14 @@ namespace Api.Services.Auth
 
         public async Task SignUp(SignUpRequest request)
         {
-            Infrastructure.Models.Account account 
-                = new(request.Name, request.Email, request.Password, request.CPF, request.PhoneNumber);
+            Infrastructure.Models.Account account = new(
+                request.Name,
+                request.Email,
+                request.Password,
+                request.CPF,
+                request.BirthDate,
+                request.PhoneNumber
+            );
 
             if (!IsValidSignUp(account)) return;
 

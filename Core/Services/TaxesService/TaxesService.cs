@@ -3,8 +3,9 @@ using Api.Exceptions;
 using Common.Enums;
 using Common.Exceptions;
 using Common.Helpers;
-using Core.DTOs.B3;
+using Core.Clients.InfoSimples;
 using Core.Models;
+using Core.Models.B3;
 using Core.Models.Responses;
 using Core.Requests.BigBang;
 using Core.Responses;
@@ -16,6 +17,7 @@ using Infrastructure.Repositories.Account;
 using Infrastructure.Repositories.AverageTradedPrice;
 using Infrastructure.Repositories.Taxes;
 using Microsoft.Extensions.Logging;
+using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
 
 namespace Core.Services.TaxesService;
@@ -31,7 +33,13 @@ public class TaxesService : ITaxesService
     private readonly IAverageTradedPriceRepostory averageTradedPriceRepository;
 
     private readonly IB3Client b3Client;
+    private readonly IInfoSimplesClient infoSimplesClient;
+
     private readonly ILogger<TaxesService> logger;
+
+    // https://farocontabil.com.br/codigosdarf.htm#:~:text=Imposto%20sobre%20ganhos%20l%C3%ADquidos%20em%20opera%C3%A7%C3%B5es%20em%20bolsa%20de%20valores%2C%20de%20mercadorias%2C%20de%20futuros%20e%20assemelhadas
+    private const int DarfCode = 6015;
+
 
     /**
      * TODO Atualmente, para validar se um usuário ainda possui um plano válido para acessar os recursos,
@@ -47,6 +55,7 @@ public class TaxesService : ITaxesService
         ITaxesRepository taxesRepository,
         IAverageTradedPriceRepostory averageTradedPriceRepository,
         IB3Client b3Client,
+        IInfoSimplesClient infoSimplesClient,
         ILogger<TaxesService> logger
         )
     {
@@ -56,6 +65,7 @@ public class TaxesService : ITaxesService
         this.taxesRepository = taxesRepository;
         this.averageTradedPriceRepository = averageTradedPriceRepository;
         this.b3Client = b3Client;
+        this.infoSimplesClient = infoSimplesClient;
         this.logger = logger;
     }
 
@@ -85,8 +95,7 @@ public class TaxesService : ITaxesService
             // var b3Response = await b3Client.GetAccountMovement(account.CPF, startDate, yesterday, account.Id);
             var b3Response = GetCurrentMonthMockedDataBeforeB3Contract();
 
-            var response = await incomeTaxesService.GetB3ResponseDetails(b3Response, account.Id);
-            response = null;
+            var response = await incomeTaxesService.GetB3ResponseDetails(b3Response, account.Id);            
 
             if (response is null || response.Assets is null)
                 throw new RecordNotFoundException("Nenhuma movimentação foi feita no mês atual.");
@@ -663,5 +672,36 @@ public class TaxesService : ITaxesService
         });
     }
 
+    #endregion
+
+    #region Geração de DARF
+    public async Task GenerateDARF(Guid accountId, string month)
+    {
+        var taxes = await taxesRepository.GetSpecifiedMonthTaxes(month, accountId);
+
+        if (taxes.IsNullOrEmpty())
+            throw new RecordNotFoundException("Nenhum imposto foi encontrado para esse mês, logo, a DARF não pode ser gerada.");
+
+        var account = await genericRepositoryAccount.GetByIdAsync(accountId);
+
+        string taxesReferenceDate = taxes.Select(x => x.Month).First();
+        string today = DateTime.Now.ToString("MM/yyyy");
+
+        double totalTaxes = taxes.Select(x => x.Taxes).Sum();
+
+        var response = await infoSimplesClient.GenerateDARF(
+            new Models.InfoSimples.GenerateDARFRequest
+            (                
+                account.CPF,
+                account.BirthDate,
+                $"Venda de ativos no mês {taxesReferenceDate}. Essa DARF foi gerada automaticamente" +
+                $"pelo Stocks IR em {today}.",
+                DarfCode,
+                totalTaxes,
+                taxesReferenceDate,
+                today
+            )
+        );
+    }
     #endregion
 }
