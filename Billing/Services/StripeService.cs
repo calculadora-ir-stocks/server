@@ -1,11 +1,14 @@
-﻿using Common.Constants;
+﻿using Common;
+using Common.Constants;
 using Common.Enums;
 using Common.Exceptions;
 using Common.Helpers;
+using Common.Models;
 using Infrastructure.Models;
 using Infrastructure.Repositories;
 using Infrastructure.Repositories.Account;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Stripe;
 using Stripe.Checkout;
 
@@ -17,21 +20,22 @@ namespace Billing.Services
         private readonly IGenericRepository<Order> genericRepositoryStripe;
         private readonly IAccountRepository accountRepository;
 
-        private readonly ILogger<StripeService> logger;
+        private readonly StripeWebhookSecret secret;
 
-        // TODO store secret on appSettings.json
-        private const string WebhookSecret = "whsec_19efbb10a933ae75a8f1dc3fce9f406e3b206d2df41d81204269373cf56755c5";
+        private readonly ILogger<StripeService> logger;
 
         public StripeService(
             IGenericRepository<Infrastructure.Models.Plan> genericRepositoryPlan,
             IGenericRepository<Order> genericRepositoryStripe,
             IAccountRepository accountRepository,
+            IOptions<StripeWebhookSecret> secret,
             ILogger<StripeService> logger
         )
         {
             this.genericRepositoryPlan = genericRepositoryPlan;
             this.genericRepositoryStripe = genericRepositoryStripe;
             this.accountRepository = accountRepository;
+            this.secret = secret.Value;
             this.logger = logger;
         }
 
@@ -143,7 +147,7 @@ namespace Billing.Services
 
             try
             {
-                stripeEvent = EventUtility.ConstructEvent(json, stripeSignatureHeader, WebhookSecret);
+                stripeEvent = EventUtility.ConstructEvent(json, stripeSignatureHeader, secret.Secret);
             }
             catch (Exception e)
             {

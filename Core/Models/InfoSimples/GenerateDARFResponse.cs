@@ -5,7 +5,7 @@ namespace Core.Models.InfoSimples
     public class GenerateDARFResponse
     {
         [JsonProperty("data")]
-        List<Data> Data { get; init; }
+        public List<Data> Data { get; init; }
     }
 
     public class Data

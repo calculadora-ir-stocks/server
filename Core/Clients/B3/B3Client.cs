@@ -1,7 +1,9 @@
 ﻿using Api.Clients.B3;
 using Api.DTOs.Auth;
+using Common.Models;
 using Core.Models.B3;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using System.Diagnostics;
 using System.Net;
@@ -16,13 +18,16 @@ namespace Api.Services.B3
         private readonly HttpClient b3Client;
         private readonly HttpClient microsoftClient;
 
+        private readonly B3ClientParams @params;
+
         private static Token? token;
 
         private readonly ILogger<B3Client> logger;
 
-        public B3Client(IHttpClientFactory clientFactory, ILogger<B3Client> logger)
+        public B3Client(IHttpClientFactory clientFactory, IOptions<B3ClientParams> @params, ILogger<B3Client> logger)
         {
             this.clientFactory = clientFactory;
+            this.@params = @params.Value;
 
             b3Client = this.clientFactory.CreateClient("B3");
             microsoftClient = this.clientFactory.CreateClient("Microsoft");
@@ -130,10 +135,10 @@ namespace Api.Services.B3
                 {
                     Content = new FormUrlEncodedContent(new KeyValuePair<string?, string?>[]
                     {
-                        new("client_id", "6d005c50-8c54-4874-9049-18d3fbb6f1e0"),
-                        new("client_secret", "lD98Q~WZtjqE1gvILoOKNgO~7pTMO2SkOlJeIdo2"),
-                        new("scope", "0c991613-4c90-454d-8685-d466a47669cb/.default"),
-                        new("grant_type", "client_credentials")
+                        new("client_id", @params.ClientId),
+                        new("client_secret", @params.ClientSecret),
+                        new("scope", @params.Scope),
+                        new("grant_type", @params.GrantType)
                     })
                 };
 

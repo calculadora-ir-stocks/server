@@ -6,6 +6,7 @@ using Api.Services.B3;
 using Api.Services.Jwt;
 using Billing.Services;
 using Common;
+using Common.Models;
 using Core.Calculators;
 using Core.Calculators.Assets;
 using Core.Clients.InfoSimples;
@@ -68,11 +69,29 @@ namespace Api
 
             services.AddMvc(options => options.Filters.Add<NotificationFilter>());
 
-            services.Configure<AppSettings>(options =>
+            services.Configure<JwtProperties>(options =>
             {
                 options.Secret = builder.Configuration["Jwt:Token"];
                 options.Issuer = builder.Configuration["Jwt:Issuer"];
                 options.Audience = builder.Configuration["Jwt:Audience"];
+            });
+
+            services.Configure<StripeWebhookSecret>(options =>
+            {
+                options.Secret = builder.Configuration["Services:Stripe:Token"];
+            });
+
+            services.Configure<InfoSimplesToken>(options =>
+            {
+                options.Secret = builder.Configuration["Services:InfoSimples:Token"];
+            });
+
+            services.Configure<B3ClientParams>(options =>
+            {
+                options.ClientId = builder.Configuration["Services:B3:ClientId"];
+                options.ClientSecret = builder.Configuration["Services:B3:ClientSecret"];
+                options.Scope = builder.Configuration["Services:B3:Scope"];
+                options.GrantType = builder.Configuration["Services:B3:GrantType"];
             });
         }
 

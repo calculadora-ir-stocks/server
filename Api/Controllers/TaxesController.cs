@@ -28,8 +28,8 @@ public class TaxesController : BaseController
     [HttpGet("generate-darf")]
     public async Task<IActionResult> GenerateDarf(Guid accountId, string month)
     {
-        await service.GenerateDARF(accountId, month);
-        return Ok();
+        var response = await service.GenerateDARF(accountId, month);
+        return Ok(new { barCode = response });
     }
 
     /// <summary>

@@ -1,8 +1,8 @@
 ﻿namespace Common
 {
-    public class AppSettings
+    public class JwtProperties
     {
-        public AppSettings(string secret, string issuer, string audience)
+        public JwtProperties(string secret, string issuer, string audience)
         {
             Secret = secret;
             Issuer = issuer;
@@ -10,7 +10,7 @@
         }
 
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
-        public AppSettings() { }
+        public JwtProperties() { }
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
 
         public string Secret { get; set; }

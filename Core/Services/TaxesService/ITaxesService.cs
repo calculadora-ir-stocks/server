@@ -40,6 +40,6 @@ public interface ITaxesService
     /// </summary>
     /// <param name="accountId"></param>
     /// <param name="month"></param>
-    /// <returns></returns>
-    Task GenerateDARF(Guid accountId, string month);
+    /// <returns>A barra de código da DARF.</returns>
+    Task<string> GenerateDARF(Guid accountId, string month);
 }

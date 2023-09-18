@@ -10,14 +10,14 @@ namespace Api.Services.Jwt
 {
     public class JwtCommon : IJwtCommon
     {
-        private readonly AppSettings appSettings;
+        private readonly JwtProperties appSettings;
 
         /// <summary>
         /// Claim que determina se o plano de um usuário está expirado.
         /// </summary>
         private const string IsPlanExpired = "pln";
 
-        public JwtCommon(IOptions<AppSettings> appSettings)
+        public JwtCommon(IOptions<JwtProperties> appSettings)
         {
             this.appSettings = appSettings.Value;
         }

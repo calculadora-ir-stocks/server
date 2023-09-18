@@ -1,5 +1,7 @@
-﻿using Core.Models.InfoSimples;
+﻿using Common.Models;
+using Core.Models.InfoSimples;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using System.Web;
 
@@ -10,27 +12,28 @@ namespace Core.Clients.InfoSimples
         private readonly IHttpClientFactory httpClient;
         private readonly HttpClient client;
 
+        private readonly InfoSimplesToken secret;
         private readonly ILogger<InfoSimplesClient> logger;
 
-        // TODO get token from appsettings.json
-        private const string Token = "ys0RvnIznomL-J8f0_OUEj06OKFIE1BZnxk2xpLz";
-
-        public InfoSimplesClient(IHttpClientFactory httpClient, ILogger<InfoSimplesClient> logger)
+        public InfoSimplesClient(IHttpClientFactory httpClient, IOptions<InfoSimplesToken> secret, ILogger<InfoSimplesClient> logger)
         {
             this.httpClient = httpClient;
             client = this.httpClient.CreateClient("Infosimples");
 
+            this.secret = secret.Value;
             this.logger = logger;
         }
 
-        public async Task<GenerateDARFResponse> GenerateDARF(GenerateDARFRequest request)
+        public async Task<string> GetBarCodeFromDARF(GenerateDARFRequest request)
         {
             logger.LogInformation("Iniciando geração de DARF.");
 
             string encodedUrl = 
-                    $"receita-federal/sicalc/darf?token={Token}&cpf={request.CPF}&birthdate={request.BirthDate}" +
-                    $"&observacoes={HttpUtility.UrlEncode(request.Observacoes)}&codigo={request.Codigo}&valor_principal={request.ValorPrincipal}" +
-                    $"&periodo_apuracao={HttpUtility.UrlEncode(request.PeriodoApuracao)}&data_consolidacao={HttpUtility.UrlEncode(request.DataConsolidacao)}";
+                    $"receita-federal/sicalc/darf?token={secret.Secret}&cnpj=&cpf={request.CPF}&birthdate={HttpUtility.UrlEncode(request.BirthDate)}" +
+                    $"&observacoes={HttpUtility.UrlEncode(request.Observacoes)}&codigo={request.Codigo}" +
+                    $"&valor_principal={request.ValorPrincipal.ToString().Replace(",", ".")}" +
+                    $"&periodo_apuracao={HttpUtility.UrlEncode(request.PeriodoApuracao)}&data_consolidacao={HttpUtility.UrlEncode(request.DataConsolidacao)}" +
+                    $"&numero_referencia=&quota=";
 
             HttpRequestMessage infoSimplesRequest = new(HttpMethod.Get, encodedUrl);
 
@@ -39,11 +42,11 @@ namespace Core.Clients.InfoSimples
 
             var responseContentStream = await response.Content.ReadAsStringAsync();
 
-            var darf = JsonConvert.DeserializeObject<GenerateDARFResponse>(responseContentStream);
+            var darf = JsonConvert.DeserializeObject<GenerateDARFResponse>(responseContentStream)!;
 
-            if (darf is null) throw new Exception("Ocorreu um erro ao gerar a DARF.");
+            if (darf.Data[0].CodigoDeBarras is null) throw new Exception("Não foi possível gerar a DARF para esse mês.");
 
-            return darf;
+            return darf.Data[0].CodigoDeBarras;
         }
     }
 }

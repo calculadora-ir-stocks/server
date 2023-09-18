@@ -676,33 +676,37 @@ public class TaxesService : ITaxesService
     #endregion
 
     #region Geração de DARF
-    public async Task GenerateDARF(Guid accountId, string month)
+    public async Task<string> GenerateDARF(Guid accountId, string month)
     {
         var taxes = await taxesRepository.GetSpecifiedMonthTaxes(month, accountId);
+        double totalTaxes = taxes.Select(x => x.Taxes).Sum();
 
         if (taxes.IsNullOrEmpty() || taxes.Select(x => x.Taxes).Sum() <= 0)
             throw new RecordNotFoundException("Nenhum imposto foi encontrado para esse mês, logo, a DARF não pode ser gerada.");
+
+        if (totalTaxes < 10) 
+            throw new InvalidBusinessRuleException("Para gerar uma DARF, o total de impostos precisa ser maior ou igual à 10.");
 
         var account = await genericRepositoryAccount.GetByIdAsync(accountId);
 
         string taxesReferenceDate = taxes.Select(x => x.Month).First();
         string today = DateTime.Now.ToString("dd/MM/yyyy");
 
-        double totalTaxes = taxes.Select(x => x.Taxes).Sum();
-
-        var response = await infoSimplesClient.GenerateDARF(
+        var response = await infoSimplesClient.GetBarCodeFromDARF(
             new Models.InfoSimples.GenerateDARFRequest
             (                
                 RemoveSpecialCharacters(account.CPF),
-                RemoveSpecialCharacters(account.BirthDate),
+                account.BirthDate,
                 $"Venda de ativos no mês {taxesReferenceDate}. Essa DARF foi gerada automaticamente " +
                 $"pelo Stocks IR em {today}.",
                 DarfCode,
-                9.47,
+                totalTaxes,
                 taxesReferenceDate,
                 today
             )
         );
+
+        return response;
     }
 
     public static string RemoveSpecialCharacters(string str)
