@@ -38,6 +38,7 @@ namespace Infrastructure.Repositories.Taxes
 
             string sql = @"
                 SELECT
+                    it.""Month"",
 	                it.""TotalTaxes"" as Taxes,
 	                it.""TotalSold"",
 	                it.""SwingTradeProfit"",

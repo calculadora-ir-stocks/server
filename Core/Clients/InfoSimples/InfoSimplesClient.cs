@@ -1,6 +1,7 @@
 ﻿using Core.Models.InfoSimples;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using System.Web;
 
 namespace Core.Clients.InfoSimples
 {
@@ -26,12 +27,12 @@ namespace Core.Clients.InfoSimples
         {
             logger.LogInformation("Iniciando geração de DARF.");
 
-            HttpRequestMessage infoSimplesRequest = 
-                new(HttpMethod.Get,
-                $"receita-federal/sicalc/darf?token={Token}&cpf={request.CPF}&birthdate={request.BirthDate}" +
-                $"&observacoes={request.Observacoes}&codigo={request.Codigo}&valor_principal={request.ValorPrincipal}" +
-                $"&periodo_apuracao={request.PeriodoApuracao}&data_consolidacao={request.DataConsolidacao}"
-            );
+            string encodedUrl = 
+                    $"receita-federal/sicalc/darf?token={Token}&cpf={request.CPF}&birthdate={request.BirthDate}" +
+                    $"&observacoes={HttpUtility.UrlEncode(request.Observacoes)}&codigo={request.Codigo}&valor_principal={request.ValorPrincipal}" +
+                    $"&periodo_apuracao={HttpUtility.UrlEncode(request.PeriodoApuracao)}&data_consolidacao={HttpUtility.UrlEncode(request.DataConsolidacao)}";
+
+            HttpRequestMessage infoSimplesRequest = new(HttpMethod.Get, encodedUrl);
 
             using var response = await client.SendAsync(infoSimplesRequest, HttpCompletionOption.ResponseHeadersRead);
             response.EnsureSuccessStatusCode();

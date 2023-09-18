@@ -9,11 +9,11 @@ namespace Infrastructure.Models
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
     public class IncomeTaxes
     {
-        public IncomeTaxes(string month, double totalTaxes, double totalSold, double swingTradeProfit, double dayTradeProfit,
+        public IncomeTaxes(string month, double taxes, double totalSold, double swingTradeProfit, double dayTradeProfit,
             string tradedAssets, Account account, int assetId)
         {
             Month = month;
-            TotalTaxes = totalTaxes;
+            Taxes = taxes;
             TotalSold = totalSold;
             SwingTradeProfit = swingTradeProfit;
             DayTradeProfit = dayTradeProfit;
@@ -30,12 +30,18 @@ namespace Infrastructure.Models
         [DatabaseGenerated(DatabaseGeneratedOption.None)]
         public Guid Id { get; protected set; } = Guid.NewGuid();
 
+        /// <summary>
+        /// Id do tipo de ativo.
+        /// </summary>
+        public int AssetId { get; set; }
+
         public string Month { get; set; }
 
         /// <summary>
+        /// A quantidade de imposto referente a esse tipo de ativo.
         /// https://www.youtube.com/watch?v=VMwqYLSPg_c
         /// </summary>
-        public double TotalTaxes { get; set; }
+        public double Taxes { get; set; }
 
         public double TotalSold { get; set; }
 
@@ -64,10 +70,5 @@ namespace Infrastructure.Models
         public bool? CompesatedDayTradeLoss { get; set; }
 
         public Account Account { get; set; }
-
-        /// <summary>
-        /// Id do tipo de ativo que foi negociado no mês.
-        /// </summary>
-        public int AssetId { get; set; }
     }
 }

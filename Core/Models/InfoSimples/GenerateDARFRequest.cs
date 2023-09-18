@@ -7,7 +7,7 @@
             string cPF,
             string birthDate,
             string observacoes,
-            int codigo,
+            string codigo,
             double valorPrincipal,
             string periodoApuracao,
             string dataConsolidacao
@@ -23,12 +23,12 @@
         }
 
         /// <summary>
-        /// O CPF do investidor.
+        /// O CPF do investidor sem pontuação e hífen.
         /// </summary>
         public string CPF { get; init; }
 
         /// <summary>
-        /// Data de nascimento do investidor.
+        /// Data de nascimento do investidor sem barra.
         /// </summary>
         public string BirthDate { get; init; }
 
@@ -40,7 +40,7 @@
         /// <summary>
         /// O código da DARF.
         /// </summary>
-        public int Codigo { get; init; }
+        public string Codigo { get; init; }
 
         /// <summary>
         /// O valor total de imposto a ser pago.
@@ -48,12 +48,12 @@
         public double ValorPrincipal { get; init; }
 
         /// <summary>
-        /// A data em que as operações foram feitas.
+        /// A data em que as operações foram feitas no formato mm/yyyy.
         /// </summary>
         public string PeriodoApuracao { get; init; }
 
         /// <summary>
-        /// A data em que essa DARF está sendo gerada.
+        /// A data em que essa DARF está sendo gerada no formato dd/mm/yyyy.
         /// </summary>
         public string DataConsolidacao { get; init; }
     }

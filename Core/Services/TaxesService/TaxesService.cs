@@ -19,6 +19,7 @@ using Infrastructure.Repositories.Taxes;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
+using System.Text.RegularExpressions;
 
 namespace Core.Services.TaxesService;
 
@@ -38,7 +39,7 @@ public class TaxesService : ITaxesService
     private readonly ILogger<TaxesService> logger;
 
     // https://farocontabil.com.br/codigosdarf.htm#:~:text=Imposto%20sobre%20ganhos%20l%C3%ADquidos%20em%20opera%C3%A7%C3%B5es%20em%20bolsa%20de%20valores%2C%20de%20mercadorias%2C%20de%20futuros%20e%20assemelhadas
-    private const int DarfCode = 6015;
+    private const string DarfCode = "6015-01";
 
 
     /**
@@ -521,7 +522,7 @@ public class TaxesService : ITaxesService
                 incomeTaxes.Add(new Infrastructure.Models.IncomeTaxes
                 {
                     Month = asset.Month,
-                    TotalTaxes = asset.Taxes,
+                    Taxes = asset.Taxes,
                     TotalSold = asset.TotalSold,
                     SwingTradeProfit = asset.SwingTradeProfit,
                     DayTradeProfit = asset.DayTradeProfit,
@@ -679,29 +680,35 @@ public class TaxesService : ITaxesService
     {
         var taxes = await taxesRepository.GetSpecifiedMonthTaxes(month, accountId);
 
-        if (taxes.IsNullOrEmpty())
+        if (taxes.IsNullOrEmpty() || taxes.Select(x => x.Taxes).Sum() <= 0)
             throw new RecordNotFoundException("Nenhum imposto foi encontrado para esse mês, logo, a DARF não pode ser gerada.");
 
         var account = await genericRepositoryAccount.GetByIdAsync(accountId);
 
         string taxesReferenceDate = taxes.Select(x => x.Month).First();
-        string today = DateTime.Now.ToString("MM/yyyy");
+        string today = DateTime.Now.ToString("dd/MM/yyyy");
 
         double totalTaxes = taxes.Select(x => x.Taxes).Sum();
 
         var response = await infoSimplesClient.GenerateDARF(
             new Models.InfoSimples.GenerateDARFRequest
             (                
-                account.CPF,
-                account.BirthDate,
-                $"Venda de ativos no mês {taxesReferenceDate}. Essa DARF foi gerada automaticamente" +
+                RemoveSpecialCharacters(account.CPF),
+                RemoveSpecialCharacters(account.BirthDate),
+                $"Venda de ativos no mês {taxesReferenceDate}. Essa DARF foi gerada automaticamente " +
                 $"pelo Stocks IR em {today}.",
                 DarfCode,
-                totalTaxes,
+                9.47,
                 taxesReferenceDate,
                 today
             )
         );
     }
+
+    public static string RemoveSpecialCharacters(string str)
+    {
+        return Regex.Replace(str, "[^a-zA-Z0-9]", "", RegexOptions.Compiled);
+    }
+
     #endregion
 }
