@@ -72,7 +72,7 @@ public class TaxesService : ITaxesService
     }
 
     #region Calcula o imposto de renda do mês atual.
-    public async Task<MonthTaxesResponse> GetCurrentMonthTaxes(Guid accountId)
+    public async Task<TaxesDetailsResponse> GetCurrentMonthTaxes(Guid accountId)
     {
         try
         {
@@ -95,14 +95,14 @@ public class TaxesService : ITaxesService
                 throw new ForbiddenException("O plano do usuário está pausado por conta de uma falha de pagamento.");
 
             // var b3Response = await b3Client.GetAccountMovement(account.CPF, startDate, yesterday, account.Id);
-            var b3Response = GetCurrentMonthMockedDataBeforeB3Contract();
+            var b3Response = AddCurrentMonthSet();
 
             var response = await incomeTaxesService.GetB3ResponseDetails(b3Response, account.Id);            
 
-            if (response is null || response.Assets is null)
-                throw new RecordNotFoundException("Nenhuma movimentação foi feita no mês atual.");
+            if (response is null || response.Assets.IsNullOrEmpty())
+                throw new NotFoundException("Nenhuma movimentação foi feita no mês atual.");
 
-            return CurrentMonthToDto(response.Assets);
+            return ToTaxesDetailsResponse(response.Assets);
         }
         catch (Exception e)
         {
@@ -111,9 +111,65 @@ public class TaxesService : ITaxesService
         }
     }
 
-    private static Movement.Root? GetCurrentMonthMockedDataBeforeB3Contract()
+    private static bool IsDayOne()
     {
-        Movement.Root? b3Response = new()
+        // D-1
+        DateTime yesterday = DateTime.Now.AddDays(-1);
+        return yesterday.Month < DateTime.Now.Month;
+    }
+
+    private static TaxesDetailsResponse ToTaxesDetailsResponse(List<AssetIncomeTaxes> assets)
+    {
+        // O objeto de retorno é complexo o suficiente para não usar o AutoMapper?
+
+        TaxesDetailsResponse response = new(totalTaxes: assets.Select(x => x.Taxes).Sum());
+
+        var days = assets.SelectMany(x => x.TradedAssets.Select(x => x.Day).Distinct());
+
+        foreach (var day in days)
+        {
+            List<Responses.Details> details = new();
+            List<Responses.Movement> movements = new();            
+
+            var tradedAssetsOnThisDay = assets.SelectMany(x => x.TradedAssets.Where(x => x.Day == day));            
+
+            string weekDay = string.Empty;
+
+            foreach (var tradedAsset in tradedAssetsOnThisDay)
+            {
+                if (weekDay.IsNullOrEmpty())
+                {
+                    string dayOfTheWeek = tradedAsset.Day.ToString();
+                    weekDay = $"{tradedAsset.DayOfTheWeek}, dia {dayOfTheWeek}";
+                }   
+
+                details.Add(new Responses.Details(
+                    tradedAsset.AssetTypeId,
+                    tradedAsset.AssetType,
+                    tradedAsset.MovementType,
+                    tradedAsset.TickerSymbol,
+                    tradedAsset.Total,
+                    tradedAsset.Quantity
+                ));
+            }
+
+            movements.Add(new Responses.Movement(weekDay, details));
+
+            response.Movements.AddRange(
+                movements
+            );
+        }
+
+        return response;
+    }
+
+    /// <summary>
+    /// Retorna dados mockados da API da B3 para testes locais antes da contratação.
+    /// Deve ser removido após a implementação do serviço de produção.
+    /// </summary>
+    private static Models.B3.Movement.Root? AddCurrentMonthSet()
+    {
+        Models.B3.Movement.Root? response = new()
         {
             Data = new()
             {
@@ -124,72 +180,7 @@ public class TaxesService : ITaxesService
             }
         };
 
-        AddCurrentMonthSet(b3Response);
-
-        return b3Response;
-    }
-
-    private static bool IsDayOne()
-    {
-        // D-1
-        DateTime yesterday = DateTime.Now.AddDays(-1);
-        return yesterday.Month < DateTime.Now.Month;
-    }
-
-    private static MonthTaxesResponse CurrentMonthToDto(List<AssetIncomeTaxes> assets)
-    {
-        List<Responses.Asset> tradedAssets = new();
-
-        foreach (var item in assets)
-        {
-            tradedAssets.Add(new Core.Responses.Asset(
-                item.AssetTypeId,
-                item.AssetName,
-                item.Taxes,
-                item.TotalSold,
-                item.SwingTradeProfit,
-                item.DayTradeProfit,
-                item.TradedAssets
-            ));
-        }
-
-        return new MonthTaxesResponse(
-            totalTaxes: assets.Select(x => x.Taxes).Sum(),
-            tradedAssets
-        );
-
-        /*
-         * "A vida não é só isso."
-         * 
-         * Na verdade, essa frase é verdadeira em absolutamente qualquer cenário possível. A vida não se resume à ciência da computação
-         * e isso vale para mim. Se você é um botânico, a vida não se resume a biologia; se você é um engenheiro,
-         * a vida não se resume a engenharia; se você é um físico, a vida não se resume a matemática.
-         * 
-         * Todos os exemplos são únicos campos de estudo. Mesmo assim, a premissa prevalence mesmo se você for um polímata. Se
-         * você for um cientista da computação, botânico, engenheiro e físico, ainda assim estará distante da sociologia, da filosofia
-         * e da retórica - ou seja, a vida continua não sendo apenas isso.
-         * 
-         * Se a vida não é o que escolhemos nos dedicar a estudar, o que mais resta para sê-la?
-         * 
-         * Mesmo quando aproveitamos pequenos e especiais momentos, estamos deixando de lado muitas outras coisas - então a premissa
-         * principal ainda prevalece - ou seja, a vida não é o seu campo de estudo nem os seus pequenos proveitos e lazeres.
-         * 
-         * Alguns argumentam que a vida é estudo, mas ainda resta o que ser estudado.
-         * Alguns argumentam que a vida é aproveitar os momentos, mas ainda resta o que ser aproveitado.
-         * Alguns argumentam que a vida é vencer, mas vencer é subjetivo quando já se vence.
-         * Alguns argumentam que a vida é prazer, como Salomão, mas ainda sim o prazer é subjetivo.
-         * 
-         * Vai ver a vida é apenas sentir e refletir sobre ela.
-         * */
-    }
-
-    /// <summary>
-    /// Retorna dados mockados da API da B3 para testes locais antes da contratação.
-    /// Deve ser removido após a implementação do serviço de produção.
-    /// </summary>
-    private static void AddCurrentMonthSet(Movement.Root response)
-    {
-        response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
+        response.Data.EquitiesPeriods.EquitiesMovements.Add(new Models.B3.Movement.EquitMovement
         {
             AssetType = "ETF - Exchange Traded Fund",
             TickerSymbol = "BOVA11",
@@ -200,7 +191,7 @@ public class TaxesService : ITaxesService
             ReferenceDate = new DateTime(2023, 01, 01)
         });
 
-        response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
+        response.Data.EquitiesPeriods.EquitiesMovements.Add(new Models.B3.Movement.EquitMovement
         {
             AssetType = "ETF - Exchange Traded Fund",
             TickerSymbol = "BOVA11",
@@ -211,7 +202,7 @@ public class TaxesService : ITaxesService
             ReferenceDate = new DateTime(2023, 01, 03)
         });
 
-        response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
+        response.Data.EquitiesPeriods.EquitiesMovements.Add(new Models.B3.Movement.EquitMovement
         {
             AssetType = "ETF - Exchange Traded Fund",
             TickerSymbol = "BOVA11",
@@ -223,7 +214,7 @@ public class TaxesService : ITaxesService
             ReferenceDate = new DateTime(2023, 01, 08)
         });
 
-        response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
+        response.Data.EquitiesPeriods.EquitiesMovements.Add(new Models.B3.Movement.EquitMovement
         {
             AssetType = "FII - Fundo de Investimento Imobiliário",
             TickerSymbol = "VISC11",
@@ -231,10 +222,10 @@ public class TaxesService : ITaxesService
             MovementType = "Compra",
             OperationValue = 231.34,
             EquitiesQuantity = 1,
-            ReferenceDate = new DateTime(2023, 01, 16)
+            ReferenceDate = new DateTime(2023, 01, 29)
         });
 
-        response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
+        response.Data.EquitiesPeriods.EquitiesMovements.Add(new Models.B3.Movement.EquitMovement
         {
             AssetType = "FII - Fundo de Investimento Imobiliário",
             TickerSymbol = "VISC11",
@@ -243,10 +234,10 @@ public class TaxesService : ITaxesService
             OperationValue = 304.43,
             UnitPrice = 304.43,
             EquitiesQuantity = 1,
-            ReferenceDate = new DateTime(2023, 01, 28)
+            ReferenceDate = new DateTime(2023, 01, 29)
         });
 
-        response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
+        response.Data.EquitiesPeriods.EquitiesMovements.Add(new Models.B3.Movement.EquitMovement
         {
             AssetType = "Ações",
             TickerSymbol = "AMER3",
@@ -257,7 +248,7 @@ public class TaxesService : ITaxesService
             ReferenceDate = new DateTime(2023, 01, 29)
         });
 
-        response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
+        response.Data.EquitiesPeriods.EquitiesMovements.Add(new Models.B3.Movement.EquitMovement
         {
             AssetType = "Ações",
             TickerSymbol = "AMER3",
@@ -268,17 +259,19 @@ public class TaxesService : ITaxesService
             EquitiesQuantity = 1,
             ReferenceDate = new DateTime(2023, 01, 29)
         });
+
+        return response;
     }
     #endregion
 
     #region Calcula o imposto de renda do mês especificado.
-    public async Task<MonthTaxesResponse> GetTaxesByMonth(string month, Guid accountId)
+    public async Task<TaxesDetailsResponse> GetTaxesByMonth(string month, Guid accountId)
     {
         try
         {
             if (WorkerDidNotSaveDataForThisMonthYet(month))
             {
-                throw new InvalidBusinessRuleException("Para obter as informações de impostos do mês atual, acesse /assets/current.");
+                throw new BadRequestException("Para obter as informações de impostos do mês atual, acesse /assets/current.");
             }
 
             var account = genericRepositoryAccount.GetById(accountId);
@@ -291,7 +284,7 @@ public class TaxesService : ITaxesService
 
             var response = await taxesRepository.GetSpecifiedMonthTaxes(System.Net.WebUtility.UrlDecode(month), accountId);
 
-            return SpecifiedMonthToDto(response);
+            return SpecifiedMonthTaxesDtoToTaxesDetailsResponse(response);
         }
         catch (Exception e)
         {
@@ -300,28 +293,10 @@ public class TaxesService : ITaxesService
         }
     }
 
-    private static MonthTaxesResponse SpecifiedMonthToDto(IEnumerable<SpecifiedMonthTaxesDto> taxes)
+    private static TaxesDetailsResponse SpecifiedMonthTaxesDtoToTaxesDetailsResponse(IEnumerable<SpecifiedMonthTaxesDto> assets)
     {
-        double totalMonthTaxes = taxes.Select(x => x.Taxes).Sum();
-        List<Responses.Asset> tradedAssets = new();
-
-        foreach (var tax in taxes)
-        {
-            tradedAssets.Add(new Responses.Asset(
-                (Common.Enums.Asset)tax.AssetTypeId,
-                tax.AssetName,
-                tax.Taxes,
-                tax.TotalSold,
-                tax.SwingTradeProfit,
-                tax.DayTradeProfit,
-                JsonConvert.DeserializeObject<IEnumerable<OperationDetails>>(tax.TradedAssets)!
-            ));
-        }
-
-        return new MonthTaxesResponse(
-            totalMonthTaxes,
-            tradedAssets
-        );
+        // TODO
+        return new TaxesDetailsResponse(0);
     }
 
     private static bool WorkerDidNotSaveDataForThisMonthYet(string month)
@@ -332,7 +307,7 @@ public class TaxesService : ITaxesService
     #endregion
 
     #region Calcula o imposto de renda do ano especificado
-    public async Task<IEnumerable<YearTaxesResponse>> GetTaxesByYear(string year, Guid accountId)
+    public async Task<IEnumerable<CalendarResponse>> GetTaxesByYear(string year, Guid accountId)
     {
         try
         {
@@ -355,9 +330,9 @@ public class TaxesService : ITaxesService
         }
     }
 
-    private static IEnumerable<YearTaxesResponse> ToSpecifiedYearDto(IEnumerable<SpecifiedYearTaxesDto> taxes)
+    private static IEnumerable<CalendarResponse> ToSpecifiedYearDto(IEnumerable<SpecifiedYearTaxesDto> taxes)
     {
-        List<YearTaxesResponse> response = new();
+        List<CalendarResponse> response = new();
 
         foreach (var item in taxes)
         {
@@ -372,7 +347,7 @@ public class TaxesService : ITaxesService
             double totalSwingTradeProfit = taxesByMonth.Select(x => x.SwingTradeProfit).Sum();
             double totalDayTradeProfit = taxesByMonth.Select(x => x.DayTradeProfit).Sum();
 
-            response.Add(new YearTaxesResponse(
+            response.Add(new CalendarResponse(
                 item.Month,
                 totalTaxes,
                 totalSwingTradeProfit,
@@ -383,7 +358,7 @@ public class TaxesService : ITaxesService
         return response;
     }
 
-    private static bool MonthAlreadyAdded(IEnumerable<YearTaxesResponse> response, SpecifiedYearTaxesDto item)
+    private static bool MonthAlreadyAdded(IEnumerable<CalendarResponse> response, SpecifiedYearTaxesDto item)
     {
         return response.Select(x => x.Month).Contains(item.Month);
     }
@@ -408,32 +383,32 @@ public class TaxesService : ITaxesService
     #region Faz a sincronização com a B3.
     public async Task ExecuteB3Sync(Guid accountId, List<BigBangRequest> request)
     {
+        Infrastructure.Models.Account? account = accountRepository.GetById(accountId);
+        if (account is null) throw new NotFoundException("Investidor", accountId.ToString());
+
+        if (account.Status == EnumHelper.GetEnumDescription(AccountStatus.Synced))
+        {
+            logger.LogError("A sincronização com a B3 já foi executada para o usuário {accountId}, mas" +
+                "o Big Bang foi executado mesmo assim.", accountId);
+
+            throw new BadRequestException($"A sincronização com a B3 já foi executada para o usuário {accountId}.");
+        }
+
         try
         {
-            Infrastructure.Models.Account? account = accountRepository.GetById(accountId);
-            if (account is null) throw new RecordNotFoundException("Investidor", accountId.ToString());
-
-            if (account.Status == EnumHelper.GetEnumDescription(AccountStatus.Synced))
-            {
-                logger.LogError("A sincronização com a B3 já foi executada para o usuário {accountId}, mas" +
-                    "o Big Bang foi executado mesmo assim.", accountId);
-
-                throw new InvalidBusinessRuleException($"A sincronização com a B3 já foi executada para o usuário {accountId}.");
-            }
-
             if (AccountCanExecuteSyncing(account))
             {
                 account.Status = EnumHelper.GetEnumDescription(AccountStatus.Syncing);
                 accountRepository.Update(account);
             } else
             {
-                throw new InvalidBusinessRuleException("Antes de executar o Big Bang é necessário " +
+                throw new BadRequestException("Antes de executar o Big Bang é necessário " +
                     "confirmar o endereço de e-mail.");
             }
 
-#pragma warning disable CS0219 // Variable is assigned but its value is never used
+    #pragma warning disable CS0219 // Variable is assigned but its value is never used
             string startDate = "2019-11-01";
-#pragma warning restore CS0219 // Variable is assigned but its value is never used
+    #pragma warning restore CS0219 // Variable is assigned but its value is never used
 
             string lastMonth = new DateTime(year: DateTime.Now.Year, month: DateTime.Now.Month, day: 1)
                 .AddMonths(-1)
@@ -449,13 +424,13 @@ public class TaxesService : ITaxesService
             await SaveB3Data(response, account);
 
             logger.LogInformation("Big Bang executado com sucesso para o usuário {accountId}.", accountId);
-        }
-        catch (Exception e)
+        } catch
         {
-            logger.LogError("Uma exceção ocorreu ao executar o Big Bang do usuário {accountId}." +
-                "{e.Message}", accountId, e.Message);
+            account.Status = EnumHelper.GetEnumDescription(AccountStatus.EmailConfirmed);
+            accountRepository.Update(account);
 
-            throw;
+            logger.LogError("Um erro ocorreu ao executar o Big Bang.");
+            throw new Exception();
         }
     }
 
@@ -464,9 +439,9 @@ public class TaxesService : ITaxesService
         return account.Status == EnumHelper.GetEnumDescription(AccountStatus.EmailConfirmed);
     }
 
-    private static Movement.Root? GetBigBangMockedDataBeforeB3Contract()
+    private static Models.B3.Movement.Root? GetBigBangMockedDataBeforeB3Contract()
     {
-        Movement.Root? b3Response = new()
+        Models.B3.Movement.Root? b3Response = new()
         {
             Data = new()
             {
@@ -545,9 +520,9 @@ public class TaxesService : ITaxesService
     /// Retorna dados mockados da API da B3 para testes locais antes da contratação.
     /// Deve ser removido após a implementação do serviço de produção.
     /// </summary>
-    private static void AddBigBangDataSet(Movement.Root response)
+    private static void AddBigBangDataSet(Models.B3.Movement.Root response)
     {
-        response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
+        response.Data.EquitiesPeriods.EquitiesMovements.Add(new Models.B3.Movement.EquitMovement
         {
             AssetType = "ETF - Exchange Traded Fund",
             TickerSymbol = "BOVA11",
@@ -558,7 +533,7 @@ public class TaxesService : ITaxesService
             ReferenceDate = new DateTime(2023, 01, 01)
         });
 
-        response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
+        response.Data.EquitiesPeriods.EquitiesMovements.Add(new Models.B3.Movement.EquitMovement
         {
             AssetType = "ETF - Exchange Traded Fund",
             TickerSymbol = "BOVA11",
@@ -569,7 +544,7 @@ public class TaxesService : ITaxesService
             ReferenceDate = new DateTime(2023, 01, 03)
         });
 
-        response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
+        response.Data.EquitiesPeriods.EquitiesMovements.Add(new Models.B3.Movement.EquitMovement
         {
             AssetType = "ETF - Exchange Traded Fund",
             TickerSymbol = "BOVA11",
@@ -581,7 +556,7 @@ public class TaxesService : ITaxesService
             ReferenceDate = new DateTime(2023, 01, 08)
         });
 
-        response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
+        response.Data.EquitiesPeriods.EquitiesMovements.Add(new Models.B3.Movement.EquitMovement
         {
             AssetType = "ETF - Exchange Traded Fund",
             TickerSymbol = "IVVB11",
@@ -592,7 +567,7 @@ public class TaxesService : ITaxesService
             ReferenceDate = new DateTime(2023, 01, 09)
         });
 
-        response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
+        response.Data.EquitiesPeriods.EquitiesMovements.Add(new Models.B3.Movement.EquitMovement
         {
             AssetType = "ETF - Exchange Traded Fund",
             TickerSymbol = "IVVB11",
@@ -603,7 +578,7 @@ public class TaxesService : ITaxesService
             ReferenceDate = new DateTime(2023, 01, 09)
         });
 
-        response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
+        response.Data.EquitiesPeriods.EquitiesMovements.Add(new Models.B3.Movement.EquitMovement
         {
             AssetType = "ETF - Exchange Traded Fund",
             TickerSymbol = "IVVB11",
@@ -615,7 +590,7 @@ public class TaxesService : ITaxesService
             ReferenceDate = new DateTime(2023, 01, 10)
         });
 
-        response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
+        response.Data.EquitiesPeriods.EquitiesMovements.Add(new Models.B3.Movement.EquitMovement
         {
             AssetType = "FII - Fundo de Investimento Imobiliário",
             TickerSymbol = "KFOF11",
@@ -626,7 +601,7 @@ public class TaxesService : ITaxesService
             ReferenceDate = new DateTime(2023, 01, 16)
         });
 
-        response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
+        response.Data.EquitiesPeriods.EquitiesMovements.Add(new Models.B3.Movement.EquitMovement
         {
             AssetType = "FII - Fundo de Investimento Imobiliário",
             TickerSymbol = "KFOF11",
@@ -638,7 +613,7 @@ public class TaxesService : ITaxesService
             ReferenceDate = new DateTime(2023, 01, 28)
         });
 
-        response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
+        response.Data.EquitiesPeriods.EquitiesMovements.Add(new Models.B3.Movement.EquitMovement
         {
             AssetType = "Ações",
             TickerSymbol = "AMER3",
@@ -650,7 +625,7 @@ public class TaxesService : ITaxesService
             ReferenceDate = new DateTime(2023, 02, 01)
         });
 
-        response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
+        response.Data.EquitiesPeriods.EquitiesMovements.Add(new Models.B3.Movement.EquitMovement
         {
             AssetType = "Ações",
             TickerSymbol = "AMER3",
@@ -661,7 +636,7 @@ public class TaxesService : ITaxesService
             ReferenceDate = new DateTime(2023, 02, 01)
         });
 
-        response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
+        response.Data.EquitiesPeriods.EquitiesMovements.Add(new Models.B3.Movement.EquitMovement
         {
             AssetType = "Ações",
             TickerSymbol = "AMER3",
@@ -690,7 +665,7 @@ public class TaxesService : ITaxesService
         double totalTaxes = taxes.Select(x => x.Taxes).Sum();
 
         if (taxes.IsNullOrEmpty() || taxes.Select(x => x.Taxes).Sum() <= 0)
-            throw new RecordNotFoundException("Nenhum imposto foi encontrado para esse mês, logo, a DARF não pode ser gerada.");        
+            throw new NotFoundException("Nenhum imposto foi encontrado para esse mês, logo, a DARF não pode ser gerada.");        
 
         string taxesReferenceDate = taxes.Select(x => x.Month).First();
         string today = DateTime.Now.ToString("dd/MM/yyyy");

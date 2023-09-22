@@ -1,10 +1,9 @@
 ﻿using Common.Enums;
-using Common.Models;
 using Core.Calculators;
 using Core.Calculators.Assets;
 using Core.Constants;
-using Core.DTOs.B3;
 using Core.Models;
+using Core.Models.B3;
 
 namespace stocks_unit_tests.Business
 {

@@ -23,7 +23,7 @@ namespace Core.Services.IncomeTaxes
         public async Task<InvestorMovementDetails?> GetB3ResponseDetails(Movement.Root? request, Guid accountId)
         {
             var movements = GetInvestorMovements(request);
-            if (movements.IsNullOrEmpty()) throw new NoneMovementsException("O usuário não possui nenhuma movimentação na bolsa até então.");
+            if (movements.IsNullOrEmpty()) throw new NotFoundException("O usuário não possui nenhuma movimentação na bolsa até então.");
 
             movements = OrderMovementsByDateAndMovementType(movements);
 
@@ -33,6 +33,9 @@ namespace Core.Services.IncomeTaxes
             foreach (var month in monthsThatHadMovements)
             {
                 var monthMovements = movements.Where(x => x.ReferenceDate.ToString("MM/yyyy") == month).ToList();
+
+                SetDayTradeMovementsAsDayTrade(monthMovements);
+
                 monthlyMovements.Add(month, monthMovements);
             }
 
@@ -77,8 +80,6 @@ namespace Core.Services.IncomeTaxes
 
             foreach (var monthMovements in monthlyMovements)
             {
-                SetDayTradeMovementsAsDayTrade(monthMovements.Value);
-
                 var stocks = monthMovements.Value.Where(x => x.AssetType.Equals(B3ResponseConstants.Stocks));
                 var etfs = monthMovements.Value.Where(x => x.AssetType.Equals(B3ResponseConstants.ETFs));
                 var fiis = monthMovements.Value.Where(x => x.AssetType.Equals(B3ResponseConstants.FIIs));
@@ -148,7 +149,7 @@ namespace Core.Services.IncomeTaxes
         }
 
         /// <summary>
-        /// Altera a propriedade booleana DayTraded para verdadeiro em operações de compra e venda day-trade.
+        /// Altera a propriedade booleana DayTraded para verdadeiro em operações de venda day-trade.
         /// </summary>
         private static void SetDayTradeMovementsAsDayTrade(List<Movement.EquitMovement> movements)
         {

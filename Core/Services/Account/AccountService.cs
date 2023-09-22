@@ -53,10 +53,10 @@ namespace Core.Services.Account
             {
                 account ??= repository.GetById(accountId);
 
-                if (account is null) throw new InvalidBusinessRuleException($"O usuário de id {accountId} não foi encontrado em nossa base.");
+                if (account is null) throw new BadRequestException($"O usuário de id {accountId} não foi encontrado em nossa base.");
 
                 if (!emailSenderService.CanSendEmailForUser(accountId))
-                    throw new InvalidBusinessRuleException($"O usuário de id {accountId} já enviou um código de verificação há pelo menos 10 minutos atrás.");
+                    throw new BadRequestException($"O usuário de id {accountId} já enviou um código de verificação há pelo menos 10 minutos atrás.");
 
                 // 4-digit random number
                 string verificationCode = new Random().Next(1000, 9999).ToString();
@@ -91,7 +91,7 @@ namespace Core.Services.Account
             try
             {
                 if (!emailSenderService.CanSendEmailForUser(accountId))
-                    throw new InvalidBusinessRuleException($"O usuário de id {accountId} já enviou um código de verificação há pelo menos 10 minutos atrás.");
+                    throw new BadRequestException($"O usuário de id {accountId} já enviou um código de verificação há pelo menos 10 minutos atrás.");
 
                 var account = repository.GetById(accountId);
                 if (account is null) throw new NullReferenceException($"O usuário de id {accountId} não foi encontrado na base de dados.");
@@ -120,19 +120,19 @@ namespace Core.Services.Account
 
         private void ValidateNewPassword(Infrastructure.Models.Account account, string password)
         {
-            if (account.Password == password) throw new InvalidBusinessRuleException("A nova senha não pode ser igual à senha atual.");
+            if (account.Password == password) throw new BadRequestException("A nova senha não pode ser igual à senha atual.");
         }
 
         public bool IsSynced(Guid accountId)
         {
             var account = repository.GetById(accountId);
 
-            if (account is null) throw new RecordNotFoundException("Investidor", accountId.ToString());
+            if (account is null) throw new NotFoundException("Investidor", accountId.ToString());
 
             if (account.Status == EnumHelper.GetEnumDescription(Common.Enums.AccountStatus.EmailNotConfirmed) ||
                 account.Status == EnumHelper.GetEnumDescription(Common.Enums.AccountStatus.EmailConfirmed))
             {
-                throw new InvalidBusinessRuleException("O Big Bang ainda não foi executado para esse usuário.");
+                throw new BadRequestException("O Big Bang ainda não foi executado para esse usuário.");
             }
 
             return account.Status != EnumHelper.GetEnumDescription(Common.Enums.AccountStatus.Syncing);

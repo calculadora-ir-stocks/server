@@ -1,10 +1,14 @@
+using Common.Enums;
+
 namespace Core.Models;
 
 public class OperationDetails
 {
     public OperationDetails(
-        string day,
+        int day,
         string dayOfTheWeek,
+        string assetType,
+        Asset assetTypeId,
         string tickerSymbol,
         string corporationName,
         string operation,
@@ -15,20 +19,24 @@ public class OperationDetails
     {
         Day = day;
         DayOfTheWeek = dayOfTheWeek;
+        AssetType = assetType;
+        AssetTypeId = assetTypeId;
         TickerSymbol = tickerSymbol;
         CorporationName = corporationName;
-        Operation = operation;
+        MovementType = operation;
         Quantity = quantity;
-        Value = value;
+        Total = value;
         Profit = profit;
     }
 
-    public string Day { get; protected set; }
+    public int Day { get; init; }
     public string DayOfTheWeek { get; init; }
+    public string AssetType { get; init; }
+    public Asset AssetTypeId { get; init; }
     public string TickerSymbol { get; init; }
     public string CorporationName { get; init; }
-    public string Operation { get; init; }
+    public string MovementType { get; init; }
     public int Quantity { get; init; }
-    public double Value { get; init; }
-    public double Profit { get; protected set; } = 0;
+    public double Total { get; init; }
+    public double Profit { get; init; } = 0;
 }

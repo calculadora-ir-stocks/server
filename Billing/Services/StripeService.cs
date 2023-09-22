@@ -42,7 +42,7 @@ namespace Billing.Services
         public async Task<Session> CreateCheckoutSession(Guid accountId, string productId, string? couponId = null)
         {
             var account = accountRepository.GetById(accountId);
-            if (account is null) throw new RecordNotFoundException("Investidor", accountId.ToString());
+            if (account is null) throw new NotFoundException("Investidor", accountId.ToString());
 
             var options = new SessionCreateOptions
             {
@@ -126,7 +126,7 @@ namespace Billing.Services
         public async Task<Stripe.BillingPortal.Session> CreatePortalSession(Guid accountId)
         {
             var account = accountRepository.GetById(accountId);
-            if (account is null) throw new RecordNotFoundException("Investidor", accountId.ToString());
+            if (account is null) throw new NotFoundException("Investidor", accountId.ToString());
 
             var options = new Stripe.BillingPortal.SessionCreateOptions
             {

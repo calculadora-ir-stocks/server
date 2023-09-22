@@ -1,6 +1,4 @@
-﻿using System.Reflection;
-
-namespace Core.Models.InfoSimples
+﻿namespace Core.Models.InfoSimples
 {
     public class GenerateDARFRequest
     {

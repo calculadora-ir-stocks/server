@@ -49,7 +49,7 @@ public class TaxesController : BaseController
     {
         var response = await service.GetCurrentMonthTaxes(accountId);
 
-        if (response.TradedAssets.IsNullOrEmpty()) return NotFound("Por enquanto não há nenhum imposto de renda a ser pago.");
+        if (response.Movements.IsNullOrEmpty()) return NotFound("Por enquanto não há nenhum imposto de renda a ser pago.");
 
         return Ok(response);
     }
@@ -64,7 +64,7 @@ public class TaxesController : BaseController
     {
         var response = await service.GetTaxesByMonth(month, accountId);
 
-        if (response.TradedAssets.IsNullOrEmpty()) return NotFound("Nenhum imposto de renda foi encontrado para o mês especificado.");
+        if (response.Movements.IsNullOrEmpty()) return NotFound("Nenhum imposto de renda foi encontrado para o mês especificado.");
 
         return Ok(response);
     }

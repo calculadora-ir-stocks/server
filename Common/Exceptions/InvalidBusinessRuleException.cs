@@ -2,11 +2,11 @@
 
 namespace Api.Exceptions
 {
-    public class InvalidBusinessRuleException : Exception
+    public class BadRequestException : Exception
     {
-        public InvalidBusinessRuleException(string message) : base(message) { }
-        public InvalidBusinessRuleException() { }
-        public InvalidBusinessRuleException(string message, Exception innerException) : base(message, innerException) { }
-        public InvalidBusinessRuleException(SerializationInfo info, StreamingContext context) : base(info, context) { }
+        public BadRequestException(string message) : base(message) { }
+        public BadRequestException() { }
+        public BadRequestException(string message, Exception innerException) : base(message, innerException) { }
+        public BadRequestException(SerializationInfo info, StreamingContext context) : base(info, context) { }
     }
 }

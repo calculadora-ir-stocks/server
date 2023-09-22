@@ -1,4 +1,5 @@
 ﻿using common.Helpers;
+using Common.Helpers;
 using Core.Constants;
 using Core.Models;
 using Core.Models.B3;
@@ -55,8 +56,10 @@ namespace Core.Calculators
         )
         {
             operationsHistory.Add(new OperationDetails(
-                movement.ReferenceDate.Day.ToString(),
+                movement.ReferenceDate.Day,
                 UtilsHelper.GetDayOfTheWeekName((int)movement.ReferenceDate.DayOfWeek),
+                movement.AssetType,
+                AssetTypeHelper.GetEnumByName(movement.AssetType),
                 movement.TickerSymbol,
                 movement.CorporationName,
                 movement.MovementType,

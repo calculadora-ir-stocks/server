@@ -54,7 +54,7 @@ namespace Api.Services.Auth
                     return null;
 
                 if (account.Status == EnumHelper.GetEnumDescription(AccountStatus.EmailNotConfirmed))
-                    throw new InvalidBusinessRuleException("Você ainda não confirmou o seu e-mail no cadastro da sua conta.");
+                    throw new BadRequestException("Você ainda não confirmou o seu e-mail no cadastro da sua conta.");
 
                 if (BCryptHelper.CheckPassword(request.Password, account.Password))
                 {
@@ -104,10 +104,10 @@ namespace Api.Services.Auth
             try
             {
                 if (accountRepository.EmailExists(account.Email))
-                    throw new InvalidBusinessRuleException($"Um usuário com esse e-mail já está cadastrado na plataforma.");
+                    throw new BadRequestException($"Um usuário com esse e-mail já está cadastrado na plataforma.");
 
                 if (accountRepository.CPFExists(account.CPF))
-                    throw new InvalidBusinessRuleException($"Um usuário com esse CPF já está cadastrado na plataforma.");
+                    throw new BadRequestException($"Um usuário com esse CPF já está cadastrado na plataforma.");
 
                 if (account.IsInvalid)
                 {

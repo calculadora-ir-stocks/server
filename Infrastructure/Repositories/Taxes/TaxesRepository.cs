@@ -39,13 +39,9 @@ namespace Infrastructure.Repositories.Taxes
             string sql = @"
                 SELECT
                     it.""Month"",
-	                it.""TotalTaxes"" as Taxes,
-	                it.""TotalSold"",
-	                it.""SwingTradeProfit"",
-	                it.""DayTradeProfit"",
+	                it.""Taxes"" as Taxes,
 	                it.""TradedAssets"",
-	                it.""AssetId"",
-                    a.""Name"" as AssetName
+	                it.""AssetId""
                 FROM ""IncomeTaxes"" it
                 INNER JOIN ""Assets"" a ON it.""AssetId"" = a.""Id""
                 WHERE it.""Month"" = @Month AND it.""AccountId"" = @AccountId;
@@ -67,13 +63,13 @@ namespace Infrastructure.Repositories.Taxes
             string sql = @"
                 SELECT
                     LEFT(it.""Month"", 2) as Month,
-	                it.""TotalTaxes"" as Taxes,
+	                it.""Taxes"" as Taxes,
 	                it.""SwingTradeProfit"",
 	                it.""DayTradeProfit""
                 FROM ""IncomeTaxes"" it
                 INNER JOIN ""Assets"" a ON it.""AssetId"" = a.""Id""
                 WHERE RIGHT(it.""Month"", 4) LIKE @Year 
-                AND it.""TotalTaxes"" > 0
+                AND it.""Taxes"" > 0
                 AND it.""AccountId"" = @AccountId;
             ";
 

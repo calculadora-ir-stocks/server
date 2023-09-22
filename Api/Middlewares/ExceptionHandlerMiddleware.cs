@@ -27,17 +27,17 @@ namespace Api.Middlewares
 
                 switch (error)
                 {
-                    case InvalidBusinessRuleException:
+                    case BadRequestException:
                         response.StatusCode = (int)HttpStatusCode.BadRequest;
                         break;
-                    case NoneMovementsException:
-                        response.StatusCode = (int)HttpStatusCode.OK;
-                        break;
-                    case RecordNotFoundException:
+                    case NotFoundException:
                         response.StatusCode = (int)HttpStatusCode.NotFound;
                         break;
                     case ForbiddenException:
                         response.StatusCode = (int)HttpStatusCode.Forbidden;
+                        break;
+                    case InternalServerErrorException:
+                        response.StatusCode = (int)HttpStatusCode.InternalServerError;
                         break;
                     case KeyNotFoundException _:
                         response.StatusCode = (int)HttpStatusCode.NotFound;

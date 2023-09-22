@@ -1,8 +1,8 @@
 namespace Core.Models.Responses;
 
-public class YearTaxesResponse
+public class CalendarResponse
 {
-    public YearTaxesResponse(string month, double taxes, double swingTradeProfit, double dayTradeProfit)
+    public CalendarResponse(string month, double taxes, double swingTradeProfit, double dayTradeProfit)
     {
         Month = month;
         Taxes = taxes;

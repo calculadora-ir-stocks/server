@@ -2,6 +2,8 @@
 using Common.Constants;
 using Infrastructure.Models;
 using System.Reflection;
+using Microsoft.Extensions.Logging;
+using Common.Exceptions;
 
 namespace Api.Database
 {
@@ -15,14 +17,20 @@ namespace Api.Database
         public DbSet<Plan> Plans { get; set; } = null!;
         public DbSet<Order> Orders { get; set; } = null!;
 
-        public StocksContext()
-        {
-            Database.EnsureCreated();
-        }
+        public ILogger<StocksContext> logger;
 
-        public StocksContext(DbContextOptions<StocksContext> options) : base(options)
+        public StocksContext(DbContextOptions<StocksContext> options, ILogger<StocksContext> logger) : base(options)
         {
-            Database.EnsureCreated();
+            this.logger = logger;
+
+            try
+            {
+                Database.EnsureCreated();
+            } catch (Exception e)
+            {
+                logger.LogError(e, "O servidor não conseguiu conectar-se com o banco de dados.");
+                throw new InternalServerErrorException("Não foi possível conectar-se com o banco de dados.");
+            }
         }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)

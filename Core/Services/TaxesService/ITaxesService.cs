@@ -13,17 +13,17 @@ public interface ITaxesService
     /// <summary>
     /// Retorna a quantidade de imposto de renda a ser pago para cada ativo de renda variável no mês atual.
     /// </summary>
-    Task<MonthTaxesResponse> GetCurrentMonthTaxes(Guid accountId);
+    Task<TaxesDetailsResponse> GetCurrentMonthTaxes(Guid accountId);
 
     /// <summary>
     /// Retorna a quantidade de imposto de renda a ser pago para cada ativo de renda variável no mês especificado.
     /// </summary>
-    Task<MonthTaxesResponse> GetTaxesByMonth(string month, Guid accountId);
+    Task<TaxesDetailsResponse> GetTaxesByMonth(string month, Guid accountId);
 
     /// <summary>
     /// Retorna a quantidade de imposto de renda a ser pago para cada ativo de renda variável no ano especificado.
     /// </summary>
-    Task<IEnumerable<YearTaxesResponse>> GetTaxesByYear(string year, Guid accountId);
+    Task<IEnumerable<CalendarResponse>> GetTaxesByYear(string year, Guid accountId);
 
     /// <summary>
     /// Faz o cálculo de impostos retroativos e preço médio de todos os ativos da conta de um investidor.
