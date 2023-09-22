@@ -36,6 +36,9 @@ namespace Api.Middlewares
                     case RecordNotFoundException:
                         response.StatusCode = (int)HttpStatusCode.NotFound;
                         break;
+                    case ForbiddenException:
+                        response.StatusCode = (int)HttpStatusCode.Forbidden;
+                        break;
                     case KeyNotFoundException _:
                         response.StatusCode = (int)HttpStatusCode.NotFound;
                         break;

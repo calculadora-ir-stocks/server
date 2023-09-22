@@ -6,6 +6,7 @@ using Common.Helpers;
 using Core.Clients.InfoSimples;
 using Core.Models;
 using Core.Models.B3;
+using Core.Models.InfoSimples;
 using Core.Models.Responses;
 using Core.Requests.BigBang;
 using Core.Responses;
@@ -87,11 +88,11 @@ public class TaxesService : ITaxesService
 
             Infrastructure.Models.Account account = await genericRepositoryAccount.GetByIdAsync(accountId);
 
-            if (account.Status == EnumHelper.GetEnumDescription(AccountStatus.SubscriptionExpired)) 
-                throw new InvalidBusinessRuleException("O plano do usuário está expirado.");
+            if (account.Status == EnumHelper.GetEnumDescription(AccountStatus.SubscriptionExpired))
+                throw new ForbiddenException("O plano do usuário está expirado.");
 
             if (account.Status == EnumHelper.GetEnumDescription(AccountStatus.SubscriptionPaused))
-                throw new InvalidBusinessRuleException("O plano do usuário está pausado por conta de uma falha de pagamento.");
+                throw new ForbiddenException("O plano do usuário está pausado por conta de uma falha de pagamento.");
 
             // var b3Response = await b3Client.GetAccountMovement(account.CPF, startDate, yesterday, account.Id);
             var b3Response = GetCurrentMonthMockedDataBeforeB3Contract();
@@ -137,8 +138,7 @@ public class TaxesService : ITaxesService
 
     private static MonthTaxesResponse CurrentMonthToDto(List<AssetIncomeTaxes> assets)
     {
-        double totalTaxes = assets.Select(x => x.Taxes).Sum();
-        List<Core.Responses.Asset> tradedAssets = new();
+        List<Responses.Asset> tradedAssets = new();
 
         foreach (var item in assets)
         {
@@ -154,7 +154,7 @@ public class TaxesService : ITaxesService
         }
 
         return new MonthTaxesResponse(
-            totalTaxes: totalTaxes,
+            totalTaxes: assets.Select(x => x.Taxes).Sum(),
             tradedAssets
         );
 
@@ -284,10 +284,10 @@ public class TaxesService : ITaxesService
             var account = genericRepositoryAccount.GetById(accountId);
 
             if (account.Status == EnumHelper.GetEnumDescription(AccountStatus.SubscriptionExpired))
-                throw new InvalidBusinessRuleException("O plano do usuário está expirado.");
+                throw new ForbiddenException("O plano do usuário está expirado.");
 
             if (account.Status == EnumHelper.GetEnumDescription(AccountStatus.SubscriptionPaused))
-                throw new InvalidBusinessRuleException("O plano do usuário está pausado por conta de uma falha de pagamento.");
+                throw new ForbiddenException("O plano do usuário está pausado por conta de uma falha de pagamento.");
 
             var response = await taxesRepository.GetSpecifiedMonthTaxes(System.Net.WebUtility.UrlDecode(month), accountId);
 
@@ -303,11 +303,11 @@ public class TaxesService : ITaxesService
     private static MonthTaxesResponse SpecifiedMonthToDto(IEnumerable<SpecifiedMonthTaxesDto> taxes)
     {
         double totalMonthTaxes = taxes.Select(x => x.Taxes).Sum();
-        List<Core.Responses.Asset> tradedAssets = new();
+        List<Responses.Asset> tradedAssets = new();
 
         foreach (var tax in taxes)
         {
-            tradedAssets.Add(new Core.Responses.Asset(
+            tradedAssets.Add(new Responses.Asset(
                 (Common.Enums.Asset)tax.AssetTypeId,
                 tax.AssetName,
                 tax.Taxes,
@@ -339,10 +339,10 @@ public class TaxesService : ITaxesService
             var account = genericRepositoryAccount.GetById(accountId);
 
             if (account.Status == EnumHelper.GetEnumDescription(AccountStatus.SubscriptionExpired))
-                throw new InvalidBusinessRuleException("O plano do usuário está expirado.");
+                throw new ForbiddenException("O plano do usuário está expirado.");
 
             if (account.Status == EnumHelper.GetEnumDescription(AccountStatus.SubscriptionPaused))
-                throw new InvalidBusinessRuleException("O plano do usuário está pausado por conta de uma falha de pagamento.");
+                throw new ForbiddenException("O plano do usuário está pausado por conta de uma falha de pagamento.");
 
             var response = await taxesRepository.GetSpecifiedYearTaxes(System.Net.WebUtility.UrlDecode(year), accountId);
 
@@ -413,7 +413,7 @@ public class TaxesService : ITaxesService
             Infrastructure.Models.Account? account = accountRepository.GetById(accountId);
             if (account is null) throw new RecordNotFoundException("Investidor", accountId.ToString());
 
-            if (account.Status == EnumHelper.GetEnumDescription(Common.Enums.AccountStatus.Synced))
+            if (account.Status == EnumHelper.GetEnumDescription(AccountStatus.Synced))
             {
                 logger.LogError("A sincronização com a B3 já foi executada para o usuário {accountId}, mas" +
                     "o Big Bang foi executado mesmo assim.", accountId);
@@ -423,7 +423,7 @@ public class TaxesService : ITaxesService
 
             if (AccountCanExecuteSyncing(account))
             {
-                account.Status = EnumHelper.GetEnumDescription(Common.Enums.AccountStatus.Syncing);
+                account.Status = EnumHelper.GetEnumDescription(AccountStatus.Syncing);
                 accountRepository.Update(account);
             } else
             {
@@ -676,25 +676,28 @@ public class TaxesService : ITaxesService
     #endregion
 
     #region Geração de DARF
-    public async Task<string> GenerateDARF(Guid accountId, string month)
+    public async Task<(GenerateDARFResponse, string)> GenerateDARF(Guid accountId, string month)
     {
+        var account = await genericRepositoryAccount.GetByIdAsync(accountId);
+
+        if (account.Status == EnumHelper.GetEnumDescription(AccountStatus.SubscriptionExpired))
+            throw new ForbiddenException("O plano do usuário está expirado.");
+
+        if (account.Status == EnumHelper.GetEnumDescription(AccountStatus.SubscriptionPaused))
+            throw new ForbiddenException("O plano do usuário está pausado por conta de uma falha de pagamento.");
+
         var taxes = await taxesRepository.GetSpecifiedMonthTaxes(month, accountId);
         double totalTaxes = taxes.Select(x => x.Taxes).Sum();
 
         if (taxes.IsNullOrEmpty() || taxes.Select(x => x.Taxes).Sum() <= 0)
-            throw new RecordNotFoundException("Nenhum imposto foi encontrado para esse mês, logo, a DARF não pode ser gerada.");
-
-        if (totalTaxes < 10) 
-            throw new InvalidBusinessRuleException("Para gerar uma DARF, o total de impostos precisa ser maior ou igual à 10.");
-
-        var account = await genericRepositoryAccount.GetByIdAsync(accountId);
+            throw new RecordNotFoundException("Nenhum imposto foi encontrado para esse mês, logo, a DARF não pode ser gerada.");        
 
         string taxesReferenceDate = taxes.Select(x => x.Month).First();
         string today = DateTime.Now.ToString("dd/MM/yyyy");
 
-        var response = await infoSimplesClient.GetBarCodeFromDARF(
-            new Models.InfoSimples.GenerateDARFRequest
-            (                
+        var response = await infoSimplesClient.GenerateDARF(
+            new GenerateDARFRequest
+            (
                 RemoveSpecialCharacters(account.CPF),
                 account.BirthDate,
                 $"Venda de ativos no mês {taxesReferenceDate}. Essa DARF foi gerada automaticamente " +
@@ -706,7 +709,19 @@ public class TaxesService : ITaxesService
             )
         );
 
-        return response;
+        string observation = string.Empty;
+
+        if (response.Data[0].Totais.NormalizadoTotal < 10)
+        {
+            // var taxesToAddIntoThisDarf = taxesRepository.Get
+
+            observation = "O valor total da sua DARF é menor que o valor mínimo proposto pela Receita de R$10,00. \n" +
+                "Para consertar isso, iremos esperar até que alguma DARF sua dê novamente menos que R$10,00. \n" +
+                "Quando isso acontecer, iremos somar os valores das DARFs até que um valor superior à R$10,00 seja gerado. \n" +
+                "Mas não se preocupe, iremos enviar uma notificação pra você quando isso ocorrer.";
+        }
+
+        return (response, observation);
     }
 
     public static string RemoveSpecialCharacters(string str)

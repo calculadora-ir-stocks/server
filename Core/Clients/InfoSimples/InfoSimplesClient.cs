@@ -24,7 +24,7 @@ namespace Core.Clients.InfoSimples
             this.logger = logger;
         }
 
-        public async Task<string> GetBarCodeFromDARF(GenerateDARFRequest request)
+        public async Task<GenerateDARFResponse> GenerateDARF(GenerateDARFRequest request)
         {
             logger.LogInformation("Iniciando geração de DARF.");
 
@@ -46,7 +46,7 @@ namespace Core.Clients.InfoSimples
 
             if (darf.Data[0].CodigoDeBarras is null) throw new Exception("Não foi possível gerar a DARF para esse mês.");
 
-            return darf.Data[0].CodigoDeBarras;
+            return darf;
         }
     }
 }

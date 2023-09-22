@@ -1,5 +1,6 @@
 using Core.Requests.BigBang;
 using Core.Services.TaxesService;
+using Infrastructure.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 
@@ -23,19 +24,27 @@ public class TaxesController : BaseController
     /// Gera uma DARF para o usuário especificado referente a um mês onde há impostos a ser pago.
     /// </summary>
     /// <param name="accountId">O id do usuário</param>
-    /// <param name="month">O mês onde há impostos a ser pago que a DARF será gerada</param>
-    /// <returns></returns>
+    /// <param name="month">O mês onde há impostos a ser pago que a DARF será gerada. Formato: MM/yyyy</param>
+    /// <returns>O código de barras da DARF e outras informações referentes ao imposto sendo pago.</returns>
     [HttpGet("generate-darf")]
     public async Task<IActionResult> GenerateDarf(Guid accountId, string month)
     {
         var response = await service.GenerateDARF(accountId, month);
-        return Ok(new { barCode = response });
+
+        return Ok(new
+        {
+            barCode = response.Item1.Data[0].CodigoDeBarras,
+            interest = response.Item1.Data[0].Totais.Juros,
+            fine = response.Item1.Data[0].Totais.Multa,
+            total = response.Item1.Data[0].Totais.NormalizadoTotal,
+            comments = response.Item2
+        });
     }
 
     /// <summary>
     /// Retorna todas as informações referentes a impostos do mês atual.
     /// </summary>
-    [HttpGet("current/{accountId}")]
+    [HttpGet("home/{accountId}")]
     public async Task<IActionResult> GetCurrentMonthTaxes(Guid accountId)
     {
         var response = await service.GetCurrentMonthTaxes(accountId);
@@ -50,8 +59,7 @@ public class TaxesController : BaseController
     /// </summary>
     /// <param name="month">Formato: MM/yyyy</param>
     /// <param name="accountId"></param>
-    /// <returns></returns>
-    [HttpGet("month/{month}/{accountId}")]
+    [HttpGet("details/{month}/{accountId}")]
     public async Task<IActionResult> GetSpecifiedMonthTaxes(string month, Guid accountId)
     {
         var response = await service.GetTaxesByMonth(month, accountId);
@@ -66,8 +74,7 @@ public class TaxesController : BaseController
     /// </summary>
     /// <param name="year">Formato: yyyy</param>
     /// <param name="accountId"></param>
-    /// <returns></returns>
-    [HttpGet("year/{year}/{accountId}")]
+    [HttpGet("calendar/{year}/{accountId}")]
     public async Task<IActionResult> GetSpecifiedYearTaxes(string year, Guid accountId)
     {
         var response = await service.GetTaxesByYear(year, accountId);
@@ -82,7 +89,6 @@ public class TaxesController : BaseController
     /// </summary>
     /// <param name="month">Formato: MM/yyyy</param>
     /// <param name="accountId"></param>
-    /// <returns></returns>
     [HttpPut("set-paid-or-unpaid/{month}/{accountId}")]
     public async Task<IActionResult> SetMonthAsPaid(string month, Guid accountId)
     {

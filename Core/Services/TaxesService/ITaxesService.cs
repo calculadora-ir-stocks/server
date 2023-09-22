@@ -1,3 +1,4 @@
+using Core.Models.InfoSimples;
 using Core.Models.Responses;
 using Core.Requests.BigBang;
 using Core.Responses;
@@ -40,6 +41,5 @@ public interface ITaxesService
     /// </summary>
     /// <param name="accountId"></param>
     /// <param name="month"></param>
-    /// <returns>A barra de código da DARF.</returns>
-    Task<string> GenerateDARF(Guid accountId, string month);
+    Task<(GenerateDARFResponse, string)> GenerateDARF(Guid accountId, string month);
 }
