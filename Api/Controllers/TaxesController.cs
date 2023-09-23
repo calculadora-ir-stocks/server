@@ -77,7 +77,7 @@ public class TaxesController : BaseController
     [HttpGet("calendar/{year}/{accountId}")]
     public async Task<IActionResult> GetSpecifiedYearTaxes(string year, Guid accountId)
     {
-        var response = await service.GetTaxesByYear(year, accountId);
+        var response = await service.GetCalendarTaxes(year, accountId);
 
         if (response.IsNullOrEmpty()) return NotFound("Nenhum imposto de renda foi encontrado para o ano especificado.");
 

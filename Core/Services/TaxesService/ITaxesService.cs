@@ -23,7 +23,7 @@ public interface ITaxesService
     /// <summary>
     /// Retorna a quantidade de imposto de renda a ser pago para cada ativo de renda variável no ano especificado.
     /// </summary>
-    Task<IEnumerable<CalendarResponse>> GetTaxesByYear(string year, Guid accountId);
+    Task<IEnumerable<CalendarResponse>> GetCalendarTaxes(string year, Guid accountId);
 
     /// <summary>
     /// Faz o cálculo de impostos retroativos e preço médio de todos os ativos da conta de um investidor.

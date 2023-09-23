@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Api.Database;
 using Infrastructure.Dtos;
+using Newtonsoft.Json;
 
 namespace Infrastructure.Repositories.Taxes
 {
@@ -48,7 +49,13 @@ namespace Infrastructure.Repositories.Taxes
             ";
 
             var connection = context.Database.GetDbConnection();
+
             var response = await connection.QueryAsync<SpecifiedMonthTaxesDto>(sql, parameters);
+
+            foreach (var item in response)
+            {
+                item.SerializedTradedAssets = JsonConvert.DeserializeObject<IEnumerable<SpecifiedMonthTaxesDtoDetails>>(item.TradedAssets)!;
+            }
 
             return response;
         }
@@ -65,7 +72,8 @@ namespace Infrastructure.Repositories.Taxes
                     LEFT(it.""Month"", 2) as Month,
 	                it.""Taxes"" as Taxes,
 	                it.""SwingTradeProfit"",
-	                it.""DayTradeProfit""
+	                it.""DayTradeProfit"",
+	                it.""AssetId""
                 FROM ""IncomeTaxes"" it
                 INNER JOIN ""Assets"" a ON it.""AssetId"" = a.""Id""
                 WHERE RIGHT(it.""Month"", 4) LIKE @Year 

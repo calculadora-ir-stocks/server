@@ -1,5 +1,6 @@
 using Api.Clients.B3;
 using Api.Exceptions;
+using common.Helpers;
 using Common.Enums;
 using Common.Exceptions;
 using Common.Helpers;
@@ -128,7 +129,7 @@ public class TaxesService : ITaxesService
 
         foreach (var day in days)
         {
-            List<Responses.Details> details = new();
+            List<Details> details = new();
             List<Responses.Movement> movements = new();            
 
             var tradedAssetsOnThisDay = assets.SelectMany(x => x.TradedAssets.Where(x => x.Day == day));            
@@ -295,8 +296,45 @@ public class TaxesService : ITaxesService
 
     private static TaxesDetailsResponse SpecifiedMonthTaxesDtoToTaxesDetailsResponse(IEnumerable<SpecifiedMonthTaxesDto> assets)
     {
-        // TODO
-        return new TaxesDetailsResponse(0);
+        TaxesDetailsResponse response = new(totalTaxes: assets.Select(x => x.Taxes).Sum());
+
+        var days = assets.SelectMany(x => x.SerializedTradedAssets.Select(x => x.Day).Distinct());
+
+        foreach (var day in days)
+        {
+            List<Details> details = new();
+            List<Responses.Movement> movements = new();
+
+            var tradedAssetsOnThisDay = assets.SelectMany(x => x.SerializedTradedAssets.Where(x => x.Day == day));
+
+            string weekDay = string.Empty;
+
+            foreach (var tradedAsset in tradedAssetsOnThisDay)
+            {
+                if (weekDay.IsNullOrEmpty())
+                {
+                    string dayOfTheWeek = tradedAsset.Day.ToString();
+                    weekDay = $"{tradedAsset.DayOfTheWeek}, dia {dayOfTheWeek}";
+                }
+
+                details.Add(new Responses.Details(
+                    tradedAsset.AssetTypeId,
+                    tradedAsset.AssetType,
+                    tradedAsset.MovementType,
+                    tradedAsset.TickerSymbol,
+                    tradedAsset.Total,
+                    tradedAsset.Quantity
+                ));
+            }
+
+            movements.Add(new Responses.Movement(weekDay, details));
+
+            response.Movements.AddRange(
+                movements
+            );
+        }
+
+        return response;
     }
 
     private static bool WorkerDidNotSaveDataForThisMonthYet(string month)
@@ -307,7 +345,7 @@ public class TaxesService : ITaxesService
     #endregion
 
     #region Calcula o imposto de renda do ano especificado
-    public async Task<IEnumerable<CalendarResponse>> GetTaxesByYear(string year, Guid accountId)
+    public async Task<IEnumerable<CalendarResponse>> GetCalendarTaxes(string year, Guid accountId)
     {
         try
         {
@@ -348,7 +386,7 @@ public class TaxesService : ITaxesService
             double totalDayTradeProfit = taxesByMonth.Select(x => x.DayTradeProfit).Sum();
 
             response.Add(new CalendarResponse(
-                item.Month,
+                UtilsHelper.GetMonthName(int.Parse(item.Month)),
                 totalTaxes,
                 totalSwingTradeProfit,
                 totalDayTradeProfit
@@ -360,7 +398,7 @@ public class TaxesService : ITaxesService
 
     private static bool MonthAlreadyAdded(IEnumerable<CalendarResponse> response, SpecifiedYearTaxesDto item)
     {
-        return response.Select(x => x.Month).Contains(item.Month);
+        return response.Select(x => x.Month).Contains(UtilsHelper.GetMonthName(int.Parse(item.Month)));
     }
 
     #endregion

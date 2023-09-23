@@ -1,26 +1,31 @@
 ﻿using Common.Enums;
+using Newtonsoft.Json;
 
 namespace Infrastructure.Dtos
 {
     public record SpecifiedMonthTaxesDto
     {
         public SpecifiedMonthTaxesDto(
-            double taxes,
             string month,
-            IEnumerable<SpecifiedMonthTaxesDtoDetails> details
+            double taxes,
+            string tradedAssets
         )
         {
             Taxes = taxes;
             Month = month;
-            TradedAssets = details;
+            TradedAssets = tradedAssets;
+
+            SerializedTradedAssets = JsonConvert.DeserializeObject<IEnumerable<SpecifiedMonthTaxesDtoDetails>>(tradedAssets)!;
         }
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
-        public SpecifiedMonthTaxesDto() { }
-#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
+        public SpecifiedMonthTaxesDto()
+        {
+        }
 
         public string Month { get; init; }
-        public double Taxes { get; init; }        
-        public IEnumerable<SpecifiedMonthTaxesDtoDetails> TradedAssets { get; init; }
+        public double Taxes { get; init; }
+        public string TradedAssets { get; init; }
+        public IEnumerable<SpecifiedMonthTaxesDtoDetails> SerializedTradedAssets { get; set; }
     }
 
     public class SpecifiedMonthTaxesDtoDetails

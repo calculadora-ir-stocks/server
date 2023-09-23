@@ -4,6 +4,8 @@ using Infrastructure.Models;
 using System.Reflection;
 using Microsoft.Extensions.Logging;
 using Common.Exceptions;
+using Infrastructure.Dtos;
+using Newtonsoft.Json;
 
 namespace Api.Database
 {
@@ -28,8 +30,7 @@ namespace Api.Database
                 Database.EnsureCreated();
             } catch (Exception e)
             {
-                logger.LogError(e, "O servidor não conseguiu conectar-se com o banco de dados.");
-                throw new InternalServerErrorException("Não foi possível conectar-se com o banco de dados.");
+                logger.LogError(e, "Ocorreu um erro ao carregar o banco de dados.");
             }
         }
 
