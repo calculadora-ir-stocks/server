@@ -20,7 +20,7 @@ namespace Billing.Services
         private readonly IGenericRepository<Order> genericRepositoryStripe;
         private readonly IAccountRepository accountRepository;
 
-        private readonly StripeWebhookSecret secret;
+        private readonly StripeSecret secret;
 
         private readonly ILogger<StripeService> logger;
 
@@ -28,7 +28,7 @@ namespace Billing.Services
             IGenericRepository<Infrastructure.Models.Plan> genericRepositoryPlan,
             IGenericRepository<Order> genericRepositoryStripe,
             IAccountRepository accountRepository,
-            IOptions<StripeWebhookSecret> secret,
+            IOptions<StripeSecret> secret,
             ILogger<StripeService> logger
         )
         {
@@ -147,7 +147,7 @@ namespace Billing.Services
 
             try
             {
-                stripeEvent = EventUtility.ConstructEvent(json, stripeSignatureHeader, secret.Secret);
+                stripeEvent = EventUtility.ConstructEvent(json, stripeSignatureHeader, secret.WebhookSecret);
             }
             catch (Exception e)
             {

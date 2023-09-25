@@ -144,7 +144,7 @@ public class TaxesService : ITaxesService
                     weekDay = $"{tradedAsset.DayOfTheWeek}, dia {dayOfTheWeek}";
                 }   
 
-                details.Add(new Responses.Details(
+                details.Add(new Details(
                     tradedAsset.AssetTypeId,
                     tradedAsset.AssetType,
                     tradedAsset.MovementType,

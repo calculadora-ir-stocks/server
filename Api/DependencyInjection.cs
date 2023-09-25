@@ -76,9 +76,10 @@ namespace Api
                 options.Audience = builder.Configuration["Jwt:Audience"];
             });
 
-            services.Configure<StripeWebhookSecret>(options =>
+            services.Configure<StripeSecret>(options =>
             {
-                options.Secret = builder.Configuration["Services:Stripe:Token"];
+                options.WebhookSecret = builder.Configuration["Services:Stripe:WebhookToken"];
+                options.ApiSecret = builder.Configuration["Services:Stripe:ApiToken"];
             });
 
             services.Configure<InfoSimplesToken>(options =>
@@ -97,7 +98,7 @@ namespace Api
 
         public static void AddStripeServices(this IServiceCollection services, IConfiguration configuration)
         {
-            StripeConfiguration.ApiKey = configuration.GetValue<string>("StripeSettings:SecretKey");
+            StripeConfiguration.ApiKey = configuration.GetValue<string>("Services:Stripe:ApiToken");
 
             services.AddScoped<ChargeService>();
             services.AddScoped<CustomerService>();
