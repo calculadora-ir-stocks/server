@@ -49,12 +49,6 @@ namespace Common.Enums
         SubscriptionExpired = 4,
 
         /// <summary>
-        /// Quando um plano é pausado - geralmente por conta de pagamentos falhos -, a conta é definida como <c>SUBSCRIPTION_PAUSED</c>.
-        /// </summary>
-        [Description("SUBSCRIPTION_PAUSED")]
-        SubscriptionPaused = 5,
-
-        /// <summary>
         /// Quando um plano ainda é válido, a conta é definida como <c>SUBSCRIPTION_VALID</c>.
         /// </summary>
         [Description("SUBSCRIPTION_VALID")]

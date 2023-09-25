@@ -1,11 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Common.Constants;
 using Infrastructure.Models;
 using System.Reflection;
 using Microsoft.Extensions.Logging;
-using Common.Exceptions;
-using Infrastructure.Dtos;
-using Newtonsoft.Json;
 
 namespace Api.Database
 {
@@ -16,7 +12,6 @@ namespace Api.Database
         public DbSet<AverageTradedPrice> AverageTradedPrices { get; set; } = null!;
         public DbSet<IncomeTaxes> IncomeTaxes { get; set; } = null!;
         public DbSet<EmailCode> EmailCodes { get; set; } = null!;
-        public DbSet<Plan> Plans { get; set; } = null!;
         public DbSet<Order> Orders { get; set; } = null!;
 
         public ILogger<StocksContext> logger;
@@ -60,9 +55,6 @@ namespace Api.Database
                 .HasMany(ap => ap.AverageTradedPrices)
                 .WithOne(ap => ap.Account);
 
-            modelBuilder.Entity<Account>()
-                .HasOne(ap => ap.Plan);
-
             modelBuilder.Entity<IncomeTaxes>()
                 .HasOne(ap => ap.Account)
                 .WithMany(ap => ap.IncomeTaxes);
@@ -83,14 +75,6 @@ namespace Api.Database
                 new Asset(4, "Fundos de Investimentos"),
                 new Asset(5, "BDR - Brazilian Depositary Receipts"),
                 new Asset(6, "Ouro")
-            );
-
-            modelBuilder.Entity<Plan>().HasData
-            (
-                new Plan(PlansConstants.Free, "Gratuito", "Plano gratuito", "price_1NkZ3XElcTcz6jitSpsX5bce"),
-                new Plan(PlansConstants.Monthly, "Mensal", "R$39,99 por mês", "price_1NioETElcTcz6jitFPhhg4HH"),
-                new Plan(PlansConstants.Semester, "Semestral", "R$29,99 por mês", "price_1Ninm4ElcTcz6jitB40ifv1V"),
-                new Plan(PlansConstants.Anual, "Anual", "R$19,99 por mês", "price_1NiniyElcTcz6jit3AKGk57n")
             );
         }
     }

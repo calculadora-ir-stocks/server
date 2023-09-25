@@ -11,12 +11,12 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Stripe;
 using Stripe.Checkout;
+using System.Xml.Linq;
 
 namespace Billing.Services
 {
     public class StripeService : IStripeService
     {
-        private readonly IGenericRepository<Infrastructure.Models.Plan> genericRepositoryPlan;
         private readonly IGenericRepository<Order> genericRepositoryStripe;
         private readonly IAccountRepository accountRepository;
 
@@ -25,14 +25,12 @@ namespace Billing.Services
         private readonly ILogger<StripeService> logger;
 
         public StripeService(
-            IGenericRepository<Infrastructure.Models.Plan> genericRepositoryPlan,
             IGenericRepository<Order> genericRepositoryStripe,
             IAccountRepository accountRepository,
             IOptions<StripeSecret> secret,
             ILogger<StripeService> logger
         )
         {
-            this.genericRepositoryPlan = genericRepositoryPlan;
             this.genericRepositoryStripe = genericRepositoryStripe;
             this.accountRepository = accountRepository;
             this.secret = secret.Value;
@@ -87,7 +85,7 @@ namespace Billing.Services
 
         public async Task<Session> CreateCheckoutSessionForFreeTrial(Guid accountId)
         {
-            var annualPlan = genericRepositoryPlan.GetAll().Where(x => x.Id == PlansConstants.Anual).Single();
+            var annual = GetStripePlan(PlansConstants.Anual)!;
 
             var options = new SessionCreateOptions
             {
@@ -95,7 +93,7 @@ namespace Billing.Services
                 {
                     new SessionLineItemOptions 
                     { 
-                        Price = annualPlan.StripeProductId,
+                        Price = annual.DefaultPriceId,
                         Quantity = 1
                     },
                 },
@@ -121,6 +119,17 @@ namespace Billing.Services
             var session = await service.CreateAsync(options);
 
             return session;
+        }
+
+        private static Product? GetStripePlan(string planName)
+        {
+            var options = new ProductListOptions();
+
+            var service = new ProductService();
+
+            StripeList<Product> products = service.List(options);
+
+            return products.Where(x => x.Active && x.Name.Equals(planName)).FirstOrDefault();
         }
 
         public async Task<Stripe.BillingPortal.Session> CreatePortalSession(Guid accountId)
@@ -151,7 +160,7 @@ namespace Billing.Services
             }
             catch (Exception e)
             {
-                logger.LogError("Something failed {e}", e);
+                logger.LogError(e, "Ocorreu um erro ao deserializar um evento do Stripe.");
                 throw new Exception("Ocorreu um erro ao obter a atualização de plano de um usuário.");
             }
 
@@ -179,39 +188,9 @@ namespace Billing.Services
 
                     ExpiresAccountSubscription(stripeEvent);
                     break;
-                case "invoice.payment_failed":
-                    PausesAccountSubscription(stripeEvent);
-                    break;
                 default:
                     break;
             }
-        }
-
-        private void PausesAccountSubscription(Event stripeEvent)
-        {
-            var subscription = stripeEvent.Data.Object as Invoice;
-
-            var account = accountRepository.GetByStripeCustomerId(subscription!.CustomerId);
-
-            if (FailedPaymentIsFromExistingPlan(subscription))
-            {
-                account.Status = EnumHelper.GetEnumDescription(AccountStatus.SubscriptionPaused);
-                accountRepository.Update(account);
-
-                logger.LogInformation("Usuário de id {id} teve um débito inválido e o plano agora está pausado.", account.Id);
-            }
-        }
-
-        /// <summary>
-        /// Há alguns cenários que ativam o Webhook de parâmetro <c>invoice_payment_failed</c>.
-        /// Um deles é quando um usuário vai comprar um plano e o cartão falha.
-        /// O outro é quando um usuário já possui um plano salvo e, na hora de debitar, o cartão falha.
-        /// 
-        /// Para pausar a inscrição de um usuário, o pagamento falho deve ser de uma inscrição já existente.
-        /// </summary>
-        private static bool FailedPaymentIsFromExistingPlan(Invoice subscription)
-        {
-            return subscription.BillingReason == "subscription_cycle";
         }
 
         private void ValidateAccountSubscription(Event stripeEvent)
@@ -251,27 +230,12 @@ namespace Billing.Services
                 var options = new SessionGetOptions();
                 options.AddExpand("line_items");
 
-                var service = new SessionService();
-
-                Session sessionWithLineItems = service.Get(session.Id, options);
-
-                var lineItem = sessionWithLineItems.LineItems.Data.First();
-                string productId = lineItem!.Price.Id;
-
-                int planId = genericRepositoryPlan
-                    .GetAll()
-                    .Where(x => x.StripeProductId == productId)
-                    .Select(x => x.Id)
-                    .First();
-
                 var account = accountRepository.GetByStripeCustomerId(session.CustomerId);
 
-                account.PlanId = planId;
-                account.Status = EnumHelper.GetEnumDescription(Common.Enums.AccountStatus.SubscriptionValid);
-
+                account.Status = EnumHelper.GetEnumDescription(AccountStatus.SubscriptionValid);
                 accountRepository.Update(account);
 
-                logger.LogInformation("Usuário de id {id} comprou o plano de id {planId}.", account.Id, planId);
+                logger.LogInformation("Usuário de id {id} acabou de assinar um plano.", account.Id);
             }
             else
             {

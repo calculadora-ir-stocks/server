@@ -92,9 +92,6 @@ public class TaxesService : ITaxesService
             if (account.Status == EnumHelper.GetEnumDescription(AccountStatus.SubscriptionExpired))
                 throw new ForbiddenException("O plano do usuário está expirado.");
 
-            if (account.Status == EnumHelper.GetEnumDescription(AccountStatus.SubscriptionPaused))
-                throw new ForbiddenException("O plano do usuário está pausado por conta de uma falha de pagamento.");
-
             // var b3Response = await b3Client.GetAccountMovement(account.CPF, startDate, yesterday, account.Id);
             var b3Response = AddCurrentMonthSet();
 
@@ -280,9 +277,6 @@ public class TaxesService : ITaxesService
             if (account.Status == EnumHelper.GetEnumDescription(AccountStatus.SubscriptionExpired))
                 throw new ForbiddenException("O plano do usuário está expirado.");
 
-            if (account.Status == EnumHelper.GetEnumDescription(AccountStatus.SubscriptionPaused))
-                throw new ForbiddenException("O plano do usuário está pausado por conta de uma falha de pagamento.");
-
             var response = await taxesRepository.GetSpecifiedMonthTaxes(System.Net.WebUtility.UrlDecode(month), accountId);
 
             return SpecifiedMonthTaxesDtoToTaxesDetailsResponse(response);
@@ -353,9 +347,6 @@ public class TaxesService : ITaxesService
 
             if (account.Status == EnumHelper.GetEnumDescription(AccountStatus.SubscriptionExpired))
                 throw new ForbiddenException("O plano do usuário está expirado.");
-
-            if (account.Status == EnumHelper.GetEnumDescription(AccountStatus.SubscriptionPaused))
-                throw new ForbiddenException("O plano do usuário está pausado por conta de uma falha de pagamento.");
 
             var response = await taxesRepository.GetSpecifiedYearTaxes(System.Net.WebUtility.UrlDecode(year), accountId);
 
@@ -695,9 +686,6 @@ public class TaxesService : ITaxesService
 
         if (account.Status == EnumHelper.GetEnumDescription(AccountStatus.SubscriptionExpired))
             throw new ForbiddenException("O plano do usuário está expirado.");
-
-        if (account.Status == EnumHelper.GetEnumDescription(AccountStatus.SubscriptionPaused))
-            throw new ForbiddenException("O plano do usuário está pausado por conta de uma falha de pagamento.");
 
         var taxes = await taxesRepository.GetSpecifiedMonthTaxes(month, accountId);
         double totalTaxes = taxes.Select(x => x.Taxes).Sum();

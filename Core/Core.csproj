@@ -15,4 +15,7 @@
     <ProjectReference Include="..\Common\Common.csproj" />
     <ProjectReference Include="..\Infrastructure\Infrastructure.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Services\Plan\" />
+  </ItemGroup>
 </Project>

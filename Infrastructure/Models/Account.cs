@@ -92,15 +92,6 @@ namespace Infrastructure.Models
         public EmailCode EmailCode { get; set; }
         #endregion
 
-        #region Plans
-        public Plan Plan { get; protected set; }
-
-        /// <summary>
-        /// Inicialmente, todos os investidores iniciarão com o plano gratuito.
-        /// </summary>
-        public int PlanId { get; set; } = PlansConstants.Free;
-        #endregion
-
         public void HashPassword(string password)
         {
             Password = BCryptHelper.HashPassword(password, BCryptHelper.GenerateSalt());
