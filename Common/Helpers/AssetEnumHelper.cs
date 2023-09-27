@@ -3,7 +3,7 @@ using Core.Constants;
 
 namespace Common.Helpers
 {
-    public class AssetTypeHelper
+    public class AssetEnumHelper
     {
         public static Asset GetEnumByName(string assetType)
         {

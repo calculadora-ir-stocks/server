@@ -1,3 +1,5 @@
+using System.Text.RegularExpressions;
+
 namespace common.Helpers;
 
 public class UtilsHelper
@@ -44,5 +46,14 @@ public class UtilsHelper
     public static string GetMonthName(int month)
     {
         return Months[month];
+    }
+
+    /// <summary>
+    /// Remove caracteres especiais de uma string.
+    /// </summary>
+    /// <returns>String sem caracteres especiais.</returns>
+    public static string RemoveSpecialCharacters(string str)
+    {
+        return Regex.Replace(str, "[^a-zA-Z0-9]", "", RegexOptions.Compiled);
     }
 }

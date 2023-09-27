@@ -1,4 +1,5 @@
 ﻿using Api.Clients.B3;
+using common.Helpers;
 using Core.Calculators;
 using Core.Models;
 using Core.Models.B3;
@@ -7,7 +8,9 @@ using Infrastructure.Repositories.Account;
 using Infrastructure.Repositories.AverageTradedPrice;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
+using System.ComponentModel.Design.Serialization;
 using System.Diagnostics;
+using static Core.Models.B3.Movement;
 
 namespace Core.Services.Hangfire.AverageTradedPriceUpdater
 {
@@ -51,7 +54,12 @@ namespace Core.Services.Hangfire.AverageTradedPriceUpdater
                     string lastMonthFirstDay = GetLastMonthFirstDay();
                     string lastMonthFinalDay = GetLastMonthFinalDay();
 
-                    var lastMonthMovements = await client.GetAccountMovement(account.CPF, lastMonthFirstDay, lastMonthFinalDay, account.Id);
+                    var lastMonthMovements = await client.GetAccountMovement(
+                        UtilsHelper.RemoveSpecialCharacters(account.CPF),
+                        lastMonthFirstDay,
+                        lastMonthFinalDay,
+                        account.Id
+                    );
 
                     if (lastMonthMovements is null) return;
 
@@ -201,8 +209,19 @@ namespace Core.Services.Hangfire.AverageTradedPriceUpdater
             return response;
         }
 
-        private static void GenerateMockMovements(Movement.Root response)
+        private static Root GenerateMockMovements()
         {
+            Root? response = new()
+            {
+                Data = new()
+                {
+                    EquitiesPeriods = new()
+                    {
+                        EquitiesMovements = new()
+                    }
+                }
+            };
+
             // ticker to add
             response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
             {
@@ -265,6 +284,8 @@ namespace Core.Services.Hangfire.AverageTradedPriceUpdater
                 EquitiesQuantity = 1,
                 ReferenceDate = new DateTime(2022, 02, 01)
             });
+
+            return response;
         }
 
         private static string GetLastMonthFinalDay()

@@ -18,21 +18,23 @@ builder.Services.AddRepositories();
 
 builder.Services.AddDatabase(builder);
 
+builder.Services.AddHangfireServices();
+builder.Services.ConfigureHangfireServices(builder);
+
 builder.Services.AddJwtAuthentications(builder);
+
+builder.Services.AddRouting(options => options.LowercaseUrls = true);
+
+builder.Services.AddSwaggerConfiguration();
 
 var app = builder.Build();
 
-//builder.Services.AddHangfireServices();
-//builder.Services.ConfigureHangfireServices(builder);
-//app.UseHangfireDashboard("/dashboard");
+app.UseHangfireDashboard("/dashboard");
 
 app.UseMiddleware<JwtMiddleware>();
 app.UseMiddleware<CustomExceptionHandlerMiddleware>();
 
 // Obligatory lower case routing
-builder.Services.AddRouting(options => options.LowercaseUrls = true);
-
-builder.Services.AddSwaggerConfiguration();
 app.UseSwagger();
 
 app.UseSwaggerUI(c =>

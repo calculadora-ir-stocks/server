@@ -683,7 +683,7 @@ public class TaxesService : ITaxesService
         var response = await infoSimplesClient.GenerateDARF(
             new GenerateDARFRequest
             (
-                RemoveSpecialCharacters(account.CPF),
+                UtilsHelper.RemoveSpecialCharacters(account.CPF),
                 account.BirthDate,
                 $"Venda de ativos no mês {taxesReferenceDate}. Essa DARF foi gerada automaticamente " +
                 $"pelo Stocks IR em {today}.",
@@ -708,11 +708,5 @@ public class TaxesService : ITaxesService
 
         return (response, observation);
     }
-
-    public static string RemoveSpecialCharacters(string str)
-    {
-        return Regex.Replace(str, "[^a-zA-Z0-9]", "", RegexOptions.Compiled);
-    }
-
     #endregion
 }

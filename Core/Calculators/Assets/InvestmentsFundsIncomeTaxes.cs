@@ -26,7 +26,7 @@ namespace Core.Calculators.Assets
 
             investorMovementDetails.Assets.Add(new AssetIncomeTaxes
             (
-                month, AssetTypeHelper.GetNameByAssetType(Asset.InvestmentsFunds), response.OperationHistory
+                month, AssetEnumHelper.GetNameByAssetType(Asset.InvestmentsFunds), response.OperationHistory
             )
             {
                 AssetTypeId = Asset.InvestmentsFunds,

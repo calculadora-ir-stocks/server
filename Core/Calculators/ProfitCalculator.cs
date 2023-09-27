@@ -60,7 +60,7 @@ namespace Core.Calculators
                 movement.ReferenceDate.Day,
                 UtilsHelper.GetDayOfTheWeekName((int)movement.ReferenceDate.DayOfWeek),
                 movement.AssetType,
-                AssetTypeHelper.GetEnumByName(movement.AssetType),
+                AssetEnumHelper.GetEnumByName(movement.AssetType),
                 movement.TickerSymbol,
                 movement.CorporationName,
                 movement.MovementType,
