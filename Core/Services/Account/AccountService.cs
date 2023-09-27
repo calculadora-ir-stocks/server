@@ -1,11 +1,10 @@
-﻿using Microsoft.Extensions.Logging;
-using Api.Exceptions;
-using Api.Notification;
-using Infrastructure.Repositories.Account;
-using Infrastructure.Models;
-using Core.Services.Email;
+﻿using Api.Notification;
 using Common.Exceptions;
 using Common.Helpers;
+using Core.Services.Email;
+using Infrastructure.Models;
+using Infrastructure.Repositories.Account;
+using Microsoft.Extensions.Logging;
 
 namespace Core.Services.Account
 {

@@ -1,6 +1,5 @@
-﻿using Newtonsoft.Json;
-using Api.Exceptions;
-using Common.Exceptions;
+﻿using Common.Exceptions;
+using Newtonsoft.Json;
 using System.Net;
 
 namespace Api.Middlewares

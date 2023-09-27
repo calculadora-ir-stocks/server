@@ -16,6 +16,7 @@ using Core.Services.Email;
 using Core.Services.Hangfire.AverageTradedPriceUpdater;
 using Core.Services.Hangfire.EmailCodeRemover;
 using Core.Services.IncomeTaxes;
+using Core.Services.Plan;
 using Core.Services.TaxesService;
 using Hangfire;
 using Hangfire.PostgreSql;
@@ -23,6 +24,7 @@ using Infrastructure.Repositories;
 using Infrastructure.Repositories.Account;
 using Infrastructure.Repositories.AverageTradedPrice;
 using Infrastructure.Repositories.EmailCode;
+using Infrastructure.Repositories.Plan;
 using Infrastructure.Repositories.Taxes;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -53,6 +55,7 @@ namespace Api
             services.AddScoped<IEmailService, EmailService>();
             services.AddScoped<IIncomeTaxesService, IncomeTaxesService>();
             services.AddScoped<IStripeService, StripeService>();
+            services.AddScoped<IPlanService, Core.Services.Plan.PlanService>();
 
             services.AddScoped<NotificationContext>();
 
@@ -178,6 +181,7 @@ namespace Api
             services.AddScoped<IAverageTradedPriceRepostory, AverageTradedPriceRepository>();
             services.AddScoped<IEmailCodeRepository, EmailCodeRepository>();
             services.AddScoped<ITaxesRepository, TaxesRepository>();
+            services.AddScoped<IPlanRepository, PlanRepository>();
         }
 
         public static void AddJwtAuthentications(this IServiceCollection services, WebApplicationBuilder builder)

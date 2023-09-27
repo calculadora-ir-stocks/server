@@ -1,12 +1,10 @@
 using Api.Clients.B3;
-using Api.Exceptions;
 using common.Helpers;
 using Common.Enums;
 using Common.Exceptions;
 using Common.Helpers;
 using Core.Clients.InfoSimples;
 using Core.Models;
-using Core.Models.B3;
 using Core.Models.InfoSimples;
 using Core.Models.Responses;
 using Core.Requests.BigBang;
@@ -127,7 +125,7 @@ public class TaxesService : ITaxesService
         foreach (var day in days)
         {
             List<Details> details = new();
-            List<Responses.Movement> movements = new();            
+            List<Movement> movements = new();            
 
             var tradedAssetsOnThisDay = assets.SelectMany(x => x.TradedAssets.Where(x => x.Day == day));            
 
@@ -151,7 +149,7 @@ public class TaxesService : ITaxesService
                 ));
             }
 
-            movements.Add(new Responses.Movement(weekDay, details));
+            movements.Add(new Movement(weekDay, details));
 
             response.Movements.AddRange(
                 movements
@@ -297,7 +295,7 @@ public class TaxesService : ITaxesService
         foreach (var day in days)
         {
             List<Details> details = new();
-            List<Responses.Movement> movements = new();
+            List<Movement> movements = new();
 
             var tradedAssetsOnThisDay = assets.SelectMany(x => x.SerializedTradedAssets.Where(x => x.Day == day));
 
@@ -311,7 +309,7 @@ public class TaxesService : ITaxesService
                     weekDay = $"{tradedAsset.DayOfTheWeek}, dia {dayOfTheWeek}";
                 }
 
-                details.Add(new Responses.Details(
+                details.Add(new Details(
                     tradedAsset.AssetTypeId,
                     tradedAsset.AssetType,
                     tradedAsset.MovementType,
@@ -321,7 +319,7 @@ public class TaxesService : ITaxesService
                 ));
             }
 
-            movements.Add(new Responses.Movement(weekDay, details));
+            movements.Add(new Movement(weekDay, details));
 
             response.Movements.AddRange(
                 movements
@@ -423,44 +421,30 @@ public class TaxesService : ITaxesService
             throw new BadRequestException($"A sincronização com a B3 já foi executada para o usuário {accountId}.");
         }
 
-        try
+        if (!AccountCanExecuteSyncing(account))
         {
-            if (AccountCanExecuteSyncing(account))
-            {
-                account.Status = EnumHelper.GetEnumDescription(AccountStatus.Syncing);
-                accountRepository.Update(account);
-            } else
-            {
-                throw new BadRequestException("Antes de executar o Big Bang é necessário " +
-                    "confirmar o endereço de e-mail.");
-            }
-
-    #pragma warning disable CS0219 // Variable is assigned but its value is never used
-            string startDate = "2019-11-01";
-    #pragma warning restore CS0219 // Variable is assigned but its value is never used
-
-            string lastMonth = new DateTime(year: DateTime.Now.Year, month: DateTime.Now.Month, day: 1)
-                .AddMonths(-1)
-                .ToString("yyyy-MM-dd");
-
-            // var b3Response = await b3Client.GetAccountMovement(account.CPF, startDate, lastMonth, accountId);
-            var b3Response = GetBigBangMockedDataBeforeB3Contract();
-
-            var response = await incomeTaxesService.GetB3ResponseDetails(b3Response, accountId);
-
-            if (response is null) return;
-
-            await SaveB3Data(response, account);
-
-            logger.LogInformation("Big Bang executado com sucesso para o usuário {accountId}.", accountId);
-        } catch
-        {
-            account.Status = EnumHelper.GetEnumDescription(AccountStatus.EmailConfirmed);
-            accountRepository.Update(account);
-
-            logger.LogError("Um erro ocorreu ao executar o Big Bang.");
-            throw new Exception();
+            throw new BadRequestException("Antes de executar o Big Bang é necessário " +
+                "confirmar o endereço de e-mail.");
         }
+
+#pragma warning disable CS0219 // Variable is assigned but its value is never used
+        string startDate = "2019-11-01";
+#pragma warning restore CS0219 // Variable is assigned but its value is never used
+
+        string lastMonth = new DateTime(year: DateTime.Now.Year, month: DateTime.Now.Month, day: 1)
+            .AddMonths(-1)
+            .ToString("yyyy-MM-dd");
+
+        // var b3Response = await b3Client.GetAccountMovement(account.CPF, startDate, lastMonth, accountId);
+        var b3Response = GetBigBangMockedDataBeforeB3Contract();
+
+        var response = await incomeTaxesService.GetB3ResponseDetails(b3Response, accountId);
+
+        if (response is null) return;
+
+        await SaveB3Data(response, account);
+
+        logger.LogInformation("Big Bang executado com sucesso para o usuário {accountId}.", accountId);
     }
 
     private static bool AccountCanExecuteSyncing(Infrastructure.Models.Account account)

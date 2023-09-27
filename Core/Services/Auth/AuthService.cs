@@ -1,13 +1,13 @@
 ﻿using Api.DTOs.Auth;
-using Api.Exceptions;
 using Api.Notification;
 using Api.Services.Jwt;
 using Common.Enums;
+using Common.Exceptions;
 using Common.Helpers;
 using Common.Models;
 using Core.Services.Account;
-using Core.Services.Email;
 using DevOne.Security.Cryptography.BCrypt;
+using Infrastructure.Models;
 using Infrastructure.Repositories;
 using Infrastructure.Repositories.Account;
 using Microsoft.Extensions.Logging;
@@ -18,7 +18,7 @@ namespace Api.Services.Auth
     {
 
         private readonly IAccountRepository accountRepository;
-        private readonly IGenericRepository<Infrastructure.Models.Account> accountGenericRepository;
+        private readonly IGenericRepository<Account> accountGenericRepository;
         private readonly IAccountService accountService;
 
         private readonly IJwtCommon jwtUtils;
@@ -29,7 +29,7 @@ namespace Api.Services.Auth
 
         public AuthService(
             IAccountRepository accountRepository,
-            IGenericRepository<Infrastructure.Models.Account> accountGenericRepository,
+            IGenericRepository<Account> accountGenericRepository,
             IAccountService accountService,
             IJwtCommon jwtUtils,
             NotificationContext notificationContext,
@@ -76,7 +76,7 @@ namespace Api.Services.Auth
 
         public async Task SignUp(SignUpRequest request)
         {
-            Infrastructure.Models.Account account = new(
+            Account account = new(
                 request.Name,
                 request.Email,
                 request.Password,

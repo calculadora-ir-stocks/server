@@ -1,6 +1,8 @@
 ﻿using Billing.Services;
+using Core.Services.Plan;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
 using Stripe.Checkout;
 
 namespace Api.Controllers
@@ -10,26 +12,22 @@ namespace Api.Controllers
     public class StripeController : BaseController
     {
         private readonly IStripeService stripeService;
+        private readonly IPlanService planService;
 
-        public StripeController(IStripeService stripeService)
+        public StripeController(IStripeService stripeService, IPlanService planService)
         {
             this.stripeService = stripeService;
+            this.planService = planService;
         }
 
-        /// <summary>
-        /// Retorna o plano gratuito sem nenhuma forma de pagamento vinculada.
-        /// Deve ser retornado no onboarding do usuário na plataforma.
-        /// </summary>
-        /// <param name="accountId">O id da conta do usuário que está criando o Checkout do Stripe.</param>
-        /// <returns>Objeto <c>Session</c> da sessão de Checkout criada e no Header <c>Location</c> a URL
-        /// do Checkout que o usuário deve ser redirecionado.</returns>
-        [HttpPost("create-checkout-session/free-trial/{accountId}")]
-        public async Task<IActionResult> CreateCheckoutSessionForFreeTrial([FromRoute] Guid accountId)
+        [HttpGet("plans")]
+        public IActionResult GetAllPlans()
         {
-            var session = await stripeService.CreateCheckoutSessionForFreeTrial(accountId);
+            var plans = planService.GetAll();
 
-            Response.Headers.Add("Location", session.Url);
-            return Ok();
+            if (plans.IsNullOrEmpty()) return NotFound();
+
+            return Ok(plans);
         }
 
         /// <summary>

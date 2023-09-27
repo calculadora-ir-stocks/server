@@ -52,7 +52,6 @@ namespace Core.Services.Email
             {
                 if (account.Status == EnumHelper.GetEnumDescription(Common.Enums.AccountStatus.EmailNotConfirmed))
                 {
-                    // TODO unit of work
                     account.Status = EnumHelper.GetEnumDescription(Common.Enums.AccountStatus.EmailConfirmed);
 
                     var customer = stripeCustomerService.Create(new CustomerCreateOptions

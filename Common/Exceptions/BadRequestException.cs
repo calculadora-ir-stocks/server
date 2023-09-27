@@ -1,6 +1,6 @@
 ﻿using System.Runtime.Serialization;
 
-namespace Api.Exceptions
+namespace Common.Exceptions
 {
     public class BadRequestException : Exception
     {

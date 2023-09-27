@@ -1,59 +1,58 @@
 ﻿using Api.Database;
 using Dapper;
-using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Repositories.Account
 {
     public class AccountRepository : IAccountRepository
     {
 
-        private readonly StocksContext _context;
+        private readonly StocksContext context;
 
         public AccountRepository(StocksContext context)
         {
-            _context = context;
+            this.context = context;
         }
 
         public bool EmailExists(string email)
         {
-            return _context.Accounts.Any(x => x.Email == email);
+            return context.Accounts.Any(x => x.Email == email);
         }
 
         public bool CPFExists(string cpf)
         {
-            return _context.Accounts.Any(x => x.CPF == cpf);
+            return context.Accounts.Any(x => x.CPF == cpf);
         }
 
         public void Delete(Models.Account account)
         {
-            _context.Accounts.Remove(account);
-            _context.SaveChanges();
+            context.Accounts.Remove(account);
+            context.SaveChanges();
         }
 
         public IEnumerable<Models.Account> GetAll()
         {
-            return _context.Accounts.AsList();
+            return context.Accounts.AsList();
         }
 
         public Models.Account? GetByEmail(string email)
         {
-            return _context.Accounts.AsEnumerable().SingleOrDefault(x => x.Email == email);
+            return context.Accounts.AsEnumerable().SingleOrDefault(x => x.Email == email);
         }
 
         public Models.Account? GetById(Guid accountId)
         {
-            return _context.Accounts.Where(x => x.Id == accountId).FirstOrDefault();
+            return context.Accounts.Where(x => x.Id == accountId).FirstOrDefault();
         }
 
         public Models.Account GetByStripeCustomerId(string stripeCustomerId)
         {
-            return _context.Accounts.Where(x => x.StripeCustomerId == stripeCustomerId).First();
+            return context.Accounts.Where(x => x.StripeCustomerId == stripeCustomerId).First();
         }
 
         public void Update(Models.Account account)
         {
-            _context.Accounts.Update(account);
-            _context.SaveChanges();
+            context.Accounts.Update(account);
+            context.SaveChanges();
         }
     }
 }

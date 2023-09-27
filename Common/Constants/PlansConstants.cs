@@ -6,9 +6,18 @@
     /// </summary>
     public class PlansConstants
     {
-        public static readonly string Free = "Gratuito";
-        public static readonly string Monthly = "Mensal";
-        public static readonly string Semester = "Semestral";
-        public static readonly string Anual = "Anual";
+        public const string Free = "Gratuito";
+
+        public const string Monthly = "Mensal";
+
+        /// <summary>
+        /// Plano semestral pago uma única vez (válido por 6 meses).
+        /// </summary>
+        public const string Semester = "Semestral";
+
+        /// <summary>
+        /// Plano anual pago uma única vez (válido por 1 ano).
+        /// </summary>
+        public const string Anual = "Anual";
     }
 }

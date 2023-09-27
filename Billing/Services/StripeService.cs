@@ -1,38 +1,36 @@
-﻿using Common;
+﻿using Billing.Dtos;
 using Common.Constants;
 using Common.Enums;
 using Common.Exceptions;
 using Common.Helpers;
 using Common.Models;
-using Infrastructure.Models;
-using Infrastructure.Repositories;
 using Infrastructure.Repositories.Account;
+using Infrastructure.Repositories.Plan;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Stripe;
 using Stripe.Checkout;
-using System.Xml.Linq;
 
 namespace Billing.Services
 {
     public class StripeService : IStripeService
     {
-        private readonly IGenericRepository<Order> genericRepositoryStripe;
         private readonly IAccountRepository accountRepository;
+        private readonly IPlanRepository planRepository;
 
         private readonly StripeSecret secret;
 
         private readonly ILogger<StripeService> logger;
 
         public StripeService(
-            IGenericRepository<Order> genericRepositoryStripe,
             IAccountRepository accountRepository,
+            IPlanRepository planRepository,
             IOptions<StripeSecret> secret,
             ILogger<StripeService> logger
         )
         {
-            this.genericRepositoryStripe = genericRepositoryStripe;
             this.accountRepository = accountRepository;
+            this.planRepository = planRepository;
             this.secret = secret.Value;
             this.logger = logger;
         }
@@ -52,7 +50,7 @@ namespace Billing.Services
                         Quantity = 1
                     }
                 },
-                Mode = "subscription",
+                Mode = "payment",
                 SuccessUrl = "https://localhost:7274/stripe?success=true",
                 CancelUrl = "https://localhost:7274/stripe?canceled=true",
                 Currency = "BRL",
@@ -81,55 +79,6 @@ namespace Billing.Services
                 logger.LogError("Ocorreu um erro ao criar o Checkout Session do Stripe. {e}", s.Message);
                 throw new Exception(s.Message);
             }
-        }
-
-        public async Task<Session> CreateCheckoutSessionForFreeTrial(Guid accountId)
-        {
-            var annual = GetStripePlan(PlansConstants.Anual)!;
-
-            var options = new SessionCreateOptions
-            {
-                LineItems = new List<SessionLineItemOptions>
-                {
-                    new SessionLineItemOptions 
-                    { 
-                        Price = annual.DefaultPriceId,
-                        Quantity = 1
-                    },
-                },
-                Mode = "subscription",
-                SuccessUrl = "https://localhost:7274/stripe?success=true",
-                CancelUrl = "https://localhost:7274/stripe?canceled=true",
-                SubscriptionData = new SessionSubscriptionDataOptions
-                {
-                    TrialSettings = new SessionSubscriptionDataTrialSettingsOptions
-                    {
-                        EndBehavior = new SessionSubscriptionDataTrialSettingsEndBehaviorOptions
-                        {
-                            MissingPaymentMethod = "cancel",
-                        },
-                    },
-                    TrialPeriodDays = 30,
-                    Description = "Teste gratuitamente, nada mais justo. Se você achar útil, faça parte do Stocks!"
-                },
-                PaymentMethodCollection = "if_required",
-            };
-
-            var service = new SessionService();
-            var session = await service.CreateAsync(options);
-
-            return session;
-        }
-
-        private static Product? GetStripePlan(string planName)
-        {
-            var options = new ProductListOptions();
-
-            var service = new ProductService();
-
-            StripeList<Product> products = service.List(options);
-
-            return products.Where(x => x.Active && x.Name.Equals(planName)).FirstOrDefault();
         }
 
         public async Task<Stripe.BillingPortal.Session> CreatePortalSession(Guid accountId)
@@ -176,43 +125,7 @@ namespace Billing.Services
 
                     FulFillOrder(stripeEvent);
                     break;
-                case Events.InvoicePaid:
-                    /** Continue to provision the subscription as payments continue to be made.
-                    Store the status in your database and check when a user accesses your service.
-                    This approach helps you avoid hitting rate limits. */
-
-                    ValidateAccountSubscription(stripeEvent);
-                    break;
-                case Events.CustomerSubscriptionDeleted:
-                    /** Sent when a customer’s subscription ends. */
-
-                    ExpiresAccountSubscription(stripeEvent);
-                    break;
-                default:
-                    break;
             }
-        }
-
-        private void ValidateAccountSubscription(Event stripeEvent)
-        {
-            var invoice = stripeEvent.Data.Object as Invoice;
-            var account = accountRepository.GetByStripeCustomerId(invoice!.CustomerId);
-
-            account.Status = EnumHelper.GetEnumDescription(AccountStatus.SubscriptionValid);
-            accountRepository.Update(account);
-
-            logger.LogInformation("Usuário de id {id} teve um débito válido e o plano continua sendo válido.", account.Id);
-        }
-
-        private void ExpiresAccountSubscription(Event stripeEvent)
-        {
-            var subscription = stripeEvent.Data.Object as Subscription;
-            var account = accountRepository.GetByStripeCustomerId(subscription!.CustomerId);
-
-            account.Status = EnumHelper.GetEnumDescription(AccountStatus.SubscriptionExpired);
-            accountRepository.Update(account);
-
-            logger.LogInformation("Usuário de id {id} teve o seu plano expirado.", account.Id);
         }
 
         private void FulFillOrder(Event stripeEvent)
@@ -223,17 +136,22 @@ namespace Billing.Services
 
             if (isOrderPaid)
             {
-                genericRepositoryStripe.Add(
-                    new Order(session.CustomerId, session.SubscriptionId)
-                );
-
                 var options = new SessionGetOptions();
                 options.AddExpand("line_items");
 
+                var (subscribedPlan, expiresAt) = GetSubscribedPlan(session.AmountSubtotal);
+
                 var account = accountRepository.GetByStripeCustomerId(session.CustomerId);
+                var accountPlan = planRepository.GetByAccountId(account.Id);
 
                 account.Status = EnumHelper.GetEnumDescription(AccountStatus.SubscriptionValid);
+
+                accountPlan.Name = subscribedPlan.Name;
+                accountPlan.ExpiresAt = expiresAt;
+
+                // TODO unit of work
                 accountRepository.Update(account);
+                planRepository.Update(accountPlan);
 
                 logger.LogInformation("Usuário de id {id} acabou de assinar um plano.", account.Id);
             }
@@ -241,6 +159,35 @@ namespace Billing.Services
             {
                 // fuck you then
             }
+        }
+
+        /// <summary>
+        /// Obtém o plano cadastrado através do preço.
+        /// </summary>
+        private (PlanDto, DateTime) GetSubscribedPlan(long? amountSubtotal)
+        {
+            // TODO O Stripe - serviço de horrenda documentação - não retorna o id do produto que o usuário
+            // comprou na sessão de Checkout. Dessa forma, o plano é assimilado através do preço.
+            // Por isso, por enquanto, dois planos não podem ter preços iguais.
+            var plans = planRepository.GetAll();
+
+            var plan = plans.Where(x => x.Price == amountSubtotal).First();
+            DateTime expiresAt = DateTime.Now;
+
+            switch (plan.Name)
+            {
+                case PlansConstants.Anual:
+                    expiresAt = expiresAt.AddYears(1);
+                    break;
+                case PlansConstants.Semester:
+                    expiresAt = expiresAt.AddMonths(6);
+                    break;
+                case PlansConstants.Monthly:
+                    expiresAt = expiresAt.AddMonths(1);
+                    break;
+            }
+
+            return (plan, expiresAt);
         }
     }
 }

@@ -13,6 +13,7 @@ namespace Api.Database
         public DbSet<IncomeTaxes> IncomeTaxes { get; set; } = null!;
         public DbSet<EmailCode> EmailCodes { get; set; } = null!;
         public DbSet<Order> Orders { get; set; } = null!;
+        public DbSet<Plan> Plans { get; set; } = null!;
 
         public ILogger<StocksContext> logger;
 
@@ -53,6 +54,10 @@ namespace Api.Database
 
             modelBuilder.Entity<Account>()
                 .HasMany(ap => ap.AverageTradedPrices)
+                .WithOne(ap => ap.Account);
+
+            modelBuilder.Entity<Account>()
+                .HasOne(ap => ap.Plan)
                 .WithOne(ap => ap.Account);
 
             modelBuilder.Entity<IncomeTaxes>()

@@ -19,6 +19,8 @@ namespace Infrastructure.Models
             BirthDate = birthDate;
             PhoneNumber = phoneNumber;
 
+            Plan = new Plan(PlansConstants.Free, accountId: Id, account: this, DateTime.Now.AddMonths(1));
+
             Validate(this, new AccountValidator());
         }
 
@@ -90,6 +92,11 @@ namespace Infrastructure.Models
         /// Pode ser um código de autenticação ou um código para alteração de senha.
         /// </summary>
         public EmailCode EmailCode { get; set; }
+
+        /// <summary>
+        /// Um investidor possui um único plano ativo por vez.
+        /// </summary>
+        public Plan Plan { get; set; }
         #endregion
 
         public void HashPassword(string password)
