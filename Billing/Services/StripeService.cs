@@ -136,15 +136,12 @@ namespace Billing.Services
 
             if (isOrderPaid)
             {
-                var options = new SessionGetOptions();
-                options.AddExpand("line_items");
-
                 var (subscribedPlan, expiresAt) = GetSubscribedPlan(session.AmountSubtotal);
 
                 var account = accountRepository.GetByStripeCustomerId(session.CustomerId);
-                var accountPlan = planRepository.GetByAccountId(account.Id);
-
                 account.Status = EnumHelper.GetEnumDescription(AccountStatus.SubscriptionValid);
+
+                var accountPlan = planRepository.GetByAccountId(account.Id);
 
                 accountPlan.Name = subscribedPlan.Name;
                 accountPlan.ExpiresAt = expiresAt;
