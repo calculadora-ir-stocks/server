@@ -4,7 +4,8 @@ namespace Infrastructure.Repositories.Plan
 {
     public interface IPlanRepository
     {
-        IEnumerable<PlanDto> GetAll();
+        IEnumerable<StripePlanDto> GetAllStripePlans();
+        IEnumerable<Models.Plan> GetAllAccountPlans();
         Models.Plan GetByAccountId(Guid accountId);
         void Update(Models.Plan plan);
     }

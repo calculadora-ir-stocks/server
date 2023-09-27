@@ -13,7 +13,12 @@ namespace Infrastructure.Repositories.Plan
             this.context = context;
         }
 
-        public IEnumerable<PlanDto> GetAll()
+        public IEnumerable<Models.Plan> GetAllAccountPlans()
+        {
+            return context.Plans.ToList();
+        }
+
+        public IEnumerable<StripePlanDto> GetAllStripePlans()
         {
             var productOptions = new ProductListOptions();
             var priceOptions = new PriceListOptions();
@@ -28,7 +33,7 @@ namespace Infrastructure.Repositories.Plan
             {
                 var price = prices.Where(x => x.Active && x.ProductId == product.Id).First();
 
-                yield return new PlanDto
+                yield return new StripePlanDto
                 (
                     price.Id,
                     product.Name,

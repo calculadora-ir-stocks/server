@@ -11,6 +11,7 @@ using Core.Calculators;
 using Core.Calculators.Assets;
 using Core.Clients.InfoSimples;
 using Core.Filters;
+using Core.Hangfire.PlanExpirer;
 using Core.Services.Account;
 using Core.Services.Email;
 using Core.Services.Hangfire.AverageTradedPriceUpdater;
@@ -107,15 +108,16 @@ namespace Api
         }
 
 
-        public static void AddHangfireServices(this IServiceCollection services, WebApplicationBuilder builder)
+        public static void AddHangfireServices(this IServiceCollection services)
         {
             services.AddHangfireServer();
 
             services.AddScoped<IAverageTradedPriceUpdaterHangfire, AverageTradedPriceUpdaterHangfire>();
             services.AddScoped<IEmailCodeRemoverHangfire, EmailCodeRemoverHangfire>();
+            services.AddScoped<IPlanExpirerHangfire, PlanExpirerHangfire>();
         }
 
-        public static void AddHangFireRecurringJob(this IServiceCollection services, WebApplicationBuilder builder)
+        public static void ConfigureHangfireServices(this IServiceCollection services, WebApplicationBuilder builder)
         {
             services.AddHangfire(x =>
                 x.UsePostgreSqlStorage(builder.Configuration.GetConnectionString("DefaultConnection"))
@@ -128,6 +130,7 @@ namespace Api
 
             RecurringJob.RemoveIfExists(nameof(AverageTradedPriceUpdaterHangfire));
             RecurringJob.RemoveIfExists(nameof(EmailCodeRemoverHangfire));
+            RecurringJob.RemoveIfExists(nameof(PlanExpirerHangfire));
 
             RecurringJob.AddOrUpdate<IAverageTradedPriceUpdaterHangfire>(
                 nameof(AverageTradedPriceUpdaterHangfire),
@@ -138,11 +141,17 @@ namespace Api
             RecurringJob.AddOrUpdate<IEmailCodeRemoverHangfire>(
                 nameof(EmailCodeRemoverHangfire),
                 x => x.Execute(),
-                Cron.Minutely
+                Cron.Daily
+            );
+
+            RecurringJob.AddOrUpdate<IEmailCodeRemoverHangfire>(
+                nameof(PlanExpirerHangfire),
+                x => x.Execute(),
+                "0 */2 * * *" // every 2 hours
             );
         }
 
-        public static void Add3rdPartiesClientServices(this IServiceCollection services)
+        public static void Add3rdPartiesClients(this IServiceCollection services)
         {
             var handler = new HttpClientHandler();
             // TO-DO: uncomment for production

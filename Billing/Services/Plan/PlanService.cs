@@ -12,9 +12,9 @@ namespace Core.Services.Plan
             this.planRepository = planRepository;
         }
 
-        public IEnumerable<PlanDto> GetAll()
+        public IEnumerable<StripePlanDto> GetAll()
         {
-            return planRepository.GetAll();
+            return planRepository.GetAllStripePlans();
         }
 
         public Infrastructure.Models.Plan GetByAccountId(Guid accountId)

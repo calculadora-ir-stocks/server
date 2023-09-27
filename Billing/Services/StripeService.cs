@@ -161,12 +161,12 @@ namespace Billing.Services
         /// <summary>
         /// Obtém o plano cadastrado através do preço.
         /// </summary>
-        private (PlanDto, DateTime) GetSubscribedPlan(long? amountSubtotal)
+        private (StripePlanDto, DateTime) GetSubscribedPlan(long? amountSubtotal)
         {
             // TODO O Stripe - serviço de horrenda documentação - não retorna o id do produto que o usuário
             // comprou na sessão de Checkout. Dessa forma, o plano é assimilado através do preço.
             // Por isso, por enquanto, dois planos não podem ter preços iguais.
-            var plans = planRepository.GetAll();
+            var plans = planRepository.GetAllStripePlans();
 
             var plan = plans.Where(x => x.Price == amountSubtotal).First();
             DateTime expiresAt = DateTime.Now;

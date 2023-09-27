@@ -24,5 +24,6 @@
   <ItemGroup>
     <ProjectReference Include="..\Common\Common.csproj" />
     <ProjectReference Include="..\Core\Core.csproj" />
+    <ProjectReference Include="..\Hangfire\Hangfire.csproj" />
   </ItemGroup>
 </Project>

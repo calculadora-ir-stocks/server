@@ -36,13 +36,18 @@ namespace Core.Services.Hangfire.AverageTradedPriceUpdater
         {
             try
             {
+                Guid threadId = new();
+
+                logger.LogInformation("Iniciando Hangfire para atualizar o preço médio de todos os investidores." +
+                    "Id do processo: {id}", threadId);
+
                 var accounts = accountRepository.GetAll();
+
+                Stopwatch timer = new();
+                timer.Start();
 
                 foreach (var account in accounts)
                 {
-                    Stopwatch timer = new();
-                    timer.Start();
-
                     string lastMonthFirstDay = GetLastMonthFirstDay();
                     string lastMonthFinalDay = GetLastMonthFinalDay();
 
@@ -66,19 +71,18 @@ namespace Core.Services.Hangfire.AverageTradedPriceUpdater
                         tickersToRemoveFromDatabase,
                         account
                     );
-
-                    timer.Stop();
-                    var timeTakenForEach = timer.Elapsed;
-
-                    logger.LogInformation("Tempo de execução do investidor {id}: {timeTaken}.",
-                        account.Id,
-                        timeTakenForEach
-                    );
                 }
+
+                timer.Stop();
+                var timeTaken = timer.Elapsed;
+
+                logger.LogInformation("Finalizado Hangfire para atualizar o preço médio de todos os investidores." +
+                    "Tempo de execução: {timeTaken}. Id do processo: {id}", timeTaken, threadId);
             }
             catch (Exception e)
             {
-                logger.LogError(e.Message, e);
+                logger.LogError(e, "Ocorreu um erro ao rodar o job de atualização de preço médio de todos os investidores");
+                throw;
             }
         }
 
@@ -146,7 +150,7 @@ namespace Core.Services.Hangfire.AverageTradedPriceUpdater
             List<Movement.EquitMovement> movements, List<AverageTradedPriceDetails> updatedPrices
         )
         {
-            if (movements is null) return Array.Empty<string>();
+            if (movements.IsNullOrEmpty()) return Array.Empty<string>();
 
             var currentMonthTickers = movements.Select(x => x.TickerSymbol);
 
@@ -265,14 +269,13 @@ namespace Core.Services.Hangfire.AverageTradedPriceUpdater
 
         private static string GetLastMonthFinalDay()
         {
-            var date = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
-            return date.AddDays(-1).ToString("yyyy-MM-dd");
+            // Como o Job é executado todo o dia 01, substrair um dia resultará no último dia do mês passado.
+            return DateTime.Now.AddDays(-1).ToString("yyyy-MM-dd");
         }
 
         private static string GetLastMonthFirstDay()
         {
-            var date = new DateTime(DateTime.Today.Year, DateTime.Today.Month, DateTime.Today.Day);
-            return date.AddMonths(-1).ToString("yyyy-MM-01");
+            return DateTime.Now.AddMonths(-1).ToString("yyyy-MM-01");
         }
     }
 }

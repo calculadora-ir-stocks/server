@@ -1,8 +1,8 @@
 ﻿namespace Billing.Dtos
 {
-    public class PlanDto
+    public class StripePlanDto
     {
-        public PlanDto(string id, string name, long? price)
+        public StripePlanDto(string id, string name, long? price)
         {
             Id = id;
             Name = name;

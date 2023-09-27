@@ -4,7 +4,7 @@ namespace Core.Services.Plan
 {
     public interface IPlanService
     {
-        IEnumerable<PlanDto> GetAll();
+        IEnumerable<StripePlanDto> GetAll();
         Infrastructure.Models.Plan GetByAccountId(Guid accountId);
     }
 }

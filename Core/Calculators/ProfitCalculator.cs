@@ -12,9 +12,10 @@ namespace Core.Calculators
     /// </summary>
     public abstract class ProfitCalculator
     {
-
         /// <summary>
         /// Retorna o lucro de todas as movimentações especificadas em operações swing-trade e day-trade.
+        /// Além disso, atualiza a lista <c>averagePrices</c> com os novos preços médios e, caso algum ativo
+        /// tenha sido totalmente vendido, o remove da lista.
         /// </summary>
         public static CalculateProfitResponse CalculateProfit
             (IEnumerable<Movement.EquitMovement> movements, List<AverageTradedPriceDetails> averagePrices)
