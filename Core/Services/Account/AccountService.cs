@@ -2,6 +2,7 @@
 using Common.Exceptions;
 using Common.Helpers;
 using Core.Services.Email;
+using DevOne.Security.Cryptography.BCrypt;
 using Infrastructure.Models;
 using Infrastructure.Repositories.Account;
 using Microsoft.Extensions.Logging;
@@ -93,7 +94,7 @@ namespace Core.Services.Account
                     throw new BadRequestException($"O usuário de id {accountId} já enviou um código de verificação há pelo menos 10 minutos atrás.");
 
                 var account = repository.GetById(accountId);
-                if (account is null) throw new NullReferenceException($"O usuário de id {accountId} não foi encontrado na base de dados.");
+                if (account is null) throw new NotFoundException("Investidor", accountId.ToString());
 
                 ValidateNewPassword(account, password);
 
@@ -119,7 +120,7 @@ namespace Core.Services.Account
 
         private void ValidateNewPassword(Infrastructure.Models.Account account, string password)
         {
-            if (account.Password == password) throw new BadRequestException("A nova senha não pode ser igual à senha atual.");
+            if (BCryptHelper.CheckPassword(password, account.Password)) throw new BadRequestException("A nova senha não pode ser igual à senha atual.");
         }
 
         public bool IsSynced(Guid accountId)
@@ -135,6 +136,16 @@ namespace Core.Services.Account
             }
 
             return account.Status != EnumHelper.GetEnumDescription(Common.Enums.AccountStatus.Syncing);
+        }
+
+        public async Task<Guid> ForgotPassword(string email)
+        {
+            var account = repository.GetByEmail(email);
+            if (account is null) throw new NotFoundException("Investidor com o e-mail informado não encontrado.");
+
+            await SendEmailVerification(account.Id, account);
+
+            return account.Id;
         }
     }
 }

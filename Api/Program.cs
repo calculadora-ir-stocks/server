@@ -18,8 +18,8 @@ builder.Services.AddRepositories();
 
 builder.Services.AddDatabase(builder);
 
-builder.Services.AddHangfireServices();
-builder.Services.ConfigureHangfireServices(builder);
+// builder.Services.AddHangfireServices();
+// builder.Services.ConfigureHangfireServices(builder);
 
 builder.Services.AddJwtAuthentications(builder);
 
@@ -29,7 +29,7 @@ builder.Services.AddSwaggerConfiguration();
 
 var app = builder.Build();
 
-app.UseHangfireDashboard("/dashboard");
+// app.UseHangfireDashboard("/dashboard");
 
 app.UseMiddleware<JwtMiddleware>();
 app.UseMiddleware<CustomExceptionHandlerMiddleware>();

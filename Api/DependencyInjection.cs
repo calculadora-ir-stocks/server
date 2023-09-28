@@ -119,6 +119,7 @@ namespace Api
 
         public static void ConfigureHangfireServices(this IServiceCollection services, WebApplicationBuilder builder)
         {
+
             services.AddHangfire(x =>
                 x.UsePostgreSqlStorage(builder.Configuration.GetConnectionString("DefaultConnection"))
                 .SetDataCompatibilityLevel(CompatibilityLevel.Version_170)
@@ -126,7 +127,7 @@ namespace Api
                 .UseRecommendedSerializerSettings()
             );
 
-            GlobalConfiguration.Configuration.UsePostgreSqlStorage(builder.Configuration.GetConnectionString("DefaultConnection"));
+            // GlobalConfiguration.Configuration.UsePostgreSqlStorage(builder.Configuration.GetConnectionString("DefaultConnection"));
 
             RecurringJob.RemoveIfExists(nameof(AverageTradedPriceUpdaterHangfire));
             RecurringJob.RemoveIfExists(nameof(EmailCodeRemoverHangfire));

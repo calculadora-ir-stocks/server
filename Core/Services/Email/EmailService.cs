@@ -43,12 +43,12 @@ namespace Core.Services.Email
 
         public bool IsVerificationEmailValid(Guid accountId, string code)
         {
-            var emailSender = emailCodeRepository.GetByAccountId(accountId);
+            var emailCode = emailCodeRepository.GetByAccountId(accountId);
             var account = accountRepository.GetById(accountId)!;
 
-            if (emailSender is null) throw new NotFoundException();
+            if (emailCode is null) throw new NotFoundException();
 
-            if (emailSender.Code == code)
+            if (emailCode.Code == code)
             {
                 if (account.Status == EnumHelper.GetEnumDescription(Common.Enums.AccountStatus.EmailNotConfirmed))
                 {
@@ -64,6 +64,7 @@ namespace Core.Services.Email
                     account.StripeCustomerId = customer.Id;
 
                     accountRepository.Update(account);
+                    emailCodeRepository.Delete(emailCode);
                 }
 
                 return true;
