@@ -10,7 +10,7 @@ namespace Api.Controllers;
 /// <summary>
 /// Responsável por calcular o imposto de renda dos ativos de renda variável.
 /// </summary>
-[Authorize]
+// [Authorize]
 [Tags("Taxes")]
 public class TaxesController : BaseController
 {
@@ -46,7 +46,7 @@ public class TaxesController : BaseController
     /// Retorna todas as informações referentes a impostos do mês atual.
     /// </summary>
     [HttpGet("home/{accountId}")]
-    public async Task<IActionResult> GetCurrentMonthTaxes(Guid accountId)
+    public async Task<IActionResult> Home(Guid accountId)
     {
         var response = await service.GetCurrentMonthTaxes(accountId);
 
@@ -61,9 +61,9 @@ public class TaxesController : BaseController
     /// <param name="month">Formato: MM/yyyy</param>
     /// <param name="accountId"></param>
     [HttpGet("details/{month}/{accountId}")]
-    public async Task<IActionResult> GetSpecifiedMonthTaxes(string month, Guid accountId)
+    public async Task<IActionResult> Details(string month, Guid accountId)
     {
-        var response = await service.GetTaxesByMonth(month, accountId);
+        var response = await service.Details(month, accountId);
 
         if (response.Movements.IsNullOrEmpty()) return NotFound("Nenhum imposto de renda foi encontrado para o mês especificado.");
 
@@ -76,7 +76,7 @@ public class TaxesController : BaseController
     /// <param name="year">Formato: yyyy</param>
     /// <param name="accountId"></param>
     [HttpGet("calendar/{year}/{accountId}")]
-    public async Task<IActionResult> GetSpecifiedYearTaxes(string year, Guid accountId)
+    public async Task<IActionResult> Calendar(string year, Guid accountId)
     {
         var response = await service.GetCalendarTaxes(year, accountId);
 

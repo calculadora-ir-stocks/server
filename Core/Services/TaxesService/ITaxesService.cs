@@ -18,7 +18,7 @@ public interface ITaxesService
     /// <summary>
     /// Retorna a quantidade de imposto de renda a ser pago para cada ativo de renda variável no mês especificado.
     /// </summary>
-    Task<TaxesDetailsResponse> GetTaxesByMonth(string month, Guid accountId);
+    Task<TaxesDetailsResponse> Details(string month, Guid accountId);
 
     /// <summary>
     /// Retorna a quantidade de imposto de renda a ser pago para cada ativo de renda variável no ano especificado.

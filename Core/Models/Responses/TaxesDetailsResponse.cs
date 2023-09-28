@@ -7,9 +7,10 @@ namespace Core.Responses
     /// </summary>
     public class TaxesDetailsResponse
     {
-        public TaxesDetailsResponse(double totalTaxes)
+        public TaxesDetailsResponse(double totalTaxes, string year)
         {
             TotalTaxes = totalTaxes;
+            Year = year;
             Movements = new();
         }
 
@@ -18,6 +19,9 @@ namespace Core.Responses
         /// O total de imposto a ser pago (soma dos impostos de todos os ativos de um determinado mês).
         /// </summary>
         public double TotalTaxes { get; set; }
+
+        public string Year { get; init; }
+
         public List<Movement> Movements { get; set; }
     }
 

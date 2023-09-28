@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Builder;
 using System.Text.RegularExpressions;
 
 namespace common.Helpers;
@@ -46,6 +47,19 @@ public class UtilsHelper
     public static string GetMonthName(int month)
     {
         return Months[month];
+    }
+
+    /// <summary>
+    /// Retorna o nome do mês e ano ano com base no parâmetro
+    /// </summary>
+    /// <param name="monthYear">Formato: MM/yyyy</param>
+    /// <returns></returns>
+    public static string GetMonthAndYearName(string monthYear)
+    {
+        string month = monthYear.Substring(0, 2);
+        string year = monthYear.Substring(monthYear.Length - 4);
+
+        return $"{GetMonthName(int.Parse(month))}, {year}";
     }
 
     /// <summary>

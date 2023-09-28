@@ -79,7 +79,7 @@ public class TaxesService : ITaxesService
             if (IsDayOne())
             {
                 // Porém, sendo dia 1, o Worker já salvou os dados do mês passado na base.
-                return await GetTaxesByMonth(DateTime.Now.AddDays(-1).ToString("yyyy-MM"), accountId);
+                return await Details(DateTime.Now.AddDays(-1).ToString("yyyy-MM"), accountId);
             }
 
             string startDate = DateTime.Now.ToString("yyyy-MM-01");
@@ -118,7 +118,10 @@ public class TaxesService : ITaxesService
     {
         // O objeto de retorno é complexo o suficiente para não usar o AutoMapper?
 
-        TaxesDetailsResponse response = new(totalTaxes: assets.Select(x => x.Taxes).Sum());
+        TaxesDetailsResponse response = new(
+            totalTaxes: assets.Select(x => x.Taxes).Sum(),
+            UtilsHelper.GetMonthAndYearName(DateTime.Now.ToString("MM/yyyy"))
+        );
 
         var days = assets.SelectMany(x => x.TradedAssets.Select(x => x.Day).Distinct());
 
@@ -261,7 +264,7 @@ public class TaxesService : ITaxesService
     #endregion
 
     #region Calcula o imposto de renda do mês especificado.
-    public async Task<TaxesDetailsResponse> GetTaxesByMonth(string month, Guid accountId)
+    public async Task<TaxesDetailsResponse> Details(string month, Guid accountId)
     {
         try
         {
@@ -276,6 +279,9 @@ public class TaxesService : ITaxesService
                 throw new ForbiddenException("O plano do usuário está expirado.");
 
             var response = await taxesRepository.GetSpecifiedMonthTaxes(System.Net.WebUtility.UrlDecode(month), accountId);
+            if (response.IsNullOrEmpty()) throw new NotFoundException("Nenhum imposto foi encontrado no mês especificado.");
+
+            if (response.Select(x => x.Taxes).Sum() <= 0) throw new NotFoundException("Nenhum imposto foi encontrado no mês especificado.");
 
             return SpecifiedMonthTaxesDtoToTaxesDetailsResponse(response);
         }
@@ -288,7 +294,10 @@ public class TaxesService : ITaxesService
 
     private static TaxesDetailsResponse SpecifiedMonthTaxesDtoToTaxesDetailsResponse(IEnumerable<SpecifiedMonthTaxesDto> assets)
     {
-        TaxesDetailsResponse response = new(totalTaxes: assets.Select(x => x.Taxes).Sum());
+        TaxesDetailsResponse response = new(
+            totalTaxes: assets.Select(x => x.Taxes).Sum(),
+            year: UtilsHelper.GetMonthAndYearName(assets.ElementAt(0).Month)
+        );
 
         var days = assets.SelectMany(x => x.SerializedTradedAssets.Select(x => x.Day).Distinct());
 
@@ -389,7 +398,6 @@ public class TaxesService : ITaxesService
     {
         return response.Select(x => x.Month).Contains(UtilsHelper.GetMonthName(int.Parse(item.Month)));
     }
-
     #endregion
 
     #region Altera um mês como pago/não pago
