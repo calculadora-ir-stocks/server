@@ -413,18 +413,10 @@ public class TaxesService : ITaxesService
         Infrastructure.Models.Account? account = accountRepository.GetById(accountId);
         if (account is null) throw new NotFoundException("Investidor", accountId.ToString());
 
-        if (account.Status == EnumHelper.GetEnumDescription(AccountStatus.Synced))
-        {
-            logger.LogError("A sincronização com a B3 já foi executada para o usuário {accountId}, mas" +
-                "o Big Bang foi executado mesmo assim.", accountId);
-
-            throw new BadRequestException($"A sincronização com a B3 já foi executada para o usuário {accountId}.");
-        }
-
         if (!AccountCanExecuteSyncing(account))
         {
-            throw new BadRequestException("Antes de executar o Big Bang é necessário " +
-                "confirmar o endereço de e-mail.");
+            throw new BadRequestException($"O usuário {account.Id} tentou executar a sincronização mas não possui o e-mail validado" +
+                " ou já sincronizou sua conta anteriormente.");
         }
 
 #pragma warning disable CS0219 // Variable is assigned but its value is never used
