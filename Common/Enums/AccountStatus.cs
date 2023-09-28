@@ -18,7 +18,7 @@ namespace Common.Enums
         EmailNotConfirmed = 0,
 
         /// <summary>
-        /// O segundo estágio linear de Status.
+        /// O segundo e último estágio linear de Status.
         /// 
         /// É definido quando um usuário confirmou o seu endereço de e-mail.
         /// </summary>
@@ -26,32 +26,15 @@ namespace Common.Enums
         EmailConfirmed = 1,
 
         /// <summary>
-        /// O terceiro estágio linear de Status
-        /// 
-        /// É definido quando um usuário executa o Big Bang pela primeira vez.
-        /// Enquanto os preços médios e os impostos ainda estão sendo calculados, esse status é utilizado.
-        /// </summary>
-        [Description("SYNCING")]
-        Syncing = 2,
-
-        /// <summary>
-        /// O último estágio linear de Status.
-        /// 
-        /// Quando os preços médios e os impostos ainda estão sendo calculados, esse status é utilizado.
-        /// </summary>
-        [Description("SYNCED")]
-        Synced = 3,
-
-        /// <summary>
         /// Quando um plano é expirado, a conta é definida como <c>SUBSCRIPTION_EXPIRED</c>.
         /// </summary>
         [Description("SUBSCRIPTION_EXPIRED")]
-        SubscriptionExpired = 4,
+        SubscriptionExpired = 2,
 
         /// <summary>
         /// Quando um plano ainda é válido, a conta é definida como <c>SUBSCRIPTION_VALID</c>.
         /// </summary>
         [Description("SUBSCRIPTION_VALID")]
-        SubscriptionValid = 6
+        SubscriptionValid = 3
     }
 }

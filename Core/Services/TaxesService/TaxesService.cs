@@ -274,6 +274,7 @@ public class TaxesService : ITaxesService
             }
 
             var account = genericRepositoryAccount.GetById(accountId);
+            if (account is null) throw new NotFoundException("Investidor", accountId.ToString());
 
             if (account.Status == EnumHelper.GetEnumDescription(AccountStatus.SubscriptionExpired))
                 throw new ForbiddenException("O plano do usuário está expirado.");
@@ -351,6 +352,7 @@ public class TaxesService : ITaxesService
         try
         {
             var account = genericRepositoryAccount.GetById(accountId);
+            if (account is null) throw new NotFoundException("Investidor", accountId.ToString());
 
             if (account.Status == EnumHelper.GetEnumDescription(AccountStatus.SubscriptionExpired))
                 throw new ForbiddenException("O plano do usuário está expirado.");
@@ -444,6 +446,9 @@ public class TaxesService : ITaxesService
 
         await SaveB3Data(response, account);
 
+        account.Status = EnumHelper.GetEnumDescription(AccountStatus.SubscriptionValid);
+        accountRepository.Update(account);
+
         logger.LogInformation("Big Bang executado com sucesso para o usuário {accountId}.", accountId);
     }
 
@@ -480,10 +485,7 @@ public class TaxesService : ITaxesService
 
         // TODO unit of work
         await taxesRepository.AddAllAsync(incomeTaxes);
-        await averageTradedPriceRepository.AddAllAsync(averageTradedPrices);
-
-        account.Status = EnumHelper.GetEnumDescription(Common.Enums.AccountStatus.Synced);
-        accountRepository.Update(account);
+        await averageTradedPriceRepository.AddAllAsync(averageTradedPrices);        
     }
 
     private static void CreateAverageTradedPrices(List<AverageTradedPriceDetails> response, List<AverageTradedPrice> averageTradedPrices, Infrastructure.Models.Account account)

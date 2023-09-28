@@ -123,21 +123,6 @@ namespace Core.Services.Account
             if (BCryptHelper.CheckPassword(password, account.Password)) throw new BadRequestException("A nova senha não pode ser igual à senha atual.");
         }
 
-        public bool IsSynced(Guid accountId)
-        {
-            var account = repository.GetById(accountId);
-
-            if (account is null) throw new NotFoundException("Investidor", accountId.ToString());
-
-            if (account.Status == EnumHelper.GetEnumDescription(Common.Enums.AccountStatus.EmailNotConfirmed) ||
-                account.Status == EnumHelper.GetEnumDescription(Common.Enums.AccountStatus.EmailConfirmed))
-            {
-                throw new BadRequestException("O Big Bang ainda não foi executado para esse usuário.");
-            }
-
-            return account.Status != EnumHelper.GetEnumDescription(Common.Enums.AccountStatus.Syncing);
-        }
-
         public async Task<Guid> ForgotPassword(string email)
         {
             var account = repository.GetByEmail(email);
