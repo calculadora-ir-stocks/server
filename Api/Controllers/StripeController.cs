@@ -20,6 +20,10 @@ namespace Api.Controllers
             this.planService = planService;
         }
 
+        /// <summary>
+        /// Retorna todos os planos disponíveis.
+        /// </summary>
+        /// <returns></returns>
         [HttpGet("plans")]
         public IActionResult GetAllPlans()
         {
