@@ -24,22 +24,16 @@ public class TaxesController : BaseController
     /// <summary>
     /// Gera uma DARF para o usuário especificado referente a um mês onde há impostos a ser pago.
     /// </summary>
-    /// <param name="accountId">O id do usuário</param>
+    /// <param name="accountId">O id do usuário.</param>
     /// <param name="month">O mês onde há impostos a ser pago que a DARF será gerada. Formato: MM/yyyy</param>
+    /// <param name="value">Valor adicional (geralmente de meses onde houveram impostos inferiores a R$10,00) para ser
+    /// somado no valor total da DARF.</param>
     /// <returns>O código de barras da DARF e outras informações referentes ao imposto sendo pago.</returns>
     [HttpGet("generate-darf")]
-    public async Task<IActionResult> GenerateDarf(Guid accountId, string month)
+    public async Task<IActionResult> GenerateDarf(Guid accountId, string month, double? value)
     {
-        var response = await service.GenerateDARF(accountId, month);
-
-        return Ok(new
-        {
-            barCode = response.Item1.Data[0].CodigoDeBarras,
-            interest = response.Item1.Data[0].Totais.Juros,
-            fine = response.Item1.Data[0].Totais.Multa,
-            total = response.Item1.Data[0].Totais.NormalizadoTotal,
-            comments = response.Item2
-        });
+        var response = await service.GenerateDARF(accountId, month, value);
+        return Ok(response);
     }
 
     /// <summary>

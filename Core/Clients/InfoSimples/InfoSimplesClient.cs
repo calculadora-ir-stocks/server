@@ -44,7 +44,7 @@ namespace Core.Clients.InfoSimples
 
             var darf = JsonConvert.DeserializeObject<GenerateDARFResponse>(responseContentStream)!;
 
-            if (darf.Data[0].CodigoDeBarras is null) throw new Exception("Não foi possível gerar a DARF para esse mês.");
+            if (darf.Data is null || darf.Data[0].BarCode is null) throw new Exception("Não foi possível gerar a DARF para esse mês.");
 
             return darf;
         }

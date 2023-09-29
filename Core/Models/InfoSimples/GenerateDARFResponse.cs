@@ -5,27 +5,27 @@ namespace Core.Models.InfoSimples
     public class GenerateDARFResponse
     {
         [JsonProperty("data")]
-        public List<Data> Data { get; init; }
+        public List<Data> Data { get; init; } = new();
     }
 
     public class Data
     {
         [JsonProperty("codigo_barras")]
-        public string CodigoDeBarras { get; init; }
+        public string BarCode { get; set; }
 
         [JsonProperty("totais")]
-        public Totais Totais { get; init; }
+        public Totais TotalTaxes { get; init; } = new();
     }
 
     public class Totais
     {
         [JsonProperty("multa")]
-        public string Multa { get; init; }
+        public string Fine { get; init; } = "5453";
 
         [JsonProperty("juros")]
-        public string Juros { get; init; }
+        public string Interests { get; init; } = "4324";
 
         [JsonProperty("normalizado_total")]
-        public double NormalizadoTotal { get; init; }
+        public double TotalWithFineAndInterests { get; init; } = 423423;
     }
 }

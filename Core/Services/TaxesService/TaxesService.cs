@@ -666,7 +666,7 @@ public class TaxesService : ITaxesService
     #endregion
 
     #region Geração de DARF
-    public async Task<(GenerateDARFResponse, string)> GenerateDARF(Guid accountId, string month)
+    public async Task<DARFResponse> GenerateDARF(Guid accountId, string month, double? value)
     {
         var account = await genericRepositoryAccount.GetByIdAsync(accountId);
 
@@ -675,6 +675,8 @@ public class TaxesService : ITaxesService
 
         var taxes = await taxesRepository.GetSpecifiedMonthTaxes(month, accountId);
         double totalTaxes = taxes.Select(x => x.Taxes).Sum();
+
+        if (value is not null) totalTaxes += value.Value;
 
         if (taxes.IsNullOrEmpty() || taxes.Select(x => x.Taxes).Sum() <= 0)
             throw new NotFoundException("Nenhum imposto foi encontrado para esse mês, logo, a DARF não pode ser gerada.");        
@@ -696,19 +698,24 @@ public class TaxesService : ITaxesService
             )
         );
 
-        string observation = string.Empty;
+        string? observation = null;
 
-        if (response.Data[0].Totais.NormalizadoTotal < 10)
+        if (response.Data[0].TotalTaxes.TotalWithFineAndInterests < 10)
         {
-            // var taxesToAddIntoThisDarf = taxesRepository.Get
-
-            observation = "O valor total da sua DARF é menor que o valor mínimo proposto pela Receita de R$10,00. \n" +
-                "Para consertar isso, iremos esperar até que alguma DARF sua dê novamente menos que R$10,00. \n" +
-                "Quando isso acontecer, iremos somar os valores das DARFs até que um valor superior à R$10,00 seja gerado. \n" +
-                "Mas não se preocupe, iremos enviar uma notificação pra você quando isso ocorrer.";
+            observation = "Valor total da DARF é inferior ao valor mínimo de R$10,00. \n" +
+                "Para pagá-la, adicione esse imposto em algum mês subsequente até que o valor total seja igual ou maior que R$10,00.";
         }
 
-        return (response, observation);
+        var monthsToCompensate = await taxesRepository.GetTaxesLessThanMinimumRequired(accountId, month);
+
+        return new DARFResponse(
+            response.Data[0].BarCode,
+            response.Data[0].TotalTaxes.TotalWithFineAndInterests,
+            double.Parse(response.Data[0].TotalTaxes.Fine),
+            double.Parse(response.Data[0].TotalTaxes.Interests),
+            observation,
+            monthsToCompensate
+        );
     }
     #endregion
 }

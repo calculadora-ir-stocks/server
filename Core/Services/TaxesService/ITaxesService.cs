@@ -41,5 +41,7 @@ public interface ITaxesService
     /// </summary>
     /// <param name="accountId"></param>
     /// <param name="month"></param>
-    Task<(GenerateDARFResponse, string)> GenerateDARF(Guid accountId, string month);
+    /// <param name="value">Valor adicional (geralmente de meses onde houveram impostos inferiores a R$10,00) para ser
+    /// somado no valor total da DARF.</param>
+    Task<DARFResponse> GenerateDARF(Guid accountId, string month, double? value);
 }
