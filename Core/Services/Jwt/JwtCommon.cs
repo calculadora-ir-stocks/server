@@ -13,16 +13,16 @@ namespace Api.Services.Jwt
         private readonly JwtProperties appSettings;
 
         /// <summary>
-        /// Claim que determina se o plano de um usuário está expirado.
+        /// Claim que determina o status de um usuário.
         /// </summary>
-        private const string IsPlanExpired = "pln";
+        private const string AccountStatus = "sts";
 
         public JwtCommon(IOptions<JwtProperties> appSettings)
         {
             this.appSettings = appSettings.Value;
         }
 
-        public string GenerateToken(JwtDetails account)
+        public string GenerateToken(JwtContent jwtContent)
         {
             var key = Encoding.ASCII.GetBytes(appSettings.Secret);
             var signinCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature);
@@ -33,8 +33,8 @@ namespace Api.Services.Jwt
              */
 
             var claims = new[] {
-                new Claim(ClaimTypes.NameIdentifier, account.Id.ToString()),
-                new Claim(IsPlanExpired, account.IsPlanExpired.ToString()),
+                new Claim(ClaimTypes.NameIdentifier, jwtContent.Id.ToString()),
+                new Claim(AccountStatus, jwtContent.Status.ToString()),
             };
 
             var token = new JwtSecurityToken(

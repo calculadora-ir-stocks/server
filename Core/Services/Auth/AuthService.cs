@@ -48,7 +48,7 @@ namespace Api.Services.Auth
         {
             try
             {
-                Infrastructure.Models.Account? account = accountRepository.GetByEmail(request.Email);
+                Account? account = accountRepository.GetByEmail(request.Email);
 
                 if (account is null)
                     return null;
@@ -58,7 +58,7 @@ namespace Api.Services.Auth
 
                 if (BCryptHelper.CheckPassword(request.Password, account.Password))
                 {
-                    return jwtUtils.GenerateToken(new JwtDetails
+                    return jwtUtils.GenerateToken(new JwtContent
                     (
                         account.Id,
                         account.Status
@@ -99,7 +99,7 @@ namespace Api.Services.Auth
             }
         }
 
-        private bool IsValidSignUp(Infrastructure.Models.Account account)
+        private bool IsValidSignUp(Account account)
         {
             try
             {
