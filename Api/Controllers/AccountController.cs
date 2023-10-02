@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Api.Controllers;
 
-// [Authorize]
+[Authorize]
 [Tags("Account")]
 public class AccountController : BaseController
 {
