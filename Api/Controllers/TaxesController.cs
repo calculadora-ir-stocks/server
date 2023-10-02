@@ -24,29 +24,23 @@ public class TaxesController : BaseController
     /// <summary>
     /// Gera uma DARF para o usuário especificado referente a um mês onde há impostos a ser pago.
     /// </summary>
-    /// <param name="accountId">O id do usuário</param>
+    /// <param name="accountId">O id do usuário.</param>
     /// <param name="month">O mês onde há impostos a ser pago que a DARF será gerada. Formato: MM/yyyy</param>
+    /// <param name="value">Valor adicional (geralmente de meses onde houveram impostos inferiores a R$10,00) para ser
+    /// somado no valor total da DARF.</param>
     /// <returns>O código de barras da DARF e outras informações referentes ao imposto sendo pago.</returns>
     [HttpGet("generate-darf")]
-    public async Task<IActionResult> GenerateDarf(Guid accountId, string month)
+    public async Task<IActionResult> GenerateDarf(Guid accountId, string month, double? value)
     {
-        var response = await service.GenerateDARF(accountId, month);
-
-        return Ok(new
-        {
-            barCode = response.Item1.Data[0].CodigoDeBarras,
-            interest = response.Item1.Data[0].Totais.Juros,
-            fine = response.Item1.Data[0].Totais.Multa,
-            total = response.Item1.Data[0].Totais.NormalizadoTotal,
-            comments = response.Item2
-        });
+        var response = await service.GenerateDARF(accountId, month, value);
+        return Ok(response);
     }
 
     /// <summary>
     /// Retorna todas as informações referentes a impostos do mês atual.
     /// </summary>
     [HttpGet("home/{accountId}")]
-    public async Task<IActionResult> GetCurrentMonthTaxes(Guid accountId)
+    public async Task<IActionResult> Home(Guid accountId)
     {
         var response = await service.GetCurrentMonthTaxes(accountId);
 
@@ -61,9 +55,9 @@ public class TaxesController : BaseController
     /// <param name="month">Formato: MM/yyyy</param>
     /// <param name="accountId"></param>
     [HttpGet("details/{month}/{accountId}")]
-    public async Task<IActionResult> GetSpecifiedMonthTaxes(string month, Guid accountId)
+    public async Task<IActionResult> Details(string month, Guid accountId)
     {
-        var response = await service.GetTaxesByMonth(month, accountId);
+        var response = await service.Details(month, accountId);
 
         if (response.Movements.IsNullOrEmpty()) return NotFound("Nenhum imposto de renda foi encontrado para o mês especificado.");
 
@@ -76,7 +70,7 @@ public class TaxesController : BaseController
     /// <param name="year">Formato: yyyy</param>
     /// <param name="accountId"></param>
     [HttpGet("calendar/{year}/{accountId}")]
-    public async Task<IActionResult> GetSpecifiedYearTaxes(string year, Guid accountId)
+    public async Task<IActionResult> Calendar(string year, Guid accountId)
     {
         var response = await service.GetCalendarTaxes(year, accountId);
 

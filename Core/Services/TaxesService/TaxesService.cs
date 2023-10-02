@@ -19,7 +19,6 @@ using Infrastructure.Repositories.Taxes;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
-using System.Text.RegularExpressions;
 
 namespace Core.Services.TaxesService;
 
@@ -40,7 +39,6 @@ public class TaxesService : ITaxesService
 
     // https://farocontabil.com.br/codigosdarf.htm#:~:text=Imposto%20sobre%20ganhos%20l%C3%ADquidos%20em%20opera%C3%A7%C3%B5es%20em%20bolsa%20de%20valores%2C%20de%20mercadorias%2C%20de%20futuros%20e%20assemelhadas
     private const string DarfCode = "6015-01";
-
 
     /**
      * TODO Atualmente, para validar se um usuário ainda possui um plano válido para acessar os recursos,
@@ -79,7 +77,7 @@ public class TaxesService : ITaxesService
             if (IsDayOne())
             {
                 // Porém, sendo dia 1, o Worker já salvou os dados do mês passado na base.
-                return await GetTaxesByMonth(DateTime.Now.AddDays(-1).ToString("yyyy-MM"), accountId);
+                return await Details(DateTime.Now.AddDays(-1).ToString("yyyy-MM"), accountId);
             }
 
             string startDate = DateTime.Now.ToString("yyyy-MM-01");
@@ -118,7 +116,10 @@ public class TaxesService : ITaxesService
     {
         // O objeto de retorno é complexo o suficiente para não usar o AutoMapper?
 
-        TaxesDetailsResponse response = new(totalTaxes: assets.Select(x => x.Taxes).Sum());
+        TaxesDetailsResponse response = new(
+            totalTaxes: assets.Select(x => x.Taxes).Sum(),
+            UtilsHelper.GetMonthAndYearName(DateTime.Now.ToString("MM/yyyy"))
+        );
 
         var days = assets.SelectMany(x => x.TradedAssets.Select(x => x.Day).Distinct());
 
@@ -261,7 +262,7 @@ public class TaxesService : ITaxesService
     #endregion
 
     #region Calcula o imposto de renda do mês especificado.
-    public async Task<TaxesDetailsResponse> GetTaxesByMonth(string month, Guid accountId)
+    public async Task<TaxesDetailsResponse> Details(string month, Guid accountId)
     {
         try
         {
@@ -271,11 +272,15 @@ public class TaxesService : ITaxesService
             }
 
             var account = genericRepositoryAccount.GetById(accountId);
+            if (account is null) throw new NotFoundException("Investidor", accountId.ToString());
 
             if (account.Status == EnumHelper.GetEnumDescription(AccountStatus.SubscriptionExpired))
                 throw new ForbiddenException("O plano do usuário está expirado.");
 
             var response = await taxesRepository.GetSpecifiedMonthTaxes(System.Net.WebUtility.UrlDecode(month), accountId);
+            if (response.IsNullOrEmpty()) throw new NotFoundException("Nenhum imposto foi encontrado no mês especificado.");
+
+            if (response.Select(x => x.Taxes).Sum() <= 0) throw new NotFoundException("Nenhum imposto foi encontrado no mês especificado.");
 
             return SpecifiedMonthTaxesDtoToTaxesDetailsResponse(response);
         }
@@ -288,7 +293,10 @@ public class TaxesService : ITaxesService
 
     private static TaxesDetailsResponse SpecifiedMonthTaxesDtoToTaxesDetailsResponse(IEnumerable<SpecifiedMonthTaxesDto> assets)
     {
-        TaxesDetailsResponse response = new(totalTaxes: assets.Select(x => x.Taxes).Sum());
+        TaxesDetailsResponse response = new(
+            totalTaxes: assets.Select(x => x.Taxes).Sum(),
+            year: UtilsHelper.GetMonthAndYearName(assets.ElementAt(0).Month)
+        );
 
         var days = assets.SelectMany(x => x.SerializedTradedAssets.Select(x => x.Day).Distinct());
 
@@ -342,6 +350,7 @@ public class TaxesService : ITaxesService
         try
         {
             var account = genericRepositoryAccount.GetById(accountId);
+            if (account is null) throw new NotFoundException("Investidor", accountId.ToString());
 
             if (account.Status == EnumHelper.GetEnumDescription(AccountStatus.SubscriptionExpired))
                 throw new ForbiddenException("O plano do usuário está expirado.");
@@ -389,7 +398,6 @@ public class TaxesService : ITaxesService
     {
         return response.Select(x => x.Month).Contains(UtilsHelper.GetMonthName(int.Parse(item.Month)));
     }
-
     #endregion
 
     #region Altera um mês como pago/não pago
@@ -436,6 +444,9 @@ public class TaxesService : ITaxesService
 
         await SaveB3Data(response, account);
 
+        account.Status = EnumHelper.GetEnumDescription(AccountStatus.SubscriptionValid);
+        accountRepository.Update(account);
+
         logger.LogInformation("Big Bang executado com sucesso para o usuário {accountId}.", accountId);
     }
 
@@ -472,10 +483,7 @@ public class TaxesService : ITaxesService
 
         // TODO unit of work
         await taxesRepository.AddAllAsync(incomeTaxes);
-        await averageTradedPriceRepository.AddAllAsync(averageTradedPrices);
-
-        account.Status = EnumHelper.GetEnumDescription(Common.Enums.AccountStatus.Synced);
-        accountRepository.Update(account);
+        await averageTradedPriceRepository.AddAllAsync(averageTradedPrices);        
     }
 
     private static void CreateAverageTradedPrices(List<AverageTradedPriceDetails> response, List<AverageTradedPrice> averageTradedPrices, Infrastructure.Models.Account account)
@@ -656,7 +664,7 @@ public class TaxesService : ITaxesService
     #endregion
 
     #region Geração de DARF
-    public async Task<(GenerateDARFResponse, string)> GenerateDARF(Guid accountId, string month)
+    public async Task<DARFResponse> GenerateDARF(Guid accountId, string month, double? value)
     {
         var account = await genericRepositoryAccount.GetByIdAsync(accountId);
 
@@ -665,6 +673,8 @@ public class TaxesService : ITaxesService
 
         var taxes = await taxesRepository.GetSpecifiedMonthTaxes(month, accountId);
         double totalTaxes = taxes.Select(x => x.Taxes).Sum();
+
+        if (value is not null) totalTaxes += value.Value;
 
         if (taxes.IsNullOrEmpty() || taxes.Select(x => x.Taxes).Sum() <= 0)
             throw new NotFoundException("Nenhum imposto foi encontrado para esse mês, logo, a DARF não pode ser gerada.");        
@@ -686,19 +696,24 @@ public class TaxesService : ITaxesService
             )
         );
 
-        string observation = string.Empty;
+        string? observation = null;
 
-        if (response.Data[0].Totais.NormalizadoTotal < 10)
+        if (response.Data[0].TotalTaxes.TotalWithFineAndInterests < 10)
         {
-            // var taxesToAddIntoThisDarf = taxesRepository.Get
-
-            observation = "O valor total da sua DARF é menor que o valor mínimo proposto pela Receita de R$10,00. \n" +
-                "Para consertar isso, iremos esperar até que alguma DARF sua dê novamente menos que R$10,00. \n" +
-                "Quando isso acontecer, iremos somar os valores das DARFs até que um valor superior à R$10,00 seja gerado. \n" +
-                "Mas não se preocupe, iremos enviar uma notificação pra você quando isso ocorrer.";
+            observation = "Valor total da DARF é inferior ao valor mínimo de R$10,00. \n" +
+                "Para pagá-la, adicione esse imposto em algum mês subsequente até que o valor total seja igual ou maior que R$10,00.";
         }
 
-        return (response, observation);
+        var monthsToCompensate = await taxesRepository.GetTaxesLessThanMinimumRequired(accountId, month);
+
+        return new DARFResponse(
+            response.Data[0].BarCode,
+            response.Data[0].TotalTaxes.TotalWithFineAndInterests,
+            double.Parse(response.Data[0].TotalTaxes.Fine),
+            double.Parse(response.Data[0].TotalTaxes.Interests),
+            observation,
+            monthsToCompensate
+        );
     }
     #endregion
 }

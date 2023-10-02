@@ -41,18 +41,6 @@ public class AccountController : BaseController
     }
 
     /// <summary>
-    /// Determina se uma conta foi ou não sincronizada com a B3.
-    /// </summary>
-    /// <param name="accountId">O id da conta</param>
-    /// <returns></returns>
-    [HttpGet("is-synced/{accountId}")]
-    public IActionResult IsSynced(Guid accountId)
-    {
-        var response = service.IsSynced(accountId);
-        return Ok(new { isSynced = response } );
-    }
-
-    /// <summary>
     /// Atualiza a senha da conta cadastrada.
     /// </summary>
     [HttpPut("password")]

@@ -32,7 +32,7 @@ namespace Core.Calculators
                         AddOperationHistory(movement, investorMovements.OperationHistory);
                         break;
                     case B3ResponseConstants.Sell:
-                        AddTickerIntoResponseDictionary(investorMovements, movement);
+                        AddTickerIntoResponse(investorMovements, movement);
                         UpdateProfitOrLoss(investorMovements, movement, movements, averagePrices);
                         break;
                     case B3ResponseConstants.Split:
@@ -70,7 +70,7 @@ namespace Core.Calculators
             ));
         }
 
-        private static void AddTickerIntoResponseDictionary(
+        private static void AddTickerIntoResponse(
             CalculateProfitResponse investorMovements,
             Movement.EquitMovement movement
         )
