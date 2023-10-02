@@ -118,7 +118,7 @@ namespace Infrastructure.Models
         private readonly Regex IsValidBirthDate = new(@"^\d{2}/\d{2}/\d{4}$");
 
         private const int NameMinLength = 3;
-        private const int NameMaxLength = 20;
+        private const int NameMaxLength = 40;
 
         public AccountValidator()
         {
