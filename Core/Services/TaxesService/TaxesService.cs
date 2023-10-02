@@ -19,7 +19,6 @@ using Infrastructure.Repositories.Taxes;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
-using System.Text.RegularExpressions;
 
 namespace Core.Services.TaxesService;
 
@@ -40,7 +39,6 @@ public class TaxesService : ITaxesService
 
     // https://farocontabil.com.br/codigosdarf.htm#:~:text=Imposto%20sobre%20ganhos%20l%C3%ADquidos%20em%20opera%C3%A7%C3%B5es%20em%20bolsa%20de%20valores%2C%20de%20mercadorias%2C%20de%20futuros%20e%20assemelhadas
     private const string DarfCode = "6015-01";
-
 
     /**
      * TODO Atualmente, para validar se um usuário ainda possui um plano válido para acessar os recursos,
