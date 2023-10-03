@@ -41,12 +41,10 @@ app.UseSwaggerUI(c =>
     c.SwaggerEndpoint("v1/swagger.json", "Stocks v1")
 );
 
-// app.UseHttpsRedirection();
+app.UseHttpsRedirection();
 
 app.UseAuthentication();
-
 app.UseRouting();
-
 app.UseAuthorization();
 
 app.MapControllers();
