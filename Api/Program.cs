@@ -31,8 +31,8 @@ var app = builder.Build();
 
 // app.UseHangfireDashboard("/dashboard");
 
-app.UseMiddleware<JwtMiddleware>();
 app.UseMiddleware<CustomExceptionHandlerMiddleware>();
+app.UseMiddleware<JwtMiddleware>();
 
 // Obligatory lower case routing
 app.UseSwagger();

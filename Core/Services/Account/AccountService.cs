@@ -49,27 +49,20 @@ namespace Core.Services.Account
 
         public async Task SendEmailVerification(Guid accountId, Infrastructure.Models.Account? account = null)
         {
-            try
-            {
-                account ??= repository.GetById(accountId);
+            account ??= repository.GetById(accountId);
 
-                if (account is null) throw new BadRequestException($"O usuário de id {accountId} não foi encontrado em nossa base.");
+            if (account is null) throw new BadRequestException($"O usuário de id {accountId} não foi encontrado em nossa base.");
 
-                if (!emailSenderService.CanSendEmailForUser(accountId))
-                    throw new BadRequestException($"O usuário de id {accountId} já enviou um código de verificação há pelo menos 10 minutos atrás.");
+            if (!emailSenderService.CanSendEmailForUser(accountId))
+                throw new BadRequestException($"O usuário de id {accountId} já enviou um código de verificação há pelo menos 10 minutos atrás.");
 
-                // 4-digit random number
-                string verificationCode = new Random().Next(1000, 9999).ToString();
+            // 4-digit random number
+            string verificationCode = new Random().Next(1000, 9999).ToString();
 
-                string Subject = "Confirme seu código de verificação";
-                string HtmlContext = $"Olá {account.Name}, que surpresa agradável! O seu código de verificação é: <strong>{verificationCode}</strong>";
+            string Subject = "Confirme seu código de verificação";
+            string HtmlContext = $"Olá {account.Name}, que surpresa agradável! O seu código de verificação é: <strong>{verificationCode}</strong>";
 
-                await emailSenderService.SendEmail(account, verificationCode, Subject, HtmlContext);
-            }
-            catch
-            {
-                throw;
-            }
+            await emailSenderService.SendEmail(account, verificationCode, Subject, HtmlContext);
         }
 
         public bool IsEmailVerificationCodeValid(Guid accountId, string code)

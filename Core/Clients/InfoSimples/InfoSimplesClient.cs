@@ -12,10 +12,10 @@ namespace Core.Clients.InfoSimples
         private readonly IHttpClientFactory httpClient;
         private readonly HttpClient client;
 
-        private readonly InfoSimplesToken secret;
+        private readonly InfoSimplesSecret secret;
         private readonly ILogger<InfoSimplesClient> logger;
 
-        public InfoSimplesClient(IHttpClientFactory httpClient, IOptions<InfoSimplesToken> secret, ILogger<InfoSimplesClient> logger)
+        public InfoSimplesClient(IHttpClientFactory httpClient, IOptions<InfoSimplesSecret> secret, ILogger<InfoSimplesClient> logger)
         {
             this.httpClient = httpClient;
             client = this.httpClient.CreateClient("Infosimples");

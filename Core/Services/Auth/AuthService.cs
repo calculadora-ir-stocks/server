@@ -96,6 +96,7 @@ namespace Api.Services.Auth
             } catch(Exception e)
             {
                 logger.LogError($"Ocorreu um erro ao tentar registrar o usuário {account.Id}. {e.Message}");
+                throw;
             }
         }
 

@@ -84,17 +84,22 @@ namespace Api
                 options.ApiSecret = builder.Configuration["Services:Stripe:ApiToken"];
             });
 
-            services.Configure<InfoSimplesToken>(options =>
+            services.Configure<InfoSimplesSecret>(options =>
             {
                 options.Secret = builder.Configuration["Services:InfoSimples:Token"];
             });
 
-            services.Configure<B3ClientParams>(options =>
+            services.Configure<B3ClientParamsSecret>(options =>
             {
                 options.ClientId = builder.Configuration["Services:B3:ClientId"];
                 options.ClientSecret = builder.Configuration["Services:B3:ClientSecret"];
                 options.Scope = builder.Configuration["Services:B3:Scope"];
                 options.GrantType = builder.Configuration["Services:B3:GrantType"];
+            });
+
+            services.Configure<SendGridSecret>(options =>
+            {
+                options.Token = builder.Configuration["Services:SendGrid:Token"];
             });
         }
 
