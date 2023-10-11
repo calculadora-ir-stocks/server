@@ -10,21 +10,21 @@ namespace Api.Services.Jwt
 {
     public class JwtCommon : IJwtCommon
     {
-        private readonly JwtProperties appSettings;
+        private readonly JwtProperties properties;
 
         /// <summary>
         /// Claim que determina o status de um usuário.
         /// </summary>
         private const string AccountStatus = "sts";
 
-        public JwtCommon(IOptions<JwtProperties> appSettings)
+        public JwtCommon(IOptions<JwtProperties> properties)
         {
-            this.appSettings = appSettings.Value;
+            this.properties = properties.Value;
         }
 
         public string GenerateToken(JwtContent jwtContent)
         {
-            var key = Encoding.ASCII.GetBytes(appSettings.Secret);
+            var key = Encoding.ASCII.GetBytes(properties.Secret);
             var signinCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature);
 
             /** 
@@ -38,8 +38,8 @@ namespace Api.Services.Jwt
             };
 
             var token = new JwtSecurityToken(
-                issuer: appSettings.Issuer,
-                audience: appSettings.Audience,
+                issuer: properties.Issuer,
+                audience: properties.Audience,
                 expires: DateTime.Now.AddHours(24),
                 signingCredentials: signinCredentials,
                 claims: claims
@@ -53,7 +53,7 @@ namespace Api.Services.Jwt
             if (token == null)
                 return null;
 
-            var key = Encoding.ASCII.GetBytes(appSettings.Secret);
+            var key = Encoding.ASCII.GetBytes(properties.Secret);
             var signinCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature);
 
             var tokenHandler = new JwtSecurityTokenHandler();

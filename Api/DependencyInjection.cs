@@ -14,12 +14,13 @@ using Core.Filters;
 using Core.Hangfire.PlanExpirer;
 using Core.Services.Account;
 using Core.Services.B3Syncing;
+using Core.Services.DarfGenerator;
 using Core.Services.Email;
 using Core.Services.Hangfire.AverageTradedPriceUpdater;
 using Core.Services.Hangfire.EmailCodeRemover;
 using Core.Services.IncomeTaxes;
 using Core.Services.Plan;
-using Core.Services.TaxesService;
+using Core.Services.Taxes;
 using Hangfire;
 using Hangfire.PostgreSql;
 using Infrastructure.Repositories;
@@ -57,6 +58,7 @@ namespace Api
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IEmailService, EmailService>();
             services.AddScoped<IB3ResponseCalculatorService, B3ResponseCalculatorService>();
+            services.AddScoped<IDarfGeneratorService, DarfGeneratorService>();
             services.AddScoped<IStripeService, StripeService>();
             services.AddScoped<IPlanService, Core.Services.Plan.PlanService>();
 

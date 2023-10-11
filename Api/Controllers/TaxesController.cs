@@ -1,7 +1,7 @@
 using Core.Requests.BigBang;
 using Core.Services.B3Syncing;
-using Core.Services.TaxesService;
-using Infrastructure.Models;
+using Core.Services.DarfGenerator;
+using Core.Services.Taxes;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
@@ -17,11 +17,13 @@ public class TaxesController : BaseController
 {
     private readonly ITaxesService taxesService;
     private readonly IB3SyncingService syncingService;
+    private readonly IDarfGeneratorService darfGeneratorService;
 
-    public TaxesController(ITaxesService taxesService, IB3SyncingService syncingService)
+    public TaxesController(ITaxesService taxesService, IB3SyncingService syncingService, IDarfGeneratorService darfGeneratorService)
     {
         this.taxesService = taxesService;
         this.syncingService = syncingService;
+        this.darfGeneratorService = darfGeneratorService;
     }
 
     /// <summary>
@@ -33,9 +35,9 @@ public class TaxesController : BaseController
     /// somado no valor total da DARF.</param>
     /// <returns>O código de barras da DARF e outras informações referentes ao imposto sendo pago.</returns>
     [HttpGet("generate-darf")]
-    public async Task<IActionResult> GenerateDarf(Guid accountId, string month, double? value)
+    public async Task<IActionResult> GenerateDarf(Guid accountId, string month, double value = 0)
     {
-        var response = await taxesService.GenerateDARF(accountId, month, value);
+        var response = await darfGeneratorService.Generate(accountId, month, value);
         return Ok(response);
     }
 

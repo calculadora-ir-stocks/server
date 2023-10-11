@@ -20,45 +20,39 @@ using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
 
-namespace Core.Services.TaxesService;
+namespace Core.Services.Taxes;
 
 public class TaxesService : ITaxesService
 {
     private readonly IB3ResponseCalculatorService b3CalculatorService;
 
     private readonly IGenericRepository<Infrastructure.Models.Account> genericRepositoryAccount;
-
     private readonly ITaxesRepository taxesRepository;
 
     private readonly IB3Client b3Client;
-    private readonly IInfoSimplesClient infoSimplesClient;
 
     private readonly ILogger<TaxesService> logger;
 
-    // https://farocontabil.com.br/codigosdarf.htm#:~:text=Imposto%20sobre%20ganhos%20l%C3%ADquidos%20em%20opera%C3%A7%C3%B5es%20em%20bolsa%20de%20valores%2C%20de%20mercadorias%2C%20de%20futuros%20e%20assemelhadas
-    private const string DarfCode = "6015-01";
-
     /**
      * TODO Atualmente, para validar se um usuário ainda possui um plano válido para acessar os recursos,
-     * está sendo feita uma validação manual SOMENTE nessa classe.
+     * está sendo feita uma validação manual SOMENTE nas classes TaxesService, B3SyncingService e DarfGeneratorService.
      * 
      * É necessário alterar esse processo para armazenar um bool de plano expirado no token JWT,
      * usando a técnica de refresh token. É necessário discutir se o refresh token será armazenado no client ou no server.
      * */
 
-    public TaxesService(IB3ResponseCalculatorService b3CalculatorService,
+    public TaxesService(
+        IB3ResponseCalculatorService b3CalculatorService,
         IGenericRepository<Infrastructure.Models.Account> genericRepositoryAccount,
         ITaxesRepository taxesRepository,
         IB3Client b3Client,
-        IInfoSimplesClient infoSimplesClient,
         ILogger<TaxesService> logger
-        )
+    )
     {
         this.b3CalculatorService = b3CalculatorService;
         this.genericRepositoryAccount = genericRepositoryAccount;
         this.taxesRepository = taxesRepository;
         this.b3Client = b3Client;
-        this.infoSimplesClient = infoSimplesClient;
         this.logger = logger;
     }
 
@@ -406,60 +400,6 @@ public class TaxesService : ITaxesService
             logger.LogError(e, "Ocorreu uma exceção ao marcar um mês como pago/não pago. {message}", e.Message);
             throw;
         }
-    }
-    #endregion
-
-    #region Geração de DARF
-    public async Task<DARFResponse> GenerateDARF(Guid accountId, string month, double? value)
-    {
-        var account = await genericRepositoryAccount.GetByIdAsync(accountId);
-
-        if (account.Status == EnumHelper.GetEnumDescription(AccountStatus.SubscriptionExpired))
-            throw new ForbiddenException("O plano do usuário está expirado.");
-
-        var taxes = await taxesRepository.GetSpecifiedMonthTaxes(month, accountId);
-        double totalTaxes = taxes.Select(x => x.Taxes).Sum();
-
-        if (value is not null) totalTaxes += value.Value;
-
-        if (taxes.IsNullOrEmpty() || taxes.Select(x => x.Taxes).Sum() <= 0)
-            throw new NotFoundException("Nenhum imposto foi encontrado para esse mês, logo, a DARF não pode ser gerada.");        
-
-        string taxesReferenceDate = taxes.Select(x => x.Month).First();
-        string today = DateTime.Now.ToString("dd/MM/yyyy");
-
-        var response = await infoSimplesClient.GenerateDARF(
-            new GenerateDARFRequest
-            (
-                UtilsHelper.RemoveSpecialCharacters(account.CPF),
-                account.BirthDate,
-                $"Venda de ativos no mês {taxesReferenceDate}. Essa DARF foi gerada automaticamente " +
-                $"pelo Stocks IR em {today}.",
-                DarfCode,
-                totalTaxes,
-                taxesReferenceDate,
-                today
-            )
-        );
-
-        string? observation = null;
-
-        if (response.Data[0].TotalTaxes.TotalWithFineAndInterests < 10)
-        {
-            observation = "Valor total da DARF é inferior ao valor mínimo de R$10,00. \n" +
-                "Para pagá-la, adicione esse imposto em algum mês subsequente até que o valor total seja igual ou maior que R$10,00.";
-        }
-
-        var monthsToCompensate = await taxesRepository.GetTaxesLessThanMinimumRequired(accountId, month);
-
-        return new DARFResponse(
-            response.Data[0].BarCode,
-            response.Data[0].TotalTaxes.TotalWithFineAndInterests,
-            double.Parse(response.Data[0].TotalTaxes.Fine),
-            double.Parse(response.Data[0].TotalTaxes.Interests),
-            observation,
-            monthsToCompensate
-        );
     }
     #endregion
 }

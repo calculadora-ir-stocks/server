@@ -1,9 +1,7 @@
-using Core.Models.InfoSimples;
 using Core.Models.Responses;
-using Core.Requests.BigBang;
 using Core.Responses;
 
-namespace Core.Services.TaxesService;
+namespace Core.Services.Taxes;
 
 /// <summary>
 /// Especifica um contrato com todas as funcionalidades envolvendo impostos.
@@ -29,13 +27,4 @@ public interface ITaxesService
     /// Marca o mês especificado como pago/não pago.
     /// </summary>
     Task SetAsPaidOrUnpaid(string month, Guid accountId);
-
-    /// <summary>
-    /// Cria uma DARF de um mês em que há imposto a ser pago para um determinado usuário.
-    /// </summary>
-    /// <param name="accountId"></param>
-    /// <param name="month"></param>
-    /// <param name="value">Valor adicional (geralmente de meses onde houveram impostos inferiores a R$10,00) para ser
-    /// somado no valor total da DARF.</param>
-    Task<DARFResponse> GenerateDARF(Guid accountId, string month, double? value);
 }
