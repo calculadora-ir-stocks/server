@@ -1,6 +1,6 @@
 ﻿using Stripe.Checkout;
 
-namespace Billing.Services
+namespace Billing.Services.Stripe
 {
     public interface IStripeService
     {
@@ -15,9 +15,8 @@ namespace Billing.Services
         /// Cria um servidor dedicado do Stripe onde é possível gerenciar as formas de pagamento
         /// disponíveis.
         /// </summary>
-        /// <param name="checkoutSessionCustomerId">O </param>
         /// <returns>O objeto <c>Session</c> criado do Stripe.</returns>
-        Task<Stripe.BillingPortal.Session> CreatePortalSession(Guid accountId);
+        Task<Session> CreatePortalSession(Guid accountId);
 
         /// <summary>
         /// O Stripe envia através de um Webhook atualizações sobre inscrições, cancelamentos e outras informações

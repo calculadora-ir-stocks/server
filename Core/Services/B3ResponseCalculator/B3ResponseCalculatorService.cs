@@ -9,21 +9,23 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace Core.Services.IncomeTaxes
 {
-    public class IncomeTaxesService : IIncomeTaxesService
+    public class B3ResponseCalculatorService : IB3ResponseCalculatorService
     {
         private IIncomeTaxesCalculator calculator;
         private readonly IAverageTradedPriceRepostory averageTradedPriceRepository;
 
-        public IncomeTaxesService(IIncomeTaxesCalculator calculator, IAverageTradedPriceRepostory averageTradedPriceRepository)
+        public B3ResponseCalculatorService(IIncomeTaxesCalculator calculator, IAverageTradedPriceRepostory averageTradedPriceRepository)
         {
             this.calculator = calculator;
             this.averageTradedPriceRepository = averageTradedPriceRepository;
         }
 
-        public async Task<InvestorMovementDetails?> GetB3ResponseDetails(Movement.Root? request, Guid accountId)
+        public async Task<InvestorMovementDetails?> Calculate(Movement.Root? request, Guid accountId)
         {
             var movements = GetInvestorMovements(request);
-            if (movements.IsNullOrEmpty()) throw new NotFoundException("O usuário não possui nenhuma movimentação na bolsa até então.");
+
+            if (movements.IsNullOrEmpty()) 
+                throw new NotFoundException("O usuário não possui nenhuma movimentação na bolsa até então.");
 
             movements = OrderMovementsByDateAndMovementType(movements);
 
@@ -34,7 +36,7 @@ namespace Core.Services.IncomeTaxes
             {
                 var monthMovements = movements.Where(x => x.ReferenceDate.ToString("MM/yyyy") == month).ToList();
 
-                SetDayTradeMovementsAsDayTrade(monthMovements);
+                SetDayTradeMovementsAsDayTrade(monthMovements); // TODO put outside for loop, line 31
 
                 monthlyMovements.Add(month, monthMovements);
             }
@@ -71,11 +73,11 @@ namespace Core.Services.IncomeTaxes
         private async Task<InvestorMovementDetails?> GetTaxesAndAverageTradedPrices(
             Dictionary<string, List<Movement.EquitMovement>> monthlyMovements, Guid accountId)
         {
-            InvestorMovementDetails movementDetails = null!;
+            InvestorMovementDetails movementDetails = new();
 
-            if (monthlyMovements.Any())
+            if (monthlyMovements.IsNullOrEmpty())
             {
-                movementDetails = new();
+                return null;
             }
 
             foreach (var monthMovements in monthlyMovements)

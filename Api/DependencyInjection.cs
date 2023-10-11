@@ -4,7 +4,7 @@ using Api.Notification;
 using Api.Services.Auth;
 using Api.Services.B3;
 using Api.Services.Jwt;
-using Billing.Services;
+using Billing.Services.Stripe;
 using Common;
 using Common.Models;
 using Core.Calculators;
@@ -13,6 +13,7 @@ using Core.Clients.InfoSimples;
 using Core.Filters;
 using Core.Hangfire.PlanExpirer;
 using Core.Services.Account;
+using Core.Services.B3Syncing;
 using Core.Services.Email;
 using Core.Services.Hangfire.AverageTradedPriceUpdater;
 using Core.Services.Hangfire.EmailCodeRemover;
@@ -52,9 +53,10 @@ namespace Api
 
             services.AddScoped<IAccountService, Core.Services.Account.AccountService>();
             services.AddScoped<ITaxesService, TaxesService>();
+            services.AddScoped<IB3SyncingService, B3SyncingService>();
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IEmailService, EmailService>();
-            services.AddScoped<IIncomeTaxesService, IncomeTaxesService>();
+            services.AddScoped<IB3ResponseCalculatorService, B3ResponseCalculatorService>();
             services.AddScoped<IStripeService, StripeService>();
             services.AddScoped<IPlanService, Core.Services.Plan.PlanService>();
 

@@ -26,12 +26,6 @@ public interface ITaxesService
     Task<IEnumerable<CalendarResponse>> GetCalendarTaxes(string year, Guid accountId);
 
     /// <summary>
-    /// Faz o cálculo de impostos retroativos e preço médio de todos os ativos da conta de um investidor.
-    /// Deve ser executado uma única vez quando um usuário cadastrar-se na plataforma.
-    /// </summary>
-    Task ExecuteB3Sync(Guid accountId, List<BigBangRequest> request);
-
-    /// <summary>
     /// Marca o mês especificado como pago/não pago.
     /// </summary>
     Task SetAsPaidOrUnpaid(string month, Guid accountId);
