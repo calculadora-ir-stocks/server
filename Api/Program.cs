@@ -34,7 +34,6 @@ var app = builder.Build();
 app.UseMiddleware<CustomExceptionHandlerMiddleware>();
 app.UseMiddleware<JwtMiddleware>();
 
-// Obligatory lower case routing
 app.UseSwagger();
 
 app.UseSwaggerUI(c =>

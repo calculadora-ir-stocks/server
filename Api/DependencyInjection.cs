@@ -112,7 +112,6 @@ namespace Api
             services.AddScoped<TokenService>();
         }
 
-
         public static void AddHangfireServices(this IServiceCollection services)
         {
             services.AddHangfireServer();
