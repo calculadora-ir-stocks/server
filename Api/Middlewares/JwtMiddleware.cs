@@ -1,5 +1,5 @@
 using Infrastructure.Repositories;
-using Api.Services.Jwt;
+using Api.Services.JwtCommon;
 using Infrastructure.Models;
 
 namespace Api.Middlewares;
@@ -13,7 +13,7 @@ public class JwtMiddleware
         this.next = next;
     }
 
-    public async Task Invoke(HttpContext context, IGenericRepository<Account> repository, IJwtCommon jwtCommon)
+    public async Task Invoke(HttpContext context, IGenericRepository<Account> repository, IJwtCommonService jwtCommon)
     {
         var token = context.Request.Headers["Authorization"].FirstOrDefault()?.Split(" ").Last();
 

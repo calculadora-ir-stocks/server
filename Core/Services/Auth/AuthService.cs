@@ -1,6 +1,6 @@
 ﻿using Api.DTOs.Auth;
 using Api.Notification;
-using Api.Services.Jwt;
+using Api.Services.JwtCommon;
 using Common.Enums;
 using Common.Exceptions;
 using Common.Helpers;
@@ -21,7 +21,7 @@ namespace Api.Services.Auth
         private readonly IGenericRepository<Account> accountGenericRepository;
         private readonly IAccountService accountService;
 
-        private readonly IJwtCommon jwtUtils;
+        private readonly IJwtCommonService jwtUtils;
 
         private readonly NotificationContext notificationContext;
 
@@ -31,7 +31,7 @@ namespace Api.Services.Auth
             IAccountRepository accountRepository,
             IGenericRepository<Account> accountGenericRepository,
             IAccountService accountService,
-            IJwtCommon jwtUtils,
+            IJwtCommonService jwtUtils,
             NotificationContext notificationContext,
             ILogger<AuthService> logger
         )

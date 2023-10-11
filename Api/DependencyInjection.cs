@@ -3,7 +3,7 @@ using Api.Database;
 using Api.Notification;
 using Api.Services.Auth;
 using Api.Services.B3;
-using Api.Services.Jwt;
+using Api.Services.JwtCommon;
 using Billing.Services.Stripe;
 using Common;
 using Common.Models;
@@ -71,7 +71,7 @@ namespace Api
             services.AddTransient<IIncomeTaxesCalculator, InvestmentsFundsIncomeTaxes>();
             services.AddTransient<IIncomeTaxesCalculator, StocksIncomeTaxes>();
 
-            services.AddTransient<IJwtCommon, JwtCommon>();
+            services.AddTransient<IJwtCommonService, JwtCommonService>();
 
             services.AddMvc(options => options.Filters.Add<NotificationFilter>());
 

@@ -6,9 +6,9 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 
-namespace Api.Services.Jwt
+namespace Api.Services.JwtCommon
 {
-    public class JwtCommon : IJwtCommon
+    public class JwtCommonService : IJwtCommonService
     {
         private readonly JwtProperties properties;
 
@@ -17,7 +17,7 @@ namespace Api.Services.Jwt
         /// </summary>
         private const string AccountStatus = "sts";
 
-        public JwtCommon(IOptions<JwtProperties> properties)
+        public JwtCommonService(IOptions<JwtProperties> properties)
         {
             this.properties = properties.Value;
         }

@@ -1,8 +1,8 @@
 ﻿using Common.Models;
 
-namespace Api.Services.Jwt
+namespace Api.Services.JwtCommon
 {
-    public interface IJwtCommon
+    public interface IJwtCommonService
     {
         public string GenerateToken(JwtContent account);
         public Guid? CreateToken(string token);
