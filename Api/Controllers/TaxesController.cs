@@ -58,7 +58,7 @@ public class TaxesController : BaseController
     /// Retorna todas as informações referentes a impostos no mês especificado.
     /// </summary>
     /// <param name="month">Formato: MM/yyyy</param>
-    /// <param name="accountId"></param>
+    /// <param name="accountId">O id do usuário</param>
     [HttpGet("details/{month}/{accountId}")]
     public async Task<IActionResult> Details(string month, Guid accountId)
     {
@@ -73,7 +73,7 @@ public class TaxesController : BaseController
     /// Retorna todas as informações referentes a impostos no ano especificado.
     /// </summary>
     /// <param name="year">Formato: yyyy</param>
-    /// <param name="accountId"></param>
+    /// <param name="accountId">O id do usuário</param>
     [HttpGet("calendar/{year}/{accountId}")]
     public async Task<IActionResult> Calendar(string year, Guid accountId)
     {
@@ -88,7 +88,7 @@ public class TaxesController : BaseController
     /// Altera o mês especificado como pago/não pago.
     /// </summary>
     /// <param name="month">Formato: MM/yyyy</param>
-    /// <param name="accountId"></param>
+    /// <param name="accountId">O id do usuário</param>
     [HttpPut("set-paid-or-unpaid/{month}/{accountId}")]
     public async Task<IActionResult> SetMonthAsPaid(string month, Guid accountId)
     {

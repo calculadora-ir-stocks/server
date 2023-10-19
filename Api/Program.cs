@@ -31,8 +31,8 @@ var app = builder.Build();
 
 // app.UseHangfireDashboard("/dashboard");
 
+app.UseMiddleware<AuthorizationMiddleware>();
 app.UseMiddleware<CustomExceptionHandlerMiddleware>();
-app.UseMiddleware<JwtMiddleware>();
 
 app.UseSwagger();
 

@@ -10,7 +10,7 @@ namespace Api.Services.JwtCommon
 {
     public class JwtCommonService : IJwtCommonService
     {
-        private readonly JwtProperties properties;
+        private readonly JwtProperties jwtProperties;
 
         /// <summary>
         /// Claim que determina o status de um usuário.
@@ -19,12 +19,12 @@ namespace Api.Services.JwtCommon
 
         public JwtCommonService(IOptions<JwtProperties> properties)
         {
-            this.properties = properties.Value;
+            this.jwtProperties = properties.Value;
         }
 
         public string GenerateToken(JwtContent jwtContent)
         {
-            var key = Encoding.ASCII.GetBytes(properties.Secret);
+            var key = Encoding.ASCII.GetBytes(jwtProperties.Secret);
             var signinCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature);
 
             /** 
@@ -38,8 +38,8 @@ namespace Api.Services.JwtCommon
             };
 
             var token = new JwtSecurityToken(
-                issuer: properties.Issuer,
-                audience: properties.Audience,
+                issuer: jwtProperties.Issuer,
+                audience: jwtProperties.Audience,
                 expires: DateTime.Now.AddHours(24),
                 signingCredentials: signinCredentials,
                 claims: claims
@@ -53,7 +53,7 @@ namespace Api.Services.JwtCommon
             if (token == null)
                 return null;
 
-            var key = Encoding.ASCII.GetBytes(properties.Secret);
+            var key = Encoding.ASCII.GetBytes(jwtProperties.Secret);
             var signinCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature);
 
             var tokenHandler = new JwtSecurityTokenHandler();

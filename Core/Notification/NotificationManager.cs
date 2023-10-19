@@ -2,27 +2,27 @@
 
 namespace Api.Notification
 {
-    public class NotificationContext
+    public class NotificationManager
     {
-        private readonly List<Notification> _notifications;
-        public IReadOnlyCollection<Notification> Notifications => _notifications;
-        public bool HasNotifications => _notifications.Any();
+        private readonly List<Notification> notifications;
+        public IReadOnlyCollection<Notification> Notifications => notifications;
+        public bool HasNotifications => notifications.Any();
 
-        public NotificationContext()
+        public NotificationManager()
         {
-            _notifications = new List<Notification>();
+            notifications = new List<Notification>();
         }
 
         public void AddNotification(string message)
         {
-            _notifications.Add(new Notification(message));
+            notifications.Add(new Notification(message));
         }
 
         public void AddNotifications(IEnumerable<string> messages)
         {
             foreach (var message in messages)
             {
-                _notifications.Add(new Notification(message));
+                notifications.Add(new Notification(message));
             }
         }
 

@@ -23,7 +23,7 @@ namespace Api.Services.Auth
 
         private readonly IJwtCommonService jwtUtils;
 
-        private readonly NotificationContext notificationContext;
+        private readonly NotificationManager notificationManager;
 
         private readonly ILogger<AuthService> logger;
 
@@ -32,7 +32,7 @@ namespace Api.Services.Auth
             IGenericRepository<Account> accountGenericRepository,
             IAccountService accountService,
             IJwtCommonService jwtUtils,
-            NotificationContext notificationContext,
+            NotificationManager notificationManager,
             ILogger<AuthService> logger
         )
         {
@@ -40,7 +40,7 @@ namespace Api.Services.Auth
             this.accountGenericRepository = accountGenericRepository;
             this.accountService = accountService;
             this.jwtUtils = jwtUtils;
-            this.notificationContext = notificationContext;
+            this.notificationManager = notificationManager;
             this.logger = logger;
         }
 
@@ -85,7 +85,13 @@ namespace Api.Services.Auth
                 request.PhoneNumber
             );
 
-            if (!IsValidSignUp(account)) return;
+            ThrowExceptionIfEmailOrCPFAlreadyExists(account);
+
+            if (account.IsInvalid)
+            {
+                notificationManager.AddNotifications(account.ValidationResult);
+                return;
+            }
 
             try
             {
@@ -100,7 +106,7 @@ namespace Api.Services.Auth
             }
         }
 
-        private bool IsValidSignUp(Account account)
+        private void ThrowExceptionIfEmailOrCPFAlreadyExists(Account account)
         {
             try
             {
@@ -109,20 +115,12 @@ namespace Api.Services.Auth
 
                 if (accountRepository.CPFExists(account.CPF))
                     throw new BadRequestException($"Um usuário com esse CPF já está cadastrado na plataforma.");
-
-                if (account.IsInvalid)
-                {
-                    notificationContext.AddNotifications(account.ValidationResult);
-                    return false;
-                }
             } catch (Exception e)
             {
                 logger.LogError($"Ocorreu um erro tentar validar se o usuário {account.Id} já está cadastrado" +
                     $"na plataforma. {e.Message}");
                 throw;
             }
-
-            return true;
         }
     }
 }

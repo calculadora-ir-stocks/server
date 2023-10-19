@@ -14,20 +14,20 @@ namespace Core.Services.Account
         private readonly IAccountRepository repository;
         private readonly IEmailService emailSenderService;
 
-        private readonly NotificationContext notificationContext;
+        private readonly NotificationManager notificationManager;
 
         private readonly ILogger<AccountService> logger;
 
         public AccountService(
             IAccountRepository repository,
             IEmailService emailSenderService,
-            NotificationContext notificationContext,
+            NotificationManager notificationManager,
             ILogger<AccountService> logger
         )
         {
             this.repository = repository;
             this.emailSenderService = emailSenderService;
-            this.notificationContext = notificationContext;
+            this.notificationManager = notificationManager;
             this.logger = logger;
         }
 
@@ -60,7 +60,7 @@ namespace Core.Services.Account
             string verificationCode = new Random().Next(1000, 9999).ToString();
 
             string Subject = "Confirme seu código de verificação";
-            string HtmlContext = $"Olá {account.Name}, que surpresa agradável! O seu código de verificação é: <strong>{verificationCode}</strong>";
+            string HtmlContext = $"Olá {account.Name}, que surpresa agradável! O seu código de verificação do Stocks é <strong>{verificationCode}</strong>";
 
             await emailSenderService.SendEmail(account, verificationCode, Subject, HtmlContext);
         }
@@ -99,7 +99,7 @@ namespace Core.Services.Account
                 if (validatorResult.Errors.Any())
                 {
                     IEnumerable<string> messageError = validatorResult.Errors.Select(x => x.ErrorMessage);
-                    notificationContext.AddNotifications(messageError);
+                    notificationManager.AddNotifications(messageError);
                 }
 
                 account.HashPassword(password);

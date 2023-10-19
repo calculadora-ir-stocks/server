@@ -3,6 +3,7 @@ using Common.Enums;
 using Common.Helpers;
 using DevOne.Security.Cryptography.BCrypt;
 using FluentValidation;
+using System.ComponentModel.DataAnnotations;
 using System.Text.RegularExpressions;
 
 namespace Infrastructure.Models

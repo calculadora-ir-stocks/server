@@ -62,7 +62,7 @@ namespace Api
             services.AddScoped<IStripeService, StripeService>();
             services.AddScoped<IPlanService, Core.Services.Plan.PlanService>();
 
-            services.AddScoped<NotificationContext>();
+            services.AddScoped<NotificationManager>();
 
             services.AddTransient<IIncomeTaxesCalculator, BDRsIncomeTaxes>();
             services.AddTransient<IIncomeTaxesCalculator, ETFsIncomeTaxes>();
@@ -127,7 +127,6 @@ namespace Api
 
         public static void ConfigureHangfireServices(this IServiceCollection services, WebApplicationBuilder builder)
         {
-
             services.AddHangfire(x =>
                 x.UsePostgreSqlStorage(builder.Configuration.GetConnectionString("DefaultConnection"))
                 .SetDataCompatibilityLevel(CompatibilityLevel.Version_170)
