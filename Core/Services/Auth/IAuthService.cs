@@ -8,7 +8,8 @@ namespace Api.Services.Auth
         /// Registra um novo usuário no banco de dados e envia um e-mail de verificação.
         /// </summary>
         /// <param name="request">Objeto contendo todas as informações para o registro do usuário.</param>
-        Task SignUp(SignUpRequest request);
+        /// <returns>O id do usuário cadastrado.</returns>
+        Task<Guid> SignUp(SignUpRequest request);
 
         /// <summary>
         /// Autentica um usuário já cadastrado na plataforma

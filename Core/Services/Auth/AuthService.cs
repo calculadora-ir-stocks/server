@@ -74,7 +74,7 @@ namespace Api.Services.Auth
             }
         }
 
-        public async Task SignUp(SignUpRequest request)
+        public async Task<Guid> SignUp(SignUpRequest request)
         {
             Account account = new(
                 request.Name,
@@ -90,7 +90,7 @@ namespace Api.Services.Auth
             if (account.IsInvalid)
             {
                 notificationManager.AddNotifications(account.ValidationResult);
-                return;
+                return Guid.Empty;
             }
 
             try
@@ -99,6 +99,8 @@ namespace Api.Services.Auth
                 accountGenericRepository.Add(account);
 
                 await accountService.SendEmailVerification(account.Id, account);
+
+                return account.Id;
             } catch(Exception e)
             {
                 logger.LogError($"Ocorreu um erro ao tentar registrar o usuário {account.Id}. {e.Message}");
