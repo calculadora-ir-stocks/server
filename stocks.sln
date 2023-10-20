@@ -20,11 +20,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Infrastructure", "Infrastru
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{371711E8-C4F4-4DE5-85DC-6F783AACCDAB}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UnitTests", "UnitTests\UnitTests.csproj", "{8C3C2322-174A-417B-B4A0-9F6757BB3946}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Unit", "UnitTests\Unit.csproj", "{8C3C2322-174A-417B-B4A0-9F6757BB3946}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Billing", "Billing\Billing.csproj", "{B0B9FF39-5DCE-463A-BA41-9672A30C6F30}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hangfire", "Hangfire\Hangfire.csproj", "{C24D6817-96A6-4D0E-B56C-4B318CB1D6DD}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hangfire", "Hangfire\Hangfire.csproj", "{C24D6817-96A6-4D0E-B56C-4B318CB1D6DD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

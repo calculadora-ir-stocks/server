@@ -1,5 +1,4 @@
 ﻿using Api.Notification;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Newtonsoft.Json;
 using System.Net;
@@ -8,22 +7,21 @@ namespace Core.Filters
 {
     public class NotificationFilter : IAsyncResultFilter
     {
+        private readonly NotificationManager notificationManager;
 
-        private readonly NotificationContext _notificationContext;
-
-        public NotificationFilter(NotificationContext notificationContext)
+        public NotificationFilter(NotificationManager notificationManager)
         {
-            _notificationContext = notificationContext;
+            this.notificationManager = notificationManager;
         }
 
         public async Task OnResultExecutionAsync(ResultExecutingContext context, ResultExecutionDelegate next)
         {
-            if (_notificationContext.HasNotifications)
+            if (notificationManager.HasNotifications)
             {
                 context.HttpContext.Response.StatusCode = (int)HttpStatusCode.BadRequest;
                 context.HttpContext.Response.ContentType = "application/json";
 
-                var notifications = JsonConvert.SerializeObject(_notificationContext.Notifications);
+                var notifications = JsonConvert.SerializeObject(notificationManager.Notifications);
                 await context.HttpContext.Response.WriteAsync(notifications);
 
                 return;

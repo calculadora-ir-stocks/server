@@ -1,6 +1,7 @@
 using Core.Requests.BigBang;
-using Core.Services.TaxesService;
-using Infrastructure.Models;
+using Core.Services.B3Syncing;
+using Core.Services.DarfGenerator;
+using Core.Services.Taxes;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
@@ -14,11 +15,15 @@ namespace Api.Controllers;
 [Tags("Taxes")]
 public class TaxesController : BaseController
 {
-    private readonly ITaxesService service;
+    private readonly ITaxesService taxesService;
+    private readonly IB3SyncingService syncingService;
+    private readonly IDarfGeneratorService darfGeneratorService;
 
-    public TaxesController(ITaxesService service)
+    public TaxesController(ITaxesService taxesService, IB3SyncingService syncingService, IDarfGeneratorService darfGeneratorService)
     {
-        this.service = service;
+        this.taxesService = taxesService;
+        this.syncingService = syncingService;
+        this.darfGeneratorService = darfGeneratorService;
     }
 
     /// <summary>
@@ -30,9 +35,9 @@ public class TaxesController : BaseController
     /// somado no valor total da DARF.</param>
     /// <returns>O código de barras da DARF e outras informações referentes ao imposto sendo pago.</returns>
     [HttpGet("generate-darf")]
-    public async Task<IActionResult> GenerateDarf(Guid accountId, string month, double? value)
+    public async Task<IActionResult> GenerateDarf(Guid accountId, string month, double value = 0)
     {
-        var response = await service.GenerateDARF(accountId, month, value);
+        var response = await darfGeneratorService.Generate(accountId, month, value);
         return Ok(response);
     }
 
@@ -42,7 +47,7 @@ public class TaxesController : BaseController
     [HttpGet("home/{accountId}")]
     public async Task<IActionResult> Home(Guid accountId)
     {
-        var response = await service.GetCurrentMonthTaxes(accountId);
+        var response = await taxesService.GetCurrentMonthTaxes(accountId);
 
         if (response.Movements.IsNullOrEmpty()) return NotFound("Por enquanto não há nenhum imposto de renda a ser pago.");
 
@@ -53,11 +58,11 @@ public class TaxesController : BaseController
     /// Retorna todas as informações referentes a impostos no mês especificado.
     /// </summary>
     /// <param name="month">Formato: MM/yyyy</param>
-    /// <param name="accountId"></param>
+    /// <param name="accountId">O id do usuário</param>
     [HttpGet("details/{month}/{accountId}")]
     public async Task<IActionResult> Details(string month, Guid accountId)
     {
-        var response = await service.Details(month, accountId);
+        var response = await taxesService.Details(month, accountId);
 
         if (response.Movements.IsNullOrEmpty()) return NotFound("Nenhum imposto de renda foi encontrado para o mês especificado.");
 
@@ -68,11 +73,11 @@ public class TaxesController : BaseController
     /// Retorna todas as informações referentes a impostos no ano especificado.
     /// </summary>
     /// <param name="year">Formato: yyyy</param>
-    /// <param name="accountId"></param>
+    /// <param name="accountId">O id do usuário</param>
     [HttpGet("calendar/{year}/{accountId}")]
     public async Task<IActionResult> Calendar(string year, Guid accountId)
     {
-        var response = await service.GetCalendarTaxes(year, accountId);
+        var response = await taxesService.GetCalendarTaxes(year, accountId);
 
         if (response.IsNullOrEmpty()) return NotFound("Nenhum imposto de renda foi encontrado para o ano especificado.");
 
@@ -83,11 +88,11 @@ public class TaxesController : BaseController
     /// Altera o mês especificado como pago/não pago.
     /// </summary>
     /// <param name="month">Formato: MM/yyyy</param>
-    /// <param name="accountId"></param>
+    /// <param name="accountId">O id do usuário</param>
     [HttpPut("set-paid-or-unpaid/{month}/{accountId}")]
     public async Task<IActionResult> SetMonthAsPaid(string month, Guid accountId)
     {
-        await service.SetAsPaidOrUnpaid(month, accountId);
+        await taxesService.SetAsPaidOrUnpaid(month, accountId);
         return Ok(new { message = "O mês especificado foi alterado para pago/não pago com sucesso." });
     }
 
@@ -98,7 +103,7 @@ public class TaxesController : BaseController
     [HttpPost("big-bang/{accountId}")]
     public async Task<IActionResult> BigBang(Guid accountId, [FromBody] List<BigBangRequest> request)
     { 
-        await service.ExecuteB3Sync(accountId, request);
+        await syncingService.Sync(accountId, request);
         return Ok(new { message = "Imposto de renda e preço médio mais recente calculados e armazenados com sucesso." });
     }
 }

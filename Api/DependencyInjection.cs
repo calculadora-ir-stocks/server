@@ -3,8 +3,8 @@ using Api.Database;
 using Api.Notification;
 using Api.Services.Auth;
 using Api.Services.B3;
-using Api.Services.Jwt;
-using Billing.Services;
+using Api.Services.JwtCommon;
+using Billing.Services.Stripe;
 using Common;
 using Common.Models;
 using Core.Calculators;
@@ -13,12 +13,14 @@ using Core.Clients.InfoSimples;
 using Core.Filters;
 using Core.Hangfire.PlanExpirer;
 using Core.Services.Account;
+using Core.Services.B3Syncing;
+using Core.Services.DarfGenerator;
 using Core.Services.Email;
 using Core.Services.Hangfire.AverageTradedPriceUpdater;
 using Core.Services.Hangfire.EmailCodeRemover;
 using Core.Services.IncomeTaxes;
 using Core.Services.Plan;
-using Core.Services.TaxesService;
+using Core.Services.Taxes;
 using Hangfire;
 using Hangfire.PostgreSql;
 using Infrastructure.Repositories;
@@ -52,13 +54,15 @@ namespace Api
 
             services.AddScoped<IAccountService, Core.Services.Account.AccountService>();
             services.AddScoped<ITaxesService, TaxesService>();
+            services.AddScoped<IB3SyncingService, B3SyncingService>();
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IEmailService, EmailService>();
-            services.AddScoped<IIncomeTaxesService, IncomeTaxesService>();
+            services.AddScoped<IB3ResponseCalculatorService, B3ResponseCalculatorService>();
+            services.AddScoped<IDarfGeneratorService, DarfGeneratorService>();
             services.AddScoped<IStripeService, StripeService>();
             services.AddScoped<IPlanService, Core.Services.Plan.PlanService>();
 
-            services.AddScoped<NotificationContext>();
+            services.AddScoped<NotificationManager>();
 
             services.AddTransient<IIncomeTaxesCalculator, BDRsIncomeTaxes>();
             services.AddTransient<IIncomeTaxesCalculator, ETFsIncomeTaxes>();
@@ -67,7 +71,7 @@ namespace Api
             services.AddTransient<IIncomeTaxesCalculator, InvestmentsFundsIncomeTaxes>();
             services.AddTransient<IIncomeTaxesCalculator, StocksIncomeTaxes>();
 
-            services.AddTransient<IJwtCommon, JwtCommon>();
+            services.AddTransient<IJwtCommonService, JwtCommonService>();
 
             services.AddMvc(options => options.Filters.Add<NotificationFilter>());
 
@@ -84,17 +88,22 @@ namespace Api
                 options.ApiSecret = builder.Configuration["Services:Stripe:ApiToken"];
             });
 
-            services.Configure<InfoSimplesToken>(options =>
+            services.Configure<InfoSimplesSecret>(options =>
             {
                 options.Secret = builder.Configuration["Services:InfoSimples:Token"];
             });
 
-            services.Configure<B3ClientParams>(options =>
+            services.Configure<B3ClientParamsSecret>(options =>
             {
                 options.ClientId = builder.Configuration["Services:B3:ClientId"];
                 options.ClientSecret = builder.Configuration["Services:B3:ClientSecret"];
                 options.Scope = builder.Configuration["Services:B3:Scope"];
                 options.GrantType = builder.Configuration["Services:B3:GrantType"];
+            });
+
+            services.Configure<SendGridSecret>(options =>
+            {
+                options.Token = builder.Configuration["Services:SendGrid:Token"];
             });
         }
 
@@ -107,7 +116,6 @@ namespace Api
             services.AddScoped<TokenService>();
         }
 
-
         public static void AddHangfireServices(this IServiceCollection services)
         {
             services.AddHangfireServer();
@@ -119,7 +127,6 @@ namespace Api
 
         public static void ConfigureHangfireServices(this IServiceCollection services, WebApplicationBuilder builder)
         {
-
             services.AddHangfire(x =>
                 x.UsePostgreSqlStorage(builder.Configuration.GetConnectionString("DefaultConnection"))
                 .SetDataCompatibilityLevel(CompatibilityLevel.Version_170)

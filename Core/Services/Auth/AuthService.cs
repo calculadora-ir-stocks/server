@@ -1,16 +1,19 @@
 ﻿using Api.DTOs.Auth;
 using Api.Notification;
-using Api.Services.Jwt;
+using Api.Services.JwtCommon;
+using Common;
 using Common.Enums;
 using Common.Exceptions;
 using Common.Helpers;
 using Common.Models;
+using Core.Models.Api.Responses;
 using Core.Services.Account;
 using DevOne.Security.Cryptography.BCrypt;
 using Infrastructure.Models;
 using Infrastructure.Repositories;
 using Infrastructure.Repositories.Account;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace Api.Services.Auth
 {
@@ -21,9 +24,9 @@ namespace Api.Services.Auth
         private readonly IGenericRepository<Account> accountGenericRepository;
         private readonly IAccountService accountService;
 
-        private readonly IJwtCommon jwtUtils;
+        private readonly IJwtCommonService jwtUtils;
 
-        private readonly NotificationContext notificationContext;
+        private readonly NotificationManager notificationManager;
 
         private readonly ILogger<AuthService> logger;
 
@@ -31,8 +34,8 @@ namespace Api.Services.Auth
             IAccountRepository accountRepository,
             IGenericRepository<Account> accountGenericRepository,
             IAccountService accountService,
-            IJwtCommon jwtUtils,
-            NotificationContext notificationContext,
+            IJwtCommonService jwtUtils,
+            NotificationManager notificationManager,
             ILogger<AuthService> logger
         )
         {
@@ -40,7 +43,7 @@ namespace Api.Services.Auth
             this.accountGenericRepository = accountGenericRepository;
             this.accountService = accountService;
             this.jwtUtils = jwtUtils;
-            this.notificationContext = notificationContext;
+            this.notificationManager = notificationManager;
             this.logger = logger;
         }
 
@@ -48,7 +51,7 @@ namespace Api.Services.Auth
         {
             try
             {
-                Infrastructure.Models.Account? account = accountRepository.GetByEmail(request.Email);
+                Account? account = accountRepository.GetByEmail(request.Email);
 
                 if (account is null)
                     return null;
@@ -58,7 +61,7 @@ namespace Api.Services.Auth
 
                 if (BCryptHelper.CheckPassword(request.Password, account.Password))
                 {
-                    return jwtUtils.GenerateToken(new JwtDetails
+                    return jwtUtils.GenerateToken(new JwtContent
                     (
                         account.Id,
                         account.Status
@@ -74,7 +77,7 @@ namespace Api.Services.Auth
             }
         }
 
-        public async Task SignUp(SignUpRequest request)
+        public async Task<SignUpResponse> SignUp(SignUpRequest request)
         {
             Account account = new(
                 request.Name,
@@ -85,7 +88,13 @@ namespace Api.Services.Auth
                 request.PhoneNumber
             );
 
-            if (!IsValidSignUp(account)) return;
+            ThrowExceptionIfSignUpIsInvalid(account, request.IsTOSAccepted);
+
+            if (account.IsInvalid)
+            {
+                notificationManager.AddNotifications(account.ValidationResult);
+                return new SignUpResponse(Guid.Empty, string.Empty);
+            }
 
             try
             {
@@ -93,35 +102,38 @@ namespace Api.Services.Auth
                 accountGenericRepository.Add(account);
 
                 await accountService.SendEmailVerification(account.Id, account);
+
+                var jwt = jwtUtils.GenerateToken(new JwtContent(
+                        account.Id,
+                        account.Status
+                    ));
+
+                return new SignUpResponse(account.Id, jwt);
             } catch(Exception e)
             {
                 logger.LogError($"Ocorreu um erro ao tentar registrar o usuário {account.Id}. {e.Message}");
+                throw;
             }
         }
 
-        private bool IsValidSignUp(Infrastructure.Models.Account account)
+        private void ThrowExceptionIfSignUpIsInvalid(Account account, bool isTOSAccepted)
         {
             try
             {
+                if (!isTOSAccepted)
+                    throw new BadRequestException("Os termos de uso precisam ser aceitos.");
+
                 if (accountRepository.EmailExists(account.Email))
                     throw new BadRequestException($"Um usuário com esse e-mail já está cadastrado na plataforma.");
 
                 if (accountRepository.CPFExists(account.CPF))
                     throw new BadRequestException($"Um usuário com esse CPF já está cadastrado na plataforma.");
-
-                if (account.IsInvalid)
-                {
-                    notificationContext.AddNotifications(account.ValidationResult);
-                    return false;
-                }
             } catch (Exception e)
             {
                 logger.LogError($"Ocorreu um erro tentar validar se o usuário {account.Id} já está cadastrado" +
                     $"na plataforma. {e.Message}");
                 throw;
             }
-
-            return true;
         }
     }
 }

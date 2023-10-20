@@ -5,29 +5,35 @@ using Infrastructure.Repositories.EmailCode;
 using Infrastructure.Repositories.Account;
 using Stripe;
 using Common.Helpers;
+using Common.Models;
+using Microsoft.Extensions.Options;
 
 namespace Core.Services.Email
 {
     public class EmailService : IEmailService
     {
-        private const string StocksEmail = "calculadorastocks@gmail.com"; //TODO change it
-        private const string StocksName = "Stocks";
+        private const string EmailAddress = "contato@stocksir.app";
+        private const string SenderName = "Stocks";
 
         private readonly CustomerService stripeCustomerService;
 
         private readonly IEmailCodeRepository emailCodeRepository;
         private readonly IAccountRepository accountRepository;
 
+        private readonly SendGridSecret secret;
+
         public EmailService(
             CustomerService stripeCustomerService,
             IEmailCodeRepository emailCodeRepository,
-            IAccountRepository accountRepository
+            IAccountRepository accountRepository,
+            IOptions<SendGridSecret> secret
         )
         
         {
             this.stripeCustomerService = stripeCustomerService;
             this.emailCodeRepository = emailCodeRepository;
             this.accountRepository = accountRepository;
+            this.secret = secret.Value;
         }
 
         public bool CanSendEmailForUser(Guid accountId)
@@ -75,25 +81,18 @@ namespace Core.Services.Email
 
         public async Task SendEmail(Infrastructure.Models.Account account, string verificationCode, string subject, string htmlContent)
         {
-            try {
-                // TODO criar variável de ambiente no Docker.
-                string? apiKey = "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";
+            SendGridClient client = new(secret.Token);
 
-                SendGridClient client = new(apiKey);
-                var from = new EmailAddress(StocksEmail, StocksName);
+            var from = new EmailAddress(EmailAddress, SenderName);
 
-                var to = new EmailAddress(account.Email, account.Name);
+            var to = new EmailAddress(account.Email, account.Name);
 
-                var msg = MailHelper.CreateSingleEmail(from, to, subject, string.Empty, htmlContent);
-                var response = await client.SendEmailAsync(msg);
+            var msg = MailHelper.CreateSingleEmail(from, to, subject, string.Empty, htmlContent);
+            var response = await client.SendEmailAsync(msg);
 
-                if (!response.IsSuccessStatusCode) throw new Exception();
+            if (!response.IsSuccessStatusCode) throw new Exception();
 
-                await emailCodeRepository.Create(verificationCode, account);
-            } catch
-            {
-                throw;
-            }
+            await emailCodeRepository.Create(verificationCode, account);
         }
     }
 }

@@ -25,8 +25,11 @@ public class AuthController : BaseController
     [HttpPost("sign-up")]
     public async Task<IActionResult> SignUp([FromBody] SignUpRequest request)
     {
-        await service.SignUp(request);
-        return Ok();
+        var response = await service.SignUp(request);
+
+        Response.Headers["Authorization"] = response.Jwt;
+
+        return Ok(new { accountId = response.AccountId });
     }
 
     /// <summary>

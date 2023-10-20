@@ -11,7 +11,7 @@ using Microsoft.Extensions.Options;
 using Stripe;
 using Stripe.Checkout;
 
-namespace Billing.Services
+namespace Billing.Services.Stripe
 {
     public class StripeService : IStripeService
     {
@@ -74,34 +74,23 @@ namespace Billing.Services
                 var session = await service.CreateAsync(options);
 
                 return session;
-            } catch (StripeException s)
+            }
+            catch (StripeException s)
             {
                 logger.LogError("Ocorreu um erro ao criar o Checkout Session do Stripe. {e}", s.Message);
                 throw new Exception(s.Message);
             }
         }
 
-        public async Task<Stripe.BillingPortal.Session> CreatePortalSession(Guid accountId)
+        public async Task<Session> CreatePortalSession(Guid accountId)
         {
-            var account = accountRepository.GetById(accountId);
-            if (account is null) throw new NotFoundException("Investidor", accountId.ToString());
-
-            var options = new Stripe.BillingPortal.SessionCreateOptions
-            {
-                Customer = account.StripeCustomerId,
-                ReturnUrl = "https://localhost:7274/stripe?returned=true",
-            };
-
-            var service = new Stripe.BillingPortal.SessionService();
-            var session = await service.CreateAsync(options);
-
-            return session;
+            throw new NotImplementedException();
         }
 
         public void HandleUserPlansNotifications(string json, string stripeSignatureHeader)
         {
             Event stripeEvent;
-            Guid sessionId = Guid.NewGuid();            
+            Guid sessionId = Guid.NewGuid();
 
             try
             {
@@ -139,7 +128,7 @@ namespace Billing.Services
                 var (subscribedPlan, expiresAt) = GetSubscribedPlan(session.AmountSubtotal);
 
                 var account = accountRepository.GetByStripeCustomerId(session.CustomerId);
-                account.Status = EnumHelper.GetEnumDescription(AccountStatus.SubscriptionValid);
+                account.Status = AccountStatus.SubscriptionValid.GetEnumDescription();
 
                 var accountPlan = planRepository.GetByAccountId(account.Id);
 

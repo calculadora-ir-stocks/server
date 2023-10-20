@@ -6,25 +6,25 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 
-namespace Api.Services.Jwt
+namespace Api.Services.JwtCommon
 {
-    public class JwtCommon : IJwtCommon
+    public class JwtCommonService : IJwtCommonService
     {
-        private readonly JwtProperties appSettings;
+        private readonly JwtProperties jwtProperties;
 
         /// <summary>
-        /// Claim que determina se o plano de um usuário está expirado.
+        /// Claim que determina o status de um usuário.
         /// </summary>
-        private const string IsPlanExpired = "pln";
+        private const string AccountStatus = "sts";
 
-        public JwtCommon(IOptions<JwtProperties> appSettings)
+        public JwtCommonService(IOptions<JwtProperties> properties)
         {
-            this.appSettings = appSettings.Value;
+            this.jwtProperties = properties.Value;
         }
 
-        public string GenerateToken(JwtDetails account)
+        public string GenerateToken(JwtContent jwtContent)
         {
-            var key = Encoding.ASCII.GetBytes(appSettings.Secret);
+            var key = Encoding.ASCII.GetBytes(jwtProperties.Secret);
             var signinCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature);
 
             /** 
@@ -33,13 +33,13 @@ namespace Api.Services.Jwt
              */
 
             var claims = new[] {
-                new Claim(ClaimTypes.NameIdentifier, account.Id.ToString()),
-                new Claim(IsPlanExpired, account.IsPlanExpired.ToString()),
+                new Claim(ClaimTypes.NameIdentifier, jwtContent.Id.ToString()),
+                new Claim(AccountStatus, jwtContent.Status.ToString()),
             };
 
             var token = new JwtSecurityToken(
-                issuer: appSettings.Issuer,
-                audience: appSettings.Audience,
+                issuer: jwtProperties.Issuer,
+                audience: jwtProperties.Audience,
                 expires: DateTime.Now.AddHours(24),
                 signingCredentials: signinCredentials,
                 claims: claims
@@ -48,12 +48,12 @@ namespace Api.Services.Jwt
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
 
-        public Guid? CreateToken(string? token)
+        public Guid? ValidateJWTToken(string? token)
         {
             if (token == null)
                 return null;
 
-            var key = Encoding.ASCII.GetBytes(appSettings.Secret);
+            var key = Encoding.ASCII.GetBytes(jwtProperties.Secret);
             var signinCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature);
 
             var tokenHandler = new JwtSecurityTokenHandler();
@@ -66,11 +66,13 @@ namespace Api.Services.Jwt
                     IssuerSigningKey = new SymmetricSecurityKey(key),
                     ValidateIssuer = true,
                     ValidateAudience = true,
-                    ClockSkew = TimeSpan.Zero
+                    ClockSkew = TimeSpan.Zero,
+                    ValidIssuer = jwtProperties.Issuer,
+                    ValidAudience = jwtProperties.Audience,
                 }, out SecurityToken validatedToken);
 
                 var jwtToken = (JwtSecurityToken)validatedToken;
-                var userId = jwtToken.Claims.First(x => x.Type == "Id").Value;
+                var userId = jwtToken.Claims.First(x => x.Type == ClaimTypes.NameIdentifier).Value;
 
                 return Guid.Parse(userId);
             }

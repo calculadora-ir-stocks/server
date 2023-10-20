@@ -53,7 +53,6 @@ public class UtilsHelper
     /// Retorna o nome do mês e ano ano com base no parâmetro
     /// </summary>
     /// <param name="monthYear">Formato: MM/yyyy</param>
-    /// <returns></returns>
     public static string GetMonthAndYearName(string monthYear)
     {
         string month = monthYear.Substring(0, 2);
