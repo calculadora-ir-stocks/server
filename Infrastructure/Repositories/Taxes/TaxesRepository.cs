@@ -3,6 +3,8 @@ using Microsoft.EntityFrameworkCore;
 using Api.Database;
 using Infrastructure.Dtos;
 using Newtonsoft.Json;
+using Microsoft.IdentityModel.Tokens;
+using System;
 
 namespace Infrastructure.Repositories.Taxes
 {
@@ -85,6 +87,34 @@ namespace Infrastructure.Repositories.Taxes
             var response = await connection.QueryAsync<SpecifiedYearTaxesDto>(sql, parameters);
 
             return response;
+        }
+
+        public async Task<IEnumerable<TaxesLessThanMinimumRequiredDto>> GetTaxesLessThanMinimumRequired(Guid accountId, string date)
+        {
+            DynamicParameters parameters = new();
+
+            parameters.Add("@Date", date);
+            parameters.Add("@AccountId", accountId);
+
+            string sql = @"
+                SELECT * FROM
+                    (SELECT
+                        it.""Month"",
+                        SUM(it.""Taxes"") AS ""Total""
+                    FROM ""IncomeTaxes"" it
+                    WHERE it.""AccountId"" = @AccountId
+                    AND it.""Paid"" IS FALSE
+                    AND to_date(it.""Month"", 'MM/YYYY') < to_date(@Date, 'MM/YYYY')
+                    GROUP BY it.""Month"") AS it
+                WHERE it.""Total"" < 10;
+            ";
+
+            var connection = context.Database.GetDbConnection();
+            var taxes = await connection.QueryAsync<TaxesLessThanMinimumRequiredDto>(sql, parameters);
+
+            if (taxes.IsNullOrEmpty()) return Enumerable.Empty<TaxesLessThanMinimumRequiredDto>();
+
+            return taxes;
         }
 
         public async Task SetMonthAsPaidOrUnpaid(string month, Guid accountId)

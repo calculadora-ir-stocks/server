@@ -10,13 +10,13 @@ builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.AddHttpContextAccessor();
 
-
 builder.Services.AddStripeServices(builder.Configuration);
 builder.Services.AddServices(builder);
 builder.Services.Add3rdPartiesClients();
 builder.Services.AddRepositories();
 
 builder.Services.AddDatabase(builder);
+
 
 // builder.Services.AddHangfireServices();
 // builder.Services.ConfigureHangfireServices(builder);
@@ -27,26 +27,29 @@ builder.Services.AddRouting(options => options.LowercaseUrls = true);
 
 builder.Services.AddSwaggerConfiguration();
 
+builder.Services.AddCors(policyBuilder =>
+    policyBuilder.AddDefaultPolicy(policy =>
+        policy.WithOrigins("*").AllowAnyHeader().AllowAnyHeader())
+);
+
 var app = builder.Build();
 
 // app.UseHangfireDashboard("/dashboard");
+app.UseCors();
 
-app.UseMiddleware<JwtMiddleware>();
+app.UseMiddleware<AuthorizationMiddleware>();
 app.UseMiddleware<CustomExceptionHandlerMiddleware>();
 
-// Obligatory lower case routing
 app.UseSwagger();
 
 app.UseSwaggerUI(c =>
     c.SwaggerEndpoint("v1/swagger.json", "Stocks v1")
 );
 
-// app.UseHttpsRedirection();
+app.UseHttpsRedirection();
 
 app.UseAuthentication();
-
 app.UseRouting();
-
 app.UseAuthorization();
 
 app.MapControllers();

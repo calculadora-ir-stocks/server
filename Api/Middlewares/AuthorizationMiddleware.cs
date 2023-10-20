@@ -1,30 +1,30 @@
-﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc.Filters;
-using Microsoft.AspNetCore.Mvc;
+using Infrastructure.Repositories;
+using Api.Services.JwtCommon;
 using Infrastructure.Models;
 
 namespace Api.Middlewares
 {
-    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method)]
-    public class AuthorizationMiddleware : Attribute, IAuthorizationFilter
+    public class AuthorizationMiddleware
     {
-        public void OnAuthorization(AuthorizationFilterContext context)
+        private readonly RequestDelegate next;
+
+        public AuthorizationMiddleware(RequestDelegate next)
         {
-            // Skips authorization
-            if (IsActionAnonymous(context))
-                return;
-
-            var user = context.HttpContext.Items["User"] as Account;
-
-            if (user is null)
-                context.Result = new JsonResult(new
-                { message = $"Você não pode executar essa operação. Primeiro, você deve possuir uma conta registrada." })
-                { StatusCode = StatusCodes.Status401Unauthorized };
+            this.next = next;
         }
 
-        private static bool IsActionAnonymous(AuthorizationFilterContext context)
+        public async Task Invoke(HttpContext context, IGenericRepository<Account> repository, IJwtCommonService jwtCommon)
         {
-            return context.ActionDescriptor.EndpointMetadata.OfType<AllowAnonymousAttribute>().Any();
+            var token = context.Request.Headers["Authorization"].FirstOrDefault()!.Split(" ").Last();
+
+            Guid? userId = jwtCommon.ValidateJWTToken(token);
+
+            if (userId != null)
+            {
+                context.Items["User"] = repository.GetById(userId.Value);
+            }
+
+            await next(context);
         }
     }
 }

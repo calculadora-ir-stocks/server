@@ -1,4 +1,4 @@
-﻿using Billing.Services;
+﻿using Billing.Services.Stripe;
 using Core.Services.Plan;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

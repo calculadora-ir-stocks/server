@@ -18,13 +18,13 @@ namespace Api.Services.B3
         private readonly HttpClient b3Client;
         private readonly HttpClient microsoftClient;
 
-        private readonly B3ClientParams @params;
+        private readonly B3ClientParamsSecret @params;
 
         private static Token? token;
 
         private readonly ILogger<B3Client> logger;
 
-        public B3Client(IHttpClientFactory clientFactory, IOptions<B3ClientParams> @params, ILogger<B3Client> logger)
+        public B3Client(IHttpClientFactory clientFactory, IOptions<B3ClientParamsSecret> @params, ILogger<B3Client> logger)
         {
             this.clientFactory = clientFactory;
             this.@params = @params.Value;

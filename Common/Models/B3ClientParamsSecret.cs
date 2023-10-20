@@ -1,8 +1,8 @@
 ﻿namespace Common.Models
 {
-    public class B3ClientParams
+    public class B3ClientParamsSecret
     {
-        public B3ClientParams(string clientId, string clientSecret, string scope, string grantType)
+        public B3ClientParamsSecret(string clientId, string clientSecret, string scope, string grantType)
         {
             ClientId = clientId;
             ClientSecret = clientSecret;
@@ -11,7 +11,7 @@
         }
 
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
-        public B3ClientParams()
+        public B3ClientParamsSecret()
         {
         }
 

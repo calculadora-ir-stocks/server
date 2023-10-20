@@ -12,10 +12,10 @@ namespace Core.Clients.InfoSimples
         private readonly IHttpClientFactory httpClient;
         private readonly HttpClient client;
 
-        private readonly InfoSimplesToken secret;
+        private readonly InfoSimplesSecret secret;
         private readonly ILogger<InfoSimplesClient> logger;
 
-        public InfoSimplesClient(IHttpClientFactory httpClient, IOptions<InfoSimplesToken> secret, ILogger<InfoSimplesClient> logger)
+        public InfoSimplesClient(IHttpClientFactory httpClient, IOptions<InfoSimplesSecret> secret, ILogger<InfoSimplesClient> logger)
         {
             this.httpClient = httpClient;
             client = this.httpClient.CreateClient("Infosimples");
@@ -44,7 +44,7 @@ namespace Core.Clients.InfoSimples
 
             var darf = JsonConvert.DeserializeObject<GenerateDARFResponse>(responseContentStream)!;
 
-            if (darf.Data[0].CodigoDeBarras is null) throw new Exception("Não foi possível gerar a DARF para esse mês.");
+            if (darf.Data is null || darf.Data[0].BarCode is null) throw new Exception("Não foi possível gerar a DARF para esse mês.");
 
             return darf;
         }

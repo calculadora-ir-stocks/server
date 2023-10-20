@@ -1,17 +1,17 @@
 ﻿namespace Common.Models
 {
-    public class InfoSimplesToken
+    public class SendGridSecret
     {
-        public InfoSimplesToken(string secret)
+        public SendGridSecret(string token)
         {
-            Secret = secret;
+            Token = token;
         }
 
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
-        public InfoSimplesToken()
+        public SendGridSecret()
         {
         }
 
-        public string Secret { get; set; }
+        public string Token { get; set; }
     }
 }
