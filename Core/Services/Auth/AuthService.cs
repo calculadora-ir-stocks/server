@@ -85,7 +85,7 @@ namespace Api.Services.Auth
                 request.PhoneNumber
             );
 
-            ThrowExceptionIfEmailOrCPFAlreadyExists(account);
+            ThrowExceptionIfSignUpIsInvalid(account, request.IsTOSAccepted);
 
             if (account.IsInvalid)
             {
@@ -108,10 +108,13 @@ namespace Api.Services.Auth
             }
         }
 
-        private void ThrowExceptionIfEmailOrCPFAlreadyExists(Account account)
+        private void ThrowExceptionIfSignUpIsInvalid(Account account, bool isTOSAccepted)
         {
             try
             {
+                if (!isTOSAccepted)
+                    throw new BadRequestException("Os termos de uso precisam ser aceitos.");
+
                 if (accountRepository.EmailExists(account.Email))
                     throw new BadRequestException($"Um usuário com esse e-mail já está cadastrado na plataforma.");
 
