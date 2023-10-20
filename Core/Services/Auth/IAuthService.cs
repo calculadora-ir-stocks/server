@@ -1,4 +1,5 @@
 ﻿using Api.DTOs.Auth;
+using Core.Models.Api.Responses;
 
 namespace Api.Services.Auth
 {
@@ -9,7 +10,7 @@ namespace Api.Services.Auth
         /// </summary>
         /// <param name="request">Objeto contendo todas as informações para o registro do usuário.</param>
         /// <returns>O id do usuário cadastrado.</returns>
-        Task<Guid> SignUp(SignUpRequest request);
+        Task<SignUpResponse> SignUp(SignUpRequest request);
 
         /// <summary>
         /// Autentica um usuário já cadastrado na plataforma

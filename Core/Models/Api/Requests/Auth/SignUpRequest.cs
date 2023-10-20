@@ -2,7 +2,7 @@
 {
     public record SignUpRequest
     {
-        public SignUpRequest(string name, string email, string cPF, string birthDate, string password, string phoneNumber, bool ísTOSAccepted)
+        public SignUpRequest(string name, string email, string cPF, string birthDate, string password, string phoneNumber, bool isTOSAccepted)
         {
             Name = name;
             Email = email;
@@ -10,7 +10,7 @@
             BirthDate = birthDate;
             Password = password;
             PhoneNumber = phoneNumber;
-            IsTOSAccepted = ísTOSAccepted;
+            IsTOSAccepted = isTOSAccepted;
         }
 
         public string Name { get; init; }

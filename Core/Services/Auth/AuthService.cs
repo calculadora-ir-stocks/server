@@ -1,16 +1,19 @@
 ﻿using Api.DTOs.Auth;
 using Api.Notification;
 using Api.Services.JwtCommon;
+using Common;
 using Common.Enums;
 using Common.Exceptions;
 using Common.Helpers;
 using Common.Models;
+using Core.Models.Api.Responses;
 using Core.Services.Account;
 using DevOne.Security.Cryptography.BCrypt;
 using Infrastructure.Models;
 using Infrastructure.Repositories;
 using Infrastructure.Repositories.Account;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace Api.Services.Auth
 {
@@ -74,7 +77,7 @@ namespace Api.Services.Auth
             }
         }
 
-        public async Task<Guid> SignUp(SignUpRequest request)
+        public async Task<SignUpResponse> SignUp(SignUpRequest request)
         {
             Account account = new(
                 request.Name,
@@ -90,7 +93,7 @@ namespace Api.Services.Auth
             if (account.IsInvalid)
             {
                 notificationManager.AddNotifications(account.ValidationResult);
-                return Guid.Empty;
+                return new SignUpResponse(Guid.Empty, string.Empty);
             }
 
             try
@@ -100,7 +103,12 @@ namespace Api.Services.Auth
 
                 await accountService.SendEmailVerification(account.Id, account);
 
-                return account.Id;
+                var jwt = jwtUtils.GenerateToken(new JwtContent(
+                        account.Id,
+                        account.Status
+                    ));
+
+                return new SignUpResponse(account.Id, jwt);
             } catch(Exception e)
             {
                 logger.LogError($"Ocorreu um erro ao tentar registrar o usuário {account.Id}. {e.Message}");

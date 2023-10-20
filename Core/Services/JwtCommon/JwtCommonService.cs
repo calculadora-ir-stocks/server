@@ -48,7 +48,7 @@ namespace Api.Services.JwtCommon
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
 
-        public Guid? CreateToken(string? token)
+        public Guid? ValidateJWTToken(string? token)
         {
             if (token == null)
                 return null;
@@ -66,11 +66,13 @@ namespace Api.Services.JwtCommon
                     IssuerSigningKey = new SymmetricSecurityKey(key),
                     ValidateIssuer = true,
                     ValidateAudience = true,
-                    ClockSkew = TimeSpan.Zero
+                    ClockSkew = TimeSpan.Zero,
+                    ValidIssuer = jwtProperties.Issuer,
+                    ValidAudience = jwtProperties.Audience,
                 }, out SecurityToken validatedToken);
 
                 var jwtToken = (JwtSecurityToken)validatedToken;
-                var userId = jwtToken.Claims.First(x => x.Type == "Id").Value;
+                var userId = jwtToken.Claims.First(x => x.Type == ClaimTypes.NameIdentifier).Value;
 
                 return Guid.Parse(userId);
             }

@@ -15,9 +15,9 @@ namespace Api.Middlewares
 
         public async Task Invoke(HttpContext context, IGenericRepository<Account> repository, IJwtCommonService jwtCommon)
         {
-            var token = context.Request.Headers["Authorization"].FirstOrDefault()?.Split(" ").Last();
+            var token = context.Request.Headers["Authorization"].FirstOrDefault()!.Split(" ").Last();
 
-            Guid? userId = jwtCommon.CreateToken(token);
+            Guid? userId = jwtCommon.ValidateJWTToken(token);
 
             if (userId != null)
             {
