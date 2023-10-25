@@ -28,6 +28,7 @@ namespace Core.Services.IncomeTaxes
                 throw new NotFoundException("O usuário não possui nenhuma movimentação na bolsa até então.");
 
             movements = OrderMovementsByDateAndMovementType(movements);
+            SetDayTradeMovementsAsDayTrade(movements);
 
             Dictionary<string, List<Movement.EquitMovement>> monthlyMovements = new();
             var monthsThatHadMovements = movements.Select(x => x.ReferenceDate.ToString("MM/yyyy")).Distinct();
@@ -35,9 +36,6 @@ namespace Core.Services.IncomeTaxes
             foreach (var month in monthsThatHadMovements)
             {
                 var monthMovements = movements.Where(x => x.ReferenceDate.ToString("MM/yyyy") == month).ToList();
-
-                SetDayTradeMovementsAsDayTrade(monthMovements); // TODO put outside for loop, line 31
-
                 monthlyMovements.Add(month, monthMovements);
             }
 
@@ -82,6 +80,8 @@ namespace Core.Services.IncomeTaxes
 
             foreach (var monthMovements in monthlyMovements)
             {
+                // TODO: multiple concrete classes implementing the same interface. DI need to be changed
+
                 var stocks = monthMovements.Value.Where(x => x.AssetType.Equals(B3ResponseConstants.Stocks));
                 var etfs = monthMovements.Value.Where(x => x.AssetType.Equals(B3ResponseConstants.ETFs));
                 var fiis = monthMovements.Value.Where(x => x.AssetType.Equals(B3ResponseConstants.FIIs));
