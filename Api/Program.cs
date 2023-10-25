@@ -29,7 +29,7 @@ builder.Services.AddSwaggerConfiguration();
 
 builder.Services.AddCors(policyBuilder =>
     policyBuilder.AddDefaultPolicy(policy =>
-        policy.WithOrigins("*").AllowAnyHeader().AllowAnyHeader())
+        policy.WithOrigins("*").AllowAnyHeader().AllowAnyHeader().SetIsOriginAllowed((host) => true))
 );
 
 var app = builder.Build();
