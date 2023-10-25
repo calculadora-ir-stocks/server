@@ -9,6 +9,7 @@ namespace Api.Controllers;
 /// Responsável pelo registro e autenticação de usuários.
 /// </summary>
 [Tags("Authentication")]
+[AllowAnonymous]
 public class AuthController : BaseController
 {
     private readonly IAuthService service;
@@ -21,7 +22,6 @@ public class AuthController : BaseController
     /// <summary>
     /// Registra um novo usuário na plataforma.
     /// </summary>
-    [AllowAnonymous]
     [HttpPost("sign-up")]
     public async Task<IActionResult> SignUp([FromBody] SignUpRequest request)
     {
@@ -35,17 +35,16 @@ public class AuthController : BaseController
     /// <summary>
     /// Autentica um usuário na plataforma.
     /// </summary>
-    [AllowAnonymous]
     [HttpPost("sign-in")]
     public IActionResult SignIn([FromBody] SignInRequest request)
     {
-        string? jwt = service.SignIn(request);
+        var (Jwt, Id) = service.SignIn(request);
 
-        if (jwt is null)
+        if (Jwt is null)
             return BadRequest("Nome de usuário ou senha incorreto(s).");
 
-        Response.Headers["Authorization"] = jwt;
+        Response.Headers["Authorization"] = Jwt;
 
-        return Ok();
+        return Ok(new { accountId = Id });
     }
 }

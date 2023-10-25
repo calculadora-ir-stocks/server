@@ -24,10 +24,26 @@ namespace Api.Controllers
             return Ok(accountRepository.GetAll());
         }
 
+        /// <summary>
+        /// Retorna todos os códigos de validação enviados por e-mail. Útil para não precisar enviar pro
+        /// seu próprio e-mail.
+        /// </summary>
+        /// <returns></returns>
         [HttpGet("validation-codes")]
         public IActionResult GetAllValidationCodes()
         {
             return Ok(emailCodeRepository.GetAll());
+        }
+
+        /// <summary>
+        /// Deleta todos os usuários da base.
+        /// </summary>
+        /// <returns></returns>
+        [HttpDelete("nuke")]
+        public IActionResult Nuke()
+        {
+            accountRepository.DeleteAll();
+            return Ok();
         }
     }
 }

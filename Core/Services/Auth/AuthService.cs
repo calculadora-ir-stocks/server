@@ -47,28 +47,24 @@ namespace Api.Services.Auth
             this.logger = logger;
         }
 
-        public string? SignIn(SignInRequest request)
+        public (string?, Guid) SignIn(SignInRequest request)
         {
             try
             {
                 Account? account = accountRepository.GetByEmail(request.Email);
 
                 if (account is null)
-                    return null;
+                    return (null, Guid.Empty);
 
                 if (account.Status == EnumHelper.GetEnumDescription(AccountStatus.EmailNotConfirmed))
                     throw new BadRequestException("Você ainda não confirmou o seu e-mail no cadastro da sua conta.");
 
                 if (BCryptHelper.CheckPassword(request.Password, account.Password))
                 {
-                    return jwtUtils.GenerateToken(new JwtContent
-                    (
-                        account.Id,
-                        account.Status
-                    ));
+                    return (jwtUtils.GenerateToken(new JwtContent(account.Id, account.Status)), account.Id);
                 }
 
-                return null;
+                return (null, Guid.Empty);
             }
             catch (Exception e)
             {

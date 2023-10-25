@@ -54,5 +54,11 @@ namespace Infrastructure.Repositories.Account
             context.Accounts.Update(account);
             context.SaveChanges();
         }
+
+        public void DeleteAll()
+        {
+            context.Accounts.RemoveRange(context.Accounts);
+            context.SaveChanges();
+        }
     }
 }

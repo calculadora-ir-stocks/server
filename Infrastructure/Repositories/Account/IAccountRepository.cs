@@ -9,6 +9,7 @@
         Models.Account GetByStripeCustomerId(string stripeCustomerId);
         IEnumerable<Models.Account> GetAll();
         void Delete(Models.Account account);
+        void DeleteAll();
         void Update(Models.Account account);
     }
 }

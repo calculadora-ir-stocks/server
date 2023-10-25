@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Api.Controllers;
 
-// [Authorize]
 [Tags("Account")]
 public class AccountController : BaseController
 {
@@ -44,6 +43,7 @@ public class AccountController : BaseController
     /// Atualiza a senha da conta cadastrada.
     /// </summary>
     [HttpPut("password")]
+    [AllowAnonymous]
     public IActionResult UpdatePassword(Guid accountId, string password)
     {
         service.UpdatePassword(accountId, password);
@@ -55,8 +55,8 @@ public class AccountController : BaseController
     /// Para confirmar esse código, acesse /api/account/validate-code/
     /// </summary>
     /// <param name="email">O e-mail da conta.</param>
-    /// <returns></returns>
     [HttpPost("forgot-password")]
+    [AllowAnonymous]
     public async Task<IActionResult> ForgotPassword([FromBody] string email)
     {
         Guid accountId = await service.ForgotPassword(email);
