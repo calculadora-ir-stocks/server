@@ -16,7 +16,7 @@ namespace Api.Services.Auth
         /// Autentica um usuário já cadastrado na plataforma
         /// </summary>
         /// <param name="request">Objeto contendo todas as informações para a autenticação do usuário.</param>
-        /// <returns>Um token JWT se a autenticação for bem sucedida.</returns>
-        string? SignIn(SignInRequest request);
+        /// <returns>Um token JWT se a autenticação for bem sucedida e o id do usuário autenticado.</returns>
+        (string? Jwt, Guid Id) SignIn(SignInRequest request);
     }
 }
