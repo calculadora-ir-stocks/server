@@ -22,10 +22,10 @@ namespace Core.Services.IncomeTaxes
 
         public async Task<InvestorMovementDetails?> Calculate(Movement.Root? request, Guid accountId)
         {
-            var movements = GetInvestorMovements(request);
+            var movements = GetOnlyNecessaryMovementsFromResponse(request);
 
             if (movements.IsNullOrEmpty()) 
-                throw new NotFoundException("O usuário não possui nenhuma movimentação na bolsa até então.");
+                throw new NotFoundException("O usuário não possui nenhuma movimentação até então.");
 
             movements = OrderMovementsByDateAndMovementType(movements);
             SetDayTradeMovementsAsDayTrade(movements);
@@ -42,7 +42,7 @@ namespace Core.Services.IncomeTaxes
             return await GetTaxesAndAverageTradedPrices(monthlyMovements, accountId);
         }
 
-        private static List<Movement.EquitMovement> GetInvestorMovements(Movement.Root? response)
+        private static List<Movement.EquitMovement> GetOnlyNecessaryMovementsFromResponse(Movement.Root? response)
         {
             if (response is null || response.Data is null) return Array.Empty<Movement.EquitMovement>().ToList();
 

@@ -5,7 +5,8 @@ namespace Api.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    // [Authorize]
+    [Produces("application/json")]
+    [AllowAnonymous]
     public abstract class BaseController : ControllerBase
     {
     }

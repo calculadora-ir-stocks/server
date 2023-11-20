@@ -43,6 +43,7 @@ namespace Infrastructure.Repositories.Taxes
                 SELECT
                     it.""Month"",
 	                it.""Taxes"" as Taxes,
+                    it.""Paid"",
 	                it.""TradedAssets"",
 	                it.""AssetId""
                 FROM ""IncomeTaxes"" it
@@ -73,6 +74,7 @@ namespace Infrastructure.Repositories.Taxes
                 SELECT
                     LEFT(it.""Month"", 2) as Month,
 	                it.""Taxes"" as Taxes,
+                    it.""Paid"",
 	                it.""SwingTradeProfit"",
 	                it.""DayTradeProfit"",
 	                it.""AssetId""

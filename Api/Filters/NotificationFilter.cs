@@ -1,4 +1,4 @@
-﻿using Api.Notification;
+﻿using Core.Notification;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Newtonsoft.Json;
 using System.Net;

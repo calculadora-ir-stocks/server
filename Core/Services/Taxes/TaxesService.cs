@@ -3,22 +3,15 @@ using common.Helpers;
 using Common.Enums;
 using Common.Exceptions;
 using Common.Helpers;
-using Core.Clients.InfoSimples;
 using Core.Models;
-using Core.Models.InfoSimples;
+using Core.Models.Api.Responses;
 using Core.Models.Responses;
-using Core.Requests.BigBang;
-using Core.Responses;
 using Core.Services.IncomeTaxes;
 using Infrastructure.Dtos;
-using Infrastructure.Models;
 using Infrastructure.Repositories;
-using Infrastructure.Repositories.Account;
-using Infrastructure.Repositories.AverageTradedPrice;
 using Infrastructure.Repositories.Taxes;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
-using Newtonsoft.Json;
 
 namespace Core.Services.Taxes;
 
@@ -106,6 +99,7 @@ public class TaxesService : ITaxesService
 
         TaxesDetailsResponse response = new(
             totalTaxes: assets.Select(x => x.Taxes).Sum(),
+            TaxesStatus.Pending,
             UtilsHelper.GetMonthAndYearName(DateTime.Now.ToString("MM/yyyy"))
         );
 
@@ -117,7 +111,6 @@ public class TaxesService : ITaxesService
             List<Movement> movements = new();            
 
             var tradedAssetsOnThisDay = assets.SelectMany(x => x.TradedAssets.Where(x => x.Day == day));            
-
             string weekDay = string.Empty;
 
             foreach (var tradedAsset in tradedAssetsOnThisDay)
@@ -283,6 +276,7 @@ public class TaxesService : ITaxesService
     {
         TaxesDetailsResponse response = new(
             totalTaxes: assets.Select(x => x.Taxes).Sum(),
+            assets.ToList()[0].Paid ? TaxesStatus.Paid : TaxesStatus.Unpaid,
             year: UtilsHelper.GetMonthAndYearName(assets.ElementAt(0).Month)
         );
 
@@ -344,6 +338,7 @@ public class TaxesService : ITaxesService
                 throw new ForbiddenException("O plano do usuário está expirado.");
 
             var response = await taxesRepository.GetSpecifiedYearTaxes(System.Net.WebUtility.UrlDecode(year), accountId);
+            if (response.IsNullOrEmpty()) throw new NotFoundException("Nenhum imposto de renda foi encontrado para o ano especificado.");
 
             return ToSpecifiedYearDto(response);
         }
@@ -356,35 +351,22 @@ public class TaxesService : ITaxesService
 
     private static IEnumerable<CalendarResponse> ToSpecifiedYearDto(IEnumerable<SpecifiedYearTaxesDto> taxes)
     {
-        List<CalendarResponse> response = new();
-
-        foreach (var item in taxes)
+        List<CalendarResponse> response = taxes.GroupBy(x => x.Month).Select(group =>
         {
-            if (MonthAlreadyAdded(response, item)) continue;
+            double totalTaxes = group.Sum(x => x.Taxes);
+            double totalSwingTradeProfit = group.Sum(x => x.SwingTradeProfit);
+            double totalDayTradeProfit = group.Sum(x => x.DayTradeProfit);
 
-            // Há registros duplicados para cada mês referente a cada ativo. O front-end
-            // espera o valor total de imposto a ser pago no mês, e não para cada ativo. Por conta disso,
-            // é feito o agrupamento.
-            var taxesByMonth = taxes.Where(x => x.Month == item.Month);
-
-            double totalTaxes = taxesByMonth.Select(x => x.Taxes).Sum();
-            double totalSwingTradeProfit = taxesByMonth.Select(x => x.SwingTradeProfit).Sum();
-            double totalDayTradeProfit = taxesByMonth.Select(x => x.DayTradeProfit).Sum();
-
-            response.Add(new CalendarResponse(
-                UtilsHelper.GetMonthName(int.Parse(item.Month)),
+            return new CalendarResponse(
+                UtilsHelper.GetMonthName(int.Parse(group.Key)),
                 totalTaxes,
+                group.Any(x => x.Paid) ? TaxesStatus.Paid : TaxesStatus.Unpaid,
                 totalSwingTradeProfit,
                 totalDayTradeProfit
-            ));
-        }
+            );
+        }).ToList();
 
         return response;
-    }
-
-    private static bool MonthAlreadyAdded(IEnumerable<CalendarResponse> response, SpecifiedYearTaxesDto item)
-    {
-        return response.Select(x => x.Month).Contains(UtilsHelper.GetMonthName(int.Parse(item.Month)));
     }
     #endregion
 

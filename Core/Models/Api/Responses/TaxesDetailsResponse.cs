@@ -1,15 +1,16 @@
 ﻿using Common.Enums;
 
-namespace Core.Responses
+namespace Core.Models.Api.Responses
 {
     /// <summary>
     /// Response utilizado na tela principal do Stocks.
     /// </summary>
     public class TaxesDetailsResponse
     {
-        public TaxesDetailsResponse(double totalTaxes, string year)
+        public TaxesDetailsResponse(double totalTaxes, TaxesStatus status, string year)
         {
             TotalTaxes = totalTaxes;
+            Status = status;
             Year = year;
             Movements = new();
         }
@@ -19,6 +20,8 @@ namespace Core.Responses
         /// O total de imposto a ser pago (soma dos impostos de todos os ativos de um determinado mês).
         /// </summary>
         public double TotalTaxes { get; set; }
+
+        public TaxesStatus Status { get; init; }
 
         public string Year { get; init; }
 
@@ -53,6 +56,7 @@ namespace Core.Responses
         /// O id do tipo de ativo sendo negociado.
         /// </summary>
         public Asset AssetTypeId { get; set; }
+
         /// <summary>
         /// O nome do tipo de ativo sendo negociado.
         /// </summary>
