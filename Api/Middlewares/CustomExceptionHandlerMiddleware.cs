@@ -34,7 +34,9 @@ namespace Api.Middlewares
                     _ => (int)HttpStatusCode.InternalServerError,
                 };
 
-                await response.WriteAsync(JsonConvert.SerializeObject(new List<Notification.Notification> { new Notification.Notification(error?.Message) }));
+                await response.WriteAsync(
+                    JsonConvert.SerializeObject(new List<Core.Notification.Notification> { new Core.Notification.Notification(error?.Message) })
+                );
             }
         }
     }

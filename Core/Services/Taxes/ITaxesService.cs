@@ -1,5 +1,5 @@
+using Core.Models.Api.Responses;
 using Core.Models.Responses;
-using Core.Responses;
 
 namespace Core.Services.Taxes;
 

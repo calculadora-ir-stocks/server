@@ -43,6 +43,7 @@ namespace Infrastructure.Repositories.Taxes
                 SELECT
                     it.""Month"",
 	                it.""Taxes"" as Taxes,
+                    it.""Paid"",
 	                it.""TradedAssets"",
 	                it.""AssetId""
                 FROM ""IncomeTaxes"" it

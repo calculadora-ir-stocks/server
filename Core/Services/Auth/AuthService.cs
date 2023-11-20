@@ -1,19 +1,17 @@
 ﻿using Api.DTOs.Auth;
-using Api.Notification;
 using Api.Services.JwtCommon;
-using Common;
 using Common.Enums;
 using Common.Exceptions;
 using Common.Helpers;
 using Common.Models;
 using Core.Models.Api.Responses;
+using Core.Notification;
 using Core.Services.Account;
 using DevOne.Security.Cryptography.BCrypt;
 using Infrastructure.Models;
 using Infrastructure.Repositories;
 using Infrastructure.Repositories.Account;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 
 namespace Api.Services.Auth
 {

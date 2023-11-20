@@ -1,4 +1,4 @@
-﻿namespace Api.Notification
+﻿namespace Core.Notification
 {
     public class Notification
     {

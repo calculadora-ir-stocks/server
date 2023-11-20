@@ -8,11 +8,13 @@ namespace Infrastructure.Dtos
         public SpecifiedMonthTaxesDto(
             string month,
             double taxes,
+            bool paid,
             string tradedAssets
         )
         {
-            Taxes = taxes;
             Month = month;
+            Taxes = taxes;
+            Paid = paid;
             TradedAssets = tradedAssets;
 
             SerializedTradedAssets = JsonConvert.DeserializeObject<IEnumerable<SpecifiedMonthTaxesDtoDetails>>(tradedAssets)!;
@@ -24,6 +26,7 @@ namespace Infrastructure.Dtos
 
         public string Month { get; init; }
         public double Taxes { get; init; }
+        public bool Paid { get; init; }
         public string TradedAssets { get; init; }
         public IEnumerable<SpecifiedMonthTaxesDtoDetails> SerializedTradedAssets { get; set; }
     }

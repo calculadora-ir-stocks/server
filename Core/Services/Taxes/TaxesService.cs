@@ -3,22 +3,15 @@ using common.Helpers;
 using Common.Enums;
 using Common.Exceptions;
 using Common.Helpers;
-using Core.Clients.InfoSimples;
 using Core.Models;
-using Core.Models.InfoSimples;
+using Core.Models.Api.Responses;
 using Core.Models.Responses;
-using Core.Requests.BigBang;
-using Core.Responses;
 using Core.Services.IncomeTaxes;
 using Infrastructure.Dtos;
-using Infrastructure.Models;
 using Infrastructure.Repositories;
-using Infrastructure.Repositories.Account;
-using Infrastructure.Repositories.AverageTradedPrice;
 using Infrastructure.Repositories.Taxes;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
-using Newtonsoft.Json;
 
 namespace Core.Services.Taxes;
 
@@ -106,6 +99,7 @@ public class TaxesService : ITaxesService
 
         TaxesDetailsResponse response = new(
             totalTaxes: assets.Select(x => x.Taxes).Sum(),
+            TaxesStatus.Pending,
             UtilsHelper.GetMonthAndYearName(DateTime.Now.ToString("MM/yyyy"))
         );
 
@@ -117,7 +111,6 @@ public class TaxesService : ITaxesService
             List<Movement> movements = new();            
 
             var tradedAssetsOnThisDay = assets.SelectMany(x => x.TradedAssets.Where(x => x.Day == day));            
-
             string weekDay = string.Empty;
 
             foreach (var tradedAsset in tradedAssetsOnThisDay)
@@ -283,6 +276,7 @@ public class TaxesService : ITaxesService
     {
         TaxesDetailsResponse response = new(
             totalTaxes: assets.Select(x => x.Taxes).Sum(),
+            assets.ToList()[0].Paid ? TaxesStatus.Paid : TaxesStatus.Unpaid,
             year: UtilsHelper.GetMonthAndYearName(assets.ElementAt(0).Month)
         );
 
@@ -344,6 +338,7 @@ public class TaxesService : ITaxesService
                 throw new ForbiddenException("O plano do usuário está expirado.");
 
             var response = await taxesRepository.GetSpecifiedYearTaxes(System.Net.WebUtility.UrlDecode(year), accountId);
+            if (response.IsNullOrEmpty()) throw new NotFoundException("Nenhum imposto de renda foi encontrado para o ano especificado.");
 
             return ToSpecifiedYearDto(response);
         }

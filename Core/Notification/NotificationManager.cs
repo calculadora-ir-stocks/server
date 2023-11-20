@@ -1,6 +1,6 @@
 ﻿using FluentValidation.Results;
 
-namespace Api.Notification
+namespace Core.Notification
 {
     public class NotificationManager
     {

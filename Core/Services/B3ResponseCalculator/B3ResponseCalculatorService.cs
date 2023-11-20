@@ -25,7 +25,7 @@ namespace Core.Services.IncomeTaxes
             var movements = GetOnlyNecessaryMovementsFromResponse(request);
 
             if (movements.IsNullOrEmpty()) 
-                throw new NotFoundException("O usuário não possui nenhuma movimentação na bolsa até então.");
+                throw new NotFoundException("O usuário não possui nenhuma movimentação até então.");
 
             movements = OrderMovementsByDateAndMovementType(movements);
             SetDayTradeMovementsAsDayTrade(movements);

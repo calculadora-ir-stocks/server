@@ -1,6 +1,5 @@
 ﻿using Api.Clients.B3;
 using Api.Database;
-using Api.Notification;
 using Api.Services.Auth;
 using Api.Services.B3;
 using Api.Services.JwtCommon;
@@ -12,6 +11,7 @@ using Core.Calculators.Assets;
 using Core.Clients.InfoSimples;
 using Core.Filters;
 using Core.Hangfire.PlanExpirer;
+using Core.Notification;
 using Core.Services.Account;
 using Core.Services.B3Syncing;
 using Core.Services.DarfGenerator;
