@@ -24,6 +24,11 @@ namespace Api.Services.B3
 
         private readonly ILogger<B3Client> logger;
 
+        /// <summary>
+        /// https://clientes.b3.com.br/data/files/50/E0/18/FD/B623F7107E3811F7BFC9F9C2/Informacoes%20de%20APIs%20%20Ambiente%20certificacao.pdf
+        /// </summary>
+        private const string B3TokenAuthorizationRequestUri = "/4bee639f-5388-44c7-bbac-cb92a93911e6/oauth2/v2.0/token";
+
         public B3Client(IHttpClientFactory clientFactory, IOptions<B3ClientParamsSecret> @params, ILogger<B3Client> logger)
         {
             this.clientFactory = clientFactory;
@@ -131,7 +136,7 @@ namespace Api.Services.B3
         {
             try
             {
-                var request = new HttpRequestMessage(HttpMethod.Post, "4bee639f-5388-44c7-bbac-cb92a93911e6/oauth2/v2.0/token/")
+                var request = new HttpRequestMessage(HttpMethod.Post, B3TokenAuthorizationRequestUri)
                 {
                     Content = new FormUrlEncodedContent(new KeyValuePair<string?, string?>[]
                     {

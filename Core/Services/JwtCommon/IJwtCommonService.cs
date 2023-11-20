@@ -15,6 +15,6 @@ namespace Api.Services.JwtCommon
         /// </summary>
         /// <param name="token">O token JWT a ser validado.</param>
         /// <returns>O id do usuário se o token for válido, <c>null</c> se inválido.</returns>
-        public Guid? ValidateJWTToken(string token);
+        public Guid? ValidateJWTToken(string? token);
     }
 }

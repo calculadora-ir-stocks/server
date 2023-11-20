@@ -24,27 +24,15 @@ namespace Api.Middlewares
                 var response = context.Response;
                 response.ContentType = "application/json";
 
-                switch (error)
+                response.StatusCode = error switch
                 {
-                    case BadRequestException:
-                        response.StatusCode = (int)HttpStatusCode.BadRequest;
-                        break;
-                    case NotFoundException:
-                        response.StatusCode = (int)HttpStatusCode.NotFound;
-                        break;
-                    case ForbiddenException:
-                        response.StatusCode = (int)HttpStatusCode.Forbidden;
-                        break;
-                    case InternalServerErrorException:
-                        response.StatusCode = (int)HttpStatusCode.InternalServerError;
-                        break;
-                    case KeyNotFoundException _:
-                        response.StatusCode = (int)HttpStatusCode.NotFound;
-                        break;
-                    default:
-                        response.StatusCode = (int)HttpStatusCode.InternalServerError;
-                        break;
-                }
+                    BadRequestException => (int)HttpStatusCode.BadRequest,
+                    NotFoundException => (int)HttpStatusCode.NotFound,
+                    ForbiddenException => (int)HttpStatusCode.Forbidden,
+                    InternalServerErrorException => (int)HttpStatusCode.InternalServerError,
+                    KeyNotFoundException _ => (int)HttpStatusCode.NotFound,
+                    _ => (int)HttpStatusCode.InternalServerError,
+                };
 
                 await response.WriteAsync(JsonConvert.SerializeObject(new List<Notification.Notification> { new Notification.Notification(error?.Message) }));
             }
