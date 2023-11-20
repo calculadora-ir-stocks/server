@@ -6,6 +6,7 @@ public class SpecifiedYearTaxesDto
 {
     public string Month { get; set; }
     public double Taxes { get; set; }
+    public bool Paid { get; set; }
     public double SwingTradeProfit { get; set; }
     public double DayTradeProfit { get; set; }
 }

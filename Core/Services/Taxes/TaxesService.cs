@@ -369,6 +369,7 @@ public class TaxesService : ITaxesService
             response.Add(new CalendarResponse(
                 UtilsHelper.GetMonthName(int.Parse(item.Month)),
                 totalTaxes,
+                item.Paid ? TaxesStatus.Paid : TaxesStatus.Unpaid,
                 totalSwingTradeProfit,
                 totalDayTradeProfit
             ));
