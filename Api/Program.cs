@@ -21,7 +21,7 @@ builder.Services.AddDatabase(builder);
 // builder.Services.AddHangfireServices();
 // builder.Services.ConfigureHangfireServices(builder);
 
-builder.Services.AddJwtAuthentications(builder);
+builder.Services.AddAuth0Authentication(builder);
 
 builder.Services.AddRouting(options => options.LowercaseUrls = true);
 

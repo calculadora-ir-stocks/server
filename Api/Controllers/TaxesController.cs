@@ -38,7 +38,7 @@ public class TaxesController : BaseController
     /// <returns>O código de barras da DARF e outras informações referentes ao imposto sendo pago.</returns>
     [HttpGet("generate-darf")]
     [ProducesResponseType(typeof(DARFResponse), 200)]
-    [ProducesResponseType(typeof(Core.Notification.Notification), 404)]
+    [ProducesResponseType(typeof(Core.Notification.Notification), 404)]    
     public async Task<IActionResult> GenerateDarf(Guid accountId, string month, double value = 0)
     {
         var response = await darfGeneratorService.Generate(accountId, month, value);

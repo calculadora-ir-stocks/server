@@ -111,25 +111,20 @@ namespace Infrastructure.Models
         private readonly Regex HasNumber = new("[0-9]+");
         private readonly Regex HasUpperChar = new("[A-Z]+");
         private readonly Regex HasLowerChar = new("[a-z]+");
-        private readonly Regex HasMinMaxChars = new(".{8,60}");
+        private readonly Regex HasMinMaxChars = new(".{8}");
 
         private readonly Regex IsValidEmail = new(@"^([\w\.\-]+)@([\w\-]+)((\.(\w){2,3})+)$");
         private readonly Regex IsValidCPF = new(@"(^\d{3}\.\d{3}\.\d{3}\-\d{2}$)");
         private readonly Regex IsValidPhoneNumber = new(@"^\+\d{2} \d{2} \d \d{4}-\d{4}$");
         private readonly Regex IsValidBirthDate = new(@"^\d{2}/\d{2}/\d{4}$");
 
-        private const int NameMinLength = 3;
-        private const int NameMaxLength = 40;
+        private const int NameMinLength = 8;
 
         public AccountValidator()
         {
             RuleFor(c => c.Name)
                 .MinimumLength(NameMinLength)
                 .WithMessage($"Nome de usuário deve conter no mínimo {NameMinLength} caracteres.");
-
-            RuleFor(c => c.Name)
-                .MaximumLength(NameMaxLength)
-                .WithMessage($"Nome de usuário deve conter no máximo {NameMaxLength} caracteres.");
 
             RuleFor(c => c.Email)
                 .Must(c => IsValidEmail.IsMatch(c.ToString()))

@@ -1,8 +1,10 @@
 ﻿using Api.Clients.B3;
 using Api.Database;
+using Api.Handler;
 using Api.Services.Auth;
 using Api.Services.B3;
 using Api.Services.JwtCommon;
+using Auth0.AspNetCore.Authentication;
 using Billing.Services.Stripe;
 using Common;
 using Common.Models;
@@ -30,6 +32,7 @@ using Infrastructure.Repositories.EmailCode;
 using Infrastructure.Repositories.Plan;
 using Infrastructure.Repositories.Taxes;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -37,8 +40,8 @@ using Polly;
 using Stripe;
 using System.Reflection;
 using System.Security.Authentication;
+using System.Security.Claims;
 using System.Security.Cryptography.X509Certificates;
-using System.Text;
 
 namespace Api
 {
@@ -77,9 +80,10 @@ namespace Api
 
             services.Configure<JwtProperties>(options =>
             {
-                options.Secret = builder.Configuration["Jwt:Token"];
+                options.Token = builder.Configuration["Jwt:Token"];
                 options.Issuer = builder.Configuration["Jwt:Issuer"];
                 options.Audience = builder.Configuration["Jwt:Audience"];
+                options.Authoriry = builder.Configuration["Jwt:Authority"];
             });
 
             services.Configure<StripeSecret>(options =>
@@ -114,6 +118,33 @@ namespace Api
             services.AddScoped<ChargeService>();
             services.AddScoped<CustomerService>();
             services.AddScoped<TokenService>();
+        }
+
+        public static void AddAuth0Authentication(this IServiceCollection _, WebApplicationBuilder builder)
+        {
+            builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+            .AddJwtBearer(options =>
+            {
+                options.Authority = $"https://{builder.Configuration["Auth0:Domain"]}/";
+                options.Audience = builder.Configuration["Auth0:Audience"];
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    NameClaimType = ClaimTypes.NameIdentifier
+                };
+            });
+
+            builder.Services
+              .AddAuthorization(options =>
+              {
+                  options.AddPolicy(
+                    "read:taxes",
+                    policy => policy.Requirements.Add(
+                      new HasScopeRequirement("read:taxes", builder.Configuration["Auth0:Domain"])
+                    )
+                  );
+              });
+
+            builder.Services.AddSingleton<IAuthorizationHandler, HasScopeHandler>();
         }
 
         public static void AddHangfireServices(this IServiceCollection services)
@@ -199,28 +230,6 @@ namespace Api
             services.AddScoped<IEmailCodeRepository, EmailCodeRepository>();
             services.AddScoped<ITaxesRepository, TaxesRepository>();
             services.AddScoped<IPlanRepository, PlanRepository>();
-        }
-
-        public static void AddJwtAuthentications(this IServiceCollection services, WebApplicationBuilder builder)
-        {
-            services.AddAuthentication(opt =>
-            {
-                opt.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-                opt.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-            })
-            .AddJwtBearer(options =>
-            {
-                options.TokenValidationParameters = new TokenValidationParameters
-                {
-                    ValidateIssuer = true,
-                    ValidateAudience = true,
-                    ValidateLifetime = false,
-                    ValidateIssuerSigningKey = true,
-                    ValidIssuer = builder.Configuration["Jwt:Issuer"],
-                    ValidAudience = builder.Configuration["Jwt:Audience"],
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Token"]))
-                };
-            });
         }
 
         public static void AddSwaggerConfiguration(this IServiceCollection services)
