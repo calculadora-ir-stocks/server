@@ -47,7 +47,7 @@ namespace Api.Services.B3
         {
             Stopwatch watch = new();
 
-            HttpRequestMessage request = 
+            HttpRequestMessage request =
                 new(HttpMethod.Get,
                 $"movement/v2/equities/investors/{cpf}?referenceStartDate={referenceStartDate}&referenceEndDate={referenceEndDate}"
             );

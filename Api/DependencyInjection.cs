@@ -10,6 +10,7 @@ using Common;
 using Common.Models;
 using Core.Calculators;
 using Core.Calculators.Assets;
+using Core.Clients.Auth0;
 using Core.Clients.InfoSimples;
 using Core.Filters;
 using Core.Hangfire.PlanExpirer;
@@ -54,6 +55,7 @@ namespace Api
             // 3rd parties
             services.AddScoped<IB3Client, B3Client>();
             services.AddScoped<IInfoSimplesClient, InfoSimplesClient>();
+            services.AddScoped<IAuth0Client, Auth0Client>();
 
             services.AddScoped<IAccountService, Core.Services.Account.AccountService>();
             services.AddScoped<ITaxesService, TaxesService>();
@@ -193,9 +195,10 @@ namespace Api
         public static void Add3rdPartiesClients(this IServiceCollection services)
         {
             var handler = new HttpClientHandler();
-            // TO-DO: uncomment for production
+            // TODO: uncomment for production
             // AddCertificate(handler);
 
+            // TODO get from appsettings
             services.AddHttpClient("B3", c =>
                 c.BaseAddress = new Uri("https://apib3i-cert.b3.com.br:2443/api/")).ConfigurePrimaryHttpMessageHandler(() => handler)
                 .AddTransientHttpErrorPolicy(policy => policy.WaitAndRetryAsync(5, _ => TimeSpan.FromSeconds(10)))
@@ -208,6 +211,11 @@ namespace Api
 
             services.AddHttpClient("Infosimples", c =>
                 c.BaseAddress = new Uri("https://api.infosimples.com/api/v2/consultas/")).ConfigurePrimaryHttpMessageHandler(() => handler)
+                .AddTransientHttpErrorPolicy(policy => policy.WaitAndRetryAsync(5, _ => TimeSpan.FromSeconds(10)))
+                .AddTransientHttpErrorPolicy(policy => policy.CircuitBreakerAsync(5, TimeSpan.FromSeconds(10)));
+
+            services.AddHttpClient("Auth0", c =>
+                c.BaseAddress = new Uri("https://dev-cfdhp4yerdn6st6a.us.auth0.com/oauth/")).ConfigurePrimaryHttpMessageHandler(() => handler)
                 .AddTransientHttpErrorPolicy(policy => policy.WaitAndRetryAsync(5, _ => TimeSpan.FromSeconds(10)))
                 .AddTransientHttpErrorPolicy(policy => policy.CircuitBreakerAsync(5, TimeSpan.FromSeconds(10)));
         }

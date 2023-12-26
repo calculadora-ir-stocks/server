@@ -37,7 +37,7 @@ var app = builder.Build();
 // app.UseHangfireDashboard("/dashboard");
 app.UseCors();
 
-app.UseMiddleware<AuthorizationMiddleware>();
+// app.UseMiddleware<AuthorizationMiddleware>();
 app.UseMiddleware<CustomExceptionHandlerMiddleware>();
 
 app.UseSwagger();

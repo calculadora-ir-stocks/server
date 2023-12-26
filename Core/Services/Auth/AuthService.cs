@@ -4,6 +4,7 @@ using Common.Enums;
 using Common.Exceptions;
 using Common.Helpers;
 using Common.Models;
+using Core.Clients.Auth0;
 using Core.Models.Api.Responses;
 using Core.Notification;
 using Core.Services.Account;
@@ -21,17 +22,17 @@ namespace Api.Services.Auth
         private readonly IAccountRepository accountRepository;
         private readonly IGenericRepository<Account> accountGenericRepository;
         private readonly IAccountService accountService;
+        private readonly IAuth0Client auth0Client;
 
         private readonly IJwtCommonService jwtUtils;
-
         private readonly NotificationManager notificationManager;
-
         private readonly ILogger<AuthService> logger;
 
         public AuthService(
             IAccountRepository accountRepository,
             IGenericRepository<Account> accountGenericRepository,
             IAccountService accountService,
+            IAuth0Client auth0Client,
             IJwtCommonService jwtUtils,
             NotificationManager notificationManager,
             ILogger<AuthService> logger
@@ -40,10 +41,17 @@ namespace Api.Services.Auth
             this.accountRepository = accountRepository;
             this.accountGenericRepository = accountGenericRepository;
             this.accountService = accountService;
+            this.auth0Client = auth0Client;
             this.jwtUtils = jwtUtils;
             this.notificationManager = notificationManager;
             this.logger = logger;
         }
+
+        public async Task<string> GetToken()
+        {
+            return await auth0Client.GetToken();
+        }
+
 
         public (string?, Guid) SignIn(SignInRequest request)
         {
@@ -103,7 +111,8 @@ namespace Api.Services.Auth
                     ));
 
                 return new SignUpResponse(account.Id, jwt);
-            } catch(Exception e)
+            }
+            catch (Exception e)
             {
                 logger.LogError($"Ocorreu um erro ao tentar registrar o usuário {account.Id}. {e.Message}");
                 throw;
@@ -122,7 +131,8 @@ namespace Api.Services.Auth
 
                 if (accountRepository.CPFExists(account.CPF))
                     throw new BadRequestException($"Um usuário com esse CPF já está cadastrado na plataforma.");
-            } catch (Exception e)
+            }
+            catch (Exception e)
             {
                 logger.LogError($"Ocorreu um erro tentar validar se o usuário {account.Id} já está cadastrado" +
                     $"na plataforma. {e.Message}");

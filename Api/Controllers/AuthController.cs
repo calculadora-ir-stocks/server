@@ -54,4 +54,12 @@ public class AuthController : BaseController
     {
         return Ok();
     }
+
+    [HttpGet("token")]
+    [AllowAnonymous]
+    public async Task<IActionResult> Token()
+    {
+        return Ok(await service.GetToken());
+    }
+
 }

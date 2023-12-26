@@ -18,5 +18,10 @@ namespace Api.Services.Auth
         /// <param name="request">Objeto contendo todas as informações para a autenticação do usuário.</param>
         /// <returns>Um token JWT se a autenticação for bem sucedida e o id do usuário autenticado.</returns>
         (string? Jwt, Guid Id) SignIn(SignInRequest request);
+
+        /// <summary>
+        /// Obtém o token de autenticação do Auth0.
+        /// </summary>
+        Task<string> GetToken();
     }
 }
