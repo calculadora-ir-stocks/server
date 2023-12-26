@@ -1,5 +1,7 @@
 
 using System.Net.Http.Headers;
+using Core.Models.Auth0;
+using Newtonsoft.Json;
 using Stripe;
 
 namespace Core.Clients.Auth0
@@ -12,18 +14,14 @@ namespace Core.Clients.Auth0
         public Auth0Client(IHttpClientFactory factory)
         {
             this.factory = factory;
-            client = factory.CreateClient("dsd");
+            client = factory.CreateClient("Auth0");
         }
 
         public async Task<string> GetToken()
         {
             HttpRequestMessage request = new(HttpMethod.Post, "token")
             {
-                Content = new FormUrlEncodedContent(new KeyValuePair<string?, string?>[]
-                {
-                    // TODO get from appsettings
-                    new("application/json", "{\"client_id\":\"ILzN6bW5L0atuNgVyINGYyNYjW5cj8Ub\",\"client_secret\":\"8b2PUfCDwZ5ufQqNuIx3T4YtI80Sag568_mdMACiG2-tyoR5LKOBouzzJPqdkm7c\",\"audience\":\"https://stocks.com/\",\"grant_type\":\"client_credentials\"}"),
-                })
+                Content = new StringContent("{\"client_id\":\"ILzN6bW5L0atuNgVyINGYyNYjW5cj8Ub\",\"client_secret\":\"8b2PUfCDwZ5ufQqNuIx3T4YtI80Sag568_mdMACiG2-tyoR5LKOBouzzJPqdkm7c\",\"audience\":\"https://stocks.com/\",\"grant_type\":\"client_credentials\"}")
             };
 
             request.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
@@ -31,7 +29,10 @@ namespace Core.Clients.Auth0
             using var response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
             response.EnsureSuccessStatusCode();
 
-            return await response.Content.ReadAsStringAsync();
+            string? json = await response.Content.ReadAsStringAsync();
+            var token = JsonConvert.DeserializeObject<Auth0Token>(json);
+
+            return token!.access_token;
         }
     }
 }
