@@ -21,10 +21,11 @@ namespace Api.Services.Auth
 
         private readonly IAccountRepository accountRepository;
         private readonly IGenericRepository<Account> accountGenericRepository;
+
         private readonly IAccountService accountService;
         private readonly IAuth0Client auth0Client;
+        private readonly IJwtCommonService jwtService;
 
-        private readonly IJwtCommonService jwtUtils;
         private readonly NotificationManager notificationManager;
         private readonly ILogger<AuthService> logger;
 
@@ -33,7 +34,7 @@ namespace Api.Services.Auth
             IGenericRepository<Account> accountGenericRepository,
             IAccountService accountService,
             IAuth0Client auth0Client,
-            IJwtCommonService jwtUtils,
+            IJwtCommonService jwtService,
             NotificationManager notificationManager,
             ILogger<AuthService> logger
         )
@@ -42,7 +43,7 @@ namespace Api.Services.Auth
             this.accountGenericRepository = accountGenericRepository;
             this.accountService = accountService;
             this.auth0Client = auth0Client;
-            this.jwtUtils = jwtUtils;
+            this.jwtService = jwtService;
             this.notificationManager = notificationManager;
             this.logger = logger;
         }
@@ -67,7 +68,7 @@ namespace Api.Services.Auth
 
                 if (BCryptHelper.CheckPassword(request.Password, account.Password))
                 {
-                    return (jwtUtils.GenerateToken(new JwtContent(account.Id, account.Status)), account.Id);
+                    return (jwtService.GenerateToken(new JwtContent(account.Id, account.Status)), account.Id);
                 }
 
                 return (null, Guid.Empty);
@@ -105,7 +106,7 @@ namespace Api.Services.Auth
 
                 await accountService.SendEmailVerification(account.Id, account);
 
-                var jwt = jwtUtils.GenerateToken(new JwtContent(
+                var jwt = jwtService.GenerateToken(new JwtContent(
                         account.Id,
                         account.Status
                     ));

@@ -1,5 +1,6 @@
 
 using System.Net.Http.Headers;
+using Common.Models.Secrets;
 using Core.Models.Auth0;
 using Newtonsoft.Json;
 using Stripe;
@@ -11,17 +12,20 @@ namespace Core.Clients.Auth0
         private readonly IHttpClientFactory factory;
         private readonly HttpClient client;
 
-        public Auth0Client(IHttpClientFactory factory)
+        private readonly Auth0Secret secret;
+
+        public Auth0Client(IHttpClientFactory factory, Auth0Secret secret)
         {
             this.factory = factory;
             client = factory.CreateClient("Auth0");
+            this.secret = secret;
         }
 
         public async Task<string> GetToken()
         {
             HttpRequestMessage request = new(HttpMethod.Post, "token")
             {
-                Content = new StringContent("{\"client_id\":\"ILzN6bW5L0atuNgVyINGYyNYjW5cj8Ub\",\"client_secret\":\"8b2PUfCDwZ5ufQqNuIx3T4YtI80Sag568_mdMACiG2-tyoR5LKOBouzzJPqdkm7c\",\"audience\":\"https://stocks.com/\",\"grant_type\":\"client_credentials\"}")
+                Content = new StringContent(JsonConvert.SerializeObject(secret))
             };
 
             request.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
@@ -32,7 +36,7 @@ namespace Core.Clients.Auth0
             string? json = await response.Content.ReadAsStringAsync();
             var token = JsonConvert.DeserializeObject<Auth0Token>(json);
 
-            return token!.access_token;
+            return token!.AccessToken;
         }
     }
 }

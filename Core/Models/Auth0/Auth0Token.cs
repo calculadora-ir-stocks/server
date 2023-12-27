@@ -1,7 +1,10 @@
+using Newtonsoft.Json;
+
 namespace Core.Models.Auth0
 {
     public record Auth0Token
     {
-        public string access_token { get; init; }
+        [JsonProperty("access_token")]
+        public string AccessToken { get; init; }
     }
 }

@@ -3,7 +3,7 @@ using Common.Constants;
 using Common.Enums;
 using Common.Exceptions;
 using Common.Helpers;
-using Common.Models;
+using Common.Models.Secrets;
 using Infrastructure.Repositories.Account;
 using Infrastructure.Repositories.Plan;
 using Microsoft.Extensions.Logging;

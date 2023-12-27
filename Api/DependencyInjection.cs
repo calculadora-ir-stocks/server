@@ -8,6 +8,7 @@ using Auth0.AspNetCore.Authentication;
 using Billing.Services.Stripe;
 using Common;
 using Common.Models;
+using Common.Models.Secrets;
 using Core.Calculators;
 using Core.Calculators.Assets;
 using Core.Clients.Auth0;
@@ -99,7 +100,7 @@ namespace Api
                 options.Secret = builder.Configuration["Services:InfoSimples:Token"];
             });
 
-            services.Configure<B3ClientParamsSecret>(options =>
+            services.Configure<B3ParamsSecret>(options =>
             {
                 options.ClientId = builder.Configuration["Services:B3:ClientId"];
                 options.ClientSecret = builder.Configuration["Services:B3:ClientSecret"];
@@ -110,6 +111,17 @@ namespace Api
             services.Configure<SendGridSecret>(options =>
             {
                 options.Token = builder.Configuration["Services:SendGrid:Token"];
+            });
+
+            services.AddSingleton(_ =>
+            {
+                return new Auth0Secret
+                {
+                    ClientId = builder.Configuration["Services:Auth0:ClientId"],
+                    ClientSecret = builder.Configuration["Services:Auth0:ClientSecret"],
+                    Audience = builder.Configuration["Services:Auth0:Audience"],
+                    GrantType = builder.Configuration["Services:Auth0:GrantType"]
+                };
             });
         }
 

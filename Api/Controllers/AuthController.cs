@@ -55,11 +55,15 @@ public class AuthController : BaseController
         return Ok();
     }
 
+    /// <summary>
+    /// Obtém um novo token de autenticação do Auth0.
+    /// </summary>
     [HttpGet("token")]
     [AllowAnonymous]
     public async Task<IActionResult> Token()
     {
-        return Ok(await service.GetToken());
+        string token = await service.GetToken();
+        return Ok(new { token = token });
     }
 
 }

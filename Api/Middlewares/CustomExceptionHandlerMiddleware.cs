@@ -31,8 +31,14 @@ namespace Api.Middlewares
                     ForbiddenException => (int)HttpStatusCode.Forbidden,
                     InternalServerErrorException => (int)HttpStatusCode.InternalServerError,
                     KeyNotFoundException _ => (int)HttpStatusCode.NotFound,
+                    InvalidOperationException => (int)HttpStatusCode.Unauthorized, // thrown exception by Auth0 when a JWT is invalid
                     _ => (int)HttpStatusCode.InternalServerError,
                 };
+
+                if (error is InvalidOperationException)
+                {
+                    return;
+                }
 
                 await response.WriteAsync(
                     JsonConvert.SerializeObject(new List<Core.Notification.Notification> { new Core.Notification.Notification(error?.Message) })

@@ -1,4 +1,4 @@
-﻿using Common.Models;
+﻿using Common.Models.Secrets;
 using Core.Models.InfoSimples;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -28,7 +28,7 @@ namespace Core.Clients.InfoSimples
         {
             logger.LogInformation("Iniciando geração de DARF.");
 
-            string encodedUrl = 
+            string encodedUrl =
                     $"receita-federal/sicalc/darf?token={secret.Secret}&cnpj=&cpf={request.CPF}&birthdate={HttpUtility.UrlEncode(request.BirthDate)}" +
                     $"&observacoes={HttpUtility.UrlEncode(request.Observacoes)}&codigo={request.Codigo}" +
                     $"&valor_principal={request.ValorPrincipal.ToString().Replace(",", ".")}" +
