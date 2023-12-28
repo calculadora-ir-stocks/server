@@ -38,7 +38,7 @@ var app = builder.Build();
 app.UseCors();
 
 // app.UseMiddleware<AuthorizationMiddleware>();
-app.UseMiddleware<CustomExceptionHandlerMiddleware>();
+app.UseMiddleware<ExceptionHandlerMiddleware>();
 
 app.UseSwagger();
 

@@ -4,11 +4,11 @@ using System.Net;
 
 namespace Api.Middlewares
 {
-    public class CustomExceptionHandlerMiddleware
+    public class ExceptionHandlerMiddleware
     {
         private readonly RequestDelegate next;
 
-        public CustomExceptionHandlerMiddleware(RequestDelegate next)
+        public ExceptionHandlerMiddleware(RequestDelegate next)
         {
             this.next = next;
         }

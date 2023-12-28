@@ -136,10 +136,9 @@ namespace Api
 
         public static void AddAuth0Authentication(this IServiceCollection _, WebApplicationBuilder builder)
         {
-            builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-            .AddJwtBearer(options =>
+            builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
             {
-                options.Authority = $"https://{builder.Configuration["Auth0:Domain"]}/";
+                options.Authority = builder.Configuration["Auth0:Domain"];
                 options.Audience = builder.Configuration["Auth0:Audience"];
                 options.TokenValidationParameters = new TokenValidationParameters
                 {
@@ -147,16 +146,15 @@ namespace Api
                 };
             });
 
-            builder.Services
-              .AddAuthorization(options =>
-              {
-                  options.AddPolicy(
+            builder.Services.AddAuthorization(options =>
+            {
+                options.AddPolicy(
                     "read:taxes",
                     policy => policy.Requirements.Add(
-                      new HasScopeRequirement("read:taxes", builder.Configuration["Auth0:Domain"])
+                        new HasScopeRequirement("read:taxes", builder.Configuration["Auth0:Domain"])
                     )
-                  );
-              });
+                );
+            });
 
             builder.Services.AddSingleton<IAuthorizationHandler, HasScopeHandler>();
         }
