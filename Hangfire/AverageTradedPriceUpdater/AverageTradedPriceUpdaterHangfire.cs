@@ -44,6 +44,7 @@ namespace Core.Services.Hangfire.AverageTradedPriceUpdater
                 logger.LogInformation("Iniciando Hangfire para atualizar o preço médio de todos os investidores." +
                     "Id do processo: {id}", threadId);
 
+
                 var accounts = accountRepository.GetAll();
 
                 Stopwatch timer = new();

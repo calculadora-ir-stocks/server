@@ -2,9 +2,7 @@
 using Api.Database;
 using Api.Handler;
 using Api.Services.Auth;
-using Api.Services.B3;
 using Api.Services.JwtCommon;
-using Auth0.AspNetCore.Authentication;
 using Billing.Services.Stripe;
 using Common;
 using Common.Models;
@@ -12,6 +10,7 @@ using Common.Models.Secrets;
 using Core.Calculators;
 using Core.Calculators.Assets;
 using Core.Clients.Auth0;
+using Core.Clients.B3;
 using Core.Clients.InfoSimples;
 using Core.Filters;
 using Core.Hangfire.PlanExpirer;

@@ -5,7 +5,6 @@ namespace Infrastructure.Repositories.Account
 {
     public class AccountRepository : IAccountRepository
     {
-
         private readonly StocksContext context;
 
         public AccountRepository(StocksContext context)

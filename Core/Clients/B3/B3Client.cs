@@ -9,7 +9,7 @@ using System.Diagnostics;
 using System.Net;
 using System.Net.Http.Headers;
 
-namespace Api.Services.B3
+namespace Core.Clients.B3
 {
     public class B3Client : IB3Client
     {
