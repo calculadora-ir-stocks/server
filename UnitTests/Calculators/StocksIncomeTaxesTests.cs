@@ -25,12 +25,12 @@ namespace stocks_unit_tests.Business
 
             decimal expectedTaxes = (AliquotConstants.IncomeTaxesForDayTrade / 100m) * (decimal)stocks.DayTradeProfit;
             double expectedTotalSold = movements.Where(x => x.MovementType.Equals(B3ResponseConstants.Sell)).Select(x => x.OperationValue).Sum();
-                
+
             Assert.Equal((double)expectedTaxes, stocks.Taxes);
             Assert.Equal(expectedTotalSold, stocks.TotalSold);
         }
 
-        [Theory(DisplayName = "Não deve aplicar 20% de imposto em operações day-trade sob ações quando houver prejuizo.")]
+        [Theory(DisplayName = "Não deve aplicar 20% de imposto em operações day-trade sob ações quando houver prejuízo.")]
         [MemberData(nameof(LossDayTradeData))]
         public void TestDayTradeLoss(List<Movement.EquitMovement> movements)
         {
@@ -42,8 +42,26 @@ namespace stocks_unit_tests.Business
 
             decimal expectedTaxes = 0;
             double expectedTotalSold = movements.Where(x => x.MovementType.Equals(B3ResponseConstants.Sell)).Select(x => x.OperationValue).Sum();
-                
+
             Assert.Equal((double)expectedTaxes, stocks.Taxes);
+            Assert.Equal(expectedTotalSold, stocks.TotalSold);
+        }
+
+        [Theory(DisplayName = "Não deve aplicar 20% de imposto em operações day-trade sob ações quando houver prejuízo, mas deve aplicar" +
+        " em operações de lucro")]
+        [MemberData(nameof(LossDayTradeDataWithProfit))]
+        public void TestDayTradeLossWithProfit(List<Movement.EquitMovement> movements)
+        {
+            InvestorMovementDetails response = new();
+
+            stocksCalculator.Execute(response, movements, "01");
+
+            AssetIncomeTaxes stocks = response.Assets.Where(x => x.AssetTypeId == Asset.Stocks).Single();
+
+            double expectedTaxes = 193.8;
+            double expectedTotalSold = movements.Where(x => x.MovementType.Equals(B3ResponseConstants.Sell)).Select(x => x.OperationValue).Sum();
+
+            Assert.Equal(expectedTaxes, stocks.Taxes);
             Assert.Equal(expectedTotalSold, stocks.TotalSold);
         }
 
@@ -87,6 +105,34 @@ namespace stocks_unit_tests.Business
 
             buy = 2355;
             sell = 1324;
+
+            movements.Add(new("PETR4", "Petróleo Brasileiro S/A", "Ações", "Compra", buy, 1, buy, new DateTime(2023, 01, 01), true));
+            movements.Add(new("PETR4", "Petróleo Brasileiro S/A", "Ações", "Venda", sell, 1, sell, new DateTime(2023, 01, 01), true));
+
+            yield return new object[]
+            {
+                movements
+            };
+        }
+
+        public static IEnumerable<object[]> LossDayTradeDataWithProfit()
+        {
+            List<Movement.EquitMovement> movements = new();
+
+            int buy = 12324;
+            double sell = 10324.32;
+
+            movements.Add(new("PETR4", "Petróleo Brasileiro S/A", "Ações", "Compra", buy, 1, buy, new DateTime(2023, 01, 01), true));
+            movements.Add(new("PETR4", "Petróleo Brasileiro S/A", "Ações", "Venda", sell, 1, sell, new DateTime(2023, 01, 01), true));
+
+            buy = 5465;
+            sell = 3487;
+
+            movements.Add(new("PETR4", "Petróleo Brasileiro S/A", "Ações", "Compra", buy, 1, buy, new DateTime(2023, 01, 01), true));
+            movements.Add(new("PETR4", "Petróleo Brasileiro S/A", "Ações", "Venda", sell, 1, sell, new DateTime(2023, 01, 01), true));
+
+            buy = 2355;
+            sell = 3324;
 
             movements.Add(new("PETR4", "Petróleo Brasileiro S/A", "Ações", "Compra", buy, 1, buy, new DateTime(2023, 01, 01), true));
             movements.Add(new("PETR4", "Petróleo Brasileiro S/A", "Ações", "Venda", sell, 1, sell, new DateTime(2023, 01, 01), true));
@@ -179,7 +225,7 @@ namespace stocks_unit_tests.Business
         #region Day-trade and swing-trade unit tests
 
         [Theory(DisplayName = "Deve aplicar 20% de impostos sobre operações day-trade, mas 0% em operações swing-trade caso < 20k tenha sido vendido.")]
-        [MemberData(nameof(DayTradeAndSwingTradeData))]
+        [MemberData(nameof(DayTradeAndSwingTradeProfitLessThan20k))]
         public void TestBothDayTradeAndSwingTrade(List<Movement.EquitMovement> movements)
         {
             InvestorMovementDetails response = new();
@@ -192,26 +238,23 @@ namespace stocks_unit_tests.Business
             decimal dayTradeTaxes = (AliquotConstants.IncomeTaxesForDayTrade / 100m) * (decimal)stocks.DayTradeProfit;
 
             double totalSold = movements.Where(x => x.MovementType.Equals(B3ResponseConstants.Sell)).Select(x => x.OperationValue).Sum();
-            double expectedTaxes = 0;
-
-            if (stocks.SwingTradeProfit > 0 && totalSold > 20000) expectedTaxes += (double)swingTradeTaxes;
-            if (stocks.DayTradeProfit > 0) expectedTaxes += (double)dayTradeTaxes;
+            double expectedTaxes = 119;
 
             Assert.Equal(totalSold, stocks.TotalSold);
             Assert.Equal(expectedTaxes, stocks.Taxes);
         }
 
-        public static IEnumerable<object[]> DayTradeAndSwingTradeData()
+        public static IEnumerable<object[]> DayTradeAndSwingTradeProfitLessThan20k()
         {
             // Lucro em operações de swing-trade e day-trade.
             yield return new object[]
             {
                 new List<Movement.EquitMovement>
                 {
-                    new Movement.EquitMovement("PETR4", "Petróleo Brasileiro S/A", "Ações", "Compra", 21405, 1, 21405, new DateTime(2023, 01, 01)),
-                    new Movement.EquitMovement("PETR4", "Petróleo Brasileiro S/A", "Ações", "Venda", 25000, 1, 25000, new DateTime(2023, 01, 02)),
-                    new Movement.EquitMovement("PETR4", "Petróleo Brasileiro S/A", "Ações", "Compra", 26405, 1, 26405, new DateTime(2023, 01, 03), true),
-                    new Movement.EquitMovement("PETR4", "Petróleo Brasileiro S/A", "Ações", "Venda", 27000, 1, 27000, new DateTime(2023, 01, 03), true)
+                    new("PETR4", "Petróleo Brasileiro S/A", "Ações", "Compra", 17065, 1, 17065, new DateTime(2023, 01, 01)),
+                    new("PETR4", "Petróleo Brasileiro S/A", "Ações", "Venda", 19431, 1, 19431, new DateTime(2023, 01, 02)),
+                    new("PETR4", "Petróleo Brasileiro S/A", "Ações", "Compra", 26405, 1, 26405, new DateTime(2023, 01, 03), true),
+                    new("PETR4", "Petróleo Brasileiro S/A", "Ações", "Venda", 27000, 1, 27000, new DateTime(2023, 01, 03), true)
                 }
             };
         }
