@@ -23,8 +23,16 @@ namespace Core.Calculators.Assets
             double totalSold = sells.Sum(stock => stock.OperationValue);
 
             bool sellsSuperiorThan20000 = totalSold >= AliquotConstants.LimitForStocksSelling;
+            decimal taxes = 0;
 
-            bool paysIncomeTaxes = (sellsSuperiorThan20000 && swingTradeProfit > 0) || (dayTradeProfit > 0);
+            if (sellsSuperiorThan20000 && swingTradeProfit > 0)
+            {
+                taxes = CalculateTaxesFromProfit(swingTradeProfit, dayTradeProfit, AliquotConstants.IncomeTaxesForStocks);
+            } 
+            else
+            {
+                taxes = CalculateTaxesFromProfit(swingTradeProfit: 0, dayTradeProfit, AliquotConstants.IncomeTaxesForStocks);
+            }
 
             investorMovementDetails.Assets.Add(new AssetIncomeTaxes
             (
@@ -32,7 +40,7 @@ namespace Core.Calculators.Assets
             )
             {
                 AssetTypeId = Asset.Stocks,
-                Taxes = paysIncomeTaxes ? (double)CalculateTaxesFromProfit(swingTradeProfit, dayTradeProfit, AliquotConstants.IncomeTaxesForStocks) : 0,
+                Taxes = (double)taxes,
                 TotalSold = totalSold,
                 SwingTradeProfit = swingTradeProfit,
                 DayTradeProfit = dayTradeProfit

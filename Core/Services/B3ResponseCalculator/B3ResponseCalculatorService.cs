@@ -39,7 +39,7 @@ namespace Core.Services.IncomeTaxes
                 monthlyMovements.Add(month, monthMovements);
             }
 
-            return await GetTaxesAndAverageTradedPrices(monthlyMovements, accountId);
+            return await CalculateTaxesAndAverageTradedPrices(monthlyMovements, accountId);
         }
 
         private static List<Movement.EquitMovement> GetOnlyNecessaryMovementsFromResponse(Movement.Root? response)
@@ -68,15 +68,10 @@ namespace Core.Services.IncomeTaxes
             return movements.OrderBy(x => x.MovementType).OrderBy(x => x.ReferenceDate).ToList();
         }
 
-        private async Task<InvestorMovementDetails?> GetTaxesAndAverageTradedPrices(
+        private async Task<InvestorMovementDetails?> CalculateTaxesAndAverageTradedPrices(
             Dictionary<string, List<Movement.EquitMovement>> monthlyMovements, Guid accountId)
         {
             InvestorMovementDetails movementDetails = new();
-
-            if (monthlyMovements.IsNullOrEmpty())
-            {
-                return null;
-            }
 
             foreach (var monthMovements in monthlyMovements)
             {
@@ -89,15 +84,15 @@ namespace Core.Services.IncomeTaxes
 
                 if (stocks.Any())
                 {
-                    movementDetails.AverageTradedPrices.AddRange(await GetAverageTradedPrices(accountId, stocks));
+                    movementDetails.AverageTradedPrices.AddRange(await GetAverageTradedPricesIfAny(accountId, stocks));
 
                     calculator = new StocksIncomeTaxes();
-                    calculator.Execute(movementDetails, stocks, monthMovements.Key);
+                    calculator.Execute(movementDetails, stocks, month: monthMovements.Key);
                 }
 
                 if (etfs.Any())
                 {
-                    movementDetails.AverageTradedPrices.AddRange(await GetAverageTradedPrices(accountId, etfs));
+                    movementDetails.AverageTradedPrices.AddRange(await GetAverageTradedPricesIfAny(accountId, etfs));
 
                     calculator = new ETFsIncomeTaxes();
                     calculator.Execute(movementDetails, etfs, monthMovements.Key);
@@ -105,7 +100,7 @@ namespace Core.Services.IncomeTaxes
 
                 if (fiis.Any())
                 {
-                    movementDetails.AverageTradedPrices.AddRange(await GetAverageTradedPrices(accountId, fiis));
+                    movementDetails.AverageTradedPrices.AddRange(await GetAverageTradedPricesIfAny(accountId, fiis));
 
                     calculator = new FIIsIncomeTaxes();
                     calculator.Execute(movementDetails, fiis, monthMovements.Key);
@@ -113,7 +108,7 @@ namespace Core.Services.IncomeTaxes
 
                 if (bdrs.Any())
                 {
-                    movementDetails.AverageTradedPrices.AddRange(await GetAverageTradedPrices(accountId, bdrs));
+                    movementDetails.AverageTradedPrices.AddRange(await GetAverageTradedPricesIfAny(accountId, bdrs));
 
                     calculator = new BDRsIncomeTaxes();
                     calculator.Execute(movementDetails, bdrs, monthMovements.Key);
@@ -121,7 +116,7 @@ namespace Core.Services.IncomeTaxes
 
                 if (gold.Any())
                 {
-                    movementDetails.AverageTradedPrices.AddRange(await GetAverageTradedPrices(accountId, gold));
+                    movementDetails.AverageTradedPrices.AddRange(await GetAverageTradedPricesIfAny(accountId, gold));
 
                     calculator = new GoldIncomeTaxes();
                     calculator.Execute(movementDetails, gold, monthMovements.Key);
@@ -129,7 +124,7 @@ namespace Core.Services.IncomeTaxes
 
                 if (fundInvestments.Any())
                 {
-                    movementDetails.AverageTradedPrices.AddRange(await GetAverageTradedPrices(accountId, fundInvestments));
+                    movementDetails.AverageTradedPrices.AddRange(await GetAverageTradedPricesIfAny(accountId, fundInvestments));
 
                     calculator = new InvestmentsFundsIncomeTaxes();
                     calculator.Execute(movementDetails, fundInvestments, monthMovements.Key);
@@ -139,7 +134,12 @@ namespace Core.Services.IncomeTaxes
             return movementDetails;
         }
 
-        private async Task<IEnumerable<AverageTradedPriceDetails>> GetAverageTradedPrices(Guid accountId, IEnumerable<Movement.EquitMovement> movements)
+        /// <summary>
+        /// Caso um investidor já possua o preço médio de um ticker salvo, é necessário usá-lo para calcular o novo preço médio desse ticker.
+        /// </summary>
+        /// <param name="movements">As movimentações daquele tipo de ativo.</param>
+        /// <returns></returns>
+        private async Task<IEnumerable<AverageTradedPriceDetails>> GetAverageTradedPricesIfAny(Guid accountId, IEnumerable<Movement.EquitMovement> movements)
         {
             var response = await averageTradedPriceRepository.GetAverageTradedPricesDto(accountId, movements.Select(x => x.TickerSymbol).ToList());
 
@@ -149,7 +149,7 @@ namespace Core.Services.IncomeTaxes
         }
 
         /// <summary>
-        /// Altera a propriedade booleana DayTraded para verdadeiro em operações de venda day-trade.
+        /// Altera a propriedade booleana <c>Movement.EquitMovement.DayTraded</c> para verdadeiro em operações de venda day-trade.
         /// </summary>
         private static void SetDayTradeMovementsAsDayTrade(List<Movement.EquitMovement> movements)
         {

@@ -48,7 +48,7 @@ namespace stocks_unit_tests.Business
         }
 
         [Theory(DisplayName = "Não deve aplicar 20% de imposto em operações day-trade sob ações quando houver prejuízo, mas deve aplicar" +
-        " em operações de lucro")]
+        " em operações de lucro.")]
         [MemberData(nameof(LossDayTradeDataWithProfit))]
         public void TestDayTradeLossWithProfit(List<Movement.EquitMovement> movements)
         {
@@ -226,7 +226,7 @@ namespace stocks_unit_tests.Business
 
         [Theory(DisplayName = "Deve aplicar 20% de impostos sobre operações day-trade, mas 0% em operações swing-trade caso < 20k tenha sido vendido.")]
         [MemberData(nameof(DayTradeAndSwingTradeProfitLessThan20k))]
-        public void TestBothDayTradeAndSwingTrade(List<Movement.EquitMovement> movements)
+        public void TestBothDayTradeAndSwingTradeLessThan20k(List<Movement.EquitMovement> movements)
         {
             InvestorMovementDetails response = new();
 
@@ -238,7 +238,27 @@ namespace stocks_unit_tests.Business
             decimal dayTradeTaxes = (AliquotConstants.IncomeTaxesForDayTrade / 100m) * (decimal)stocks.DayTradeProfit;
 
             double totalSold = movements.Where(x => x.MovementType.Equals(B3ResponseConstants.Sell)).Select(x => x.OperationValue).Sum();
-            double expectedTaxes = 119;
+            double expectedTaxes = 200;
+
+            Assert.Equal(totalSold, stocks.TotalSold);
+            Assert.Equal(expectedTaxes, stocks.Taxes);
+        }
+
+        [Theory(DisplayName = "Deve aplicar 20% de impostos sobre operações day-trade e 15% em operações swing-trade caso > 20k tenha sido vendido.")]
+        [MemberData(nameof(DayTradeAndSwingTradeProfitMoreThan20k))]
+        public void TestBothDayTradeAndSwingTradeMoreThan20k(List<Movement.EquitMovement> movements)
+        {
+            InvestorMovementDetails response = new();
+
+            stocksCalculator.Execute(response, movements, "01");
+
+            AssetIncomeTaxes stocks = response.Assets.Where(x => x.AssetTypeId == Asset.Stocks).Single();
+
+            decimal swingTradeTaxes = (AliquotConstants.IncomeTaxesForStocks / 100m) * (decimal)stocks.SwingTradeProfit;
+            decimal dayTradeTaxes = (AliquotConstants.IncomeTaxesForDayTrade / 100m) * (decimal)stocks.DayTradeProfit;
+
+            double totalSold = movements.Where(x => x.MovementType.Equals(B3ResponseConstants.Sell)).Select(x => x.OperationValue).Sum();
+            double expectedTaxes = 2568.2;
 
             Assert.Equal(totalSold, stocks.TotalSold);
             Assert.Equal(expectedTaxes, stocks.Taxes);
@@ -246,15 +266,32 @@ namespace stocks_unit_tests.Business
 
         public static IEnumerable<object[]> DayTradeAndSwingTradeProfitLessThan20k()
         {
-            // Lucro em operações de swing-trade e day-trade.
+            // Lucro em operações de swing-trade e day-trade, mas < 20k foram vendidos. Nesse caso, apenas 20% devem ser aplicados nas operações
+            // de day-trade.
             yield return new object[]
             {
                 new List<Movement.EquitMovement>
                 {
-                    new("PETR4", "Petróleo Brasileiro S/A", "Ações", "Compra", 17065, 1, 17065, new DateTime(2023, 01, 01)),
-                    new("PETR4", "Petróleo Brasileiro S/A", "Ações", "Venda", 19431, 1, 19431, new DateTime(2023, 01, 02)),
-                    new("PETR4", "Petróleo Brasileiro S/A", "Ações", "Compra", 26405, 1, 26405, new DateTime(2023, 01, 03), true),
-                    new("PETR4", "Petróleo Brasileiro S/A", "Ações", "Venda", 27000, 1, 27000, new DateTime(2023, 01, 03), true)
+                    new("PETR4", "Petróleo Brasileiro S/A", "Ações", "Compra", 5467, 1, 5467, new DateTime(2023, 01, 01)),
+                    new("PETR4", "Petróleo Brasileiro S/A", "Ações", "Venda", 6587, 1, 6587, new DateTime(2023, 01, 02)),
+                    new("PETR4", "Petróleo Brasileiro S/A", "Ações", "Compra", 7653, 1, 7653, new DateTime(2023, 01, 03), true),
+                    new("PETR4", "Petróleo Brasileiro S/A", "Ações", "Venda", 8653, 1, 8653, new DateTime(2023, 01, 03), true)
+                }
+            };
+        }
+
+        public static IEnumerable<object[]> DayTradeAndSwingTradeProfitMoreThan20k()
+        {
+            // Lucro em operações de swing-trade e day-trade, mas > 20k foram vendidos. Nesse caso, 20% devem ser aplicados nas operações
+            // de day-trade e 15% devem ser aplicados nas operações de swing-trade. O imposto total a ser pago é a soma dessas duas aplicações.
+            yield return new object[]
+            {
+                new List<Movement.EquitMovement>
+                {
+                    new("PETR4", "Petróleo Brasileiro S/A", "Ações", "Compra", 5467, 1, 5467, new DateTime(2023, 01, 01)),
+                    new("PETR4", "Petróleo Brasileiro S/A", "Ações", "Venda", 6587, 1, 6587, new DateTime(2023, 01, 02)),
+                    new("PETR4", "Petróleo Brasileiro S/A", "Ações", "Compra", 7653, 1, 7653, new DateTime(2023, 01, 03), true),
+                    new("PETR4", "Petróleo Brasileiro S/A", "Ações", "Venda", 19654, 1, 19654, new DateTime(2023, 01, 03), true)
                 }
             };
         }
