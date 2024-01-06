@@ -24,10 +24,8 @@ namespace Core.Calculators.Assets
 
             bool paysIncomeTaxes = sells.Any() && (swingTradeProfit > 0 || dayTradeProfit > 0);
 
-            investorMovementDetails.Assets.Add(new AssetIncomeTaxes
-            (
-                month, AssetEnumHelper.GetNameByAssetType(Asset.FIIs), response.OperationHistory
-            )
+            investorMovementDetails.Assets.Add(new AssetIncomeTaxes(
+                month, AssetEnumHelper.GetNameByAssetType(Asset.FIIs), response.OperationHistory)
             {
                 AssetTypeId = Asset.FIIs,
                 Taxes = paysIncomeTaxes ? (double)CalculateTaxesFromProfit(swingTradeProfit, dayTradeProfit, AliquotConstants.IncomeTaxesForFIIs) : 0,

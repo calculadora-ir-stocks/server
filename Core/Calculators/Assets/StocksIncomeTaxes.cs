@@ -30,10 +30,8 @@ namespace Core.Calculators.Assets
             else
                 taxes = CalculateTaxesFromProfit(swingTradeProfit: 0, dayTradeProfit, AliquotConstants.IncomeTaxesForStocks);
 
-            investorMovementDetails.Assets.Add(new AssetIncomeTaxes
-            (
-                month, AssetEnumHelper.GetNameByAssetType(Asset.Stocks), profit.OperationHistory
-            )
+            investorMovementDetails.Assets.Add(new AssetIncomeTaxes(
+                month, AssetEnumHelper.GetNameByAssetType(Asset.Stocks), profit.OperationHistory)
             {
                 AssetTypeId = Asset.Stocks,
                 Taxes = (double)taxes,
