@@ -25,14 +25,10 @@ namespace Core.Calculators.Assets
             bool sellsSuperiorThan20000 = totalSold >= AliquotConstants.LimitForStocksSelling;
             decimal taxes = 0;
 
-            if (sellsSuperiorThan20000 && swingTradeProfit > 0)
-            {
+            if (sellsSuperiorThan20000)
                 taxes = CalculateTaxesFromProfit(swingTradeProfit, dayTradeProfit, AliquotConstants.IncomeTaxesForStocks);
-            } 
             else
-            {
                 taxes = CalculateTaxesFromProfit(swingTradeProfit: 0, dayTradeProfit, AliquotConstants.IncomeTaxesForStocks);
-            }
 
             investorMovementDetails.Assets.Add(new AssetIncomeTaxes
             (
