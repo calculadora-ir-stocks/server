@@ -20,15 +20,17 @@ namespace Core.Calculators.Assets
             var swingTradeProfit = profit.SwingTradeOperations.Select(x => x.Profit).Sum();
 
             var sells = movements.Where(x => x.MovementType.Equals(B3ResponseConstants.Sell));
-            double totalSold = sells.Sum(stock => stock.OperationValue);
+            double totalSold = sells.Sum(x => x.OperationValue);
 
             bool sellsSuperiorThan20000 = totalSold >= AliquotConstants.LimitForStocksSelling;
+
             decimal taxes = 0;
 
-            if (sellsSuperiorThan20000)
-                taxes = CalculateTaxesFromProfit(swingTradeProfit, dayTradeProfit, AliquotConstants.IncomeTaxesForStocks);
-            else
-                taxes = CalculateTaxesFromProfit(swingTradeProfit: 0, dayTradeProfit, AliquotConstants.IncomeTaxesForStocks);
+            if (swingTradeProfit > 0 && sellsSuperiorThan20000)
+                taxes = CalculateTaxesFromProfit(swingTradeProfit, isDayTrade: false, AliquotConstants.IncomeTaxesForStocks);                    
+
+            if (dayTradeProfit > 0)
+                taxes += CalculateTaxesFromProfit(dayTradeProfit, isDayTrade: true, AliquotConstants.IncomeTaxesForStocks);
 
             investorMovementDetails.Assets.Add(new AssetIncomeTaxes(
                 month, AssetEnumHelper.GetNameByAssetType(Asset.Stocks), profit.OperationHistory)

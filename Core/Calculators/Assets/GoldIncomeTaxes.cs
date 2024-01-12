@@ -22,13 +22,19 @@ namespace Core.Calculators.Assets
             var sells = movements.Where(x => x.MovementType.Equals(B3ResponseConstants.Sell));
             double totalSold = sells.Sum(gold => gold.OperationValue);
 
-            bool paysIncomeTaxes = sells.Any() && (swingTradeProfit > 0 || dayTradeProfit > 0);
+            decimal taxes = 0;
+
+            if (swingTradeProfit > 0)
+                taxes = CalculateTaxesFromProfit(swingTradeProfit, isDayTrade: false, AliquotConstants.IncomeTaxesForGold);
+
+            if (dayTradeProfit > 0)
+                taxes += CalculateTaxesFromProfit(dayTradeProfit, isDayTrade: true, AliquotConstants.IncomeTaxesForGold);
 
             investorMovementDetails.Assets.Add(new AssetIncomeTaxes(
                 month, AssetEnumHelper.GetNameByAssetType(Asset.Gold), response.OperationHistory)
             {
                 AssetTypeId = Asset.Gold,
-                Taxes = paysIncomeTaxes ? (double)CalculateTaxesFromProfit(swingTradeProfit, dayTradeProfit, AliquotConstants.IncomeTaxesForGold) : 0,
+                Taxes = (double)taxes,
                 TotalSold = totalSold,
                 SwingTradeProfit = swingTradeProfit,
                 DayTradeProfit = dayTradeProfit

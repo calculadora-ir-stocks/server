@@ -13,7 +13,7 @@ namespace Core.Calculators
     public abstract class ProfitCalculator
     {
         /// <summary>
-        /// Retorna o lucro de todas as movimentações especificadas em operações swing-trade e day-trade.
+        /// Retorna o lucro (ou prejuízo) de todas as movimentações especificadas em operações swing-trade e day-trade.
         /// Além disso, atualiza a lista <c>averagePrices</c> com os novos preços médios e, caso algum ativo
         /// tenha sido totalmente vendido, o remove da lista.
         /// </summary>
@@ -184,20 +184,19 @@ namespace Core.Calculators
             }
         }
 
-        public static decimal CalculateTaxesFromProfit(double swingTradeProfit, double dayTradeProfit, int aliquot)
+        public static decimal CalculateTaxesFromProfit(double profit, bool isDayTrade, int aliquot)
         {
-            decimal swingTradeTaxes = 0;
-            decimal dayTradeTaxes = 0;
+            decimal taxes = 0;
 
-            if (swingTradeProfit > 0)
-                swingTradeTaxes = (aliquot / 100m) * (decimal)swingTradeProfit;
+            if (profit > 0)
+            {
+                if (isDayTrade)
+                    taxes = (AliquotConstants.IncomeTaxesForDayTrade / 100m) * (decimal)profit;
+                else
+                    taxes = (aliquot / 100m) * (decimal)profit;
+            }
 
-            if (dayTradeProfit > 0)
-                dayTradeTaxes = (AliquotConstants.IncomeTaxesForDayTrade / 100m) * (decimal)dayTradeProfit;
-
-            decimal totalTaxes = swingTradeTaxes + dayTradeTaxes;
-
-            return totalTaxes;
+            return taxes;
         }
 
         private static void CalculateSplitOperation(Movement.EquitMovement movement)
