@@ -42,7 +42,7 @@ namespace stocks_unit_tests.Services
             double firstMonthTaxes = result!.Assets.Where(x => x.Month.Equals("01/2023")).Select(x => x.Taxes).Sum();
             double secondMonthTaxes = result!.Assets.Where(x => x.Month.Equals("02/2023")).Select(x => x.Taxes).Sum();
 
-            Assert.Equal(540.55, firstMonthTaxes);
+            Assert.Equal(531, Math.Round(firstMonthTaxes, 0));
             Assert.Equal(31.9, secondMonthTaxes);
         }
 

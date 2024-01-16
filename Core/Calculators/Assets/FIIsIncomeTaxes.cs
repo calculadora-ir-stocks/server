@@ -14,10 +14,10 @@ namespace Core.Calculators.Assets
             string month
         )
         {
-            var response = CalculateProfit(movements, investorMovementDetails.AverageTradedPrices);
+            var profit = CalculateProfit(movements, investorMovementDetails.AverageTradedPrices);
 
-            var dayTradeProfit = response.DayTradeOperations.Select(x => x.Profit).Sum();
-            var swingTradeProfit = response.SwingTradeOperations.Select(x => x.Profit).Sum();
+            var dayTradeProfit = profit.DayTradeOperations.Select(x => x.Profit).Sum();
+            var swingTradeProfit = profit.SwingTradeOperations.Select(x => x.Profit).Sum();
 
             var sells = movements.Where(x => x.MovementType.Equals(B3ResponseConstants.Sell));
             double totalSold = sells.Sum(fii => fii.OperationValue);
@@ -31,7 +31,7 @@ namespace Core.Calculators.Assets
                 taxes += CalculateTaxesFromProfit(dayTradeProfit, isDayTrade: true, AliquotConstants.IncomeTaxesForDayTrade);
 
             investorMovementDetails.Assets.Add(new AssetIncomeTaxes(
-                month, AssetEnumHelper.GetNameByAssetType(Asset.FIIs), response.OperationHistory)
+                month, AssetEnumHelper.GetNameByAssetType(Asset.FIIs), profit.OperationHistory)
             {
                 AssetTypeId = Asset.FIIs,
                 Taxes = (double)taxes,
