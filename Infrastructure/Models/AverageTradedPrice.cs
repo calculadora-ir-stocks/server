@@ -10,10 +10,11 @@ namespace Infrastructure.Models
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
     public class AverageTradedPrice
     {
-        public AverageTradedPrice(string ticker, double averagePrice, int quantity, Account account, DateTime updatedAt)
+        public AverageTradedPrice(string ticker, double averagePrice, double totalBought, int quantity, Account account, DateTime updatedAt)
         {
             Ticker = ticker;
             AveragePrice = averagePrice;
+            TotalBought = totalBought;
             Quantity = quantity;
             Account = account;
             UpdatedAt = updatedAt;
@@ -28,6 +29,7 @@ namespace Infrastructure.Models
         public Guid Id { get; protected set; } = Guid.NewGuid();
         public string Ticker { get; set; }
         public double AveragePrice { get; set; }
+        public double TotalBought { get; set; }
         public int Quantity { get; set; }
         public Account Account { get; set; }
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;

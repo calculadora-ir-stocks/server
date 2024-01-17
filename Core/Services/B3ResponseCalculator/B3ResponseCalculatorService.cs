@@ -84,7 +84,7 @@ namespace Core.Services.IncomeTaxes
 
                 if (stocks.Any())
                 {
-                    movementDetails.AverageTradedPrices.AddRange(await GetAverageTradedPricesIfAny(accountId, stocks));
+                    movementDetails.AverageTradedPrices.AddRange(await GetAverageTradedPricesIfAny(accountId, movementDetails.AverageTradedPrices));
 
                     calculator = new StocksIncomeTaxes();
                     calculator.Execute(movementDetails, stocks, month: monthMovements.Key);
@@ -92,7 +92,7 @@ namespace Core.Services.IncomeTaxes
 
                 if (etfs.Any())
                 {
-                    movementDetails.AverageTradedPrices.AddRange(await GetAverageTradedPricesIfAny(accountId, etfs));
+                    movementDetails.AverageTradedPrices.AddRange(await GetAverageTradedPricesIfAny(accountId, movementDetails.AverageTradedPrices));
 
                     calculator = new ETFsIncomeTaxes();
                     calculator.Execute(movementDetails, etfs, monthMovements.Key);
@@ -100,7 +100,7 @@ namespace Core.Services.IncomeTaxes
 
                 if (fiis.Any())
                 {
-                    movementDetails.AverageTradedPrices.AddRange(await GetAverageTradedPricesIfAny(accountId, fiis));
+                    movementDetails.AverageTradedPrices.AddRange(await GetAverageTradedPricesIfAny(accountId, movementDetails.AverageTradedPrices));
 
                     calculator = new FIIsIncomeTaxes();
                     calculator.Execute(movementDetails, fiis, monthMovements.Key);
@@ -108,7 +108,7 @@ namespace Core.Services.IncomeTaxes
 
                 if (bdrs.Any())
                 {
-                    movementDetails.AverageTradedPrices.AddRange(await GetAverageTradedPricesIfAny(accountId, bdrs));
+                    movementDetails.AverageTradedPrices.AddRange(await GetAverageTradedPricesIfAny(accountId, movementDetails.AverageTradedPrices));
 
                     calculator = new BDRsIncomeTaxes();
                     calculator.Execute(movementDetails, bdrs, monthMovements.Key);
@@ -116,7 +116,7 @@ namespace Core.Services.IncomeTaxes
 
                 if (gold.Any())
                 {
-                    movementDetails.AverageTradedPrices.AddRange(await GetAverageTradedPricesIfAny(accountId, gold));
+                    movementDetails.AverageTradedPrices.AddRange(await GetAverageTradedPricesIfAny(accountId, movementDetails.AverageTradedPrices));
 
                     calculator = new GoldIncomeTaxes();
                     calculator.Execute(movementDetails, gold, monthMovements.Key);
@@ -124,7 +124,7 @@ namespace Core.Services.IncomeTaxes
 
                 if (fundInvestments.Any())
                 {
-                    movementDetails.AverageTradedPrices.AddRange(await GetAverageTradedPricesIfAny(accountId, fundInvestments));
+                    movementDetails.AverageTradedPrices.AddRange(await GetAverageTradedPricesIfAny(accountId, movementDetails.AverageTradedPrices));
 
                     calculator = new InvestmentsFundsIncomeTaxes();
                     calculator.Execute(movementDetails, fundInvestments, monthMovements.Key);
@@ -139,12 +139,15 @@ namespace Core.Services.IncomeTaxes
         /// </summary>
         /// <param name="movements">As movimentações daquele tipo de ativo.</param>
         /// <returns></returns>
-        private async Task<IEnumerable<AverageTradedPriceDetails>> GetAverageTradedPricesIfAny(Guid accountId, IEnumerable<Movement.EquitMovement> movements)
+        private async Task<IEnumerable<AverageTradedPriceDetails>> GetAverageTradedPricesIfAny(Guid accountId, List<AverageTradedPriceDetails> averagePrices)
         {
-            var response = await averageTradedPriceRepository.GetAverageTradedPricesDto(accountId, movements.Select(x => x.TickerSymbol).ToList());
+            var response = await averageTradedPriceRepository.GetAverageTradedPricesDto(accountId, averagePrices.Select(x => x.TickerSymbol).ToList());
+
+            // ticker já foi adicionado na lista de preço médio
+            if (response.Any(x => averagePrices.Any(y => y.TickerSymbol == x.Ticker))) return Array.Empty<AverageTradedPriceDetails>();
 
             return response
-                .Select(x => new AverageTradedPriceDetails(x.Ticker, x.AverageTradedPrice, x.AverageTradedPrice, x.Quantity))
+                .Select(x => new AverageTradedPriceDetails(x.Ticker, x.AverageTradedPrice, x.TotalBought, x.Quantity))
                 .ToList();
         }
 

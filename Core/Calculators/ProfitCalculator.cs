@@ -133,7 +133,7 @@ namespace Core.Calculators
                 quantity = ticker.TradedQuantity + movement.EquitiesQuantity;
             }
 
-            ticker.UpdateAverageTradedPrice(totalBought, (int)quantity);
+            ticker.UpdateValues(totalBought, (int)quantity);
 
             if (InvestorSoldAllTicker(ticker))
             {

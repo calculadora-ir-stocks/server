@@ -94,7 +94,7 @@ namespace Core.Services.B3Syncing
                 }
             };
 
-            // AddBigBangDataSet(b3Response);
+            AddBigBangDataSet(b3Response);
 
             return b3Response;
         }
@@ -120,6 +120,7 @@ namespace Core.Services.B3Syncing
                 (
                    averageTradedPrice.TickerSymbol,
                    averageTradedPrice.AverageTradedPrice,
+                   averageTradedPrice.TotalBought,
                    averageTradedPrice.TradedQuantity,
                    account,
                    updatedAt: DateTime.UtcNow

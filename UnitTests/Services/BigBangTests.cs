@@ -31,6 +31,17 @@ namespace stocks_unit_tests.Services
             Assert.ThrowsAsync<NotFoundException>(() => bigBang.Calculate(emptyMovements, It.IsAny<Guid>()));
         }
 
+        [Theory(DisplayName = "Deve calcular corretamente os impostos de movimentações que possuem mais de um ativo em uma operação de compra ou venda.")]
+        [MemberData(nameof(TaxesFromMovementsWithMoreThanOneAssetPerOperationData))]
+        public async Task ShouldCalculateTaxesFromMovementsWithMoreThanOneAssetPerOperation(Root movement)
+        {
+            var result = await bigBang.Calculate(movement, It.IsAny<Guid>());
+
+            double taxes = result!.Assets.Where(x => x.Month.Equals("01/2023")).Select(x => x.Taxes).Sum();
+
+            Assert.Equal(15.2, taxes);
+        }
+
         [Theory(DisplayName = "Deve calcular corretamente todos os impostos de meses retroativos ao fazer a sincronização inicial da conta.")]
         [MemberData(nameof(BigBangData))]
         public async Task ShouldCalculateTaxesFromRetroactiveMonthsWhenSyncing(Root movement)
@@ -44,6 +55,51 @@ namespace stocks_unit_tests.Services
 
             Assert.Equal(531, Math.Round(firstMonthTaxes, 0));
             Assert.Equal(31.9, secondMonthTaxes);
+        }
+
+        [Theory(DisplayName = "Deve calcular corretamente todos os preços médios de meses retroativos ao fazer a sincronização inicial da conta.")]
+        [MemberData(nameof(AverageTradedPriceData))]
+        public async Task ShouldCalculateAverageTradedPricesWhenSyncing(Root movement)
+        {
+            repository.Setup(x => x.GetAverageTradedPricesDto(It.IsAny<Guid>(), It.IsAny<List<string>>())).ReturnsAsync(new List<AverageTradedPriceDto>
+            {
+                new("TETA4", 27, 54, 2)
+            });
+
+            var result = await bigBang.Calculate(movement, It.IsAny<Guid>());
+
+            var averagePrices = result!.AverageTradedPrices.ToList();
+
+            double petr4 = averagePrices.Where(x => x.TickerSymbol.Equals("PETR4")).Select(x => x.AverageTradedPrice).First();
+            double vale3 = averagePrices.Where(x => x.TickerSymbol.Equals("VALE3")).Select(x => x.AverageTradedPrice).First();
+            double mus3 = averagePrices.Where(x => x.TickerSymbol.Equals("MUS3")).Select(x => x.AverageTradedPrice).First();
+            double teta4 = averagePrices.Where(x => x.TickerSymbol.Equals("TETA4")).Select(x => x.AverageTradedPrice).First();
+
+            Assert.Equal(15, petr4);
+            Assert.Equal(57.5, vale3);
+            Assert.Equal(15760.5, mus3);
+            Assert.Equal(54, teta4);
+        }
+
+        public static IEnumerable<object[]> TaxesFromMovementsWithMoreThanOneAssetPerOperationData()
+        {
+            yield return new object[]
+            {
+                new Root
+                {
+                    Data = new Data
+                    {
+                        EquitiesPeriods = new EquitiesPeriods
+                        {
+                            EquitiesMovements = new List<EquitMovement>()
+                            {
+                                new("PETR4", "Petróleo Brasileiro S/A", "Ações", "Compra", 128, 2, 64, new DateTime(2023, 01, 02), true),
+                                new("PETR4", "Petróleo Brasileiro S/A", "Ações", "Venda", 204, 2, 102, new DateTime(2023, 01, 02)),
+                            }
+                        }
+                    }
+                }
+            };
         }
 
         public static IEnumerable<object[]> BigBangData()
@@ -108,49 +164,38 @@ namespace stocks_unit_tests.Services
             };
         }
 
-        [Theory(DisplayName = "Deve calcular corretamente todos os preços médios de meses retroativos ao fazer a sincronização inicial da conta.")]
-        [MemberData(nameof(BigBangData))]
-        public async Task ShouldCalculateAverageTradedPricesWhenSyncing(Root movement)
+        public static IEnumerable<object[]> AverageTradedPriceData()
         {
-            repository.Setup(x => x.GetAverageTradedPricesDto(It.IsAny<Guid>(), It.IsAny<List<string>>())).ReturnsAsync(new List<AverageTradedPriceDto>
+            yield return new object[]
             {
-                new AverageTradedPriceDto("PETR4", 20.54, 3),
-                new AverageTradedPriceDto("IVVB11", 54, 1)
-            });
+                new Root
+                {
+                    Data = new Data
+                    {
+                        EquitiesPeriods = new EquitiesPeriods
+                        {
+                            EquitiesMovements = new List<EquitMovement>()
+                            {
+                                new("PETR4", "Petróleo Brasileiro S/A", "Ações", "Compra", 53, 1, 53, new DateTime(2023, 01, 01)),
+                                new("PETR4", "Petróleo Brasileiro S/A", "Ações", "Compra", 64, 1, 64, new DateTime(2023, 01, 02)),
+                                new("PETR4", "Petróleo Brasileiro S/A", "Ações", "Venda", 102, 1, 102, new DateTime(2023, 01, 03)),
 
-            var result = await bigBang.Calculate(movement, It.IsAny<Guid>());
+                                new("VALE3", "Vale S.A.", "Ações", "Compra", 53, 1, 53, new DateTime(2023, 01, 01)),
+                                new("VALE3", "Vale S.A.", "Ações", "Compra", 64, 1, 64, new DateTime(2023, 01, 03)),
+                                new("VALE3", "Vale S.A.", "Ações", "Compra", 102, 1, 102, new DateTime(2023, 01, 03)),
+                                new("VALE3", "Vale S.A.", "Ações", "Venda", 104, 1, 104, new DateTime(2023, 01, 03), true),
 
-            var averagePrices = result!.AverageTradedPrices.ToList();
+                                new("MUS3", "Music S.A.", "Ações", "Compra", 18320, 1, 18320, new DateTime(2023, 01, 10)),
+                                new("MUS3", "Music S.A.", "Ações", "Compra", 34640, 2, 17320, new DateTime(2023, 01, 10)),
+                                new("MUS3", "Music S.A.", "Ações", "Venda", 21439, 1, 21439, new DateTime(2023, 01, 11)),
 
-            // Mês 01
-
-            double petr4Price = averagePrices.Where(x => x.TickerSymbol.Equals("PETR4")).Select(x => x.AverageTradedPrice).First();
-            double petr4Quantity = averagePrices.Where(x => x.TickerSymbol.Equals("PETR4")).Select(x => x.TradedQuantity).First();
-
-            double vale3 = averagePrices.Where(x => x.TickerSymbol.Equals("VALE3")).Select(x => x.AverageTradedPrice).First();
-            double mus3 = averagePrices.Where(x => x.TickerSymbol.Equals("MUS3")).Select(x => x.AverageTradedPrice).First();
-            double corp4 = averagePrices.Where(x => x.TickerSymbol.Equals("CORP4")).Select(x => x.AverageTradedPrice).First();
-            double teta4 = averagePrices.Where(x => x.TickerSymbol.Equals("TETA4")).Select(x => x.AverageTradedPrice).First();
-            double googl = averagePrices.Where(x => x.TickerSymbol.Equals("GOOGL")).Select(x => x.AverageTradedPrice).First();
-
-            // Mês 02
-
-            double cpts11 = averagePrices.Where(x => x.TickerSymbol.Equals("CPTS11")).Select(x => x.AverageTradedPrice).First();
-            double bova11 = averagePrices.Where(x => x.TickerSymbol.Equals("BOVA11")).Select(x => x.AverageTradedPrice).First();
-            double ivvb11 = averagePrices.Where(x => x.TickerSymbol.Equals("IVVB11")).Select(x => x.AverageTradedPrice).First();
-
-            Assert.Equal(27.50, petr4Price);
-            Assert.Equal(5, petr4Quantity);
-
-            Assert.Equal(73, vale3);
-            Assert.Equal(18320, mus3);
-            Assert.Equal(743, corp4);
-            Assert.Equal(20, teta4);
-            Assert.Equal(743, googl);
-
-            Assert.Equal(201, cpts11);
-            Assert.Equal(50, bova11);
-            Assert.Equal(52, ivvb11);
+                                new("TETA4", "Tetris S.A.", "Ações", "Compra", 20, 1, 20, new DateTime(2023, 01, 17)),
+                                new("TETA4", "Tetris S.A.", "Ações", "Venda", 20, 2, 10, new DateTime(2023, 01, 17), true),
+                            }
+                        }
+                    }
+                }
+            };
         }
-    }
+    }    
 }

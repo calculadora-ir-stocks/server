@@ -124,7 +124,7 @@ namespace Core.Services.Hangfire.AverageTradedPriceUpdater
             var response = await averageTradedPriceRepository.GetAverageTradedPricesDto(id, movements.Select(x => x.TickerSymbol).ToList());
 
             return response
-                .Select(x => new AverageTradedPriceDetails(x.Ticker, x.AverageTradedPrice, x.AverageTradedPrice, x.Quantity))
+                .Select(x => new AverageTradedPriceDetails(x.Ticker, x.AverageTradedPrice, x.TotalBought, x.Quantity))
                 .ToList();
         }
 
@@ -201,6 +201,7 @@ namespace Core.Services.Hangfire.AverageTradedPriceUpdater
                 response.Add(new AverageTradedPrice(
                     asset.TickerSymbol,
                     asset.AverageTradedPrice,
+                    asset.TotalBought,
                     asset.TradedQuantity,
                     account,
                     DateTime.Now
