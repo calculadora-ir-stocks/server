@@ -11,6 +11,7 @@ using Core.Calculators.Assets;
 using Core.Clients.Auth0;
 using Core.Clients.B3;
 using Core.Clients.InfoSimples;
+using Core.Filters;
 using Core.Hangfire.PlanExpirer;
 using Core.Notification;
 using Core.Services.Account;
@@ -70,13 +71,7 @@ namespace Api
             services.AddTransient<IIncomeTaxesCalculator, InvestmentsFundsIncomeTaxes>();
             services.AddTransient<IIncomeTaxesCalculator, StocksIncomeTaxes>();
 
-            services.Configure<JwtProperties>(options =>
-            {
-                options.Token = builder.Configuration["Jwt:Token"];
-                options.Issuer = builder.Configuration["Jwt:Issuer"];
-                options.Audience = builder.Configuration["Jwt:Audience"];
-                options.Authoriry = builder.Configuration["Jwt:Authority"];
-            });
+            services.AddMvc(options => options.Filters.Add<NotificationFilter>());
 
             services.Configure<StripeSecret>(options =>
             {

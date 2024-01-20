@@ -10,7 +10,7 @@ namespace Api.Services.Auth
         /// </summary>
         /// <param name="request">Objeto contendo todas as informações para o registro do usuário.</param>
         /// <returns>O id do usuário cadastrado.</returns>
-        Task<Guid?> SignUp(SignUpRequest request);
+        Task<Guid> SignUp(SignUpRequest request);
 
         /// <summary>
         /// Obtém o token de autenticação do Auth0. Será usado apenas para testes locais. Em produção, o token JWT

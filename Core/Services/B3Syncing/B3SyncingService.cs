@@ -172,6 +172,7 @@ namespace Core.Services.B3Syncing
                 CorporationName = "BOVA 11 Corporation Inc.",
                 MovementType = "Compra",
                 OperationValue = 10.43,
+                UnitPrice = 10.43,
                 EquitiesQuantity = 1,
                 ReferenceDate = new DateTime(2023, 01, 01)
             });
@@ -183,6 +184,7 @@ namespace Core.Services.B3Syncing
                 CorporationName = "BOVA 11 Corporation Inc.",
                 MovementType = "Compra",
                 OperationValue = 18.43,
+                UnitPrice = 18.43,
                 EquitiesQuantity = 1,
                 ReferenceDate = new DateTime(2023, 01, 03)
             });
@@ -206,6 +208,7 @@ namespace Core.Services.B3Syncing
                 CorporationName = "IVVB 11 Corporation Inc.",
                 MovementType = "Compra",
                 OperationValue = 245.65,
+                UnitPrice = 245.65,
                 EquitiesQuantity = 1,
                 ReferenceDate = new DateTime(2023, 01, 09)
             });
@@ -217,6 +220,7 @@ namespace Core.Services.B3Syncing
                 CorporationName = "IVVB 11 Corporation Inc.",
                 MovementType = "Compra",
                 OperationValue = 246.65,
+                UnitPrice = 246.65,
                 EquitiesQuantity = 1,
                 ReferenceDate = new DateTime(2023, 01, 09)
             });
@@ -240,6 +244,7 @@ namespace Core.Services.B3Syncing
                 CorporationName = "KFOF11 Corporation Inc.",
                 MovementType = "Compra",
                 OperationValue = 231.34,
+                UnitPrice = 231.34,
                 EquitiesQuantity = 1,
                 ReferenceDate = new DateTime(2023, 01, 16)
             });
@@ -275,7 +280,8 @@ namespace Core.Services.B3Syncing
                 MovementType = "Compra",
                 CorporationName = "Americanas S/A",
                 OperationValue = 265.54,
-                EquitiesQuantity = 1,
+                UnitPrice = 132.77,
+                EquitiesQuantity = 2,
                 ReferenceDate = new DateTime(2023, 02, 01)
             });
 
@@ -286,6 +292,7 @@ namespace Core.Services.B3Syncing
                 MovementType = "Compra",
                 CorporationName = "Americanas S/A",
                 OperationValue = 261.54,
+                UnitPrice = 261.54,
                 EquitiesQuantity = 1,
                 ReferenceDate = new DateTime(2023, 02, 01)
             });

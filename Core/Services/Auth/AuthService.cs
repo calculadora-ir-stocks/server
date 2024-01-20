@@ -2,6 +2,7 @@
 using Common.Exceptions;
 using Core.Clients.Auth0;
 using Core.Notification;
+using Infrastructure.Repositories;
 using Infrastructure.Repositories.Account;
 using Microsoft.Extensions.Logging;
 using Stripe;
@@ -12,6 +13,8 @@ namespace Api.Services.Auth
     {
 
         private readonly IAccountRepository accountRepository;
+        private readonly IGenericRepository<Infrastructure.Models.Account> genericRepository;
+
         private readonly IAuth0Client auth0Client;
         private readonly CustomerService stripeCustomerService;
 
@@ -19,6 +22,7 @@ namespace Api.Services.Auth
         private readonly ILogger<AuthService> logger;
 
         public AuthService(
+            IGenericRepository<Infrastructure.Models.Account> genericRepository,
             IAccountRepository accountRepository,
             IAuth0Client auth0Client,
             CustomerService stripeCustomerService,
@@ -26,6 +30,7 @@ namespace Api.Services.Auth
             ILogger<AuthService> logger
         )
         {
+            this.genericRepository = genericRepository;
             this.accountRepository = accountRepository;
             this.auth0Client = auth0Client;
             this.stripeCustomerService = stripeCustomerService;
@@ -38,7 +43,7 @@ namespace Api.Services.Auth
             return await auth0Client.GetToken();
         }
 
-        public async Task<Guid?> SignUp(SignUpRequest request)
+        public async Task<Guid> SignUp(SignUpRequest request)
         {
             Infrastructure.Models.Account account = new(
                 request.Auth0Id,
@@ -49,11 +54,6 @@ namespace Api.Services.Auth
 
             await ThrowExceptionIfSignUpIsInvalid(account, request.IsTOSAccepted);
 
-            if (notificationManager.HasNotifications)
-            {
-                return null;
-            }
-
             Customer? stripeAccount = await stripeCustomerService.CreateAsync(new CustomerCreateOptions
             {
                 Phone = account.PhoneNumber
@@ -61,6 +61,7 @@ namespace Api.Services.Auth
 
             account.StripeCustomerId = stripeAccount.Id;
 
+            genericRepository.Add(account);
 
             return account.Id;
         }
