@@ -1,22 +1,14 @@
 ﻿namespace Core.Services.Email
 {
+    [Obsolete("E-mails eram enviados para a confirmação de cadastro. Hoje, com o Auth0, eles não são mais necessários" +
+    " - porém, a integração está feita e será utilizada quando necessário.")]
     public interface IEmailService
     {
         /// <summary>
-        /// Envia um código de verificação para a conta especificada.
+        /// Envia um e-mail para a conta especificada.
         /// </summary>
-        Task SendEmail(Infrastructure.Models.Account account, string code, string subject, string htmlContent);
-
-        /// <summary>
-        /// O usuário poderá enviar códigos de verificação a cada 10 minutos.
-        /// </summary>
-        bool CanSendEmailForUser(Guid accountId);
-
-        /// <summary>
-        /// Valida o código de verificação fornecida pelo usuário especificado.
-        /// Se for válido, altera a propriedade <c>AuthenticationCodeValidated</c> para verdadeiro
-        /// e, em seguida, cria um Stripe Customer.
-        /// </summary>
-        bool IsVerificationEmailValid(Guid accountId, string code);
+        [Obsolete("E-mails eram enviados para a confirmação de cadastro. Hoje, com o Auth0, eles não são mais necessários" +
+        " - porém, a integração está feita e será utilizada quando necessário.")]
+        Task Send(string subject, string htmlContent);
     }
 }

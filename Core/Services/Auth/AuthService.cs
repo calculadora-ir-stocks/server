@@ -102,7 +102,7 @@ namespace Api.Services.Auth
                 account.HashPassword(account.Password);
                 accountGenericRepository.Add(account);
 
-                await accountService.SendEmailVerification(account.Id, account);
+                await accountService.SendEmail(account.Id, account);
 
                 var jwt = jwtService.GenerateToken(new JwtContent(
                         account.Id,
