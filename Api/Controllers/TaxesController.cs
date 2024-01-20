@@ -110,7 +110,7 @@ public class TaxesController : BaseController
     [ProducesResponseType(typeof(Core.Notification.Notification), 200)]
     [ProducesResponseType(typeof(Core.Notification.Notification), 404)]
     public async Task<IActionResult> BigBang(Guid accountId, [FromBody] List<BigBangRequest> request)
-    { 
+    {
         await syncingService.Sync(accountId, request);
         return Ok(new { message = "Imposto de renda e preço médio mais recente calculados e armazenados com sucesso." });
     }

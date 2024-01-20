@@ -1,5 +1,8 @@
 ﻿using Api.DTOs.Auth;
 using Api.Services.Auth;
+using Auth0.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -9,7 +12,6 @@ namespace Api.Controllers;
 /// Responsável pelo registro e autenticação de usuários.
 /// </summary>
 [Tags("Authentication")]
-[AllowAnonymous]
 public class AuthController : BaseController
 {
     private readonly IAuthService service;
@@ -23,6 +25,7 @@ public class AuthController : BaseController
     /// Registra um novo usuário na plataforma.
     /// </summary>
     [HttpPost("sign-up")]
+    [AllowAnonymous]
     public async Task<IActionResult> SignUp([FromBody] SignUpRequest request)
     {
         var response = await service.SignUp(request);
@@ -33,18 +36,34 @@ public class AuthController : BaseController
     }
 
     /// <summary>
-    /// Autentica um usuário na plataforma.
+    /// Insere no header <c>location</c> a URL do servidor de autenticação do Auth0.
     /// </summary>
     [HttpPost("sign-in")]
-    public IActionResult SignIn([FromBody] SignInRequest request)
+    [AllowAnonymous]
+    public async Task<IActionResult> SignIn()
     {
-        var (Jwt, Id) = service.SignIn(request);
-
-        if (Jwt is null)
-            return BadRequest("Nome de usuário ou senha incorreto(s).");
-
-        Response.Headers["Authorization"] = Jwt;
-
-        return Ok(new { accountId = Id });
+        return Ok();
     }
+
+    /// <summary>
+    /// Insere no header <c>location</c> a URL do servidor de log-out do Auth0.
+    /// </summary>
+    [HttpPost("sign-out")]
+    [AllowAnonymous]
+    public async new Task<IActionResult> SignOut()
+    {
+        return Ok();
+    }
+
+    /// <summary>
+    /// Obtém um novo token de autenticação do Auth0.
+    /// </summary>
+    [HttpGet("token")]
+    [AllowAnonymous]
+    public async Task<IActionResult> Token()
+    {
+        string token = await service.GetToken();
+        return Ok(new { token = token });
+    }
+
 }

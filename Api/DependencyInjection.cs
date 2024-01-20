@@ -1,13 +1,16 @@
 ﻿using Api.Clients.B3;
 using Api.Database;
+using Api.Handler;
 using Api.Services.Auth;
-using Api.Services.B3;
 using Api.Services.JwtCommon;
 using Billing.Services.Stripe;
 using Common;
 using Common.Models;
+using Common.Models.Secrets;
 using Core.Calculators;
 using Core.Calculators.Assets;
+using Core.Clients.Auth0;
+using Core.Clients.B3;
 using Core.Clients.InfoSimples;
 using Core.Filters;
 using Core.Hangfire.PlanExpirer;
@@ -30,6 +33,7 @@ using Infrastructure.Repositories.EmailCode;
 using Infrastructure.Repositories.Plan;
 using Infrastructure.Repositories.Taxes;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -37,8 +41,8 @@ using Polly;
 using Stripe;
 using System.Reflection;
 using System.Security.Authentication;
+using System.Security.Claims;
 using System.Security.Cryptography.X509Certificates;
-using System.Text;
 
 namespace Api
 {
@@ -51,6 +55,7 @@ namespace Api
             // 3rd parties
             services.AddScoped<IB3Client, B3Client>();
             services.AddScoped<IInfoSimplesClient, InfoSimplesClient>();
+            services.AddScoped<IAuth0Client, Auth0Client>();
 
             services.AddScoped<IAccountService, Core.Services.Account.AccountService>();
             services.AddScoped<ITaxesService, TaxesService>();
@@ -77,9 +82,10 @@ namespace Api
 
             services.Configure<JwtProperties>(options =>
             {
-                options.Secret = builder.Configuration["Jwt:Token"];
+                options.Token = builder.Configuration["Jwt:Token"];
                 options.Issuer = builder.Configuration["Jwt:Issuer"];
                 options.Audience = builder.Configuration["Jwt:Audience"];
+                options.Authoriry = builder.Configuration["Jwt:Authority"];
             });
 
             services.Configure<StripeSecret>(options =>
@@ -93,7 +99,7 @@ namespace Api
                 options.Secret = builder.Configuration["Services:InfoSimples:Token"];
             });
 
-            services.Configure<B3ClientParamsSecret>(options =>
+            services.Configure<B3ParamsSecret>(options =>
             {
                 options.ClientId = builder.Configuration["Services:B3:ClientId"];
                 options.ClientSecret = builder.Configuration["Services:B3:ClientSecret"];
@@ -105,6 +111,17 @@ namespace Api
             {
                 options.Token = builder.Configuration["Services:SendGrid:Token"];
             });
+
+            services.AddSingleton(_ =>
+            {
+                return new Auth0Secret
+                {
+                    ClientId = builder.Configuration["Services:Auth0:ClientId"],
+                    ClientSecret = builder.Configuration["Services:Auth0:ClientSecret"],
+                    Audience = builder.Configuration["Services:Auth0:Audience"],
+                    GrantType = builder.Configuration["Services:Auth0:GrantType"]
+                };
+            });
         }
 
         public static void AddStripeServices(this IServiceCollection services, IConfiguration configuration)
@@ -114,6 +131,31 @@ namespace Api
             services.AddScoped<ChargeService>();
             services.AddScoped<CustomerService>();
             services.AddScoped<TokenService>();
+        }
+
+        public static void AddAuth0Authentication(this IServiceCollection _, WebApplicationBuilder builder)
+        {
+            builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
+            {
+                options.Authority = builder.Configuration["Auth0:Domain"];
+                options.Audience = builder.Configuration["Auth0:Audience"];
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    NameClaimType = ClaimTypes.NameIdentifier
+                };
+            });
+
+            builder.Services.AddAuthorization(options =>
+            {
+                options.AddPolicy(
+                    "read:taxes",
+                    policy => policy.Requirements.Add(
+                        new HasScopeRequirement("read:taxes", builder.Configuration["Auth0:Domain"])
+                    )
+                );
+            });
+
+            builder.Services.AddSingleton<IAuthorizationHandler, HasScopeHandler>();
         }
 
         public static void AddHangfireServices(this IServiceCollection services)
@@ -162,9 +204,10 @@ namespace Api
         public static void Add3rdPartiesClients(this IServiceCollection services)
         {
             var handler = new HttpClientHandler();
-            // TO-DO: uncomment for production
+            // TODO: uncomment for production
             // AddCertificate(handler);
 
+            // TODO get from appsettings
             services.AddHttpClient("B3", c =>
                 c.BaseAddress = new Uri("https://apib3i-cert.b3.com.br:2443/api/")).ConfigurePrimaryHttpMessageHandler(() => handler)
                 .AddTransientHttpErrorPolicy(policy => policy.WaitAndRetryAsync(5, _ => TimeSpan.FromSeconds(10)))
@@ -177,6 +220,11 @@ namespace Api
 
             services.AddHttpClient("Infosimples", c =>
                 c.BaseAddress = new Uri("https://api.infosimples.com/api/v2/consultas/")).ConfigurePrimaryHttpMessageHandler(() => handler)
+                .AddTransientHttpErrorPolicy(policy => policy.WaitAndRetryAsync(5, _ => TimeSpan.FromSeconds(10)))
+                .AddTransientHttpErrorPolicy(policy => policy.CircuitBreakerAsync(5, TimeSpan.FromSeconds(10)));
+
+            services.AddHttpClient("Auth0", c =>
+                c.BaseAddress = new Uri("https://dev-cfdhp4yerdn6st6a.us.auth0.com/oauth/")).ConfigurePrimaryHttpMessageHandler(() => handler)
                 .AddTransientHttpErrorPolicy(policy => policy.WaitAndRetryAsync(5, _ => TimeSpan.FromSeconds(10)))
                 .AddTransientHttpErrorPolicy(policy => policy.CircuitBreakerAsync(5, TimeSpan.FromSeconds(10)));
         }
@@ -199,28 +247,6 @@ namespace Api
             services.AddScoped<IEmailCodeRepository, EmailCodeRepository>();
             services.AddScoped<ITaxesRepository, TaxesRepository>();
             services.AddScoped<IPlanRepository, PlanRepository>();
-        }
-
-        public static void AddJwtAuthentications(this IServiceCollection services, WebApplicationBuilder builder)
-        {
-            services.AddAuthentication(opt =>
-            {
-                opt.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-                opt.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-            })
-            .AddJwtBearer(options =>
-            {
-                options.TokenValidationParameters = new TokenValidationParameters
-                {
-                    ValidateIssuer = true,
-                    ValidateAudience = true,
-                    ValidateLifetime = false,
-                    ValidateIssuerSigningKey = true,
-                    ValidIssuer = builder.Configuration["Jwt:Issuer"],
-                    ValidAudience = builder.Configuration["Jwt:Audience"],
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Token"]))
-                };
-            });
         }
 
         public static void AddSwaggerConfiguration(this IServiceCollection services)

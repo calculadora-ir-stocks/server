@@ -36,7 +36,7 @@ namespace Api.Controllers
         /// <summary>
         /// Retorna os planos e as formas de pagamento disponíveis (o plano gratuito não é retornado).
         /// </summary>
-        /// <param name="productId">O id do produto vinculado ao Stripe.</param>
+        /// <param name="productId">O id do plano retornado em <c>/plans</c>.</param>
         /// <param name="accountId">O id da conta do usuário que está criando o Checkout do Stripe.</param>
         /// <param name="couponId">O id de um cupom válido.</param>
         /// <returns>Objeto <c>Session</c> da sessão de Checkout criada e no Header <c>Location</c> a URL
@@ -48,22 +48,6 @@ namespace Api.Controllers
 
             Response.Headers.Add("Location", session.Url);
             return Ok();
-        }
-
-        /// <summary>
-        /// Cria um Portal Session do Stripe onde é possível gerenciar todas as formas de pagamento
-        /// salvas (se alguma existir).
-        /// </summary>
-        /// <param name="accountId">O id da conta do usuário que está criando o Portal Session do Stripe.</param>
-        /// <returns>Objeto <c>Session</c> da sessão criada e no Header <c>Location</c> a URL
-        /// do Portal Session que o usuário deve ser redirecionado.</returns>
-        [HttpPost("create-portal-session/{accountId}")]
-        public async Task <IActionResult> CreatePortalSession([FromRoute] Guid accountId)
-        {
-            var session = await stripeService.CreatePortalSession(accountId);
-
-            Response.Headers.Add("Location", session.Url);
-            return Ok(session);
         }
 
         /// <summary>

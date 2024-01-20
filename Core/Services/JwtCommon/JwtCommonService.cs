@@ -24,7 +24,7 @@ namespace Api.Services.JwtCommon
 
         public string GenerateToken(JwtContent jwtContent)
         {
-            var key = Encoding.ASCII.GetBytes(jwtProperties.Secret);
+            var key = Encoding.ASCII.GetBytes(jwtProperties.Token);
             var signinCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature);
 
             /** 
@@ -53,7 +53,7 @@ namespace Api.Services.JwtCommon
             if (token == null)
                 return null;
 
-            var key = Encoding.ASCII.GetBytes(jwtProperties.Secret);
+            var key = Encoding.ASCII.GetBytes(jwtProperties.Token);
             var signinCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature);
 
             var tokenHandler = new JwtSecurityTokenHandler();

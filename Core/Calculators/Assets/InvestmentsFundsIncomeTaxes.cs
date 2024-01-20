@@ -14,23 +14,27 @@ namespace Core.Calculators.Assets
             string month
         )
         {
-            var response = CalculateProfit(movements, investorMovementDetails.AverageTradedPrices);
+            var profit = CalculateProfit(movements, investorMovementDetails.AverageTradedPrices);
 
-            var dayTradeProfit = response.DayTradeOperations.Select(x => x.Profit).Sum();
-            var swingTradeProfit = response.SwingTradeOperations.Select(x => x.Profit).Sum();
+            var dayTradeProfit = profit.DayTradeOperations.Select(x => x.Profit).Sum();
+            var swingTradeProfit = profit.SwingTradeOperations.Select(x => x.Profit).Sum();
 
             var sells = movements.Where(x => x.MovementType.Equals(B3ResponseConstants.Sell));
             double totalSold = sells.Sum(funds => funds.OperationValue);
 
-            bool paysIncomeTaxes = sells.Any() && (swingTradeProfit > 0 || dayTradeProfit > 0);
+            decimal taxes = 0;
 
-            investorMovementDetails.Assets.Add(new AssetIncomeTaxes
-            (
-                month, AssetEnumHelper.GetNameByAssetType(Asset.InvestmentsFunds), response.OperationHistory
-            )
+            if (swingTradeProfit > 0)
+                taxes = CalculateTaxesFromProfit(swingTradeProfit, isDayTrade: false, AliquotConstants.IncomeTaxesForInvestmentsFunds);
+
+            if (dayTradeProfit > 0)
+                taxes += CalculateTaxesFromProfit(dayTradeProfit, isDayTrade: true, AliquotConstants.IncomeTaxesForInvestmentsFunds);
+
+            investorMovementDetails.Assets.Add(new AssetIncomeTaxes(
+                month, AssetEnumHelper.GetNameByAssetType(Asset.InvestmentsFunds), profit.OperationHistory)
             {
                 AssetTypeId = Asset.InvestmentsFunds,
-                Taxes = paysIncomeTaxes ? (double)CalculateTaxesFromProfit(swingTradeProfit, dayTradeProfit, AliquotConstants.IncomeTaxesForInvestmentsFunds) : 0,
+                Taxes = (double)taxes,
                 TotalSold = totalSold,
                 SwingTradeProfit = swingTradeProfit,
                 DayTradeProfit = dayTradeProfit

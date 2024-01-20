@@ -20,19 +20,23 @@ namespace Core.Calculators.Assets
             var swingTradeProfit = profit.SwingTradeOperations.Select(x => x.Profit).Sum();
 
             var sells = movements.Where(x => x.MovementType.Equals(B3ResponseConstants.Sell));
-            double totalSold = sells.Sum(stock => stock.OperationValue);
+            double totalSold = sells.Sum(x => x.OperationValue);
 
             bool sellsSuperiorThan20000 = totalSold >= AliquotConstants.LimitForStocksSelling;
 
-            bool paysIncomeTaxes = (sellsSuperiorThan20000 && swingTradeProfit > 0) || (dayTradeProfit > 0);
+            decimal taxes = 0;
 
-            investorMovementDetails.Assets.Add(new AssetIncomeTaxes
-            (
-                month, AssetEnumHelper.GetNameByAssetType(Asset.Stocks), profit.OperationHistory
-            )
+            if (swingTradeProfit > 0 && sellsSuperiorThan20000)
+                taxes = CalculateTaxesFromProfit(swingTradeProfit, isDayTrade: false, AliquotConstants.IncomeTaxesForStocks);                    
+
+            if (dayTradeProfit > 0)
+                taxes += CalculateTaxesFromProfit(dayTradeProfit, isDayTrade: true, AliquotConstants.IncomeTaxesForStocks);
+
+            investorMovementDetails.Assets.Add(new AssetIncomeTaxes(
+                month, AssetEnumHelper.GetNameByAssetType(Asset.Stocks), profit.OperationHistory)
             {
                 AssetTypeId = Asset.Stocks,
-                Taxes = paysIncomeTaxes ? (double)CalculateTaxesFromProfit(swingTradeProfit, dayTradeProfit, AliquotConstants.IncomeTaxesForStocks) : 0,
+                Taxes = (double)taxes,
                 TotalSold = totalSold,
                 SwingTradeProfit = swingTradeProfit,
                 DayTradeProfit = dayTradeProfit

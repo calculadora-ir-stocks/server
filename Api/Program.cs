@@ -21,7 +21,7 @@ builder.Services.AddDatabase(builder);
 // builder.Services.AddHangfireServices();
 // builder.Services.ConfigureHangfireServices(builder);
 
-builder.Services.AddJwtAuthentications(builder);
+builder.Services.AddAuth0Authentication(builder);
 
 builder.Services.AddRouting(options => options.LowercaseUrls = true);
 
@@ -37,8 +37,8 @@ var app = builder.Build();
 // app.UseHangfireDashboard("/dashboard");
 app.UseCors();
 
-app.UseMiddleware<AuthorizationMiddleware>();
-app.UseMiddleware<CustomExceptionHandlerMiddleware>();
+// app.UseMiddleware<AuthorizationMiddleware>();
+app.UseMiddleware<ExceptionHandlerMiddleware>();
 
 app.UseSwagger();
 

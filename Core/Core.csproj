@@ -9,6 +9,10 @@
   </PropertyGroup>
   
   <ItemGroup>
+    <None Remove="Calculators\ProfitCalculator.cs~RF79a3f4.TMP" />
+  </ItemGroup>
+  
+  <ItemGroup>
     <PackageReference Include="Stripe.net" Version="42.3.0" />
     <PackageReference Include="System.Runtime.Serialization.Json" Version="4.3.0" />
     <PackageReference Include="SendGrid" Version="9.28.1" />

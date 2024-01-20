@@ -56,11 +56,11 @@ namespace Core.Services.B3Syncing
 
 #pragma warning disable CS0219 // Variable is assigned but its value is never used
             string startDate = "2019-11-01";
-#pragma warning restore CS0219 // Variable is assigned but its value is never used
 
             string lastMonth = new DateTime(year: DateTime.Now.Year, month: DateTime.Now.Month, day: 1)
                 .AddMonths(-1)
                 .ToString("yyyy-MM-dd");
+#pragma warning restore CS0219 // Variable is assigned but its value is never used
 
             // var b3Response = await b3Client.GetAccountMovement(account.CPF, startDate, lastMonth, accountId);
             var b3Response = GetBigBangMockedDataBeforeB3Contract();
@@ -120,6 +120,7 @@ namespace Core.Services.B3Syncing
                 (
                    averageTradedPrice.TickerSymbol,
                    averageTradedPrice.AverageTradedPrice,
+                   averageTradedPrice.TotalBought,
                    averageTradedPrice.TradedQuantity,
                    account,
                    updatedAt: DateTime.UtcNow

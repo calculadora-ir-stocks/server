@@ -3,7 +3,7 @@ using Common.Constants;
 using Common.Enums;
 using Common.Exceptions;
 using Common.Helpers;
-using Common.Models;
+using Common.Models.Secrets;
 using Infrastructure.Repositories.Account;
 using Infrastructure.Repositories.Plan;
 using Microsoft.Extensions.Logging;
@@ -130,16 +130,14 @@ namespace Billing.Services.Stripe
                 var account = accountRepository.GetByStripeCustomerId(session.CustomerId);
                 account.Status = AccountStatus.SubscriptionValid.GetEnumDescription();
 
-                var accountPlan = planRepository.GetByAccountId(account.Id);
+                var plan = planRepository.GetByAccountId(account.Id);
 
-                accountPlan.Name = subscribedPlan.Name;
-                accountPlan.ExpiresAt = expiresAt;
+                plan.Name = subscribedPlan.Name;
+                plan.ExpiresAt = expiresAt;
 
-                // TODO unit of work
-                accountRepository.Update(account);
-                planRepository.Update(accountPlan);
+                planRepository.Update(plan, account);
 
-                logger.LogInformation("Usuário de id {id} acabou de assinar um plano.", account.Id);
+                logger.LogInformation("Usuário de id {id} acabou de assinar um plano. We getting rich baby!", account.Id);
             }
             else
             {
@@ -147,9 +145,6 @@ namespace Billing.Services.Stripe
             }
         }
 
-        /// <summary>
-        /// Obtém o plano cadastrado através do preço.
-        /// </summary>
         private (StripePlanDto, DateTime) GetSubscribedPlan(long? amountSubtotal)
         {
             // TODO O Stripe - serviço de horrenda documentação - não retorna o id do produto que o usuário

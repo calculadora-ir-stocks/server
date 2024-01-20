@@ -57,6 +57,7 @@ namespace Infrastructure.Repositories.AverageTradedPrice
                 @"SELECT 
                     atp.""Ticker"",
                     atp.""AveragePrice"" as AverageTradedPrice,
+                    atp.""TotalBought"" as TotalBought,
                     atp.""Quantity""
                   FROM ""AverageTradedPrices"" atp
                   WHERE atp.""AccountId"" = @AccountId AND

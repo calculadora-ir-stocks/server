@@ -85,8 +85,7 @@ namespace Core.Services.Account
                 if (!emailSenderService.CanSendEmailForUser(accountId))
                     throw new BadRequestException($"O usuário de id {accountId} já enviou um código de verificação há pelo menos 10 minutos atrás.");
 
-                var account = repository.GetById(accountId);
-                if (account is null) throw new NotFoundException("Investidor", accountId.ToString());
+                var account = repository.GetById(accountId) ?? throw new NotFoundException("Investidor", accountId.ToString());
 
                 ValidateNewPassword(account, password);
 
@@ -103,14 +102,15 @@ namespace Core.Services.Account
 
                 account.HashPassword(password);
                 repository.Update(account);
-            } catch (Exception e)
+            }
+            catch (Exception e)
             {
                 logger.LogError(e, "Ocorreu um erro ao alterar a senha do usuário, {error}", e.Message);
                 throw;
             }
         }
 
-        private void ValidateNewPassword(Infrastructure.Models.Account account, string password)
+        private static void ValidateNewPassword(Infrastructure.Models.Account account, string password)
         {
             if (BCryptHelper.CheckPassword(password, account.Password)) throw new BadRequestException("A nova senha não pode ser igual à senha atual.");
         }

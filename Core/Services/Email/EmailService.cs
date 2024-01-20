@@ -5,8 +5,8 @@ using Infrastructure.Repositories.EmailCode;
 using Infrastructure.Repositories.Account;
 using Stripe;
 using Common.Helpers;
-using Common.Models;
 using Microsoft.Extensions.Options;
+using Common.Models.Secrets;
 
 namespace Core.Services.Email
 {
@@ -28,7 +28,7 @@ namespace Core.Services.Email
             IAccountRepository accountRepository,
             IOptions<SendGridSecret> secret
         )
-        
+
         {
             this.stripeCustomerService = stripeCustomerService;
             this.emailCodeRepository = emailCodeRepository;

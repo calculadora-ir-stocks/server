@@ -47,9 +47,11 @@ namespace Infrastructure.Repositories.Plan
             return context.Plans.Where(x => x.AccountId == accountId).First();
         }
 
-        public void Update(Models.Plan plan)
+        public void Update(Models.Plan plan, Models.Account account)
         {
             context.Plans.Update(plan);
+            context.Accounts.Update(account);
+
             context.SaveChanges();
         }
     }

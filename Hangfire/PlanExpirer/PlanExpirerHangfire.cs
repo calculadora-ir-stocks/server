@@ -27,7 +27,7 @@ namespace Core.Hangfire.PlanExpirer
             {
                 Guid threadId = new();
 
-                logger.LogInformation("Iniciando Hangfire para atualizar planos expirados de investidores." +
+                logger.LogInformation("Iniciando Hangfire para atualizar planos expirados de investidores. " +
                     "Id do processo: {id}", threadId);
 
                 Stopwatch timer = new();
@@ -55,7 +55,7 @@ namespace Core.Hangfire.PlanExpirer
             }
             catch (Exception e)
             {
-                logger.LogError("Ocorreu um erro ao invalidar o plano de 3 meses de usuários premiums. {e}", e.Message);
+                logger.LogError("Ocorreu um erro ao expirar os planos dos usuários. {e}", e.Message);
             }
         }
     }

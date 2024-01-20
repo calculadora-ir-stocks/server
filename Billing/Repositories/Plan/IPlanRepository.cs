@@ -7,6 +7,6 @@ namespace Infrastructure.Repositories.Plan
         IEnumerable<StripePlanDto> GetAllStripePlans();
         IEnumerable<Models.Plan> GetAllAccountPlans();
         Models.Plan GetByAccountId(Guid accountId);
-        void Update(Models.Plan plan);
+        void Update(Models.Plan plan, Models.Account account);
     }
 }
