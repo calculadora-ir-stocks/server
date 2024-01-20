@@ -1,5 +1,6 @@
 ﻿using Api.Database;
 using Dapper;
+using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Repositories.Account
 {
@@ -12,9 +13,9 @@ namespace Infrastructure.Repositories.Account
             this.context = context;
         }
 
-        public bool CPFExists(string cpf)
+        public async Task<bool> CPFExists(string cpf)
         {
-            return context.Accounts.Any(x => x.CPF == cpf);
+            return await context.Accounts.AnyAsync(x => x.CPF == cpf);
         }
 
         public void Delete(Models.Account account)

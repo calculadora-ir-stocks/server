@@ -20,7 +20,7 @@ namespace Core.Clients.B3
 
         private readonly B3ParamsSecret @params;
 
-        private static Token? token;
+        private static B3Token? token;
 
         private readonly ILogger<B3Client> logger;
 
@@ -124,7 +124,7 @@ namespace Core.Clients.B3
             await GetAccountMovementsInAllPages(root);
         }
 
-        private async Task<Token> GetB3AuthorizationToken()
+        private async Task<B3Token> GetB3AuthorizationToken()
         {
             if (token is not null && !token!.Expired)
                 return token;
@@ -132,7 +132,7 @@ namespace Core.Clients.B3
                 return await RefreshAuthorizationToken();
         }
 
-        private async Task<Token> RefreshAuthorizationToken()
+        private async Task<B3Token> RefreshAuthorizationToken()
         {
             try
             {
@@ -152,7 +152,7 @@ namespace Core.Clients.B3
 
                 var responseContentStream = response.Content.ReadAsStringAsync().Result;
 
-                token = JsonConvert.DeserializeObject<Token>(responseContentStream)!;
+                token = JsonConvert.DeserializeObject<B3Token>(responseContentStream)!;
 
                 return token ?? throw new Exception("Uma exceção ocorreu ao deserializar o objeto de Token de autenticação da B3");
             }

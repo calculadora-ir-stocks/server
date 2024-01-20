@@ -2,7 +2,6 @@
 using Api.Database;
 using Api.Handler;
 using Api.Services.Auth;
-using Api.Services.JwtCommon;
 using Billing.Services.Stripe;
 using Common;
 using Common.Models;
@@ -12,7 +11,6 @@ using Core.Calculators.Assets;
 using Core.Clients.Auth0;
 using Core.Clients.B3;
 using Core.Clients.InfoSimples;
-using Core.Filters;
 using Core.Hangfire.PlanExpirer;
 using Core.Notification;
 using Core.Services.Account;
@@ -71,10 +69,6 @@ namespace Api
             services.AddTransient<IIncomeTaxesCalculator, GoldIncomeTaxes>();
             services.AddTransient<IIncomeTaxesCalculator, InvestmentsFundsIncomeTaxes>();
             services.AddTransient<IIncomeTaxesCalculator, StocksIncomeTaxes>();
-
-            services.AddTransient<IJwtCommonService, JwtCommonService>();
-
-            services.AddMvc(options => options.Filters.Add<NotificationFilter>());
 
             services.Configure<JwtProperties>(options =>
             {

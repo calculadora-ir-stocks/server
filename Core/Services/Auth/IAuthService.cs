@@ -10,17 +10,11 @@ namespace Api.Services.Auth
         /// </summary>
         /// <param name="request">Objeto contendo todas as informações para o registro do usuário.</param>
         /// <returns>O id do usuário cadastrado.</returns>
-        Task<SignUpResponse> SignUp(SignUpRequest request);
+        Task<Guid?> SignUp(SignUpRequest request);
 
         /// <summary>
-        /// Autentica um usuário já cadastrado na plataforma
-        /// </summary>
-        /// <param name="request">Objeto contendo todas as informações para a autenticação do usuário.</param>
-        /// <returns>Um token JWT se a autenticação for bem sucedida e o id do usuário autenticado.</returns>
-        (string? Jwt, Guid Id) SignIn(SignInRequest request);
-
-        /// <summary>
-        /// Obtém o token de autenticação do Auth0.
+        /// Obtém o token de autenticação do Auth0. Será usado apenas para testes locais. Em produção, o token JWT
+        /// será requisitado para o Auth0 através do front-end.
         /// </summary>
         Task<string> GetToken();
     }

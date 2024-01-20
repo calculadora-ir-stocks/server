@@ -1,9 +1,7 @@
 ﻿using Common.Constants;
 using Common.Enums;
 using Common.Helpers;
-using DevOne.Security.Cryptography.BCrypt;
 using FluentValidation;
-using System.ComponentModel.DataAnnotations;
 using System.Text.RegularExpressions;
 
 namespace Infrastructure.Models
@@ -63,9 +61,9 @@ namespace Infrastructure.Models
 
         /// <summary>
         /// Define os status de uma conta cadastrada.
-        /// Quando um usuário é registrado, o status definido é <c>EmailNotConfirmed</c>.
+        /// Quando um usuário é registrado, o status definido é <c>NeedToSync</c>.
         /// </summary>
-        public string Status { get; set; } = EnumHelper.GetEnumDescription(AccountStatus.EmailNotConfirmed);
+        public string Status { get; set; } = EnumHelper.GetEnumDescription(AccountStatus.NeedToSync);
         #endregion
 
         #region Relationships
@@ -80,13 +78,6 @@ namespace Infrastructure.Models
         public ICollection<IncomeTaxes>? IncomeTaxes { get; set; }
 
         /// <summary>
-        /// Um investidor possui um único código de confirmação de e-mail por vez.
-        /// Código enviado para o e-mail para confirmação.
-        /// Pode ser um código de autenticação ou um código para alteração de senha.
-        /// </summary>
-        public EmailCode EmailCode { get; set; }
-
-        /// <summary>
         /// Um investidor possui um único plano ativo por vez.
         /// </summary>
         public Plan Plan { get; set; }
@@ -95,17 +86,9 @@ namespace Infrastructure.Models
 
     public partial class AccountValidator : AbstractValidator<Account>
     {
-        private readonly Regex HasNumber = new("[0-9]+");
-        private readonly Regex HasUpperChar = new("[A-Z]+");
-        private readonly Regex HasLowerChar = new("[a-z]+");
-        private readonly Regex HasMinMaxChars = new(".{8}");
-
-        private readonly Regex IsValidEmail = new(@"^([\w\.\-]+)@([\w\-]+)((\.(\w){2,3})+)$");
         private readonly Regex IsValidCPF = new(@"(^\d{3}\.\d{3}\.\d{3}\-\d{2}$)");
         private readonly Regex IsValidPhoneNumber = new(@"^\+\d{2} \d{2} \d \d{4}-\d{4}$");
         private readonly Regex IsValidBirthDate = new(@"^\d{2}/\d{2}/\d{4}$");
-
-        private const int NameMinLength = 8;
 
         public AccountValidator()
         {

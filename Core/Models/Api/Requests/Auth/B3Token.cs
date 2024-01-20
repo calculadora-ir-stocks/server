@@ -2,9 +2,9 @@
 
 namespace Api.DTOs.Auth
 {
-    public class Token
+    public class B3Token
     {
-        public Token(string accessToken, string scheme, int expiresInSeconds)
+        public B3Token(string accessToken, string scheme, int expiresInSeconds)
         {
             AccessToken = accessToken;
             Scheme = scheme;

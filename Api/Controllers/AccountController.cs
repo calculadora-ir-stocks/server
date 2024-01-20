@@ -14,7 +14,7 @@ public class AccountController : BaseController
     }
 
     /// <summary>
-    /// Deleta a conta especificada assim como desvincula com a B3.
+    /// Deleta a conta especificada e desvincula com a B3.
     /// </summary>
     [HttpDelete("{id}")]
     public IActionResult Delete([FromRoute] Guid id)

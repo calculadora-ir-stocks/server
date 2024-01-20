@@ -50,8 +50,11 @@ namespace Core.Services.B3Syncing
 
             if (!AccountCanExecuteSyncing(account))
             {
-                throw new BadRequestException($"O usuário {account.Id} tentou executar a sincronização mas não possui o e-mail validado" +
-                    " ou já sincronizou sua conta anteriormente.");
+                logger.LogInformation("O usuário {accountId} tentou executar a sincronização mas " +
+                    "já sincronizou sua conta anteriormente.", account.Id);
+
+                throw new BadRequestException($"O usuário {account.Id} tentou executar a sincronização mas " +
+                    "já sincronizou sua conta anteriormente.");
             }
 
 #pragma warning disable CS0219 // Variable is assigned but its value is never used
@@ -78,7 +81,7 @@ namespace Core.Services.B3Syncing
 
         private static bool AccountCanExecuteSyncing(Infrastructure.Models.Account account)
         {
-            return account.Status == EnumHelper.GetEnumDescription(AccountStatus.EmailConfirmed);
+            return account.Status == EnumHelper.GetEnumDescription(AccountStatus.NeedToSync);
         }
 
         private static Models.B3.Movement.Root? GetBigBangMockedDataBeforeB3Contract()

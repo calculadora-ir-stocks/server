@@ -2,7 +2,7 @@
 {
     public interface IAccountRepository
     {
-        bool CPFExists(string cpf);
+        Task<bool> CPFExists(string cpf);
         Models.Account? GetById(Guid accountId);
         Models.Account GetByStripeCustomerId(string stripeCustomerId);
         IEnumerable<Models.Account> GetAll();

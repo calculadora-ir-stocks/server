@@ -1,8 +1,5 @@
 ﻿using Api.DTOs.Auth;
 using Api.Services.Auth;
-using Auth0.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -22,48 +19,25 @@ public class AuthController : BaseController
     }
 
     /// <summary>
-    /// Registra um novo usuário na plataforma.
+    /// Registra um usuário já criado anteriormente no Auth0.
     /// </summary>
     [HttpPost("sign-up")]
     [AllowAnonymous]
     public async Task<IActionResult> SignUp([FromBody] SignUpRequest request)
     {
-        var response = await service.SignUp(request);
-
-        Response.Headers["Authorization"] = response.Jwt;
-
-        return Ok(new { accountId = response.AccountId });
+        Guid? accountId = await service.SignUp(request);
+        return Ok(new { accountId });
     }
 
     /// <summary>
-    /// Insere no header <c>location</c> a URL do servidor de autenticação do Auth0.
-    /// </summary>
-    [HttpPost("sign-in")]
-    [AllowAnonymous]
-    public async Task<IActionResult> SignIn()
-    {
-        return Ok();
-    }
-
-    /// <summary>
-    /// Insere no header <c>location</c> a URL do servidor de log-out do Auth0.
-    /// </summary>
-    [HttpPost("sign-out")]
-    [AllowAnonymous]
-    public async new Task<IActionResult> SignOut()
-    {
-        return Ok();
-    }
-
-    /// <summary>
-    /// Obtém um novo token de autenticação do Auth0.
+    /// Obtém o token de autenticação do Auth0. Será usado apenas para testes locais. Em produção, o token JWT
+    /// será requisitado para o Auth0 através do front-end.
     /// </summary>
     [HttpGet("token")]
     [AllowAnonymous]
     public async Task<IActionResult> Token()
     {
         string token = await service.GetToken();
-        return Ok(new { token = token });
+        return Ok(new { token });
     }
-
 }
