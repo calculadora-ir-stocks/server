@@ -2,19 +2,17 @@
 {
     public record SignUpRequest
     {
-        public SignUpRequest(string name, string email, string cPF, string birthDate, string password, string phoneNumber, bool isTOSAccepted)
+        public SignUpRequest(string auth0Id, string cpf, string birthDate, string password, string phoneNumber, bool isTOSAccepted)
         {
-            Name = name;
-            Email = email;
-            CPF = cPF;
+            Auth0Id = auth0Id;
+            CPF = cpf;
             BirthDate = birthDate;
             Password = password;
             PhoneNumber = phoneNumber;
             IsTOSAccepted = isTOSAccepted;
         }
 
-        public string Name { get; init; }
-        public string Email { get; init; }
+        public string Auth0Id { get; init; }
         public string CPF { get; init; }
         public string BirthDate { get; init; }
         public string Password { get; init; }

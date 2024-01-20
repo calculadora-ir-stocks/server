@@ -83,9 +83,7 @@ namespace Api.Services.Auth
         public async Task<SignUpResponse> SignUp(SignUpRequest request)
         {
             Account account = new(
-                request.Name,
-                request.Email,
-                request.Password,
+                request.Auth0Id,
                 request.CPF,
                 request.BirthDate,
                 request.PhoneNumber
@@ -126,9 +124,6 @@ namespace Api.Services.Auth
             {
                 if (!isTOSAccepted)
                     throw new BadRequestException("Os termos de uso precisam ser aceitos.");
-
-                if (accountRepository.EmailExists(account.Email))
-                    throw new BadRequestException($"Um usuário com esse e-mail já está cadastrado na plataforma.");
 
                 if (accountRepository.CPFExists(account.CPF))
                     throw new BadRequestException($"Um usuário com esse CPF já está cadastrado na plataforma.");

@@ -12,11 +12,6 @@ namespace Infrastructure.Repositories.Account
             this.context = context;
         }
 
-        public bool EmailExists(string email)
-        {
-            return context.Accounts.Any(x => x.Email == email);
-        }
-
         public bool CPFExists(string cpf)
         {
             return context.Accounts.Any(x => x.CPF == cpf);
@@ -31,11 +26,6 @@ namespace Infrastructure.Repositories.Account
         public IEnumerable<Models.Account> GetAll()
         {
             return context.Accounts.AsList();
-        }
-
-        public Models.Account? GetByEmail(string email)
-        {
-            return context.Accounts.AsEnumerable().SingleOrDefault(x => x.Email == email);
         }
 
         public Models.Account? GetById(Guid accountId)

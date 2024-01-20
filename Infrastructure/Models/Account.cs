@@ -11,11 +11,13 @@ namespace Infrastructure.Models
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
     public class Account : BaseEntity
     {
-        public Account(string name, string email, string password, string cpf, string birthDate, string phoneNumber)
+        public Account(string auth0Id,
+            string cpf,
+            string birthDate,
+            string phoneNumber
+        )
         {
-            Name = name;
-            Email = email;
-            Password = password;
+            Auth0Id = auth0Id;
             CPF = cpf;
             BirthDate = birthDate;
             PhoneNumber = phoneNumber;
@@ -27,23 +29,13 @@ namespace Infrastructure.Models
 
         public Account() { }
 
+        /// <summary>
+        /// A propriedade <c>sub</c> retornada pelo JWT do Auth0. É utilizado como ID para consultar
+        /// as informações do usuário.
+        /// </summary>
+        public string Auth0Id { get; init; }
+
         #region Registration information
-        /// <summary>
-        /// Nome completo de uma conta cadastrada.
-        /// </summary>
-        public string Name { get; init; }
-
-        /// <summary>
-        /// Endereço de e-mail válido de uma conta cadastrada.
-        /// </summary>
-        public string Email { get; init; }
-
-        /// <summary>
-        /// Senha de uma conta cadastrada.
-        /// Deve conter no mínimo uma letra maiúscula, um número, um caractere especial e 8 dígitos.
-        /// </summary>
-        public string Password { get; set; }
-
         /// <summary>
         /// CPF formatado (111.111.111-11) de uma conta cadastrada.
         /// É utilizado principalmente para fazer o vínculo com a API da B3.
@@ -99,11 +91,6 @@ namespace Infrastructure.Models
         /// </summary>
         public Plan Plan { get; set; }
         #endregion
-
-        public void HashPassword(string password)
-        {
-            Password = BCryptHelper.HashPassword(password, BCryptHelper.GenerateSalt());
-        }
     }
 
     public partial class AccountValidator : AbstractValidator<Account>
@@ -122,14 +109,6 @@ namespace Infrastructure.Models
 
         public AccountValidator()
         {
-            RuleFor(c => c.Name)
-                .MinimumLength(NameMinLength)
-                .WithMessage($"Nome de usuário deve conter no mínimo {NameMinLength} caracteres.");
-
-            RuleFor(c => c.Email)
-                .Must(c => IsValidEmail.IsMatch(c.ToString()))
-                .WithMessage($"O endereço de e-mail informado não é válido.");
-
             RuleFor(c => c.CPF)
                 .Must(c => IsValidCPF.IsMatch(c.ToString()))
                 .WithMessage($"O CPF informado não é válido.");
@@ -141,19 +120,6 @@ namespace Infrastructure.Models
             RuleFor(c => c.BirthDate)
                 .Must(c => IsValidBirthDate.IsMatch(c.ToString()))
                 .WithMessage($"A data de nascimento deve seguir o formato dd/MM/yyyy");
-
-            RuleFor(c => c.Password)
-                .Must(c => HasNumber.IsMatch(c.ToString()))
-                .WithMessage($"A sua senha deve conter no mínimo um número.");
-            RuleFor(c => c.Password)
-                .Must(c => HasUpperChar.IsMatch(c.ToString()))
-                .WithMessage($"A sua senha deve conter no mínimo uma letra maiúscula.");
-            RuleFor(c => c.Password)
-                .Must(c => HasLowerChar.IsMatch(c.ToString()))
-                .WithMessage($"A sua senha deve conter no mínimo uma letra minúscula.");
-            RuleFor(c => c.Password)
-                .Must(c => HasMinMaxChars.IsMatch(c.ToString()))
-                .WithMessage($"A sua senha deve conter no mínimo 8 dígitos.");
         }
     }
 }
