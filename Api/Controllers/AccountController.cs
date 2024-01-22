@@ -14,6 +14,16 @@ public class AccountController : BaseController
     }
 
     /// <summary>
+    /// Obtém um usuário pelo Auth0 Id.
+    /// </summary>
+    [HttpGet("{auth0Id}")]
+    public async Task<IActionResult> GetByAuth0Id([FromRoute] string auth0Id)
+    {
+        Guid accountId = await service.GetByAuth0Id(auth0Id);
+        return Ok(new { accountId });
+    }
+
+    /// <summary>
     /// Deleta a conta especificada e desvincula com a B3.
     /// </summary>
     [HttpDelete("{id}")]

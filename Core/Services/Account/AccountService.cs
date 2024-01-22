@@ -29,5 +29,17 @@ namespace Core.Services.Account
                 throw;
             }
         }
+
+        public async Task<Guid> GetByAuth0Id(string auth0Id)
+        {
+            try
+            {
+                return await repository.GetByAuth0IdAsNoTracking(auth0Id);
+            } catch (Exception e)
+            {
+                logger.LogError(e, "Ocorreu um erro ao consultar um usuário pelo Auth0 Id.");
+                throw;
+            }
+        }
     }
 }

@@ -50,5 +50,10 @@ namespace Infrastructure.Repositories.Account
             context.Accounts.RemoveRange(context.Accounts);
             context.SaveChanges();
         }
+
+        public Task<Guid> GetByAuth0IdAsNoTracking(string auth0Id)
+        {
+            return context.Accounts.AsNoTracking().Where(x => x.Auth0Id.Equals(auth0Id)).Select(x => x.Id).FirstOrDefaultAsync();
+        }
     }
 }

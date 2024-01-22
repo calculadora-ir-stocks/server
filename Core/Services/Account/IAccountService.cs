@@ -6,5 +6,6 @@
         /// Deleta fisicamente o usuário da base e desvincula sua conta com a B3.
         /// </summary>
         void Delete(Guid accountId);
+        Task<Guid> GetByAuth0Id(string auth0Id);
     }
 }
