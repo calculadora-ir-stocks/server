@@ -18,8 +18,8 @@ namespace Core.Services.Account
         {
             try
             {
-                var account = repository.GetById(accountId);
-                if (account is null) throw new NullReferenceException($"O usuário de id {accountId} não foi encontrado na base de dados.");
+                var account = repository.GetById(accountId) ?? 
+                    throw new NullReferenceException($"O usuário de id {accountId} não foi encontrado na base de dados.");
 
                 repository.Delete(account);
             }
@@ -28,6 +28,11 @@ namespace Core.Services.Account
                 logger.LogError(e, "Ocorreu um erro ao alterar a senha do usuário, {error}", e.Message);
                 throw;
             }
+        }
+
+        public async Task<Guid> GetByAuth0Id(string auth0Id)
+        {
+            return await repository.GetByAuth0IdAsNoTracking(auth0Id);
         }
     }
 }

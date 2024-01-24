@@ -22,4 +22,15 @@ public class AccountController : BaseController
         service.Delete(id);
         return Ok(new { message = $"A conta do usuário {id} foi deletada com sucesso e sua conta foi desvinculada com a B3." });
     }
+
+    /// <summary>
+    /// Obtém o id do usuário através do id do Auth0.
+    /// </summary>
+    /// <param name="auth0Id">O id do Auth0.</param>
+    [HttpGet("{auth0Id}")]
+    public async Task<IActionResult> GetByAuth0Id([FromRoute] string auth0Id) 
+    {
+        Guid accountId = await service.GetByAuth0Id(auth0Id);
+        return Ok(new { accountId });
+    }
 }

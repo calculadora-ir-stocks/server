@@ -9,5 +9,7 @@
         void Delete(Models.Account account);
         void DeleteAll();
         void Update(Models.Account account);
+        Task<Guid> GetByAuth0IdAsNoTracking(string auth0Id);
+
     }
 }
