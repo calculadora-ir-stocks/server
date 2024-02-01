@@ -50,8 +50,11 @@ namespace Core.Services.B3Syncing
 
             if (!AccountCanExecuteSyncing(account))
             {
-                throw new BadRequestException($"O usuário {account.Id} tentou executar a sincronização mas não possui o e-mail validado" +
-                    " ou já sincronizou sua conta anteriormente.");
+                logger.LogInformation("O usuário {accountId} tentou executar a sincronização mas " +
+                    "já sincronizou sua conta anteriormente.", account.Id);
+
+                throw new BadRequestException($"O usuário {account.Id} tentou executar a sincronização mas " +
+                    "já sincronizou sua conta anteriormente.");
             }
 
 #pragma warning disable CS0219 // Variable is assigned but its value is never used
@@ -78,7 +81,7 @@ namespace Core.Services.B3Syncing
 
         private static bool AccountCanExecuteSyncing(Infrastructure.Models.Account account)
         {
-            return account.Status == EnumHelper.GetEnumDescription(AccountStatus.EmailConfirmed);
+            return account.Status == EnumHelper.GetEnumDescription(AccountStatus.NeedToSync);
         }
 
         private static Models.B3.Movement.Root? GetBigBangMockedDataBeforeB3Contract()
@@ -169,6 +172,7 @@ namespace Core.Services.B3Syncing
                 CorporationName = "BOVA 11 Corporation Inc.",
                 MovementType = "Compra",
                 OperationValue = 10.43,
+                UnitPrice = 10.43,
                 EquitiesQuantity = 1,
                 ReferenceDate = new DateTime(2023, 01, 01)
             });
@@ -180,6 +184,7 @@ namespace Core.Services.B3Syncing
                 CorporationName = "BOVA 11 Corporation Inc.",
                 MovementType = "Compra",
                 OperationValue = 18.43,
+                UnitPrice = 18.43,
                 EquitiesQuantity = 1,
                 ReferenceDate = new DateTime(2023, 01, 03)
             });
@@ -203,6 +208,7 @@ namespace Core.Services.B3Syncing
                 CorporationName = "IVVB 11 Corporation Inc.",
                 MovementType = "Compra",
                 OperationValue = 245.65,
+                UnitPrice = 245.65,
                 EquitiesQuantity = 1,
                 ReferenceDate = new DateTime(2023, 01, 09)
             });
@@ -214,6 +220,7 @@ namespace Core.Services.B3Syncing
                 CorporationName = "IVVB 11 Corporation Inc.",
                 MovementType = "Compra",
                 OperationValue = 246.65,
+                UnitPrice = 246.65,
                 EquitiesQuantity = 1,
                 ReferenceDate = new DateTime(2023, 01, 09)
             });
@@ -237,6 +244,7 @@ namespace Core.Services.B3Syncing
                 CorporationName = "KFOF11 Corporation Inc.",
                 MovementType = "Compra",
                 OperationValue = 231.34,
+                UnitPrice = 231.34,
                 EquitiesQuantity = 1,
                 ReferenceDate = new DateTime(2023, 01, 16)
             });
@@ -272,7 +280,8 @@ namespace Core.Services.B3Syncing
                 MovementType = "Compra",
                 CorporationName = "Americanas S/A",
                 OperationValue = 265.54,
-                EquitiesQuantity = 1,
+                UnitPrice = 132.77,
+                EquitiesQuantity = 2,
                 ReferenceDate = new DateTime(2023, 02, 01)
             });
 
@@ -283,6 +292,7 @@ namespace Core.Services.B3Syncing
                 MovementType = "Compra",
                 CorporationName = "Americanas S/A",
                 OperationValue = 261.54,
+                UnitPrice = 261.54,
                 EquitiesQuantity = 1,
                 ReferenceDate = new DateTime(2023, 02, 01)
             });

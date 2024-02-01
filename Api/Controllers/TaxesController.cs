@@ -1,4 +1,3 @@
-using Core.Filters;
 using Core.Models.Api.Responses;
 using Core.Models.Responses;
 using Core.Requests.BigBang;

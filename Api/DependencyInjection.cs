@@ -2,7 +2,6 @@
 using Api.Database;
 using Api.Handler;
 using Api.Services.Auth;
-using Api.Services.JwtCommon;
 using Billing.Services.Stripe;
 using Common;
 using Common.Models;
@@ -18,9 +17,7 @@ using Core.Notification;
 using Core.Services.Account;
 using Core.Services.B3Syncing;
 using Core.Services.DarfGenerator;
-using Core.Services.Email;
 using Core.Services.Hangfire.AverageTradedPriceUpdater;
-using Core.Services.Hangfire.EmailCodeRemover;
 using Core.Services.IncomeTaxes;
 using Core.Services.Plan;
 using Core.Services.Taxes;
@@ -29,7 +26,6 @@ using Hangfire.PostgreSql;
 using Infrastructure.Repositories;
 using Infrastructure.Repositories.Account;
 using Infrastructure.Repositories.AverageTradedPrice;
-using Infrastructure.Repositories.EmailCode;
 using Infrastructure.Repositories.Plan;
 using Infrastructure.Repositories.Taxes;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -61,7 +57,6 @@ namespace Api
             services.AddScoped<ITaxesService, TaxesService>();
             services.AddScoped<IB3SyncingService, B3SyncingService>();
             services.AddScoped<IAuthService, AuthService>();
-            services.AddScoped<IEmailService, EmailService>();
             services.AddScoped<IB3ResponseCalculatorService, B3ResponseCalculatorService>();
             services.AddScoped<IDarfGeneratorService, DarfGeneratorService>();
             services.AddScoped<IStripeService, StripeService>();
@@ -76,17 +71,7 @@ namespace Api
             services.AddTransient<IIncomeTaxesCalculator, InvestmentsFundsIncomeTaxes>();
             services.AddTransient<IIncomeTaxesCalculator, StocksIncomeTaxes>();
 
-            services.AddTransient<IJwtCommonService, JwtCommonService>();
-
             services.AddMvc(options => options.Filters.Add<NotificationFilter>());
-
-            services.Configure<JwtProperties>(options =>
-            {
-                options.Token = builder.Configuration["Jwt:Token"];
-                options.Issuer = builder.Configuration["Jwt:Issuer"];
-                options.Audience = builder.Configuration["Jwt:Audience"];
-                options.Authoriry = builder.Configuration["Jwt:Authority"];
-            });
 
             services.Configure<StripeSecret>(options =>
             {
@@ -163,7 +148,6 @@ namespace Api
             services.AddHangfireServer();
 
             services.AddScoped<IAverageTradedPriceUpdaterHangfire, AverageTradedPriceUpdaterHangfire>();
-            services.AddScoped<IEmailCodeRemoverHangfire, EmailCodeRemoverHangfire>();
             services.AddScoped<IPlanExpirerHangfire, PlanExpirerHangfire>();
         }
 
@@ -179,7 +163,6 @@ namespace Api
             // GlobalConfiguration.Configuration.UsePostgreSqlStorage(builder.Configuration.GetConnectionString("DefaultConnection"));
 
             RecurringJob.RemoveIfExists(nameof(AverageTradedPriceUpdaterHangfire));
-            RecurringJob.RemoveIfExists(nameof(EmailCodeRemoverHangfire));
             RecurringJob.RemoveIfExists(nameof(PlanExpirerHangfire));
 
             RecurringJob.AddOrUpdate<IAverageTradedPriceUpdaterHangfire>(
@@ -188,16 +171,10 @@ namespace Api
                 Cron.Monthly
             );
 
-            RecurringJob.AddOrUpdate<IEmailCodeRemoverHangfire>(
-                nameof(EmailCodeRemoverHangfire),
-                x => x.Execute(),
-                Cron.Daily
-            );
-
-            RecurringJob.AddOrUpdate<IEmailCodeRemoverHangfire>(
+            RecurringJob.AddOrUpdate<IPlanExpirerHangfire>(
                 nameof(PlanExpirerHangfire),
                 x => x.Execute(),
-                "0 */2 * * *" // every 2 hours
+                Cron.Daily
             );
         }
 
@@ -244,7 +221,6 @@ namespace Api
             services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
             services.AddScoped<IAccountRepository, AccountRepository>();
             services.AddScoped<IAverageTradedPriceRepostory, AverageTradedPriceRepository>();
-            services.AddScoped<IEmailCodeRepository, EmailCodeRepository>();
             services.AddScoped<ITaxesRepository, TaxesRepository>();
             services.AddScoped<IPlanRepository, PlanRepository>();
         }

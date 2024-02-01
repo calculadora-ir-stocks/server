@@ -1,5 +1,6 @@
 ﻿using Api.Database;
 using Dapper;
+using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Repositories.Account
 {
@@ -12,14 +13,9 @@ namespace Infrastructure.Repositories.Account
             this.context = context;
         }
 
-        public bool EmailExists(string email)
+        public async Task<bool> CPFExists(string cpf)
         {
-            return context.Accounts.Any(x => x.Email == email);
-        }
-
-        public bool CPFExists(string cpf)
-        {
-            return context.Accounts.Any(x => x.CPF == cpf);
+            return await context.Accounts.AnyAsync(x => x.CPF == cpf);
         }
 
         public void Delete(Models.Account account)
@@ -31,11 +27,6 @@ namespace Infrastructure.Repositories.Account
         public IEnumerable<Models.Account> GetAll()
         {
             return context.Accounts.AsList();
-        }
-
-        public Models.Account? GetByEmail(string email)
-        {
-            return context.Accounts.AsEnumerable().SingleOrDefault(x => x.Email == email);
         }
 
         public Models.Account? GetById(Guid accountId)
@@ -58,6 +49,11 @@ namespace Infrastructure.Repositories.Account
         {
             context.Accounts.RemoveRange(context.Accounts);
             context.SaveChanges();
+        }
+
+        public Task<Guid> GetByAuth0IdAsNoTracking(string auth0Id)
+        {
+            return context.Accounts.AsNoTracking().Where(x => x.Auth0Id.Equals(auth0Id)).Select(x => x.Id).FirstOrDefaultAsync();
         }
     }
 }
