@@ -20,6 +20,7 @@ public class AccountController : BaseController
     public async Task<IActionResult> GetByAuth0Id([FromRoute] string auth0Id)
     {
         Guid accountId = await service.GetByAuth0Id(auth0Id);
+        if (accountId == Guid.Empty) return NotFound();
         return Ok(new { accountId });
     }
 
