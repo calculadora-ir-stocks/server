@@ -18,8 +18,8 @@ namespace Core.Services.Account
         {
             try
             {
-                var account = repository.GetById(accountId);
-                if (account is null) throw new NullReferenceException($"O usuário de id {accountId} não foi encontrado na base de dados.");
+                var account = repository.GetById(accountId) ?? 
+                    throw new NullReferenceException($"O usuário de id {accountId} não foi encontrado na base de dados.");
 
                 repository.Delete(account);
             }
@@ -32,14 +32,7 @@ namespace Core.Services.Account
 
         public async Task<Guid> GetByAuth0Id(string auth0Id)
         {
-            try
-            {
-                return await repository.GetByAuth0IdAsNoTracking(auth0Id);
-            } catch (Exception e)
-            {
-                logger.LogError(e, "Ocorreu um erro ao consultar um usuário pelo Auth0 Id.");
-                throw;
-            }
+            return await repository.GetByAuth0IdAsNoTracking(auth0Id);
         }
     }
 }
