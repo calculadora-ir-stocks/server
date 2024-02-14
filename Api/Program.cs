@@ -17,7 +17,6 @@ builder.Services.AddRepositories();
 
 builder.Services.AddDatabase(builder);
 
-
 // builder.Services.AddHangfireServices();
 // builder.Services.ConfigureHangfireServices(builder);
 
@@ -46,7 +45,8 @@ app.UseSwaggerUI(c =>
     c.SwaggerEndpoint("v1/swagger.json", "Stocks v1")
 );
 
-app.UseHttpsRedirection();
+// app.UseHttpsRedirection();
+app.UseForwardedHeaders();
 
 app.UseAuthentication();
 app.UseRouting();
