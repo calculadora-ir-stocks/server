@@ -8,7 +8,6 @@ using Infrastructure.Repositories.Account;
 using Infrastructure.Repositories.AverageTradedPrice;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
-using System.ComponentModel.Design.Serialization;
 using System.Diagnostics;
 using static Core.Models.B3.Movement;
 
