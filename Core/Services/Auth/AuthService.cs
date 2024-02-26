@@ -43,7 +43,7 @@ namespace Api.Services.Auth
             return await auth0Client.GetToken();
         }
 
-        public async Task<Guid> SignUp(SignUpRequest request)
+        public async Task<Infrastructure.Models.Account> SignUp(SignUpRequest request)
         {
             Infrastructure.Models.Account account = new(
                 request.Auth0Id,
@@ -54,6 +54,12 @@ namespace Api.Services.Auth
 
             await ThrowExceptionIfSignUpIsInvalid(account, request.IsTOSAccepted);
 
+            if (account.IsInvalid)
+            {
+                notificationManager.AddNotifications(account.ValidationResult);
+                return account;
+            }
+
             Customer? stripeAccount = await stripeCustomerService.CreateAsync(new CustomerCreateOptions
             {
                 Phone = account.PhoneNumber
@@ -63,18 +69,13 @@ namespace Api.Services.Auth
 
             genericRepository.Add(account);
 
-            return account.Id;
+            return account;
         }
 
         private async Task ThrowExceptionIfSignUpIsInvalid(Infrastructure.Models.Account account, bool isTOSAccepted)
         {
             try
-            {
-                if (account.IsInvalid)
-                {
-                    notificationManager.AddNotifications(account.ValidationResult);
-                }
-
+            {                
                 if (!isTOSAccepted)
                     throw new BadRequestException("Os termos de uso precisam ser aceitos.");
 

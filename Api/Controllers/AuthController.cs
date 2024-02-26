@@ -25,8 +25,9 @@ public class AuthController : BaseController
     [AllowAnonymous]
     public async Task<IActionResult> SignUp([FromBody] SignUpRequest request)
     {
-        Guid accountId = await service.SignUp(request);
-        return Ok(new { accountId });
+        var account = await service.SignUp(request);
+        if (account.IsInvalid) return BadRequest();
+        return Ok(new { accountId = account.Id });
     }
 
     /// <summary>

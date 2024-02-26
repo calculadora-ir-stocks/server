@@ -3,7 +3,7 @@ using Api.Database;
 using Api.Handler;
 using Api.Services.Auth;
 using Billing.Services.Stripe;
-using Common;
+using Common.Configurations;
 using Common.Models;
 using Common.Models.Secrets;
 using Core.Calculators;
@@ -47,6 +47,7 @@ namespace Api
         public static void AddServices(this IServiceCollection services, WebApplicationBuilder builder)
         {
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+            services.AddSingleton<JsonSerializerConfiguration>();
 
             // 3rd parties
             services.AddScoped<IB3Client, B3Client>();

@@ -5,7 +5,7 @@ namespace Core.Notification
     public class NotificationManager
     {
         private readonly List<Notification> notifications;
-        public IReadOnlyCollection<Notification> Notifications => notifications;
+        public IReadOnlyCollection<Notification> GetNotifications => notifications;
         public bool HasNotifications => notifications.Any();
 
         public NotificationManager()
