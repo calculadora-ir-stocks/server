@@ -75,11 +75,6 @@ namespace Api
 
             services.AddMvc(options => options.Filters.Add<NotificationFilter>());
 
-            services.Configure<SendGridSecret>(options =>
-            {
-                options.Token = builder.Configuration["Services:SendGrid:Token"];
-            });
-
             services.AddSingleton(_ =>
             {
                 return new Auth0Secret
