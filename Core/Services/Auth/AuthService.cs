@@ -1,6 +1,5 @@
 ﻿using Api.DTOs.Auth;
 using Common.Exceptions;
-using Core.Clients.Auth0;
 using Core.Notification;
 using Infrastructure.Repositories;
 using Infrastructure.Repositories.Account;
@@ -15,7 +14,6 @@ namespace Api.Services.Auth
         private readonly IAccountRepository accountRepository;
         private readonly IGenericRepository<Infrastructure.Models.Account> genericRepository;
 
-        private readonly IAuth0Client auth0Client;
         private readonly CustomerService stripeCustomerService;
 
         private readonly NotificationManager notificationManager;
@@ -24,7 +22,6 @@ namespace Api.Services.Auth
         public AuthService(
             IGenericRepository<Infrastructure.Models.Account> genericRepository,
             IAccountRepository accountRepository,
-            IAuth0Client auth0Client,
             CustomerService stripeCustomerService,
             NotificationManager notificationManager,
             ILogger<AuthService> logger
@@ -32,7 +29,6 @@ namespace Api.Services.Auth
         {
             this.genericRepository = genericRepository;
             this.accountRepository = accountRepository;
-            this.auth0Client = auth0Client;
             this.stripeCustomerService = stripeCustomerService;
             this.notificationManager = notificationManager;
             this.logger = logger;

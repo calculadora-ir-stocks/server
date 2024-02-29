@@ -9,7 +9,6 @@ using Common.Models;
 using Common.Models.Secrets;
 using Core.Calculators;
 using Core.Calculators.Assets;
-using Core.Clients.Auth0;
 using Core.Clients.B3;
 using Core.Clients.InfoSimples;
 using Core.Filters;
@@ -53,7 +52,6 @@ namespace Api
             // 3rd parties
             services.AddScoped<IB3Client, B3Client>();
             services.AddScoped<IInfoSimplesClient, InfoSimplesClient>();
-            services.AddScoped<IAuth0Client, Auth0Client>();
 
             services.AddScoped<IAccountService, Core.Services.Account.AccountService>();
             services.AddScoped<ITaxesService, TaxesService>();
@@ -74,17 +72,6 @@ namespace Api
             services.AddTransient<IIncomeTaxesCalculator, StocksIncomeTaxes>();
 
             services.AddMvc(options => options.Filters.Add<NotificationFilter>());
-
-            services.AddSingleton(_ =>
-            {
-                return new Auth0Secret
-                {
-                    ClientId = builder.Configuration["Services:Auth0:ClientId"],
-                    ClientSecret = builder.Configuration["Services:Auth0:ClientSecret"],
-                    Audience = builder.Configuration["Services:Auth0:Audience"],
-                    GrantType = builder.Configuration["Services:Auth0:GrantType"]
-                };
-            });
         }
 
         public static void AddStripeServices(this IServiceCollection services)
