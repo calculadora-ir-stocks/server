@@ -3,6 +3,7 @@ using Api.Database;
 using Api.Handler;
 using Api.Services.Auth;
 using Billing.Services.Stripe;
+using Common;
 using Common.Configurations;
 using Common.Models;
 using Common.Models.Secrets;
@@ -265,12 +266,25 @@ namespace Api
 
         public static void AddDatabase(this IServiceCollection services, WebApplicationBuilder builder)
         {
+            DatabaseSecret secret = new();
+
             services.AddDbContext<StocksContext>(options =>
             {
-                options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"));
+                options.UseNpgsql(secret.GetConnectionString());
                 options.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
             });
             AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+        }
+
+        public static void InitializeEnvironmentVariables(this IServiceCollection _, string[] envFilesOnRoot)
+        {
+            string root = Directory.GetParent(Directory.GetCurrentDirectory())!.FullName;
+
+            foreach (string envFile in envFilesOnRoot)
+            {
+                string env = Path.Combine(root, envFile);
+                EnvironmentVariableInitializer.Load(env);
+            }
         }
     }
 }
