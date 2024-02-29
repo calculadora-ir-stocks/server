@@ -75,23 +75,9 @@ namespace Api
 
             services.AddMvc(options => options.Filters.Add<NotificationFilter>());
 
-            services.Configure<StripeSecret>(options =>
-            {
-                options.WebhookSecret = builder.Configuration["Services:Stripe:WebhookToken"];
-                options.ApiSecret = builder.Configuration["Services:Stripe:ApiToken"];
-            });
-
             services.Configure<InfoSimplesSecret>(options =>
             {
                 options.Secret = builder.Configuration["Services:InfoSimples:Token"];
-            });
-
-            services.Configure<B3ParamsSecret>(options =>
-            {
-                options.ClientId = builder.Configuration["Services:B3:ClientId"];
-                options.ClientSecret = builder.Configuration["Services:B3:ClientSecret"];
-                options.Scope = builder.Configuration["Services:B3:Scope"];
-                options.GrantType = builder.Configuration["Services:B3:GrantType"];
             });
 
             services.Configure<SendGridSecret>(options =>
@@ -111,9 +97,9 @@ namespace Api
             });
         }
 
-        public static void AddStripeServices(this IServiceCollection services, IConfiguration configuration)
+        public static void AddStripeServices(this IServiceCollection services)
         {
-            StripeConfiguration.ApiKey = configuration.GetValue<string>("Services:Stripe:ApiToken");
+            StripeConfiguration.ApiKey = Environment.GetEnvironmentVariable("STRIPE_API_TOKEN");
 
             services.AddScoped<ChargeService>();
             services.AddScoped<CustomerService>();

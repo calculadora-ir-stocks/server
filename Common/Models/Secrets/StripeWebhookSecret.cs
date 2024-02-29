@@ -2,15 +2,10 @@
 {
     public class StripeSecret
     {
-        public StripeSecret(string webhookSecret, string apiSecret)
-        {
-            WebhookSecret = webhookSecret;
-            ApiSecret = apiSecret;
-        }
-
-#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
         public StripeSecret()
         {
+            WebhookSecret = Environment.GetEnvironmentVariable("STRIPE_WEBHOOK_TOKEN")!;
+            ApiSecret = Environment.GetEnvironmentVariable("STRIPE_API_TOKEN")!;
         }
 
         public string WebhookSecret { get; set; }

@@ -455,4 +455,4 @@ $RECYCLE.BIN/
 
 # Secrets
 secrets.json
-.env
+**/*.env
