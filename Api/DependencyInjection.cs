@@ -75,11 +75,6 @@ namespace Api
 
             services.AddMvc(options => options.Filters.Add<NotificationFilter>());
 
-            services.Configure<InfoSimplesSecret>(options =>
-            {
-                options.Secret = builder.Configuration["Services:InfoSimples:Token"];
-            });
-
             services.Configure<SendGridSecret>(options =>
             {
                 options.Token = builder.Configuration["Services:SendGrid:Token"];
