@@ -3,6 +3,7 @@ using Api.Database;
 using Api.Handler;
 using Api.Services.Auth;
 using Billing.Services.Stripe;
+using Common;
 using Common.Configurations;
 using Common.Models;
 using Common.Models.Secrets;
@@ -74,30 +75,6 @@ namespace Api
 
             services.AddMvc(options => options.Filters.Add<NotificationFilter>());
 
-            services.Configure<StripeSecret>(options =>
-            {
-                options.WebhookSecret = builder.Configuration["Services:Stripe:WebhookToken"];
-                options.ApiSecret = builder.Configuration["Services:Stripe:ApiToken"];
-            });
-
-            services.Configure<InfoSimplesSecret>(options =>
-            {
-                options.Secret = builder.Configuration["Services:InfoSimples:Token"];
-            });
-
-            services.Configure<B3ParamsSecret>(options =>
-            {
-                options.ClientId = builder.Configuration["Services:B3:ClientId"];
-                options.ClientSecret = builder.Configuration["Services:B3:ClientSecret"];
-                options.Scope = builder.Configuration["Services:B3:Scope"];
-                options.GrantType = builder.Configuration["Services:B3:GrantType"];
-            });
-
-            services.Configure<SendGridSecret>(options =>
-            {
-                options.Token = builder.Configuration["Services:SendGrid:Token"];
-            });
-
             services.AddSingleton(_ =>
             {
                 return new Auth0Secret
@@ -110,9 +87,9 @@ namespace Api
             });
         }
 
-        public static void AddStripeServices(this IServiceCollection services, IConfiguration configuration)
+        public static void AddStripeServices(this IServiceCollection services)
         {
-            StripeConfiguration.ApiKey = configuration.GetValue<string>("Services:Stripe:ApiToken");
+            StripeConfiguration.ApiKey = Environment.GetEnvironmentVariable("STRIPE_API_TOKEN");
 
             services.AddScoped<ChargeService>();
             services.AddScoped<CustomerService>();
@@ -265,12 +242,25 @@ namespace Api
 
         public static void AddDatabase(this IServiceCollection services, WebApplicationBuilder builder)
         {
+            DatabaseSecret secret = new();
+
             services.AddDbContext<StocksContext>(options =>
             {
-                options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"));
+                options.UseNpgsql(secret.GetConnectionString());
                 options.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
             });
             AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+        }
+
+        public static void InitializeEnvironmentVariables(this IServiceCollection _, string[] envFilesOnRoot)
+        {
+            string root = Directory.GetParent(Directory.GetCurrentDirectory())!.FullName;
+
+            foreach (string envFile in envFilesOnRoot)
+            {
+                string env = Path.Combine(root, envFile);
+                EnvironmentVariableInitializer.Load(env);
+            }
         }
     }
 }

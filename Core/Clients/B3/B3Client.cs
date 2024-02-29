@@ -18,7 +18,7 @@ namespace Core.Clients.B3
         private readonly HttpClient b3Client;
         private readonly HttpClient microsoftClient;
 
-        private readonly B3ParamsSecret @params;
+        private readonly B3Secret @params;
 
         private static B3Token? token;
 
@@ -29,7 +29,7 @@ namespace Core.Clients.B3
         /// </summary>
         private const string B3TokenAuthorizationRequestUri = "/4bee639f-5388-44c7-bbac-cb92a93911e6/oauth2/v2.0/token";
 
-        public B3Client(IHttpClientFactory clientFactory, IOptions<B3ParamsSecret> @params, ILogger<B3Client> logger)
+        public B3Client(IHttpClientFactory clientFactory, IOptions<B3Secret> @params, ILogger<B3Client> logger)
         {
             this.clientFactory = clientFactory;
             this.@params = @params.Value;

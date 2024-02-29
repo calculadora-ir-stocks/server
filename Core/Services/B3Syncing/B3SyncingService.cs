@@ -1,4 +1,5 @@
-﻿using Common.Enums;
+﻿using Api.Clients.B3;
+using Common.Enums;
 using Common.Exceptions;
 using Common.Helpers;
 using Core.Models;
@@ -25,6 +26,7 @@ namespace Core.Services.B3Syncing
         private readonly ITaxesRepository taxesRepository;
 
         private readonly IB3ResponseCalculatorService b3CalculatorService;
+        private readonly IB3Client b3Client;
 
         private readonly ILogger<B3SyncingService> logger;
 
@@ -33,6 +35,7 @@ namespace Core.Services.B3Syncing
             IAverageTradedPriceRepostory averageTradedPriceRepository,
             ITaxesRepository taxesRepository,
             IB3ResponseCalculatorService b3CalculatorService,
+            IB3Client b3Client,
             ILogger<B3SyncingService> logger
         )
         {
@@ -40,6 +43,7 @@ namespace Core.Services.B3Syncing
             this.averageTradedPriceRepository = averageTradedPriceRepository;
             this.taxesRepository = taxesRepository;
             this.b3CalculatorService = b3CalculatorService;
+            this.b3Client = b3Client;
             this.logger = logger;
         }
 

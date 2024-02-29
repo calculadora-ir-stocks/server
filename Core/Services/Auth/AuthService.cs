@@ -38,11 +38,6 @@ namespace Api.Services.Auth
             this.logger = logger;
         }
 
-        public async Task<string> GetToken()
-        {
-            return await auth0Client.GetToken();
-        }
-
         public async Task<Infrastructure.Models.Account> SignUp(SignUpRequest request)
         {
             Infrastructure.Models.Account account = new(

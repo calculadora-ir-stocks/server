@@ -4,13 +4,14 @@ using Hangfire;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.InitializeEnvironmentVariables(new string[] { ".database.env", ".apis.env"});
 builder.Services.AddControllers();
 
 builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.AddHttpContextAccessor();
 
-builder.Services.AddStripeServices(builder.Configuration);
+builder.Services.AddStripeServices();
 builder.Services.AddServices(builder);
 builder.Services.Add3rdPartiesClients();
 builder.Services.AddRepositories();

@@ -29,16 +29,4 @@ public class AuthController : BaseController
         if (account.IsInvalid) return BadRequest();
         return Ok(new { accountId = account.Id });
     }
-
-    /// <summary>
-    /// Obtém o token de autenticação do Auth0. Será usado apenas para testes locais. Em produção, o token JWT
-    /// será requisitado para o Auth0 através do front-end.
-    /// </summary>
-    [HttpGet("token")]
-    [AllowAnonymous]
-    public async Task<IActionResult> Token()
-    {
-        string token = await service.GetToken();
-        return Ok(new { token });
-    }
 }
