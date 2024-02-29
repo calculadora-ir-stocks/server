@@ -1,5 +1,4 @@
 ﻿using Api.DTOs.Auth;
-using Core.Models.Api.Responses;
 using Infrastructure.Models;
 
 namespace Api.Services.Auth
@@ -12,11 +11,5 @@ namespace Api.Services.Auth
         /// <param name="request">Objeto contendo todas as informações para o registro do usuário.</param>
         /// <returns>O id do usuário cadastrado.</returns>
         Task<Account> SignUp(SignUpRequest request);
-
-        /// <summary>
-        /// Obtém o token de autenticação do Auth0. Será usado apenas para testes locais. Em produção, o token JWT
-        /// será requisitado para o Auth0 através do front-end.
-        /// </summary>
-        Task<string> GetToken();
     }
 }
