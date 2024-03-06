@@ -3,6 +3,7 @@ version: '3'
 services:
   api:
     restart: always
+    env_file: .apis.env
     container_name: api
     build:
       context: .
