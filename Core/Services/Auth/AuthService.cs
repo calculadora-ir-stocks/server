@@ -12,7 +12,6 @@ namespace Api.Services.Auth
     {
 
         private readonly IAccountRepository accountRepository;
-        private readonly IGenericRepository<Infrastructure.Models.Account> genericRepository;
 
         private readonly CustomerService stripeCustomerService;
 
@@ -20,14 +19,12 @@ namespace Api.Services.Auth
         private readonly ILogger<AuthService> logger;
 
         public AuthService(
-            IGenericRepository<Infrastructure.Models.Account> genericRepository,
             IAccountRepository accountRepository,
             CustomerService stripeCustomerService,
             NotificationManager notificationManager,
             ILogger<AuthService> logger
         )
         {
-            this.genericRepository = genericRepository;
             this.accountRepository = accountRepository;
             this.stripeCustomerService = stripeCustomerService;
             this.notificationManager = notificationManager;
@@ -49,7 +46,7 @@ namespace Api.Services.Auth
             Customer? stripeAccount = await stripeCustomerService.CreateAsync(new CustomerCreateOptions());
 
             account.StripeCustomerId = stripeAccount.Id;
-            genericRepository.Add(account);
+            await accountRepository.Create(account);
 
             return account;
         }
@@ -60,6 +57,8 @@ namespace Api.Services.Auth
             {                
                 if (!isTOSAccepted)
                     throw new BadRequestException("Os termos de uso precisam ser aceitos.");
+
+                // TODO descriptografar cpf
                 if (await accountRepository.CPFExists(account.CPF))
                     throw new BadRequestException("Um usuário com esse CPF já está cadastrado na plataforma.");
             }

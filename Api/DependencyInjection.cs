@@ -28,6 +28,7 @@ using Infrastructure.Repositories.Account;
 using Infrastructure.Repositories.AverageTradedPrice;
 using Infrastructure.Repositories.Plan;
 using Infrastructure.Repositories.Taxes;
+using Infrastructure.UnitOfWork;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
@@ -48,6 +49,8 @@ namespace Api
         {
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
             services.AddSingleton<JsonSerializerConfiguration>();
+
+            services.AddTransient<IUnitOfWork, UnitOfWork>();
 
             // 3rd parties
             services.AddScoped<IB3Client, B3Client>();
