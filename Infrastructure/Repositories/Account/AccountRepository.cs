@@ -1,5 +1,6 @@
 ﻿using Api.Database;
 using Dapper;
+using Infrastructure.Models;
 using Infrastructure.UnitOfWork;
 using Microsoft.EntityFrameworkCore;
 using System.Data.Common;
@@ -48,13 +49,26 @@ namespace Infrastructure.Repositories.Account
 
             await transaction.Connection.QueryAsync(createAccount, parameters);
             await transaction.Connection.QueryAsync(createPlan, parameters);
-
             await transaction.CommitAsync();
         }
 
         public async Task<bool> CPFExists(string cpf)
         {
-            return await context.Accounts.AnyAsync(x => x.CPF == cpf);
+            DynamicParameters parameters = new();
+
+            const string key = "GET THIS SHIT FROM A HSM";
+            parameters.Add("@Key", key);
+            parameters.Add("@CPF", cpf);
+
+            string sql = @"
+                SELECT 
+                    PGP_SYM_DECRYPT(a.""CPF""::bytea, @Key) FROM ""Accounts"" a
+                WHERE
+                    PGP_SYM_DECRYPT(a.""CPF""::bytea, @Key) = @CPF
+            ";
+
+            var result = await context.Database.GetDbConnection().QueryAsync<string>(sql, parameters);
+            return result.Any();
         }
 
         public void Delete(Models.Account account)

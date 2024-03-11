@@ -26,22 +26,6 @@ namespace Infrastructure.UnitOfWork
             return await connection.BeginTransactionAsync(IsolationLevel.ReadCommitted);
         }
 
-        public async Task TryCommitAsync()
-        {
-            try
-            {
-                if (connection.State != ConnectionState.Open)
-                    await connection.OpenAsync();
-
-                await transaction.CommitAsync();
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, "Ocorreu uma exceção ao persistir a transação na base de dados");
-                throw;
-            }
-        }
-
         #region IDisposable
 
         // To detect redundant calls.

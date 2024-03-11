@@ -58,7 +58,6 @@ namespace Api.Services.Auth
                 if (!isTOSAccepted)
                     throw new BadRequestException("Os termos de uso precisam ser aceitos.");
 
-                // TODO descriptografar cpf
                 if (await accountRepository.CPFExists(account.CPF))
                     throw new BadRequestException("Um usuário com esse CPF já está cadastrado na plataforma.");
             }
