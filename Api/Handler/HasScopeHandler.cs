@@ -1,4 +1,4 @@
-﻿using Common.Models;
+﻿using Common.Models.Handlers;
 using Microsoft.AspNetCore.Authorization;
 
 namespace Api.Handler

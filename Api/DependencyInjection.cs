@@ -6,6 +6,7 @@ using Billing.Services.Stripe;
 using Common;
 using Common.Configurations;
 using Common.Models;
+using Common.Models.Handlers;
 using Common.Models.Secrets;
 using Core.Calculators;
 using Core.Calculators.Assets;
@@ -47,6 +48,10 @@ namespace Api
     {
         public static void AddServices(this IServiceCollection services, WebApplicationBuilder builder)
         {
+            // Scope handler
+            builder.Services.AddSingleton<IAuthorizationHandler, HasScopeHandler>();
+            builder.Services.AddScoped<IAuthorizationHandler, CanAccessResourceHandler>();
+
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
             services.AddSingleton<JsonSerializerConfiguration>();
 
@@ -56,6 +61,7 @@ namespace Api
             services.AddScoped<IB3Client, B3Client>();
             services.AddScoped<IInfoSimplesClient, InfoSimplesClient>();
 
+            // Services layer
             services.AddScoped<IAccountService, Core.Services.Account.AccountService>();
             services.AddScoped<ITaxesService, TaxesService>();
             services.AddScoped<IB3SyncingService, B3SyncingService>();
@@ -67,6 +73,7 @@ namespace Api
 
             services.AddScoped<NotificationManager>();
 
+            // Calculators
             services.AddTransient<IIncomeTaxesCalculator, BDRsIncomeTaxes>();
             services.AddTransient<IIncomeTaxesCalculator, ETFsIncomeTaxes>();
             services.AddTransient<IIncomeTaxesCalculator, FIIsIncomeTaxes>();
@@ -106,9 +113,13 @@ namespace Api
                         new HasScopeRequirement("read:taxes", builder.Configuration["Auth0:Domain"])
                     )
                 );
+                options.AddPolicy(
+                    "read:own_information",
+                    policy => policy.Requirements.Add(
+                        new CanAccessResourceRequirement("read:own_information")
+                    )
+                );
             });
-
-            builder.Services.AddSingleton<IAuthorizationHandler, HasScopeHandler>();
         }
 
         public static void AddHangfireServices(this IServiceCollection services)

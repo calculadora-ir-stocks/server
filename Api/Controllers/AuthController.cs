@@ -9,6 +9,7 @@ namespace Api.Controllers;
 /// Responsável pelo registro e autenticação de usuários.
 /// </summary>
 [Tags("Authentication")]
+[Authorize("read:own_information")]
 public class AuthController : BaseController
 {
     private readonly IAuthService service;
@@ -22,7 +23,7 @@ public class AuthController : BaseController
     /// Registra um usuário já criado anteriormente no Auth0.
     /// </summary>
     [HttpPost("sign-up")]
-    [AllowAnonymous]
+    // [AllowAnonymous]
     public async Task<IActionResult> SignUp([FromBody] SignUpRequest request)
     {
         var account = await service.SignUp(request);
