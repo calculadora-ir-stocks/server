@@ -2,6 +2,10 @@
 {
     public interface IAccountRepository
     {
+        /// <summary>
+        /// Insere um novo usuário na base com o CPF criptografado.
+        /// </summary>
+        Task Create(Models.Account account);
         Task<bool> CPFExists(string cpf);
         Models.Account? GetById(Guid accountId);
         Task<Guid> GetByAuth0IdAsNoTracking(string auth0Id);

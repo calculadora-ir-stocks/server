@@ -22,7 +22,7 @@ public class AuthController : BaseController
     /// Registra um usuário já criado anteriormente no Auth0.
     /// </summary>
     [HttpPost("sign-up")]
-    [AllowAnonymous]
+    [AllowAnonymous] // TODO remove for production
     public async Task<IActionResult> SignUp([FromBody] SignUpRequest request)
     {
         var account = await service.SignUp(request);

@@ -20,7 +20,6 @@ namespace stocks_unit_tests.Services
         public BigBangTests()
         {
             repository = new Mock<IAverageTradedPriceRepostory>();
-
             bigBang = new B3ResponseCalculatorService(calculator, repository.Object);
         }
 

@@ -12,7 +12,6 @@ namespace Api.Services.Auth
     {
 
         private readonly IAccountRepository accountRepository;
-        private readonly IGenericRepository<Infrastructure.Models.Account> genericRepository;
 
         private readonly CustomerService stripeCustomerService;
 
@@ -20,14 +19,12 @@ namespace Api.Services.Auth
         private readonly ILogger<AuthService> logger;
 
         public AuthService(
-            IGenericRepository<Infrastructure.Models.Account> genericRepository,
             IAccountRepository accountRepository,
             CustomerService stripeCustomerService,
             NotificationManager notificationManager,
             ILogger<AuthService> logger
         )
         {
-            this.genericRepository = genericRepository;
             this.accountRepository = accountRepository;
             this.stripeCustomerService = stripeCustomerService;
             this.notificationManager = notificationManager;
@@ -36,12 +33,7 @@ namespace Api.Services.Auth
 
         public async Task<Infrastructure.Models.Account> SignUp(SignUpRequest request)
         {
-            Infrastructure.Models.Account account = new(
-                request.Auth0Id,
-                request.CPF,
-                request.BirthDate,
-                request.PhoneNumber
-            );
+            Infrastructure.Models.Account account = new(request.Auth0Id, request.CPF, request.BirthDate);
 
             await ThrowExceptionIfSignUpIsInvalid(account, request.IsTOSAccepted);
 
@@ -51,14 +43,10 @@ namespace Api.Services.Auth
                 return account;
             }
 
-            Customer? stripeAccount = await stripeCustomerService.CreateAsync(new CustomerCreateOptions
-            {
-                Phone = account.PhoneNumber
-            });
+            Customer? stripeAccount = await stripeCustomerService.CreateAsync(new CustomerCreateOptions());
 
             account.StripeCustomerId = stripeAccount.Id;
-
-            genericRepository.Add(account);
+            await accountRepository.Create(account);
 
             return account;
         }
@@ -75,7 +63,7 @@ namespace Api.Services.Auth
             }
             catch (Exception e)
             {
-                logger.LogError($"Ocorreu um erro tentar validar se o usuário {account.Id} já está cadastrado" +
+                logger.LogError($"Ocorreu um erro tentar validar se o usuário {account.Id} já está cadastrado " +
                     $"na plataforma. {e.Message}");
                 throw;
             }
