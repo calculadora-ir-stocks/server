@@ -1,4 +1,5 @@
 using Core.Services.Account;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Api.Controllers;
@@ -16,6 +17,9 @@ public class AccountController : BaseController
     /// <summary>
     /// Obtém um usuário pelo Auth0 Id.
     /// </summary>
+    /// Esse endpoint atualmente é público pois o front-end precisa do id de usuário e não consegue gerar o JWT
+    /// antes de inserir todos os claims necessários.
+    [AllowAnonymous]
     [HttpGet("{auth0Id}")]
     public async Task<IActionResult> GetByAuth0Id([FromRoute] string auth0Id)
     {

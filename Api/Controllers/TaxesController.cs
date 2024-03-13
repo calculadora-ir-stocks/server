@@ -35,7 +35,7 @@ public class TaxesController : BaseController
     /// <param name="value">Valor adicional (geralmente de meses onde houveram impostos inferiores a R$10,00) para ser
     /// somado no valor total da DARF.</param>
     /// <returns>O código de barras da DARF e outras informações referentes ao imposto sendo pago.</returns>
-    [HttpGet("generate-darf")]
+    [HttpGet("generate-darf/{accountId}")]
     [ProducesResponseType(typeof(DARFResponse), 200)]
     [ProducesResponseType(typeof(Core.Notification.Notification), 404)]
     public async Task<IActionResult> GenerateDarf(Guid accountId, string month, double value = 0)
