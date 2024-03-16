@@ -6,6 +6,7 @@ namespace Api.Controllers
     [ApiController]
     [Route("api/[controller]")]
     [Produces("application/json")]
+    [Authorize]
     [Authorize("read:own_information")]
     public abstract class BaseController : ControllerBase
     {

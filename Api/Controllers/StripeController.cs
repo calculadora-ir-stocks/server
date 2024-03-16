@@ -22,7 +22,6 @@ namespace Api.Controllers
         /// <summary>
         /// Retorna todos os planos disponíveis.
         /// </summary>
-        /// <returns></returns>
         [HttpGet("plans")]
         public IActionResult GetAllPlans()
         {
