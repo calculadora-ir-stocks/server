@@ -255,7 +255,7 @@ namespace Api
 
         public static void InitializeEnvironmentVariables(this IServiceCollection _, string[] envFilesOnRoot)
         {
-            string root = Directory.GetParent(Directory.GetCurrentDirectory())!.FullName;
+            string root = Directory.GetCurrentDirectory();
 
             foreach (string envFile in envFilesOnRoot)
             {
