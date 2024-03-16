@@ -12,12 +12,13 @@ builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.AddHttpContextAccessor();
 
+builder.Services.AddDatabase(builder);
+
 builder.Services.AddStripeServices();
 builder.Services.AddServices(builder);
 builder.Services.Add3rdPartiesClients();
 builder.Services.AddRepositories();
 
-builder.Services.AddDatabase(builder);
 
 //builder.Services.AddHangfireServices();
 //builder.Services.ConfigureHangfireServices(builder);
@@ -34,11 +35,6 @@ builder.Services.AddCors(policyBuilder =>
 );
 
 var app = builder.Build();
-
-using (var scope = app.Services.CreateAsyncScope())
-{
-    scope.ServiceProvider.GetRequiredService<StocksContext>();
-}
 
 // app.UseHangfireDashboard("/dashboard");
 app.UseCors();
