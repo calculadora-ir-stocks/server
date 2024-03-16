@@ -12,12 +12,9 @@ namespace Infrastructure.UnitOfWork
         private readonly DbConnection connection;
         private readonly DbTransaction transaction = null!;
 
-        private readonly ILogger<UnitOfWork> logger;
-
-        public UnitOfWork(StocksContext stocksContext, ILogger<UnitOfWork> logger)
+        public UnitOfWork(StocksContext stocksContext)
         {
             connection = stocksContext.Database.GetDbConnection();
-            this.logger = logger;
         }
 
         public async Task<DbTransaction> BeginTransactionAsync()

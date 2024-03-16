@@ -33,6 +33,7 @@ using Infrastructure.UnitOfWork;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Polly;
@@ -139,7 +140,8 @@ namespace Api
                 .UseRecommendedSerializerSettings()
             );
 
-            // GlobalConfiguration.Configuration.UsePostgreSqlStorage(builder.Configuration.GetConnectionString("DefaultConnection"));
+            DatabaseSecret secret = new();
+            GlobalConfiguration.Configuration.UsePostgreSqlStorage(builder.Configuration.GetConnectionString(secret.GetConnectionString()));
 
             RecurringJob.RemoveIfExists(nameof(AverageTradedPriceUpdaterHangfire));
             RecurringJob.RemoveIfExists(nameof(PlanExpirerHangfire));

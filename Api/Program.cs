@@ -1,4 +1,5 @@
 using Api;
+using Api.Database;
 using Api.Middlewares;
 using Hangfire;
 
@@ -18,8 +19,8 @@ builder.Services.AddRepositories();
 
 builder.Services.AddDatabase(builder);
 
-// builder.Services.AddHangfireServices();
-// builder.Services.ConfigureHangfireServices(builder);
+//builder.Services.AddHangfireServices();
+//builder.Services.ConfigureHangfireServices(builder);
 
 builder.Services.AddAuth0Authentication(builder);
 
@@ -33,6 +34,11 @@ builder.Services.AddCors(policyBuilder =>
 );
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateAsyncScope())
+{
+    scope.ServiceProvider.GetRequiredService<StocksContext>();
+}
 
 // app.UseHangfireDashboard("/dashboard");
 app.UseCors();
