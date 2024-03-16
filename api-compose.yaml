@@ -1,7 +1,17 @@
 version: '3'
 
 services:
-  api:
+  database:
+    restart: always
+    env_file: .database.env
+    container_name: database
+    image: postgres:16
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+      - pgdata:/var/lib/postgresql/data
+   api:
     restart: always
     env_file: .apis.env
     container_name: api
@@ -15,15 +25,5 @@ services:
     environment:
       - VIRTUAL_HOST=api.stocksir.app
       - LETSENCRYPT_HOST=api.stocksir.app
-  database:
-    restart: always
-    env_file: .database.env
-    container_name: database
-    image: postgres:16
-    ports:
-      - "5432:5432"
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-
 volumes:
   pgdata: {}
