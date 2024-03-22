@@ -2,6 +2,8 @@
 using Api.Database;
 using Api.Handler;
 using Api.Services.Auth;
+using Audit.Core;
+using Audit.PostgreSql.Configuration;
 using Billing.Services.Stripe;
 using Common;
 using Common.Configurations;
@@ -243,7 +245,7 @@ namespace Api
             });
         }
 
-        public static void AddDatabase(this IServiceCollection services, WebApplicationBuilder builder)
+        public static void AddDatabase(this IServiceCollection services)
         {
             DatabaseSecret secret = new();
 
@@ -253,6 +255,19 @@ namespace Api
                 options.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
             });
             AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+        }
+
+        public static void AddAudiTrail(this IServiceCollection _)
+        {
+            DatabaseSecret secret = new();
+
+            Configuration.Setup().UsePostgreSql(config => config
+                .ConnectionString(secret.GetConnectionString())
+                .TableName("Audits")
+                .IdColumnName("Id")
+                .DataColumn("Data", DataType.JSONB)
+                .LastUpdatedColumnName("UpdatedAt")
+                .CustomColumn("EventType", ev => ev.EventType));
         }
 
         public static void InitializeEnvironmentVariables(this IServiceCollection _, string[] envFilesOnRoot)

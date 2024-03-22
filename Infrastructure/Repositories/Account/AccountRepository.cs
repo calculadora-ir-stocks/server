@@ -1,6 +1,7 @@
 ﻿using Api.Database;
+using Common;
+using Common.Constants;
 using Dapper;
-using Infrastructure.Models;
 using Infrastructure.UnitOfWork;
 using Microsoft.EntityFrameworkCore;
 using System.Data.Common;
@@ -24,8 +25,8 @@ namespace Infrastructure.Repositories.Account
             DbTransaction transaction = await unitOfWork.BeginTransactionAsync();
 
             const string key = "GET THIS SHIT FROM A HSM";
-            parameters.Add("@Key", key);
 
+            parameters.Add("@Key", key);
             parameters.Add("@AccountId", account.Id);
             parameters.Add("@Auth0Id", account.Auth0Id);
             parameters.Add("@CPF", account.CPF);
@@ -50,6 +51,8 @@ namespace Infrastructure.Repositories.Account
             await transaction.Connection.QueryAsync(createAccount, parameters);
             await transaction.Connection.QueryAsync(createPlan, parameters);
             await transaction.CommitAsync();
+
+            Auditor.Audit($"{nameof(Account)}:{AuditOperation.Add}", null, "Neste evento o CPF do usuário foi criptografado na base de dados.");
         }
 
         public async Task<bool> CPFExists(string cpf)
@@ -62,13 +65,19 @@ namespace Infrastructure.Repositories.Account
 
             string sql = @"
                 SELECT 
-                    PGP_SYM_DECRYPT(a.""CPF""::bytea, @Key) FROM ""Accounts"" a
+                    a.""CPF"" FROM ""Accounts"" a
                 WHERE
                     PGP_SYM_DECRYPT(a.""CPF""::bytea, @Key) = @CPF
             ";
 
-            var result = await context.Database.GetDbConnection().QueryAsync<string>(sql, parameters);
-            return result.Any();
+            string encryptedCPF = await context.Database.GetDbConnection().QuerySingleOrDefaultAsync<string>(sql, parameters);
+
+            Auditor.Audit($"{nameof(Account)}:{AuditOperation.Get}", null, 
+                $"Neste evento o CPF criptografado {encryptedCPF} do usuário foi descriptografado a nível de banco e processado pela aplicação para verificar se o CPF já está " +
+                "cadastrado na plataforma."
+            );
+
+            return encryptedCPF is not null;
         }
 
         public void Delete(Models.Account account)
