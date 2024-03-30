@@ -2,6 +2,9 @@
 using Microsoft.EntityFrameworkCore;
 using Api.Database;
 using Infrastructure.Dtos;
+using Common.Constants;
+using Common;
+using Infrastructure.Models;
 
 namespace Infrastructure.Repositories.AverageTradedPrice
 {
@@ -15,10 +18,44 @@ namespace Infrastructure.Repositories.AverageTradedPrice
         }
 
         #region INSERT
-        public async Task Insert(Models.AverageTradedPrice averageTradedPrice)
+        public async Task AddAsync(Models.AverageTradedPrice averageTradedPrice)
         {
-            await context.AverageTradedPrices.AddAsync(averageTradedPrice);
-            context.SaveChanges();
+            DynamicParameters parameters = new();
+
+            const string key = "GET THIS SHIT FROM A HSM";
+
+            parameters.Add("@Key", key);
+            parameters.Add("@Ticker", averageTradedPrice.Ticker);
+            parameters.Add("@AveragePrice", averageTradedPrice.AveragePrice);
+            parameters.Add("@TotalBought", averageTradedPrice.TotalBought);
+            parameters.Add("@Quantity", averageTradedPrice.Quantity);
+            parameters.Add("@AccountId", averageTradedPrice.Account.Id);
+
+            string sql = @"
+                INSERT INTO ""IncomeTaxes""
+                (
+	                ""Id"",
+	                ""Ticker"",
+	                ""AveragePrice"",
+	                ""TotalBought"",
+	                ""Quantity"",
+	                ""AccountId"",
+	                ""UpdatedAt""
+                )
+                VALUES 
+                (
+	                gen_random_uuid(),
+                    PGP_SYM_ENCRYPT(@Ticker, @Key),
+                    PGP_SYM_ENCRYPT(@AveragePrice, @Key),
+                    PGP_SYM_ENCRYPT(@TotalBought, @Key),
+                    PGP_SYM_ENCRYPT(@Quantity, @Key),
+                    @AccountId,
+                    CURRENT_DATE()
+                )
+            ";
+
+            await context.Database.GetDbConnection().QuerySingleOrDefaultAsync<string>(sql, parameters);
+            Auditor.Audit($"{nameof(AverageTradedPrice)}:{AuditOperation.Add}", comment: "Neste evento todas as informações de preços médios foram criptografadas na base de dados.");
         }
 
         public void InsertAll(IEnumerable<Models.AverageTradedPrice> averageTradedPrices)

@@ -56,7 +56,6 @@ namespace Core.Services.B3Syncing
             {
                 logger.LogInformation("O usuário {accountId} tentou executar a sincronização mas " +
                     "já sincronizou sua conta anteriormente.", account.Id);
-
                 throw new BadRequestException($"O usuário {account.Id} tentou executar a sincronização mas " +
                     "já sincronizou sua conta anteriormente.");
             }
@@ -114,9 +113,16 @@ namespace Core.Services.B3Syncing
             List<AverageTradedPrice> averageTradedPrices = new();
             CreateAverageTradedPrices(response.AverageTradedPrices, averageTradedPrices, account);
 
-            // TODO unit of work
-            await taxesRepository.AddAllAsync(incomeTaxes);
-            await averageTradedPriceRepository.AddAllAsync(averageTradedPrices);
+            // TODO unit of work and bulk insert. i swear to god i only did this because we're in a mvp
+            foreach (var i in incomeTaxes)
+            {
+                await taxesRepository.AddAsync(i);
+            }
+
+            foreach (var a in averageTradedPrices)
+            {
+                await averageTradedPriceRepository.AddAsync(a);
+            }
         }
 
         private static void CreateAverageTradedPrices(List<AverageTradedPriceDetails> response, List<AverageTradedPrice> averageTradedPrices, Infrastructure.Models.Account account)

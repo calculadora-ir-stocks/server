@@ -1,35 +1,83 @@
-﻿using Dapper;
-using Microsoft.EntityFrameworkCore;
-using Api.Database;
+﻿using Api.Database;
+using Common.Constants;
+using Common;
+using Dapper;
 using Infrastructure.Dtos;
-using Newtonsoft.Json;
+using Infrastructure.Models;
+using Infrastructure.UnitOfWork;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using System;
+using Newtonsoft.Json;
+using System.Data.Common;
 
 namespace Infrastructure.Repositories.Taxes
 {
     public class TaxesRepository : ITaxesRepository
     {
         private readonly StocksContext context;
+        private readonly IUnitOfWork unitOfWork;
 
-        public TaxesRepository(StocksContext context)
+        public TaxesRepository(StocksContext context, IUnitOfWork unitOfWork)
         {
             this.context = context;
+            this.unitOfWork = unitOfWork;
         }
 
-        public async Task AddAllAsync(List<Models.IncomeTaxes> incomeTaxes)
+        public async Task AddAsync(IncomeTaxes incomeTaxes)
         {
-            context.AddRange(incomeTaxes);
+            DynamicParameters parameters = new();
 
-            context.AttachRange(incomeTaxes.Select(x => x.Account));
+            const string key = "GET THIS SHIT FROM A HSM";
 
-            await context.SaveChangesAsync();
-        }
+            parameters.Add("@Key", key);
+            parameters.Add("@AssetId", incomeTaxes.AssetId);
+            parameters.Add("@Month", incomeTaxes.Month);
+            parameters.Add("@Taxes", incomeTaxes.Taxes);
+            parameters.Add("@TotalSold", incomeTaxes.TotalSold);
+            parameters.Add("@Paid", incomeTaxes.Paid);
+            parameters.Add("@SwingTradeProfit", incomeTaxes.SwingTradeProfit);
+            parameters.Add("@DayTradeProfit", incomeTaxes.DayTradeProfit);
+            parameters.Add("@SwingTradeProfit", incomeTaxes.SwingTradeProfit);
+            parameters.Add("@TradedAssets", incomeTaxes.TradedAssets);
+            parameters.Add("@CompesatedSwingTradeLoss", incomeTaxes.CompesatedSwingTradeLoss);
+            parameters.Add("@CompesatedDayTradeLoss", incomeTaxes.CompesatedDayTradeLoss);
+            parameters.Add("@AccountId", incomeTaxes.Account.Id);
 
-        public async Task AddAsync(Models.IncomeTaxes incomeTaxes)
-        {
-            context.Add(incomeTaxes);
-            await context.SaveChangesAsync();
+            string sql = @"
+                INSERT INTO ""IncomeTaxes""
+                (
+	                ""Id"",
+	                ""AssetId"",
+	                ""Month"",
+	                ""Taxes"",
+	                ""TotalSold"",
+	                ""Paid"",
+	                ""SwingTradeProfit"",
+	                ""DayTradeProfit"",
+	                ""TradedAssets"",
+	                ""CompesatedSwingTradeLoss"",
+	                ""CompesatedDayTradeLoss"",
+	                ""AccountId""
+                )
+                VALUES 
+                (
+	                gen_random_uuid(),
+                    @AssetId,
+                    @Month,
+                    PGP_SYM_ENCRYPT(@Taxes, @Key),
+                    PGP_SYM_ENCRYPT(@TotalSold, @Key),
+                    @Paid,
+                    PGP_SYM_ENCRYPT(@SwingTradeProfit, @Key),
+                    PGP_SYM_ENCRYPT(@DayTradeProfit, @Key),
+                    PGP_SYM_ENCRYPT(@TradedAssets, @Key),
+                    @CompesatedSwingTradeLoss,
+                    @CompesatedDayTradeLoss,
+                    @AccountId
+                )
+            ";
+
+            await context.Database.GetDbConnection().QueryAsync(sql, parameters);
+            Auditor.Audit($"{nameof(IncomeTaxes)}:{AuditOperation.Add}", comment: "Neste evento todas as informações de imposto do usuário foram criptografadas na base de dados.");
         }
 
         public async Task<IEnumerable<SpecifiedMonthTaxesDto>> GetSpecifiedMonthTaxes(string month, Guid accountId)
