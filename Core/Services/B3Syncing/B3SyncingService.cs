@@ -23,7 +23,7 @@ namespace Core.Services.B3Syncing
     {
         private readonly IAccountRepository accountRepository;
         private readonly IAverageTradedPriceRepostory averageTradedPriceRepository;
-        private readonly ITaxesRepository taxesRepository;
+        private readonly IIncomeTaxesRepository taxesRepository;
 
         private readonly IB3ResponseCalculatorService b3CalculatorService;
         private readonly IB3Client b3Client;
@@ -33,7 +33,7 @@ namespace Core.Services.B3Syncing
         public B3SyncingService(
             IAccountRepository accountRepository,
             IAverageTradedPriceRepostory averageTradedPriceRepository,
-            ITaxesRepository taxesRepository,
+            IIncomeTaxesRepository taxesRepository,
             IB3ResponseCalculatorService b3CalculatorService,
             IB3Client b3Client,
             ILogger<B3SyncingService> logger
@@ -148,18 +148,16 @@ namespace Core.Services.B3Syncing
                 if (MonthHadProfitOrLoss(asset))
                 {
                     incomeTaxes.Add(new Infrastructure.Models.IncomeTaxes
-                    {
-                        Month = asset.Month,
-                        Taxes = asset.Taxes,
-                        TotalSold = asset.TotalSold,
-                        SwingTradeProfit = asset.SwingTradeProfit,
-                        DayTradeProfit = asset.DayTradeProfit,
-                        TradedAssets = JsonConvert.SerializeObject(asset.TradedAssets),
-                        Account = account,
-                        AssetId = (int)asset.AssetTypeId,
-                        CompesatedSwingTradeLoss = asset.SwingTradeProfit < 0 ? false : null,
-                        CompesatedDayTradeLoss = asset.DayTradeProfit < 0 ? false : null
-                    });
+                    (
+                        asset.Month,
+                        asset.Taxes,
+                        asset.TotalSold,
+                        asset.SwingTradeProfit,
+                        asset.DayTradeProfit,
+                        JsonConvert.SerializeObject(asset.TradedAssets),
+                        account,
+                        (int)asset.AssetTypeId
+                    ));
                 }
             }
         }

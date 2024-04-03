@@ -2,7 +2,7 @@
 
 namespace Infrastructure.Repositories.Taxes
 {
-    public interface ITaxesRepository
+    public interface IIncomeTaxesRepository
     {
         Task AddAsync(Models.IncomeTaxes incomeTaxes);
         Task<IEnumerable<SpecifiedMonthTaxesDto>> GetSpecifiedMonthTaxes(string month, Guid accountId);

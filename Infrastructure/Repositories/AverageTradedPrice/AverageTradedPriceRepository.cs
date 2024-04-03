@@ -32,7 +32,7 @@ namespace Infrastructure.Repositories.AverageTradedPrice
             parameters.Add("@AccountId", averageTradedPrice.Account.Id);
 
             string sql = @"
-                INSERT INTO ""IncomeTaxes""
+                INSERT INTO ""AverageTradedPrices""
                 (
 	                ""Id"",
 	                ""Ticker"",
@@ -42,7 +42,7 @@ namespace Infrastructure.Repositories.AverageTradedPrice
 	                ""AccountId"",
 	                ""UpdatedAt""
                 )
-                VALUES 
+                VALUES
                 (
 	                gen_random_uuid(),
                     PGP_SYM_ENCRYPT(@Ticker, @Key),
@@ -50,18 +50,12 @@ namespace Infrastructure.Repositories.AverageTradedPrice
                     PGP_SYM_ENCRYPT(@TotalBought, @Key),
                     PGP_SYM_ENCRYPT(@Quantity, @Key),
                     @AccountId,
-                    CURRENT_DATE()
+                    NOW()
                 )
             ";
 
-            await context.Database.GetDbConnection().QuerySingleOrDefaultAsync<string>(sql, parameters);
+            await context.Database.GetDbConnection().QueryAsync(sql, parameters);
             Auditor.Audit($"{nameof(AverageTradedPrice)}:{AuditOperation.Add}", comment: "Neste evento todas as informações de preços médios foram criptografadas na base de dados.");
-        }
-
-        public void InsertAll(IEnumerable<Models.AverageTradedPrice> averageTradedPrices)
-        {
-            context.AverageTradedPrices.AddRange(averageTradedPrices);
-            context.SaveChanges();
         }
 
         public async Task AddAllAsync(List<Models.AverageTradedPrice> averageTradedPrices)

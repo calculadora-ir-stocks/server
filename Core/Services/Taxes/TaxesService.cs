@@ -20,7 +20,7 @@ public class TaxesService : ITaxesService
     private readonly IB3ResponseCalculatorService b3CalculatorService;
 
     private readonly IGenericRepository<Infrastructure.Models.Account> genericRepositoryAccount;
-    private readonly ITaxesRepository taxesRepository;
+    private readonly IIncomeTaxesRepository taxesRepository;
 
     private readonly IB3Client b3Client;
 
@@ -32,12 +32,14 @@ public class TaxesService : ITaxesService
      * 
      * É necessário alterar esse processo para armazenar um bool de plano expirado no token JWT,
      * usando a técnica de refresh token. É necessário discutir se o refresh token será armazenado no client ou no server.
+     * 
+     * Adicionar handler?
      * */
 
     public TaxesService(
         IB3ResponseCalculatorService b3CalculatorService,
         IGenericRepository<Infrastructure.Models.Account> genericRepositoryAccount,
-        ITaxesRepository taxesRepository,
+        IIncomeTaxesRepository taxesRepository,
         IB3Client b3Client,
         ILogger<TaxesService> logger
     )
@@ -95,7 +97,7 @@ public class TaxesService : ITaxesService
 
     private static TaxesDetailsResponse ToTaxesDetailsResponse(List<AssetIncomeTaxes> assets)
     {
-        // TODO O objeto de retorno é complexo o suficiente para não usar o AutoMapper?
+        // TODO O objeto de retorno é complexo o suficiente para usar o AutoMapper?
 
         TaxesDetailsResponse response = new(
             totalTaxes: assets.Select(x => x.Taxes).Sum(),

@@ -14,13 +14,13 @@ namespace Core.Services.DarfGenerator
     public class DarfGeneratorService : IDarfGeneratorService
     {
         private readonly IGenericRepository<Infrastructure.Models.Account> genericRepositoryAccount;
-        private readonly ITaxesRepository taxesRepository;
+        private readonly IIncomeTaxesRepository taxesRepository;
         private readonly IInfoSimplesClient infoSimplesClient;
         private const string DarfCode = "6015-01";
 
         public DarfGeneratorService(
             IGenericRepository<Infrastructure.Models.Account> genericRepositoryAccount,
-            ITaxesRepository taxesRepository,
+            IIncomeTaxesRepository taxesRepository,
             IInfoSimplesClient infoSimplesClient
         )
         {

@@ -141,8 +141,8 @@ namespace Core.Services.Hangfire.AverageTradedPriceUpdater
             {
                 var updatedTicker = updatedAverageTradedPrices.Where(x => x.TickerSymbol == item.Ticker).First();
 
-                item.Quantity = updatedTicker.TradedQuantity;
-                item.AveragePrice = updatedTicker.AverageTradedPrice;
+                item.Quantity = updatedTicker.TradedQuantity.ToString();
+                item.AveragePrice = updatedTicker.AverageTradedPrice.ToString();
                 item.UpdatedAt = DateTime.Now;
             }
 

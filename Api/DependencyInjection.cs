@@ -167,7 +167,6 @@ namespace Api
             // TODO: uncomment for production
             // AddCertificate(handler);
 
-            // TODO get from appsettings
             services.AddHttpClient("B3", c =>
                 c.BaseAddress = new Uri("https://apib3i-cert.b3.com.br:2443/api/")).ConfigurePrimaryHttpMessageHandler(() => handler)
                 .AddTransientHttpErrorPolicy(policy => policy.WaitAndRetryAsync(5, _ => TimeSpan.FromSeconds(10)))
@@ -204,7 +203,7 @@ namespace Api
             services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
             services.AddScoped<IAccountRepository, AccountRepository>();
             services.AddScoped<IAverageTradedPriceRepostory, AverageTradedPriceRepository>();
-            services.AddScoped<ITaxesRepository, TaxesRepository>();
+            services.AddScoped<IIncomeTaxesRepository, IncomeTaxesRepository>();
             services.AddScoped<IPlanRepository, PlanRepository>();
         }
 

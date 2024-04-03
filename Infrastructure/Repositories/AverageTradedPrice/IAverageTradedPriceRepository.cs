@@ -4,7 +4,6 @@ namespace Infrastructure.Repositories.AverageTradedPrice
 {
     public interface IAverageTradedPriceRepostory
     {
-        void InsertAll(IEnumerable<Models.AverageTradedPrice> averageTradedPrices);
         Task AddAsync(Models.AverageTradedPrice averageTradedPrices);
         Models.AverageTradedPrice? GetAverageTradedPrice(string ticker, Guid accountId);
         Task<IEnumerable<AverageTradedPriceDto>> GetAverageTradedPricesDto(Guid accountId, List<string>? tickers = null);

@@ -12,12 +12,12 @@ using System.Data.Common;
 
 namespace Infrastructure.Repositories.Taxes
 {
-    public class TaxesRepository : ITaxesRepository
+    public class IncomeTaxesRepository : IIncomeTaxesRepository
     {
         private readonly StocksContext context;
         private readonly IUnitOfWork unitOfWork;
 
-        public TaxesRepository(StocksContext context, IUnitOfWork unitOfWork)
+        public IncomeTaxesRepository(StocksContext context, IUnitOfWork unitOfWork)
         {
             this.context = context;
             this.unitOfWork = unitOfWork;
