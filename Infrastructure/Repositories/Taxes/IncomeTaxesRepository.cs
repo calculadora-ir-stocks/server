@@ -84,15 +84,18 @@ namespace Infrastructure.Repositories.Taxes
         {
             DynamicParameters parameters = new();
 
+            const string key = "GET THIS SHIT FROM A HSM";
+
             parameters.Add("@Month", month);
             parameters.Add("@AccountId", accountId);
+            parameters.Add("@Key", key);
 
             string sql = @"
                 SELECT
                     it.""Month"",
-	                it.""Taxes"" as Taxes,
+	                CAST(PGP_SYM_DECRYPT(it.""Taxes""::bytea, @Key) as double precision) as Taxes,
                     it.""Paid"",
-	                it.""TradedAssets"",
+	                PGP_SYM_DECRYPT(it.""TradedAssets"", @Key) as TradedAssets,
 	                it.""AssetId""
                 FROM ""IncomeTaxes"" it
                 INNER JOIN ""Assets"" a ON it.""AssetId"" = a.""Id""
@@ -115,21 +118,24 @@ namespace Infrastructure.Repositories.Taxes
         {
             DynamicParameters parameters = new();
 
+            const string key = "GET THIS SHIT FROM A HSM";
+
             parameters.Add("@Year", year);
             parameters.Add("@AccountId", accountId);
+            parameters.Add("@Key", key);
 
             string sql = @"
                 SELECT
                     LEFT(it.""Month"", 2) as Month,
-	                it.""Taxes"" as Taxes,
+	                CAST(PGP_SYM_DECRYPT(it.""Taxes""::bytea, @Key) as double precision) AS Taxes,
                     it.""Paid"",
-	                it.""SwingTradeProfit"",
-	                it.""DayTradeProfit"",
+	                CAST(PGP_SYM_DECRYPT(it.""SwingTradeProfit""::bytea, @Key) as double precision) AS SwingTradeProfit,
+	                CAST(PGP_SYM_DECRYPT(it.""DayTradeProfit""::bytea, @Key) as double precision) AS DayTradeProfit,
 	                it.""AssetId""
                 FROM ""IncomeTaxes"" it
                 INNER JOIN ""Assets"" a ON it.""AssetId"" = a.""Id""
                 WHERE RIGHT(it.""Month"", 4) LIKE @Year 
-                AND it.""Taxes"" > 0
+                AND CAST(PGP_SYM_DECRYPT(it.""Taxes""::bytea, @Key) as double precision) > 0
                 AND it.""AccountId"" = @AccountId;
             ";
 
@@ -150,7 +156,7 @@ namespace Infrastructure.Repositories.Taxes
                 SELECT * FROM
                     (SELECT
                         it.""Month"",
-                        SUM(it.""Taxes"") AS ""Total""
+                        SUM(CAST(PGP_SYM_DECRYPT(it.""Taxes""::bytea, @Key) as double precision)) AS ""Total""
                     FROM ""IncomeTaxes"" it
                     WHERE it.""AccountId"" = @AccountId
                     AND it.""Paid"" IS FALSE

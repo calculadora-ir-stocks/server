@@ -1,10 +1,9 @@
-﻿using Dapper;
-using Microsoft.EntityFrameworkCore;
-using Api.Database;
-using Infrastructure.Dtos;
-using Common.Constants;
+﻿using Api.Database;
 using Common;
-using Infrastructure.Models;
+using Common.Constants;
+using Dapper;
+using Infrastructure.Dtos;
+using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Repositories.AverageTradedPrice
 {
@@ -81,18 +80,21 @@ namespace Infrastructure.Repositories.AverageTradedPrice
         {
             DynamicParameters parameters = new();
 
+            const string key = "GET THIS SHIT FROM A HSM";
+
             parameters.Add("@AccountId", accountId);
             parameters.Add("@Tickers", tickers);
+            parameters.Add("@Key", key);
 
             string sql =
                 @"SELECT 
-                    atp.""Ticker"",
-                    atp.""AveragePrice"" as AverageTradedPrice,
-                    atp.""TotalBought"" as TotalBought,
-                    atp.""Quantity""
+                    PGP_SYM_DECRYPT(atp.""Ticker""::bytea, @Key) as Ticker,
+                    CAST(PGP_SYM_DECRYPT(atp.""AveragePrice""::bytea, @Key) as double precision) as AverageTradedPrice,
+                    CAST(PGP_SYM_DECRYPT(atp.""TotalBought""::bytea, @Key) as double precision) as TotalBought,
+                    CAST(PGP_SYM_DECRYPT(atp.""Quantity""::bytea, @Key) as double precision) as Quantity
                   FROM ""AverageTradedPrices"" atp
                   WHERE atp.""AccountId"" = @AccountId AND
-                  atp.""Ticker"" = ANY(@Tickers);
+                  PGP_SYM_DECRYPT(atp.""Ticker""::bytea, @Key) = ANY(@Tickers);
                 ";
 
             var connection = context.Database.GetDbConnection();
@@ -124,8 +126,8 @@ namespace Infrastructure.Repositories.AverageTradedPrice
             string sql =
                 @"DELETE 
                     FROM ""AverageTradedPrices"" atp
-                  WHERE atp.""AccountId"" = @AccountId AND
-                  atp.""Ticker"" = ANY(@Tickers);
+                    WHERE atp.""AccountId"" = @AccountId AND
+                    PGP_SYM_DECRYPT(atp.""Ticker""::bytea, @Key) = ANY(@Tickers);
                 ";
 
             var connection = context.Database.GetDbConnection();
