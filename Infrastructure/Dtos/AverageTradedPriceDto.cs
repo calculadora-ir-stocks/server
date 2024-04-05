@@ -14,10 +14,10 @@
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
         public AverageTradedPriceDto() { }
 
-        public string Ticker { get; init; }
-        public double AverageTradedPrice { get; init; }
-        public double TotalBought { get; init; }
-        public int Quantity { get; init; }
-        public Guid AccountId { get; init; }
+        public string Ticker { get; set; }
+        public double AverageTradedPrice { get; set; }
+        public double TotalBought { get; set; }
+        public int Quantity { get; set; }
+        public Guid AccountId { get; set; }
     }
 }

@@ -3,6 +3,7 @@ using common.Helpers;
 using Core.Calculators;
 using Core.Models;
 using Core.Models.B3;
+using Infrastructure.Dtos;
 using Infrastructure.Models;
 using Infrastructure.Repositories.Account;
 using Infrastructure.Repositories.AverageTradedPrice;
@@ -68,7 +69,7 @@ namespace Core.Services.Hangfire.AverageTradedPriceUpdater
                     var _ = CalculateProfit(movements, averageTradedPrices);
 
                     var tickersToAddIntoDatabase = await GetTradedTickersToAddIntoDatabase(averageTradedPrices, account);
-                    var tickersToUpdateFromDatabase = GetTradedTickersToUpdate(tickersToAddIntoDatabase!, averageTradedPrices, account);
+                    var tickersToUpdateFromDatabase = await GetTradedTickersToUpdate(tickersToAddIntoDatabase!, averageTradedPrices, account);
                     var tickersToRemoveFromDatabase = GetTradedTickersToRemove(movements, averageTradedPrices);
 
                     await UpdateInvestorAverageTradedPrices(
@@ -99,7 +100,7 @@ namespace Core.Services.Hangfire.AverageTradedPriceUpdater
         /// </summary>
         private async Task UpdateInvestorAverageTradedPrices(
             IEnumerable<AverageTradedPrice>? tickersToAdd,
-            IEnumerable<AverageTradedPrice>? tickersToUpdate,
+            IEnumerable<AverageTradedPriceDto>? tickersToUpdate,
             IEnumerable<AverageTradedPriceDetails> updatedAverageTradedPrices,
             IEnumerable<string?> tickersToRemove,
             Infrastructure.Models.Account account
@@ -119,7 +120,7 @@ namespace Core.Services.Hangfire.AverageTradedPriceUpdater
             List<EquitMovement> movements, Guid id
         )
         {
-            var response = await averageTradedPriceRepository.GetAverageTradedPricesDto(id, movements.Select(x => x.TickerSymbol).ToList());
+            var response = await averageTradedPriceRepository.GetAverageTradedPrices(id, movements.Select(x => x.TickerSymbol).ToList());
 
             return response
                 .Select(x => new AverageTradedPriceDetails(x.Ticker, x.AverageTradedPrice, x.TotalBought, x.Quantity))
@@ -132,7 +133,7 @@ namespace Core.Services.Hangfire.AverageTradedPriceUpdater
         }
 
         private async Task UpdateTradedTickers(
-            IEnumerable<AverageTradedPrice> tickersToUpdate,
+            IEnumerable<AverageTradedPriceDto> tickersToUpdate,
             IEnumerable<AverageTradedPriceDetails> updatedAverageTradedPrices
         )
         {
@@ -140,12 +141,11 @@ namespace Core.Services.Hangfire.AverageTradedPriceUpdater
             {
                 var updatedTicker = updatedAverageTradedPrices.Where(x => x.TickerSymbol == item.Ticker).First();
 
-                item.Quantity = updatedTicker.TradedQuantity.ToString();
-                item.AveragePrice = updatedTicker.AverageTradedPrice.ToString();
-                item.UpdatedAt = DateTime.Now;
+                item.Quantity = updatedTicker.TradedQuantity;
+                item.AverageTradedPrice = updatedTicker.AverageTradedPrice;
             }
 
-            await averageTradedPriceRepository.UpdateAllAsync(tickersToUpdate.ToList());
+            await averageTradedPriceRepository.UpdateAllAsync(tickersToUpdate);
         }
 
         private async Task AddTradedTickers(IEnumerable<AverageTradedPrice> tickersToAdd)
@@ -171,12 +171,12 @@ namespace Core.Services.Hangfire.AverageTradedPriceUpdater
         /// Retorna os tickers que necessitam ser atualizados e já estão inseridos na base.
         /// Para isso, compara os tickers que precisam ser adicionados com os tickers que foram negociados.
         /// </summary>
-        private List<AverageTradedPrice>? GetTradedTickersToUpdate(
+        private async Task<IEnumerable<AverageTradedPriceDto>>? GetTradedTickersToUpdate(
             IEnumerable<AverageTradedPrice> tickersToAdd, List<AverageTradedPriceDetails> updatedPrices, Infrastructure.Models.Account account
         )
         {
             var tickersToUpdate = updatedPrices.Select(x => x.TickerSymbol).Except(tickersToAdd.Select(x => x.Ticker)).ToList();
-            return averageTradedPriceRepository.GetAverageTradedPrices(account.Id, tickersToUpdate);
+            return await averageTradedPriceRepository.GetAverageTradedPrices(account.Id, tickersToUpdate);
         }
 
         private async Task<IEnumerable<AverageTradedPrice>?> GetTradedTickersToAddIntoDatabase(
@@ -184,7 +184,7 @@ namespace Core.Services.Hangfire.AverageTradedPriceUpdater
         )
         {
             var tickersInvestorAlreadyHas =
-                await averageTradedPriceRepository.GetAverageTradedPricesDto(account.Id, tradedAssets.Select(x => x.TickerSymbol).ToList());
+                await averageTradedPriceRepository.GetAverageTradedPrices(account.Id, tradedAssets.Select(x => x.TickerSymbol).ToList());
 
             var tickersInvestorDoesntHave =
             tradedAssets.Select(x => x.TickerSymbol).ToList().Except(tickersInvestorAlreadyHas.Select(x => x.Ticker));

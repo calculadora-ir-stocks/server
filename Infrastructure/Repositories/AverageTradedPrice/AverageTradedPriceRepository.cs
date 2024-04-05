@@ -4,6 +4,7 @@ using Common.Constants;
 using Dapper;
 using Infrastructure.Dtos;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 
 namespace Infrastructure.Repositories.AverageTradedPrice
 {
@@ -25,7 +26,7 @@ namespace Infrastructure.Repositories.AverageTradedPrice
 
             parameters.Add("@Key", key);
             parameters.Add("@Ticker", averageTradedPrice.Ticker);
-            parameters.Add("@AveragePrice", averageTradedPrice.AveragePrice);
+            parameters.Add("@AveragePrice", averageTradedPrice.AveragePrice); 
             parameters.Add("@TotalBought", averageTradedPrice.TotalBought);
             parameters.Add("@Quantity", averageTradedPrice.Quantity);
             parameters.Add("@AccountId", averageTradedPrice.Account.Id);
@@ -66,9 +67,9 @@ namespace Infrastructure.Repositories.AverageTradedPrice
         #endregion
 
         #region UPDATE
-        public async Task UpdateAllAsync(List<Models.AverageTradedPrice> averageTradedPrices)
+        public async Task UpdateAllAsync(List<AverageTradedPriceDto> averageTradedPrices)
         {
-            context.AverageTradedPrices.UpdateRange(averageTradedPrices);
+            // TODO
             await context.SaveChangesAsync();
         }
         #endregion
@@ -95,7 +96,7 @@ namespace Infrastructure.Repositories.AverageTradedPrice
                   WHERE atp.""AccountId"" = @AccountId
                 ";
 
-            if (tickers is not null)
+            if (!tickers.IsNullOrEmpty())
             {
                 sql += @" AND PGP_SYM_DECRYPT(atp.""Ticker""::bytea, @Key) = ANY(@Tickers);";
             }
@@ -124,6 +125,11 @@ namespace Infrastructure.Repositories.AverageTradedPrice
 
             var connection = context.Database.GetDbConnection();
             await connection.QueryAsync<AverageTradedPriceDto>(sql, parameters);
+        }
+
+        public Task UpdateAllAsync(IEnumerable<AverageTradedPriceDto> averageTradedPrices)
+        {
+            throw new NotImplementedException();
         }
         #endregion
     }

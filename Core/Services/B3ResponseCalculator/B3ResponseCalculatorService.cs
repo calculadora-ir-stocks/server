@@ -74,16 +74,7 @@ namespace Core.Services.B3ResponseCalculator
             foreach (var monthMovements in monthlyMovements)
             {
                 var stocks = monthMovements.Value.Where(x => x.AssetType.Equals(B3ResponseConstants.Stocks));
-
                 var etfs = monthMovements.Value.Where(x => x.AssetType.Equals(B3ResponseConstants.ETFs));
-                movementDetails.AverageTradedPrices.Add(new AverageTradedPriceDetails(
-                    etfs.First().TickerSymbol,
-                    etfs.First().OperationValue,
-                    etfs.First().OperationValue,
-                    (int)etfs.First().EquitiesQuantity
-                ));
-
-
                 var fiis = monthMovements.Value.Where(x => x.AssetType.Equals(B3ResponseConstants.FIIs));
                 var bdrs = monthMovements.Value.Where(x => x.AssetType.Equals(B3ResponseConstants.BDRs));
                 var gold = monthMovements.Value.Where(x => x.AssetType.Equals(B3ResponseConstants.Gold));
