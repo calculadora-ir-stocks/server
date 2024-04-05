@@ -57,21 +57,6 @@ namespace Infrastructure.Repositories.AverageTradedPrice
             await context.Database.GetDbConnection().QueryAsync(sql, parameters);
             Auditor.Audit($"{nameof(AverageTradedPrice)}:{AuditOperation.Add}", comment: "Neste evento todas as informações de preços médios foram criptografadas na base de dados.");
         }
-
-        public async Task AddAllAsync(List<Models.AverageTradedPrice> averageTradedPrices)
-        {
-            context.AddRange(averageTradedPrices);
-            context.AttachRange(averageTradedPrices.Select(x => x.Account));
-            await context.SaveChangesAsync();
-        }
-        #endregion
-
-        #region UPDATE
-        public async Task UpdateAllAsync(List<AverageTradedPriceDto> averageTradedPrices)
-        {
-            // TODO
-            await context.SaveChangesAsync();
-        }
         #endregion
 
         #region GET
@@ -105,31 +90,6 @@ namespace Infrastructure.Repositories.AverageTradedPrice
             var response = await connection.QueryAsync<AverageTradedPriceDto>(sql, parameters);
 
             return response;
-        }
-        #endregion
-
-        #region DELETE
-        public async Task RemoveAllAsync(IEnumerable<string?> tickers, Guid id)
-        {
-            DynamicParameters parameters = new();
-
-            parameters.Add("@AccountId", id);
-            parameters.Add("@Tickers", tickers.ToList());
-
-            string sql =
-                @"DELETE 
-                    FROM ""AverageTradedPrices"" atp
-                    WHERE atp.""AccountId"" = @AccountId AND
-                    PGP_SYM_DECRYPT(atp.""Ticker""::bytea, @Key) = ANY(@Tickers);
-                ";
-
-            var connection = context.Database.GetDbConnection();
-            await connection.QueryAsync<AverageTradedPriceDto>(sql, parameters);
-        }
-
-        public Task UpdateAllAsync(IEnumerable<AverageTradedPriceDto> averageTradedPrices)
-        {
-            throw new NotImplementedException();
         }
         #endregion
     }
