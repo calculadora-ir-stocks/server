@@ -43,7 +43,6 @@ namespace Core.Services.Hangfire.AverageTradedPriceUpdater
                 logger.LogInformation("Iniciando Hangfire para atualizar o preço médio de todos os investidores." +
                     "Id do processo: {id}", threadId);
 
-
                 var accounts = accountRepository.GetAll();
 
                 Stopwatch timer = new();
@@ -117,7 +116,7 @@ namespace Core.Services.Hangfire.AverageTradedPriceUpdater
         }
 
         private async Task<List<AverageTradedPriceDetails>> GetMonthTradedAverageTradedPrices(
-            List<Movement.EquitMovement> movements, Guid id
+            List<EquitMovement> movements, Guid id
         )
         {
             var response = await averageTradedPriceRepository.GetAverageTradedPricesDto(id, movements.Select(x => x.TickerSymbol).ToList());
@@ -291,8 +290,12 @@ namespace Core.Services.Hangfire.AverageTradedPriceUpdater
 
         private static string GetLastMonthFinalDay()
         {
-            // Como o Job é executado todo o dia 01, substrair um dia resultará no último dia do mês passado.
-            return DateTime.Now.AddDays(-1).ToString("yyyy-MM-dd");
+            var yearInTheLastMonth = DateTime.Now.AddMonths(-1).Year;
+            // TODO o lastMonth tá retornando '3' ao invés de '03' pra mês. A API da B3 aceita?
+            var lastMonth = DateTime.Now.AddMonths(-1).Month;
+            var lastMonthLastDay = DateTime.DaysInMonth(yearInTheLastMonth, lastMonth);
+
+            return $"{yearInTheLastMonth}-{lastMonth}-{lastMonthLastDay}";
         }
 
         private static string GetLastMonthFirstDay()

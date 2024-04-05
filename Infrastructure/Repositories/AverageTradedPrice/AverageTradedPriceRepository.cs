@@ -89,7 +89,7 @@ namespace Infrastructure.Repositories.AverageTradedPrice
                     PGP_SYM_DECRYPT(atp.""Ticker""::bytea, @Key) as Ticker,
                     CAST(PGP_SYM_DECRYPT(atp.""AveragePrice""::bytea, @Key) as double precision) as AverageTradedPrice,
                     CAST(PGP_SYM_DECRYPT(atp.""TotalBought""::bytea, @Key) as double precision) as TotalBought,
-                    CAST(PGP_SYM_DECRYPT(atp.""Quantity""::bytea, @Key) as double precision) as Quantity
+                    CAST(PGP_SYM_DECRYPT(atp.""Quantity""::bytea, @Key) as int) as Quantity
                   FROM ""AverageTradedPrices"" atp
                   WHERE atp.""AccountId"" = @AccountId AND
                   PGP_SYM_DECRYPT(atp.""Ticker""::bytea, @Key) = ANY(@Tickers);
