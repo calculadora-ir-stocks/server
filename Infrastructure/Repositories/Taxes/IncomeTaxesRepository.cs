@@ -8,7 +8,6 @@ using Infrastructure.UnitOfWork;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
-using System.Data.Common;
 
 namespace Infrastructure.Repositories.Taxes
 {
@@ -93,9 +92,9 @@ namespace Infrastructure.Repositories.Taxes
             string sql = @"
                 SELECT
                     it.""Month"",
-	                CAST(PGP_SYM_DECRYPT(it.""Taxes""::bytea, @Key) as double precision) as Taxes,
+	                CAST(PGP_SYM_DECRYPT(it.""Taxes""::bytea, @Key) as double precision) AS Taxes,
                     it.""Paid"",
-	                PGP_SYM_DECRYPT(it.""TradedAssets"", @Key) as TradedAssets,
+	                PGP_SYM_DECRYPT(it.""TradedAssets""::bytea, @Key) AS TradedAssets,
 	                it.""AssetId""
                 FROM ""IncomeTaxes"" it
                 INNER JOIN ""Assets"" a ON it.""AssetId"" = a.""Id""
@@ -103,13 +102,10 @@ namespace Infrastructure.Repositories.Taxes
             ";
 
             var connection = context.Database.GetDbConnection();
-
             var response = await connection.QueryAsync<SpecifiedMonthTaxesDto>(sql, parameters);
 
             foreach (var item in response)
-            {
                 item.SerializedTradedAssets = JsonConvert.DeserializeObject<IEnumerable<SpecifiedMonthTaxesDtoDetails>>(item.TradedAssets)!;
-            }
 
             return response;
         }
@@ -149,8 +145,11 @@ namespace Infrastructure.Repositories.Taxes
         {
             DynamicParameters parameters = new();
 
+            const string key = "GET THIS SHIT FROM A HSM";
+
             parameters.Add("@Date", date);
             parameters.Add("@AccountId", accountId);
+            parameters.Add("@Key", key);
 
             string sql = @"
                 SELECT * FROM

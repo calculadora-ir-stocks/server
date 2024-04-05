@@ -44,10 +44,8 @@ namespace Infrastructure.Models
         /// https://www.youtube.com/watch?v=VMwqYLSPg_c
         /// </summary>
         public string Taxes { get; set; }
-        public double TaxesAsDouble() => Convert.ToDouble(Taxes);
 
         public string TotalSold { get; set; }
-        public double TotalSoldAsDouble() => Convert.ToDouble(TotalSold);
 
         /// <summary>
         /// Define se o imposto do mês específico já foi pago.
@@ -55,10 +53,8 @@ namespace Infrastructure.Models
         public bool Paid { get; init; } = false;
 
         public string SwingTradeProfit { get; set; }
-        public double SwingTradeProfitAsDouble() => Convert.ToDouble(SwingTradeProfit);
 
         public string DayTradeProfit { get; set; }
-        public double DayTradeProfitAsDouble() => Convert.ToDouble(DayTradeProfit);
 
         /// <summary>
         /// Uma lista em formato JSON que representa os ativos negociados.

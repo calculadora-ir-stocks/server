@@ -1,24 +1,9 @@
 ﻿using Common.Enums;
-using Newtonsoft.Json;
 
 namespace Infrastructure.Dtos
 {
     public record SpecifiedMonthTaxesDto
     {
-        public SpecifiedMonthTaxesDto(
-            string month,
-            double taxes,
-            bool paid,
-            string tradedAssets
-        )
-        {
-            Month = month;
-            Taxes = taxes;
-            Paid = paid;
-            TradedAssets = tradedAssets;
-
-            SerializedTradedAssets = JsonConvert.DeserializeObject<IEnumerable<SpecifiedMonthTaxesDtoDetails>>(tradedAssets)!;
-        }
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
         public SpecifiedMonthTaxesDto()
         {
@@ -33,27 +18,6 @@ namespace Infrastructure.Dtos
 
     public class SpecifiedMonthTaxesDtoDetails
     {
-        public SpecifiedMonthTaxesDtoDetails(
-            int day,
-            string dayOfTheWeek,
-            string assetType,
-            Asset assetTypeId,
-            string tickerSymbol,
-            string movementType,
-            int quantity,
-            double value
-        )
-        {
-            Day = day;
-            DayOfTheWeek = dayOfTheWeek;
-            AssetType = assetType;
-            AssetTypeId = assetTypeId;
-            TickerSymbol = tickerSymbol;
-            MovementType = movementType;
-            Quantity = quantity;
-            Total = value;
-        }
-
         public int Day { get; set; }
         public string DayOfTheWeek { get; set; }
 

@@ -29,13 +29,9 @@ namespace Infrastructure.Models
         public Guid Id { get; protected set; } = Guid.NewGuid();
         public string Ticker { get; set; }
         public string AveragePrice { get; set; }
-        public double AveragePriceAsDouble() => Convert.ToDouble(AveragePrice);
         public string TotalBought { get; set; }
-        public double TotalBoughtAsDouble() => Convert.ToDouble(TotalBought);
         public string Quantity { get; set; }
-        public double QuantityAsInteger() => Convert.ToDouble(Quantity);
         public Account Account { get; set; }
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
-        public override string ToString() => base.ToString().Replace(",", ".");
     }
 }

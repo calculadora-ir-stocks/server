@@ -262,7 +262,6 @@ public class TaxesService : ITaxesService
 
             var response = await taxesRepository.GetSpecifiedMonthTaxes(System.Net.WebUtility.UrlDecode(month), accountId);
             if (response.IsNullOrEmpty()) throw new NotFoundException("Nenhum imposto foi encontrado no mês especificado.");
-
             if (response.Select(x => x.Taxes).Sum() <= 0) throw new NotFoundException("Nenhum imposto foi encontrado no mês especificado.");
 
             return SpecifiedMonthTaxesDtoToTaxesDetailsResponse(response);

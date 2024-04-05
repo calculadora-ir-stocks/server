@@ -60,9 +60,7 @@ namespace Infrastructure.Repositories.AverageTradedPrice
         public async Task AddAllAsync(List<Models.AverageTradedPrice> averageTradedPrices)
         {
             context.AddRange(averageTradedPrices);
-
             context.AttachRange(averageTradedPrices.Select(x => x.Account));
-
             await context.SaveChangesAsync();
         }
         #endregion
@@ -107,11 +105,6 @@ namespace Infrastructure.Repositories.AverageTradedPrice
         {
             if (tickers is null) return context.AverageTradedPrices.Where(x => x.Account.Id == accountId).ToList();
             return context.AverageTradedPrices.Where(x => tickers.Contains(x!.Ticker) && x.Account.Id.Equals(accountId)).ToList();
-        }
-
-        public Models.AverageTradedPrice? GetAverageTradedPrice(string ticker, Guid accountId)
-        {
-            return context.AverageTradedPrices.Where(x => x.Ticker == ticker && x.Account.Id == accountId).FirstOrDefault();
         }
         #endregion
 
