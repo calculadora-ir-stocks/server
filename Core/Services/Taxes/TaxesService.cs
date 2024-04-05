@@ -6,7 +6,7 @@ using Common.Helpers;
 using Core.Models;
 using Core.Models.Api.Responses;
 using Core.Models.Responses;
-using Core.Services.IncomeTaxes;
+using Core.Services.B3ResponseCalculator;
 using Infrastructure.Dtos;
 using Infrastructure.Repositories;
 using Infrastructure.Repositories.Taxes;

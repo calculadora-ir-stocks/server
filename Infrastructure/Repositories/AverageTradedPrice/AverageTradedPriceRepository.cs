@@ -74,7 +74,7 @@ namespace Infrastructure.Repositories.AverageTradedPrice
         #endregion
 
         #region GET
-        public async Task<IEnumerable<AverageTradedPriceDto>> GetAverageTradedPricesDto(Guid accountId, List<string>? tickers = null)
+        public async Task<IEnumerable<AverageTradedPriceDto>> GetAverageTradedPrices(Guid accountId, IEnumerable<string>? tickers = null)
         {
             DynamicParameters parameters = new();
 
@@ -89,22 +89,21 @@ namespace Infrastructure.Repositories.AverageTradedPrice
                     PGP_SYM_DECRYPT(atp.""Ticker""::bytea, @Key) as Ticker,
                     CAST(PGP_SYM_DECRYPT(atp.""AveragePrice""::bytea, @Key) as double precision) as AverageTradedPrice,
                     CAST(PGP_SYM_DECRYPT(atp.""TotalBought""::bytea, @Key) as double precision) as TotalBought,
-                    CAST(PGP_SYM_DECRYPT(atp.""Quantity""::bytea, @Key) as int) as Quantity
+                    CAST(PGP_SYM_DECRYPT(atp.""Quantity""::bytea, @Key) as int) as Quantity,
+                    @AccountId as AccountId
                   FROM ""AverageTradedPrices"" atp
-                  WHERE atp.""AccountId"" = @AccountId AND
-                  PGP_SYM_DECRYPT(atp.""Ticker""::bytea, @Key) = ANY(@Tickers);
+                  WHERE atp.""AccountId"" = @AccountId
                 ";
+
+            if (tickers is not null)
+            {
+                sql += @" AND PGP_SYM_DECRYPT(atp.""Ticker""::bytea, @Key) = ANY(@Tickers);";
+            }
 
             var connection = context.Database.GetDbConnection();
             var response = await connection.QueryAsync<AverageTradedPriceDto>(sql, parameters);
 
             return response;
-        }
-
-        public List<Models.AverageTradedPrice>? GetAverageTradedPrices(Guid accountId, List<string>? tickers = null)
-        {
-            if (tickers is null) return context.AverageTradedPrices.Where(x => x.Account.Id == accountId).ToList();
-            return context.AverageTradedPrices.Where(x => tickers.Contains(x!.Ticker) && x.Account.Id.Equals(accountId)).ToList();
         }
         #endregion
 

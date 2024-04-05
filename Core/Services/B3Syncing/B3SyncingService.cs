@@ -4,18 +4,13 @@ using Common.Exceptions;
 using Common.Helpers;
 using Core.Models;
 using Core.Requests.BigBang;
-using Core.Services.IncomeTaxes;
+using Core.Services.B3ResponseCalculator;
 using Infrastructure.Models;
 using Infrastructure.Repositories.Account;
 using Infrastructure.Repositories.AverageTradedPrice;
 using Infrastructure.Repositories.Taxes;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Core.Services.B3Syncing
 {

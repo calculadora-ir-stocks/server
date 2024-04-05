@@ -7,7 +7,6 @@ using Audit.PostgreSql.Configuration;
 using Billing.Services.Stripe;
 using Common;
 using Common.Configurations;
-using Common.Models;
 using Common.Models.Handlers;
 using Common.Models.Secrets;
 using Core.Calculators;
@@ -18,10 +17,10 @@ using Core.Filters;
 using Core.Hangfire.PlanExpirer;
 using Core.Notification;
 using Core.Services.Account;
+using Core.Services.B3ResponseCalculator;
 using Core.Services.B3Syncing;
 using Core.Services.DarfGenerator;
 using Core.Services.Hangfire.AverageTradedPriceUpdater;
-using Core.Services.IncomeTaxes;
 using Core.Services.Plan;
 using Core.Services.Taxes;
 using Hangfire;
@@ -35,7 +34,6 @@ using Infrastructure.UnitOfWork;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Polly;
@@ -135,15 +133,16 @@ namespace Api
 
         public static void ConfigureHangfireServices(this IServiceCollection services, WebApplicationBuilder builder)
         {
+            DatabaseSecret secret = new();
+
             services.AddHangfire(x =>
-                x.UsePostgreSqlStorage(builder.Configuration.GetConnectionString("DefaultConnection"))
+                x.UsePostgreSqlStorage(secret.GetConnectionString())
                 .SetDataCompatibilityLevel(CompatibilityLevel.Version_170)
                 .UseSimpleAssemblyNameTypeSerializer()
                 .UseRecommendedSerializerSettings()
             );
 
-            DatabaseSecret secret = new();
-            GlobalConfiguration.Configuration.UsePostgreSqlStorage(builder.Configuration.GetConnectionString(secret.GetConnectionString()));
+            GlobalConfiguration.Configuration.UsePostgreSqlStorage(secret.GetConnectionString());
 
             RecurringJob.RemoveIfExists(nameof(AverageTradedPriceUpdaterHangfire));
             RecurringJob.RemoveIfExists(nameof(PlanExpirerHangfire));
@@ -151,7 +150,7 @@ namespace Api
             RecurringJob.AddOrUpdate<IAverageTradedPriceUpdaterHangfire>(
                 nameof(AverageTradedPriceUpdaterHangfire),
                 x => x.Execute(),
-                Cron.Monthly
+                "* * * * * *"
             );
 
             RecurringJob.AddOrUpdate<IPlanExpirerHangfire>(
