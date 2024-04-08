@@ -14,7 +14,7 @@ namespace Core.Calculators.Assets
             string month
         )
         {
-            var profit = CalculateProfit(movements, investorMovementDetails.AverageTradedPrices);
+            var profit = CalculateProfitAndAverageTradedPrice(movements, investorMovementDetails.AverageTradedPrices);
 
             var dayTradeProfit = profit.DayTradeOperations.Select(x => x.Profit).Sum();
             var swingTradeProfit = profit.SwingTradeOperations.Select(x => x.Profit).Sum();

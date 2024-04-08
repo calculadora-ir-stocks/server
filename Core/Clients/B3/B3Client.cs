@@ -41,14 +41,16 @@ namespace Core.Clients.B3
             this.logger = logger;
         }
 
+#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
         public B3Client() { }
+#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
 
         public async Task<Movement.Root?> GetAccountMovement(string cpf, string referenceStartDate, string referenceEndDate, Guid accountId, string? nextUrl)
         {
             Stopwatch watch = new();
 
-            HttpRequestMessage request =
-                new(HttpMethod.Get,
+            HttpRequestMessage request = new(
+                HttpMethod.Get,
                 $"movement/v2/equities/investors/{cpf}?referenceStartDate={referenceStartDate}&referenceEndDate={referenceEndDate}"
             );
 

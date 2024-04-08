@@ -20,8 +20,8 @@ builder.Services.AddServices(builder);
 builder.Services.Add3rdPartiesClients();
 builder.Services.AddRepositories();
 
-//builder.Services.AddHangfireServices();
-//builder.Services.ConfigureHangfireServices(builder);
+builder.Services.AddHangfireServices();
+builder.Services.ConfigureHangfireServices(builder);
 
 builder.Services.AddAuth0Authentication(builder);
 

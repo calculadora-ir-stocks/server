@@ -57,16 +57,17 @@ public class TaxesService : ITaxesService
         try
         {
             // Caso seja dia 1, não há como obter os dados do mês atual já que a B3 disponibiliza os dados em D-1.
-            if (IsDayOne())
+            if (DateTime.Now.Day == 1)
             {
                 // Porém, sendo dia 1, o Worker já salvou os dados do mês passado na base.
-                return await Details(DateTime.Now.AddDays(-1).ToString("yyyy-MM"), accountId);
+                return await Details(DateTime.Now.AddDays(-1).ToString("MM/yyyy"), accountId);
             }
 
             string startDate = DateTime.Now.ToString("yyyy-MM-01");
             string yesterday = DateTime.Now.AddDays(-1).ToString("yyyy-MM-dd");
 
             Infrastructure.Models.Account account = await genericRepositoryAccount.GetByIdAsync(accountId);
+            if (account is null) throw new NotFoundException("Investidor", accountId.ToString());
 
             if (account.Status == EnumHelper.GetEnumDescription(AccountStatus.SubscriptionExpired))
                 throw new ForbiddenException("O plano do usuário está expirado.");
@@ -86,13 +87,6 @@ public class TaxesService : ITaxesService
             logger.LogError(e, "Ocorreu um erro ao calcular o imposto mensal devido. {e.Message}", e.Message);
             throw;
         }
-    }
-
-    private static bool IsDayOne()
-    {
-        // D-1
-        DateTime yesterday = DateTime.Now.AddDays(-1);
-        return yesterday.Month < DateTime.Now.Month;
     }
 
     private static TaxesDetailsResponse ToTaxesDetailsResponse(List<AssetIncomeTaxes> assets)
