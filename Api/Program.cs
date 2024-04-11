@@ -5,7 +5,7 @@ using Hangfire;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.InitializeEnvironmentVariables(new string[] { ".database.env", ".apis.env"});
+builder.Services.InitializeEnvironmentVariables(new string[] { ".database.env", ".apis.env" });
 builder.Services.AddControllers();
 
 builder.Services.AddEndpointsApiExplorer();

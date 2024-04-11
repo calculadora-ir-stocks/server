@@ -102,7 +102,7 @@ namespace Core.Services.B3Syncing
 
         private async Task SaveB3Data(InvestorMovementDetails response, Infrastructure.Models.Account account)
         {
-            List<Infrastructure.Models.IncomeTaxes> incomeTaxes = new();
+            List<IncomeTaxes> incomeTaxes = new();
             CreateIncomeTaxes(response.Assets, incomeTaxes, account);
 
             List<AverageTradedPrice> averageTradedPrices = new();

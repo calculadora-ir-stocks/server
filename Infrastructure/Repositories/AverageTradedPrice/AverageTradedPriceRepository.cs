@@ -26,7 +26,7 @@ namespace Infrastructure.Repositories.AverageTradedPrice
 
             parameters.Add("@Key", key);
             parameters.Add("@Ticker", averageTradedPrice.Ticker);
-            parameters.Add("@AveragePrice", averageTradedPrice.AveragePrice); 
+            parameters.Add("@AveragePrice", averageTradedPrice.AveragePrice);
             parameters.Add("@TotalBought", averageTradedPrice.TotalBought);
             parameters.Add("@Quantity", averageTradedPrice.Quantity);
             parameters.Add("@AccountId", averageTradedPrice.Account.Id);
@@ -89,6 +89,7 @@ namespace Infrastructure.Repositories.AverageTradedPrice
             var connection = context.Database.GetDbConnection();
             var response = await connection.QueryAsync<AverageTradedPriceDto>(sql, parameters);
 
+            Auditor.Audit($"{nameof(AverageTradedPriceDto)}:{AuditOperation.View}", comment: "Neste evento, preços médios de tickers do investidor foram descriptografados e visualizados.");
             return response;
         }
         #endregion

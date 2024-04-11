@@ -6,5 +6,7 @@
         public const string Get = nameof(Get);
         public const string Update = nameof(Update);
         public const string Delete = nameof(Delete);
+        public const string View = nameof(View);
+
     }
 }

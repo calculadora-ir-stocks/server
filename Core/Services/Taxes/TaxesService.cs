@@ -75,7 +75,7 @@ public class TaxesService : ITaxesService
             // var b3Response = await b3Client.GetAccountMovement(account.CPF, startDate, yesterday, account.Id);
             var b3Response = AddCurrentMonthSet();
 
-            var response = await b3CalculatorService.Calculate(b3Response, account.Id);            
+            var response = await b3CalculatorService.Calculate(b3Response, account.Id);
 
             if (response is null || response.Assets.IsNullOrEmpty())
                 throw new NotFoundException("Nenhuma movimentação foi feita no mês atual.");
@@ -104,9 +104,9 @@ public class TaxesService : ITaxesService
         foreach (var day in days)
         {
             List<Details> details = new();
-            List<Movement> movements = new();            
+            List<Movement> movements = new();
 
-            var tradedAssetsOnThisDay = assets.SelectMany(x => x.TradedAssets.Where(x => x.Day == day));            
+            var tradedAssetsOnThisDay = assets.SelectMany(x => x.TradedAssets.Where(x => x.Day == day));
             string weekDay = string.Empty;
 
             foreach (var tradedAsset in tradedAssetsOnThisDay)
@@ -115,7 +115,7 @@ public class TaxesService : ITaxesService
                 {
                     string dayOfTheWeek = tradedAsset.Day.ToString();
                     weekDay = $"{tradedAsset.DayOfTheWeek}, dia {dayOfTheWeek}";
-                }   
+                }
 
                 details.Add(new Details(
                     tradedAsset.AssetTypeId,
@@ -248,13 +248,13 @@ public class TaxesService : ITaxesService
                 throw new BadRequestException("Para obter as informações de impostos do mês atual, acesse /assets/current.");
             }
 
-            var account = genericRepositoryAccount.GetById(accountId);
+            var account = await genericRepositoryAccount.GetByIdAsync(accountId);
             if (account is null) throw new NotFoundException("Investidor", accountId.ToString());
 
             if (account.Status == EnumHelper.GetEnumDescription(AccountStatus.SubscriptionExpired))
                 throw new ForbiddenException("O plano do usuário está expirado.");
 
-            var response = await taxesRepository.GetSpecifiedMonthTaxes(System.Net.WebUtility.UrlDecode(month), accountId);
+            var response = await taxesRepository.GetSpecifiedMonthTaxes(System.Net.WebUtility.UrlDecode(month), account.Id);
             if (response.IsNullOrEmpty()) throw new NotFoundException("Nenhum imposto foi encontrado no mês especificado.");
             if (response.Select(x => x.Taxes).Sum() <= 0) throw new NotFoundException("Nenhum imposto foi encontrado no mês especificado.");
 
@@ -326,13 +326,13 @@ public class TaxesService : ITaxesService
     {
         try
         {
-            var account = genericRepositoryAccount.GetById(accountId);
+            var account = await genericRepositoryAccount.GetByIdAsync(accountId);
             if (account is null) throw new NotFoundException("Investidor", accountId.ToString());
 
             if (account.Status == EnumHelper.GetEnumDescription(AccountStatus.SubscriptionExpired))
                 throw new ForbiddenException("O plano do usuário está expirado.");
 
-            var response = await taxesRepository.GetSpecifiedYearTaxes(System.Net.WebUtility.UrlDecode(year), accountId);
+            var response = await taxesRepository.GetSpecifiedYearTaxes(System.Net.WebUtility.UrlDecode(year), account.Id);
             if (response.IsNullOrEmpty()) throw new NotFoundException("Nenhum imposto de renda foi encontrado para o ano especificado.");
 
             return ToSpecifiedYearDto(response);

@@ -54,11 +54,11 @@ namespace Api.Services.Auth
         private async Task ThrowExceptionIfSignUpIsInvalid(Infrastructure.Models.Account account, bool isTOSAccepted)
         {
             try
-            {                
+            {
                 if (!isTOSAccepted)
                     throw new BadRequestException("Os termos de uso precisam ser aceitos.");
 
-                if (await accountRepository.CPFExists(account.CPF))
+                if (await accountRepository.CPFExists(account.CPF, account.Id))
                     throw new BadRequestException("Um usuário com esse CPF já está cadastrado na plataforma.");
             }
             catch (Exception e)

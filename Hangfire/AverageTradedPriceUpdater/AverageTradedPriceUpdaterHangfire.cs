@@ -3,6 +3,8 @@ using common.Helpers;
 using Core.Calculators;
 using Core.Models;
 using Core.Models.B3;
+using Infrastructure.Dtos;
+using Infrastructure.Models;
 using Infrastructure.Repositories.Account;
 using Infrastructure.Repositories.AverageTradedPrice;
 using Microsoft.Extensions.Logging;
@@ -40,6 +42,7 @@ namespace Core.Services.Hangfire.AverageTradedPriceUpdater
                 string lastMonthFirstDay = GetLastMonthFirstDay();
                 string lastMonthFinalDay = GetLastMonthFinalDay();
 
+                // TODO background job? we dont need multithread
                 foreach (var account in accounts)
                 {
                     //var lastMonthMovements = await client.GetAccountMovement(
@@ -54,20 +57,19 @@ namespace Core.Services.Hangfire.AverageTradedPriceUpdater
                     if (lastMonthMovements is null || lastMonthMovements.Data is null) continue;
 
                     var movements = lastMonthMovements.Data.EquitiesPeriods.EquitiesMovements;
+
                     var lastMonthAverageTradedPrices = await GetLastMonthTradedAverageTradedPrices(movements, account.Id);
+                    var allAverageTradedPrices = await averageTradedPriceRepository.GetAverageTradedPrices(account.Id);
 
-                    var tickersNamesToUpdate = GetTickersToUpdate(movements, lastMonthAverageTradedPrices);
-
-                    // CalculateProfitAndAverageTradedPrice remove os tickers totalmente vendidos (e que logo devem ser removidos da base)
-                    // da lista "lastMonthAverageTradedPrices".
                     var _ = CalculateProfitAndAverageTradedPrice(movements, lastMonthAverageTradedPrices);
 
-                    var tickersNamesToAdd = await GetTickersToAdd(lastMonthAverageTradedPrices, account.Id);
-                    var tickersNamesToRemove = GetTickerToRemove(lastMonthAverageTradedPrices, lastMonthAverageTradedPrices);
+                    var tickersNamesToUpdate = GetTickersToUpdate(lastMonthAverageTradedPrices, allAverageTradedPrices);
+                    var tickersNamesToAdd = GetTickersToAdd(lastMonthAverageTradedPrices, allAverageTradedPrices);
+                    var tickersNamesToRemove = GetTickerToRemove(lastMonthAverageTradedPrices, movements);
 
-                    await AddTickers(movements, tickersNamesToAdd);
-                    await UpdateTickers(movements, tickersNamesToUpdate);
-                    await RemoveTickers(movements, tickersNamesToRemove);
+                    await AddTickers(lastMonthAverageTradedPrices.Where(x => x.TickerSymbol.Equals(tickersNamesToAdd)), account);
+                    await UpdateTickers(lastMonthAverageTradedPrices.Where(x => x.TickerSymbol.Equals(tickersNamesToAdd)), account);
+                    await RemoveTickers(tickersNamesToRemove);
                 }
             }
             catch (Exception e)
@@ -77,38 +79,48 @@ namespace Core.Services.Hangfire.AverageTradedPriceUpdater
             }
         }
 
-        private Task RemoveTickers(List<EquitMovement> movements, IEnumerable<string> tickersNamesToRemove)
+        private async Task RemoveTickers(IEnumerable<string> tickersNamesToRemove)
         {
             throw new NotImplementedException();
         }
 
-        private Task UpdateTickers(List<EquitMovement> movements, IEnumerable<string> tickersNamesToUpdate)
+        private async Task UpdateTickers(IEnumerable<AverageTradedPriceDetails> averageTradedPrices, Infrastructure.Models.Account account)
         {
             throw new NotImplementedException();
         }
 
-        private Task AddTickers(List<EquitMovement> movements, IEnumerable<string> tickersNamesToAdd)
+        private async Task AddTickers(IEnumerable<AverageTradedPriceDetails> averageTradedPrices, Infrastructure.Models.Account account)
         {
-            throw new NotImplementedException();
+            foreach (var a in averageTradedPrices)
+            {
+                await averageTradedPriceRepository.AddAsync(new AverageTradedPrice(
+                    a.TickerSymbol,
+                    a.AverageTradedPrice,
+                    a.TotalBought,
+                    a.TradedQuantity,
+                    account,
+                    DateTime.Now
+                ));
+            }
         }
 
-        private static IEnumerable<string> GetTickerToRemove(List<AverageTradedPriceDetails> averageTradedPrices, List<AverageTradedPriceDetails> averageTradedPricesBeforeUpdate)
+        private static IEnumerable<string> GetTickersToUpdate(List<AverageTradedPriceDetails> lastMonthAverageTradedPrices,
+            IEnumerable<AverageTradedPriceDto> allTickers)
         {
-            return averageTradedPricesBeforeUpdate.Where(p => averageTradedPrices.All(p2 => p2.TickerSymbol != p.TickerSymbol)).Select(x => x.TickerSymbol);
+
+            var tickers = lastMonthAverageTradedPrices.Where(x => allTickers.Any(y => y.Ticker.Equals(x.TickerSymbol)));
+            return tickers.Select(x => x.TickerSymbol);
         }
 
-        private static IEnumerable<string> GetTickersToUpdate(List<EquitMovement> movements, List<AverageTradedPriceDetails> averageTradedPrices)
+        private static IEnumerable<string> GetTickersToAdd(List<AverageTradedPriceDetails> lastMonthAverageTradedPrices,
+            IEnumerable<AverageTradedPriceDto> allTickers)
         {
-            var test = movements.Where(x => averageTradedPrices.Any(y => y.TickerSymbol.Equals(x.TickerSymbol)));
-            return test.Select(x => x.TickerSymbol);
+            return lastMonthAverageTradedPrices.Select(x => x.TickerSymbol).ToList().Except(allTickers.Select(x => x.Ticker));
         }
 
-        private async Task<IEnumerable<string>> GetTickersToAdd(List<AverageTradedPriceDetails> lastMonthAverageTradedPrices, Guid accountId)
+        private static IEnumerable<string> GetTickerToRemove(List<AverageTradedPriceDetails> lastMonthAverageTradedPrices, List<EquitMovement> movements)
         {
-            var allTickers = await averageTradedPriceRepository.GetAverageTradedPrices(accountId);
-            var newTickers = lastMonthAverageTradedPrices.Select(x => x.TickerSymbol).ToList().Except(allTickers.Select(x => x.Ticker));
-
-            return newTickers;
+            return movements.Where(m => !lastMonthAverageTradedPrices.Any(l => l.TickerSymbol == m.TickerSymbol)).Select(x => x.TickerSymbol);
         }
 
         private async Task<List<AverageTradedPriceDetails>> GetLastMonthTradedAverageTradedPrices(
@@ -167,6 +179,18 @@ namespace Core.Services.Hangfire.AverageTradedPriceUpdater
             {
                 AssetType = "ETF - Exchange Traded Fund",
                 TickerSymbol = "IVVB11",
+                CorporationName = "IVVB 11 Corporation Inc.",
+                MovementType = "Compra",
+                OperationValue = 12376.43,
+                EquitiesQuantity = 4,
+                ReferenceDate = new DateTime(2022, 01, 09)
+            });
+
+            // ticker to update
+            response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
+            {
+                AssetType = "ETF - Exchange Traded Fund",
+                TickerSymbol = "BOVA11",
                 CorporationName = "IVVB 11 Corporation Inc.",
                 MovementType = "Compra",
                 OperationValue = 12376.43,

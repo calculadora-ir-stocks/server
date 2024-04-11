@@ -6,7 +6,7 @@
         /// Insere um novo usuário na base com o CPF criptografado.
         /// </summary>
         Task Create(Models.Account account);
-        Task<bool> CPFExists(string cpf);
+        Task<bool> CPFExists(string cpf, Guid accountId);
         Models.Account? GetById(Guid accountId);
         Task<Guid> GetByAuth0IdAsNoTracking(string auth0Id);
         Models.Account GetByStripeCustomerId(string stripeCustomerId);
