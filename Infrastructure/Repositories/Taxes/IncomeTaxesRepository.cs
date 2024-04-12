@@ -76,7 +76,7 @@ namespace Infrastructure.Repositories.Taxes
             ";
 
             await context.Database.GetDbConnection().QueryAsync(sql, parameters);
-            Auditor.Audit($"{nameof(IncomeTaxes)}:{AuditOperation.Add}", comment: "Neste evento todas as informações de imposto do usuário foram criptografadas na base de dados.");
+            Auditor.Audit($"{nameof(IncomeTaxes)}:{AuditOperation.Add}", comment: "Todas as informações de imposto do usuário foram criptografadas na base de dados.");
         }
 
         public async Task<IEnumerable<SpecifiedMonthTaxesDto>> GetSpecifiedMonthTaxes(string month, Guid accountId)

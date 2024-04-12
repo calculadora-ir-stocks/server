@@ -52,7 +52,7 @@ namespace Infrastructure.Repositories.Account
             await transaction.Connection.QueryAsync(createPlan, parameters);
             await transaction.CommitAsync();
 
-            Auditor.Audit($"{nameof(Account)}:{AuditOperation.Add}", comment: "Neste evento o CPF do usuário foi criptografado na base de dados.");
+            Auditor.Audit($"{nameof(Account)}:{AuditOperation.Add}", comment: "O CPF do usuário foi criptografado na base de dados.");
         }
 
         public async Task<bool> CPFExists(string cpf, Guid accountId)
@@ -73,7 +73,7 @@ namespace Infrastructure.Repositories.Account
             string encryptedCPF = await context.Database.GetDbConnection().QuerySingleOrDefaultAsync<string>(sql, parameters);
 
             Auditor.Audit($"{nameof(Account)}:{AuditOperation.Get}", null,
-                comment: $"Neste evento o CPF criptografado do usuário foi descriptografado a nível de banco e processado pela aplicação para verificar se o CPF já está " +
+                comment: $"O CPF criptografado do usuário foi descriptografado a nível de banco e processado pela aplicação para verificar se o CPF já está " +
                 "cadastrado na plataforma.", fields: new { CPF = encryptedCPF, AccountId = accountId }
             );
 

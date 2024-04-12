@@ -4,6 +4,7 @@ using Common.Constants;
 using Dapper;
 using Infrastructure.Dtos;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Update;
 using Microsoft.IdentityModel.Tokens;
 
 namespace Infrastructure.Repositories.AverageTradedPrice
@@ -55,7 +56,7 @@ namespace Infrastructure.Repositories.AverageTradedPrice
             ";
 
             await context.Database.GetDbConnection().QueryAsync(sql, parameters);
-            Auditor.Audit($"{nameof(AverageTradedPrice)}:{AuditOperation.Add}", comment: "Neste evento todas as informações de preços médios foram criptografadas na base de dados.");
+            Auditor.Audit($"{nameof(AverageTradedPrice)}:{AuditOperation.Add}", comment: "Todas as informações de preços médios foram criptografadas na base de dados.");
         }
         #endregion
 
@@ -89,8 +90,65 @@ namespace Infrastructure.Repositories.AverageTradedPrice
             var connection = context.Database.GetDbConnection();
             var response = await connection.QueryAsync<AverageTradedPriceDto>(sql, parameters);
 
-            Auditor.Audit($"{nameof(AverageTradedPriceDto)}:{AuditOperation.View}", comment: "Neste evento, preços médios de tickers do investidor foram descriptografados e visualizados.");
+            Auditor.Audit($"{nameof(AverageTradedPrice)}:{AuditOperation.View}", comment: "Preços médios de tickers do investidor foram descriptografados e visualizados.");
             return response;
+        }
+        #endregion
+
+        #region DELETE
+        public async Task RemoveByTickerNameAsync(Guid accountId, IEnumerable<string> tickers)
+        {
+            DynamicParameters parameters = new();
+
+            const string key = "GET THIS SHIT FROM A HSM";
+
+            parameters.Add("@AccountId", accountId);
+            parameters.Add("@Tickers", tickers);
+            parameters.Add("@Key", key);
+
+            string sql =
+                @"DELETE FROM ""AverageTradedPrices"" atp
+                WHERE atp.""AccountId"" = @AccountId AND 
+                PGP_SYM_DECRYPT(atp.""Ticker""::bytea, @Key) IN @Tickers";
+
+            var connection = context.Database.GetDbConnection();
+            var rowsAffected = await connection.ExecuteAsync(sql, parameters);
+
+            Auditor.Audit($"{nameof(AverageTradedPrice)}:{AuditOperation.Delete}",
+                comment: "Os preços médios de tickers do investidor foram removidos da base pois foram totalmente vendidos.",
+                fields: new { RowsAffected = rowsAffected });
+        }
+        #endregion
+
+        #region UPDATE
+        public async Task UpdateAsync(Models.Account account, Models.AverageTradedPrice averageTradedPrice)
+        {
+            DynamicParameters parameters = new();
+
+            const string key = "GET THIS SHIT FROM A HSM";
+
+            parameters.Add("@Ticker", averageTradedPrice.Ticker);
+            parameters.Add("@AveragePrice", averageTradedPrice.AveragePrice);
+            parameters.Add("@TotalBought", averageTradedPrice.TotalBought);
+            parameters.Add("@Quantity", averageTradedPrice.Quantity);
+            parameters.Add("@AccountId", account.Id);
+            parameters.Add("@Key", key);
+
+            string sql =
+                @"UPDATE ""AverageTradedPrices"" SET 
+                    ""AveragePrice"" = PGP_SYM_ENCRYPT(@AveragePrice, @Key),
+                    ""TotalBought"" = PGP_SYM_ENCRYPT(@TotalBought, @Key),
+	                ""Quantity"" = PGP_SYM_ENCRYPT(@Quantity, @Key)
+                  WHERE ""AccountId"" = @AccountId AND
+                  PGP_SYM_DECRYPT(""Ticker""::bytea, @Key) = @Ticker
+                ";
+
+            var connection = context.Database.GetDbConnection();
+            var rowsAffected = await connection.ExecuteAsync(sql, parameters);
+
+            Auditor.Audit($"{nameof(AverageTradedPrice)}:{AuditOperation.Update}",
+                comment: "Os preços médios de tickers do investidor foram atualizados na base.",
+                fields: new { RowsAffected = rowsAffected });
         }
         #endregion
     }

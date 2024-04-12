@@ -63,13 +63,17 @@ namespace Core.Services.Hangfire.AverageTradedPriceUpdater
 
                     var _ = CalculateProfitAndAverageTradedPrice(movements, lastMonthAverageTradedPrices);
 
-                    var tickersNamesToUpdate = GetTickersToUpdate(lastMonthAverageTradedPrices, allAverageTradedPrices);
                     var tickersNamesToAdd = GetTickersToAdd(lastMonthAverageTradedPrices, allAverageTradedPrices);
+                    var tickersNamesToUpdate = GetTickersToUpdate(lastMonthAverageTradedPrices, allAverageTradedPrices);
                     var tickersNamesToRemove = GetTickerToRemove(lastMonthAverageTradedPrices, movements);
 
-                    await AddTickers(lastMonthAverageTradedPrices.Where(x => x.TickerSymbol.Equals(tickersNamesToAdd)), account);
-                    await UpdateTickers(lastMonthAverageTradedPrices.Where(x => x.TickerSymbol.Equals(tickersNamesToAdd)), account);
-                    await RemoveTickers(tickersNamesToRemove);
+                    await AddTickers(account,
+                        lastMonthAverageTradedPrices.Where(x => tickersNamesToAdd.Any(y => y.Equals(x.TickerSymbol))));
+
+                    await UpdateTickers(account,
+                        lastMonthAverageTradedPrices.Where(x => tickersNamesToUpdate.Any(y => y.Equals(x.TickerSymbol))));
+
+                    await RemoveTickers(account.Id, tickersNamesToRemove);
                 }
             }
             catch (Exception e)
@@ -79,25 +83,35 @@ namespace Core.Services.Hangfire.AverageTradedPriceUpdater
             }
         }
 
-        private async Task RemoveTickers(IEnumerable<string> tickersNamesToRemove)
+        private async Task UpdateTickers(Infrastructure.Models.Account account, IEnumerable<AverageTradedPriceDetails> tickersToUpdate)
         {
-            throw new NotImplementedException();
+            foreach (var t in tickersToUpdate)
+            {
+                await averageTradedPriceRepository.UpdateAsync(account, new AverageTradedPrice(
+                    t.TickerSymbol,
+                    t.AverageTradedPrice,
+                    t.TotalBought,
+                    t.TradedQuantity,
+                    account,
+                    DateTime.Now
+                ));
+            }
         }
 
-        private async Task UpdateTickers(IEnumerable<AverageTradedPriceDetails> averageTradedPrices, Infrastructure.Models.Account account)
+        private async Task RemoveTickers(Guid accountId, IEnumerable<string> tickersToRemove)
         {
-            throw new NotImplementedException();
+            await averageTradedPriceRepository.RemoveByTickerNameAsync(accountId, tickersToRemove);
         }
 
-        private async Task AddTickers(IEnumerable<AverageTradedPriceDetails> averageTradedPrices, Infrastructure.Models.Account account)
+        private async Task AddTickers(Infrastructure.Models.Account account, IEnumerable<AverageTradedPriceDetails> tickersToAdd)
         {
-            foreach (var a in averageTradedPrices)
+            foreach (var t in tickersToAdd)
             {
                 await averageTradedPriceRepository.AddAsync(new AverageTradedPrice(
-                    a.TickerSymbol,
-                    a.AverageTradedPrice,
-                    a.TotalBought,
-                    a.TradedQuantity,
+                    t.TickerSymbol,
+                    t.AverageTradedPrice,
+                    t.TotalBought,
+                    t.TradedQuantity,
                     account,
                     DateTime.Now
                 ));
