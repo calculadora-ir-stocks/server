@@ -168,6 +168,40 @@ namespace Core.Services.B3Syncing
         /// </summary>
         private static void AddBigBangDataSet(Models.B3.Movement.Root response)
         {
+            /**
+                AverageTradedPrices
+
+                BOVA11
+                Total bought: 28,86
+                Quantity: 2
+                AVG: 14,43
+
+
+                IVVB11
+                Total bought: 492,3
+                Quantity: 3
+                AVG: 164,1
+
+
+                AMER3
+                Total bought: 527,08
+                Quantity: 3
+                AVG: 175,693333333
+
+                IncomeTaxes
+
+                01/2023
+
+                Taxes: 21,9825
+                Swing-trade profit: 144,55
+                Day-trade profit: 0
+
+                02/2023
+                Taxes: 11,74734
+                Swing-trade profit: 0
+                Day-trade profit: 58,7367            
+            */
+
             response.Data.EquitiesPeriods.EquitiesMovements.Add(new Models.B3.Movement.EquitMovement
             {
                 AssetType = "ETF - Exchange Traded Fund",
@@ -223,8 +257,8 @@ namespace Core.Services.B3Syncing
                 CorporationName = "IVVB 11 Corporation Inc.",
                 MovementType = "Compra",
                 OperationValue = 246.65,
-                UnitPrice = 246.65,
-                EquitiesQuantity = 1,
+                UnitPrice = 123.325,
+                EquitiesQuantity = 2,
                 ReferenceDate = new DateTime(2023, 01, 09)
             });
 
