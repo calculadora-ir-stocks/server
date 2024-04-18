@@ -1,5 +1,6 @@
 ﻿using Api.Database;
 using Common;
+using Common.Configurations;
 using Common.Constants;
 using Dapper;
 using Infrastructure.UnitOfWork;
@@ -11,11 +12,13 @@ namespace Infrastructure.Repositories.Account
     public class AccountRepository : IAccountRepository
     {
         private readonly StocksContext context;
+        private readonly AzureKeyVaultConfiguration keyVault;
         private readonly IUnitOfWork unitOfWork;
 
-        public AccountRepository(StocksContext context, IUnitOfWork unitOfWork)
+        public AccountRepository(StocksContext context, AzureKeyVaultConfiguration keyVault, IUnitOfWork unitOfWork)
         {
             this.context = context;
+            this.keyVault = keyVault;
             this.unitOfWork = unitOfWork;
         }
 
@@ -24,9 +27,9 @@ namespace Infrastructure.Repositories.Account
             DynamicParameters parameters = new();
             DbTransaction transaction = await unitOfWork.BeginTransactionAsync();
 
-            const string key = "GET THIS SHIT FROM A HSM";
+            var key = await keyVault.SecretClient.GetSecretAsync("pgcrypto-key");
 
-            parameters.Add("@Key", key);
+            parameters.Add("@Key", key.Value.Value);
             parameters.Add("@AccountId", account.Id);
             parameters.Add("@Auth0Id", account.Auth0Id);
             parameters.Add("@CPF", account.CPF);
@@ -59,8 +62,9 @@ namespace Infrastructure.Repositories.Account
         {
             DynamicParameters parameters = new();
 
-            const string key = "GET THIS SHIT FROM A HSM";
-            parameters.Add("@Key", key);
+            var key = await keyVault.SecretClient.GetSecretAsync("pgcrypto-key");
+
+            parameters.Add("@Key", key.Value.Value);
             parameters.Add("@CPF", cpf);
 
             string sql = @"

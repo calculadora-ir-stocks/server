@@ -1,5 +1,6 @@
 ﻿using Api.Database;
 using Common;
+using Common.Configurations;
 using Common.Constants;
 using Dapper;
 using Infrastructure.Dtos;
@@ -12,10 +13,12 @@ namespace Infrastructure.Repositories.AverageTradedPrice
     public class AverageTradedPriceRepository : IAverageTradedPriceRepostory
     {
         private readonly StocksContext context;
+        private readonly AzureKeyVaultConfiguration keyVault;
 
-        public AverageTradedPriceRepository(StocksContext context)
+        public AverageTradedPriceRepository(StocksContext context, AzureKeyVaultConfiguration keyVault)
         {
             this.context = context;
+            this.keyVault = keyVault;
         }
 
         #region INSERT
@@ -23,9 +26,9 @@ namespace Infrastructure.Repositories.AverageTradedPrice
         {
             DynamicParameters parameters = new();
 
-            const string key = "GET THIS SHIT FROM A HSM";
+            var key = await keyVault.SecretClient.GetSecretAsync("pgcrypto-key");
 
-            parameters.Add("@Key", key);
+            parameters.Add("@Key", key.Value.Value);
             parameters.Add("@Ticker", averageTradedPrice.Ticker);
             parameters.Add("@AveragePrice", averageTradedPrice.AveragePrice);
             parameters.Add("@TotalBought", averageTradedPrice.TotalBought);
@@ -65,11 +68,11 @@ namespace Infrastructure.Repositories.AverageTradedPrice
         {
             DynamicParameters parameters = new();
 
-            const string key = "GET THIS SHIT FROM A HSM";
+            var key = await keyVault.SecretClient.GetSecretAsync("pgcrypto-key");
 
+            parameters.Add("@Key", key.Value.Value);
             parameters.Add("@AccountId", accountId);
             parameters.Add("@Tickers", tickers);
-            parameters.Add("@Key", key);
 
             string sql =
                 @"SELECT 
@@ -100,11 +103,11 @@ namespace Infrastructure.Repositories.AverageTradedPrice
         {
             DynamicParameters parameters = new();
 
-            const string key = "GET THIS SHIT FROM A HSM";
+            var key = await keyVault.SecretClient.GetSecretAsync("pgcrypto-key");
 
+            parameters.Add("@Key", key.Value.Value);
             parameters.Add("@AccountId", accountId);
             parameters.Add("@Tickers", tickers);
-            parameters.Add("@Key", key);
 
             string sql =
                 @"DELETE FROM ""AverageTradedPrices"" atp
@@ -112,6 +115,7 @@ namespace Infrastructure.Repositories.AverageTradedPrice
                 PGP_SYM_DECRYPT(atp.""Ticker""::bytea, @Key) IN @Tickers";
 
             var connection = context.Database.GetDbConnection();
+            
             var rowsAffected = await connection.ExecuteAsync(sql, parameters);
 
             Auditor.Audit($"{nameof(AverageTradedPrice)}:{AuditOperation.Delete}",
@@ -125,14 +129,14 @@ namespace Infrastructure.Repositories.AverageTradedPrice
         {
             DynamicParameters parameters = new();
 
-            const string key = "GET THIS SHIT FROM A HSM";
+            var key = await keyVault.SecretClient.GetSecretAsync("pgcrypto-key");
 
+            parameters.Add("@Key", key.Value.Value);
             parameters.Add("@Ticker", averageTradedPrice.Ticker);
             parameters.Add("@AveragePrice", averageTradedPrice.AveragePrice);
             parameters.Add("@TotalBought", averageTradedPrice.TotalBought);
             parameters.Add("@Quantity", averageTradedPrice.Quantity);
             parameters.Add("@AccountId", account.Id);
-            parameters.Add("@Key", key);
 
             string sql =
                 @"UPDATE ""AverageTradedPrices"" SET 

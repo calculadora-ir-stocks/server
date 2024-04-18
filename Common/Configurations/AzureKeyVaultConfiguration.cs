@@ -14,7 +14,7 @@ namespace Common.Configurations
             {
                 Retry =
                 {
-                    Delay= TimeSpan.FromSeconds(2),
+                    Delay = TimeSpan.FromSeconds(2),
                     MaxDelay = TimeSpan.FromSeconds(16),
                     MaxRetries = 5,
                     Mode = RetryMode.Exponential

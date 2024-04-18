@@ -31,7 +31,7 @@ namespace Infrastructure.Repositories.Taxes
 
             var key = await keyVault.SecretClient.GetSecretAsync("pgcrypto-key");
 
-            parameters.Add("@Key", key.Value);
+            parameters.Add("@Key", key.Value.Value);
             parameters.Add("@AssetId", incomeTaxes.AssetId);
             parameters.Add("@Month", incomeTaxes.Month);
             parameters.Add("@Taxes", incomeTaxes.Taxes);
@@ -86,11 +86,11 @@ namespace Infrastructure.Repositories.Taxes
         {
             DynamicParameters parameters = new();
 
-            const string key = "GET THIS SHIT FROM A HSM";
+            var key = await keyVault.SecretClient.GetSecretAsync("pgcrypto-key");
 
+            parameters.Add("@Key", key.Value.Value);
             parameters.Add("@Month", month);
             parameters.Add("@AccountId", accountId);
-            parameters.Add("@Key", key);
 
             string sql = @"
                 SELECT
@@ -117,11 +117,11 @@ namespace Infrastructure.Repositories.Taxes
         {
             DynamicParameters parameters = new();
 
-            const string key = "GET THIS SHIT FROM A HSM";
+            var key = await keyVault.SecretClient.GetSecretAsync("pgcrypto-key");
 
+            parameters.Add("@Key", key.Value.Value);
             parameters.Add("@Year", year);
             parameters.Add("@AccountId", accountId);
-            parameters.Add("@Key", key);
 
             string sql = @"
                 SELECT
@@ -148,11 +148,11 @@ namespace Infrastructure.Repositories.Taxes
         {
             DynamicParameters parameters = new();
 
-            const string key = "GET THIS SHIT FROM A HSM";
+            var key = await keyVault.SecretClient.GetSecretAsync("pgcrypto-key");
 
+            parameters.Add("@Key", key.Value.Value);
             parameters.Add("@Date", date);
             parameters.Add("@AccountId", accountId);
-            parameters.Add("@Key", key);
 
             string sql = @"
                 SELECT * FROM
