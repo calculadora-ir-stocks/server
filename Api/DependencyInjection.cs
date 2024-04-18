@@ -54,7 +54,9 @@ namespace Api
             builder.Services.AddScoped<IAuthorizationHandler, CanAccessResourceHandler>();
 
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+
             services.AddSingleton<JsonSerializerConfiguration>();
+            services.AddSingleton<AzureKeyVaultConfiguration>();
 
             services.AddTransient<IUnitOfWork, UnitOfWork>();
 

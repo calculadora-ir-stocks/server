@@ -9,6 +9,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Azure.Identity" Version="1.11.0" />
+    <PackageReference Include="Azure.Security.KeyVault.Secrets" Version="4.6.0" />
     <PackageReference Include="Audit.NET" Version="25.0.3" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="6.0.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />

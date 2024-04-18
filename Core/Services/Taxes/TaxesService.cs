@@ -245,7 +245,7 @@ public class TaxesService : ITaxesService
         {
             if (WorkerDidNotSaveDataForThisMonthYet(month))
             {
-                throw new BadRequestException("Para obter as informações de impostos do mês atual, acesse /assets/current.");
+                throw new BadRequestException("Para obter as informações de impostos do mês atual, acesse /taxes/home/{accountId}.");
             }
 
             var account = await genericRepositoryAccount.GetByIdAsync(accountId);
@@ -316,7 +316,7 @@ public class TaxesService : ITaxesService
 
     private static bool WorkerDidNotSaveDataForThisMonthYet(string month)
     {
-        string currentMonth = DateTime.Now.ToString("yyyy-MM");
+        string currentMonth = DateTime.Now.ToString("MM/yyyy");
         return month == currentMonth;
     }
     #endregion
@@ -370,7 +370,7 @@ public class TaxesService : ITaxesService
     {
         try
         {
-            await taxesRepository.SetMonthAsPaidOrUnpaid(System.Net.WebUtility.UrlDecode(month), accountId);
+            await taxesRepository.SetMonthAsPaidOrUnpaid(month, accountId);
         }
         catch (Exception e)
         {

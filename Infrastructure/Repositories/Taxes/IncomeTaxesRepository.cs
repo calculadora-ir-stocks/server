@@ -8,6 +8,7 @@ using Infrastructure.UnitOfWork;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
+using Common.Configurations;
 
 namespace Infrastructure.Repositories.Taxes
 {
@@ -15,20 +16,22 @@ namespace Infrastructure.Repositories.Taxes
     {
         private readonly StocksContext context;
         private readonly IUnitOfWork unitOfWork;
+        private readonly AzureKeyVaultConfiguration keyVault;
 
-        public IncomeTaxesRepository(StocksContext context, IUnitOfWork unitOfWork)
+        public IncomeTaxesRepository(StocksContext context, IUnitOfWork unitOfWork, AzureKeyVaultConfiguration keyVault)
         {
             this.context = context;
             this.unitOfWork = unitOfWork;
+            this.keyVault = keyVault;
         }
 
         public async Task AddAsync(IncomeTaxes incomeTaxes)
         {
             DynamicParameters parameters = new();
 
-            const string key = "GET THIS SHIT FROM A HSM";
+            var key = await keyVault.SecretClient.GetSecretAsync("pgcrypto-key");
 
-            parameters.Add("@Key", key);
+            parameters.Add("@Key", key.Value);
             parameters.Add("@AssetId", incomeTaxes.AssetId);
             parameters.Add("@Month", incomeTaxes.Month);
             parameters.Add("@Taxes", incomeTaxes.Taxes);
