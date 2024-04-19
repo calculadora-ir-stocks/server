@@ -171,7 +171,6 @@ namespace Core.Calculators
                 asset.Profit = totalProfit;
 
                 UpdateOrAddAveragePrice(movement, averagePrices, sellOperation: true);
-
                 AddOperationHistory(movement, investorMovements.OperationHistory, asset.Profit);
             }
             else

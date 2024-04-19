@@ -171,22 +171,20 @@ namespace Core.Services.B3Syncing
             /**
                 AverageTradedPrices
 
-                BOVA11
-                Total bought: 28,86
-                Quantity: 2
-                AVG: 14,43
-
+                BOVA11	
+                Total bought: 16,32
+                Quantity: 1
+                AVG: 16,32
 
                 IVVB11
-                Total bought: 492,3
-                Quantity: 3
-                AVG: 164,1
-
+                Total bought: 187,76
+                Quantity: 2
+                AVG: 93,88
 
                 AMER3
-                Total bought: 527,08
-                Quantity: 3
-                AVG: 175,693333333
+                Total bought: 292,65
+                Quantity: 2
+                AVG: 146,325
 
                 IncomeTaxes
 
