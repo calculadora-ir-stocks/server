@@ -14,14 +14,12 @@ builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddDatabase();
 builder.Services.AddAudiTrail();
+builder.Services.ConfigureHangfireDatabase();
 
 builder.Services.AddStripeServices();
 builder.Services.AddServices(builder);
 builder.Services.Add3rdPartiesClients();
 builder.Services.AddRepositories();
-
-//builder.Services.AddHangfireServices();
-//builder.Services.ConfigureHangfireServices(builder);
 
 builder.Services.AddAuth0Authentication(builder);
 
@@ -41,14 +39,10 @@ using (var scope = app.Services.CreateAsyncScope())
     scope.ServiceProvider.GetRequiredService<StocksContext>();
 }
 
-// app.UseHangfireDashboard("/dashboard");
 app.UseCors();
-
-// app.UseMiddleware<AuthorizationMiddleware>();
 app.UseMiddleware<ExceptionHandlerMiddleware>();
 
 app.UseSwagger();
-
 app.UseSwaggerUI(c =>
     c.SwaggerEndpoint("v1/swagger.json", "Stocks v1")
 );
@@ -61,5 +55,8 @@ app.UseRouting();
 app.UseAuthorization();
 
 app.MapControllers();
+
+app.UseHangfireServer();
+app.ConfigureHangfireServices();
 
 app.Run();

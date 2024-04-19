@@ -36,6 +36,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Npgsql.Replication;
 using Polly;
 using Stripe;
 using System.Reflection;
@@ -84,6 +85,9 @@ namespace Api
             services.AddTransient<IIncomeTaxesCalculator, InvestmentsFundsIncomeTaxes>();
             services.AddTransient<IIncomeTaxesCalculator, StocksIncomeTaxes>();
 
+            services.AddScoped<IAverageTradedPriceUpdaterHangfire, AverageTradedPriceUpdaterHangfire>();
+            services.AddScoped<IPlanExpirerHangfire, PlanExpirerHangfire>();
+
             services.AddMvc(options => options.Filters.Add<NotificationFilter>());
         }
 
@@ -125,35 +129,24 @@ namespace Api
             });
         }
 
-        public static void AddHangfireServices(this IServiceCollection services)
-        {
-            services.AddHangfireServer();
-
-            services.AddScoped<IAverageTradedPriceUpdaterHangfire, AverageTradedPriceUpdaterHangfire>();
-            services.AddScoped<IPlanExpirerHangfire, PlanExpirerHangfire>();
-        }
-
-        public static void ConfigureHangfireServices(this IServiceCollection services, WebApplicationBuilder builder)
+        public static void ConfigureHangfireDatabase(this IServiceCollection services)
         {
             DatabaseSecret secret = new();
 
-            services.AddHangfire(x =>
-                x.UsePostgreSqlStorage(secret.GetConnectionString())
-                .SetDataCompatibilityLevel(CompatibilityLevel.Version_170)
-                .UseSimpleAssemblyNameTypeSerializer()
-                .UseRecommendedSerializerSettings()
-            );
+            services.AddHangfire(config =>
+                config.UsePostgreSqlStorage(c =>
+                    c.UseNpgsqlConnection(secret.GetConnectionString())));
+        }
 
-            GlobalConfiguration.Configuration.UsePostgreSqlStorage(secret.GetConnectionString());
-
-            RecurringJob.RemoveIfExists(nameof(AverageTradedPriceUpdaterHangfire));
-            RecurringJob.RemoveIfExists(nameof(PlanExpirerHangfire));
+        public static void ConfigureHangfireServices(this WebApplication _)
+        {
+            DatabaseSecret secret = new();
 
             RecurringJob.AddOrUpdate<IAverageTradedPriceUpdaterHangfire>(
-                nameof(AverageTradedPriceUpdaterHangfire),
-                x => x.Execute(),
-                "* * * * * *"
-            );
+                    nameof(AverageTradedPriceUpdaterHangfire),
+                    x => x.Execute(),
+                    Cron.Monthly
+                );
 
             RecurringJob.AddOrUpdate<IPlanExpirerHangfire>(
                 nameof(PlanExpirerHangfire),
