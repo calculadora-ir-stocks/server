@@ -129,19 +129,15 @@ namespace Api
             });
         }
 
-        public static void ConfigureHangfireDatabase(this IServiceCollection services)
+        public static void ConfigureHangfireDatabase(this IServiceCollection services, string connectionString)
         {
-            DatabaseSecret secret = new();
-
             services.AddHangfire(config =>
                 config.UsePostgreSqlStorage(c =>
-                    c.UseNpgsqlConnection(secret.GetConnectionString())));
+                    c.UseNpgsqlConnection(connectionString)));
         }
 
         public static void ConfigureHangfireServices(this WebApplication _)
         {
-            DatabaseSecret secret = new();
-
             RecurringJob.AddOrUpdate<IAverageTradedPriceUpdaterHangfire>(
                     nameof(AverageTradedPriceUpdaterHangfire),
                     x => x.Execute(),
@@ -238,24 +234,20 @@ namespace Api
             });
         }
 
-        public static void AddDatabase(this IServiceCollection services)
+        public static void AddDatabaseContext(this IServiceCollection services, string connectionString)
         {
-            DatabaseSecret secret = new();
-
             services.AddDbContext<StocksContext>(options =>
             {
-                options.UseNpgsql(secret.GetConnectionString());
+                options.UseNpgsql(connectionString);
                 options.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
             });
             AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
         }
 
-        public static void AddAudiTrail(this IServiceCollection _)
+        public static void AddAudiTrail(this IServiceCollection _, string connectionString)
         {
-            DatabaseSecret secret = new();
-
             Configuration.Setup().UsePostgreSql(config => config
-                .ConnectionString(secret.GetConnectionString())
+                .ConnectionString(connectionString)
                 .TableName("Audits")
                 .IdColumnName("Id")
                 .DataColumn("Data", DataType.JSONB)

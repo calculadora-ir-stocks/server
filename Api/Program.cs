@@ -1,6 +1,7 @@
 using Api;
 using Api.Database;
 using Api.Middlewares;
+using Azure.Identity;
 using Hangfire;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -12,9 +13,15 @@ builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.AddHttpContextAccessor();
 
-builder.Services.AddDatabase();
-builder.Services.AddAudiTrail();
-builder.Services.ConfigureHangfireDatabase();
+if (builder.Environment.IsProduction())
+{
+    // Sets Key Vault credentiais
+    builder.Configuration.AddAzureKeyVault(new("https://server-keys-and-secrets.vault.azure.net/"), new DefaultAzureCredential());
+}
+
+builder.Services.AddDatabaseContext(builder.Configuration["DatabaseConnectionString"]);
+builder.Services.AddAudiTrail(builder.Configuration["DatabaseConnectionString"]);
+builder.Services.ConfigureHangfireDatabase(builder.Configuration["DatabaseConnectionString"]);
 
 builder.Services.AddStripeServices();
 builder.Services.AddServices(builder);
@@ -29,7 +36,7 @@ builder.Services.AddSwaggerConfiguration();
 
 builder.Services.AddCors(policyBuilder =>
     policyBuilder.AddDefaultPolicy(policy =>
-        policy.WithOrigins("*").AllowAnyHeader().AllowAnyHeader().SetIsOriginAllowed((host) => true))
+        policy.WithOrigins("*").AllowAnyHeader().SetIsOriginAllowed((host) => true))
 );
 
 var app = builder.Build();
