@@ -1,6 +1,7 @@
 ﻿using Api.Clients.B3;
 using Api.DTOs.Auth;
 using Common.Models.Secrets;
+using Common.Options;
 using Core.Models.B3;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -14,11 +15,10 @@ namespace Core.Clients.B3
     public class B3Client : IB3Client
     {
         private readonly IHttpClientFactory clientFactory;
+        private readonly IOptions<B3ApiOptions> options;
 
         private readonly HttpClient b3Client;
         private readonly HttpClient microsoftClient;
-
-        private readonly B3Secret @params;
 
         private static B3Token? token;
 
@@ -29,10 +29,10 @@ namespace Core.Clients.B3
         /// </summary>
         private const string B3TokenAuthorizationRequestUri = "/4bee639f-5388-44c7-bbac-cb92a93911e6/oauth2/v2.0/token";
 
-        public B3Client(IHttpClientFactory clientFactory, IOptions<B3Secret> @params, ILogger<B3Client> logger)
+        public B3Client(IHttpClientFactory clientFactory, IOptions<B3ApiOptions> options, ILogger<B3Client> logger)
         {
             this.clientFactory = clientFactory;
-            this.@params = @params.Value;
+            this.options = options;
 
             b3Client = this.clientFactory.CreateClient("B3");
             microsoftClient = this.clientFactory.CreateClient("Microsoft");
@@ -142,10 +142,10 @@ namespace Core.Clients.B3
                 {
                     Content = new FormUrlEncodedContent(new KeyValuePair<string?, string?>[]
                     {
-                        new("client_id", @params.ClientId),
-                        new("client_secret", @params.ClientSecret),
-                        new("scope", @params.Scope),
-                        new("grant_type", @params.GrantType)
+                        new("client_id", options.Value.ClientId),
+                        new("client_secret", options.Value.ClientSecret),
+                        new("scope", options.Value.Scope),
+                        new("grant_type", options.Value.GrantType)
                     })
                 };
 
