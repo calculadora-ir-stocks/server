@@ -244,6 +244,12 @@ namespace Api
             {
                 options.Value = configuration["Keys:PgCrypto"];
             });
+            services.Configure<B3ApiOptions>(options =>
+            {
+                options.ClientId = configuration[$"Secrets:B3:ClientId"];
+                options.ClientSecret = configuration[$"Secrets:B3:ClientSecret"];
+                options.Scope = configuration[$"Secrets:B3:Scope"];
+            });
         }
 
         public static void AddDatabaseContext(this IServiceCollection services, string connectionString)
