@@ -234,29 +234,15 @@ namespace Api
             });
         }
 
-        public static void AddSecretsOptions(this IServiceCollection services, IConfiguration configuration, bool isProduction)
+        public static void AddSecretOptions(this IServiceCollection services, IConfiguration configuration)
         {
-            string character = string.Empty;
-
-            // KeyVaullt não aceita ':' no nome. Urgh
-            if (isProduction)
-                character = "--";
-            else
-                character = ":";
-
             services.Configure<DatabaseOptions>(options =>
             {
-                options.ConnectionString = configuration[$"ConnectionsString{character}Database"];
+                options.ConnectionString = configuration["ConnectionsString:Database"];
             });
             services.Configure<DatabaseEncryptionKeyOptions>(options =>
             {
-                options.Value = configuration[$"Keys{character}PgCrypto"];
-            });
-            services.Configure<B3ApiOptions>(options =>
-            {
-                options.ClientId = configuration[$"Secrets{character}B3{character}ClientId"];
-                options.ClientSecret = configuration[$"Secrets{character}B3{character}ClientSecret"];
-                options.Scope = configuration[$"Secrets{character}B3{character}Scope"];
+                options.Value = configuration["Keys:PgCrypto"];
             });
         }
 

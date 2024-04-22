@@ -15,10 +15,10 @@ namespace Infrastructure.Repositories.AverageTradedPrice
         private readonly StocksContext context;
         private readonly IOptions<DatabaseEncryptionKeyOptions> key;
 
-        public AverageTradedPriceRepository(StocksContext context, IOptions<DatabaseEncryptionKeyOptions> key)
+        public AverageTradedPriceRepository(StocksContext context, IOptions<DatabaseEncryptionKeyOptions> encryptionKey)
         {
             this.context = context;
-            this.key = key;
+            this.key = encryptionKey;
         }
 
         #region INSERT

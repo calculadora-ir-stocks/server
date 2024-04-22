@@ -19,14 +19,10 @@ if (builder.Environment.IsProduction())
     builder.Configuration.AddAzureKeyVault(new("https://server-keys-and-secrets.vault.azure.net/"), new DefaultAzureCredential());
 }
 
-string databaseConnectionString = builder.Environment.IsProduction() 
-    ? builder.Configuration["ConnectionsString--Database"] 
-    : builder.Configuration["ConnectionsString:Database"];
-
-builder.Services.AddSecretsOptions(builder.Configuration, isProduction: builder.Environment.IsProduction());
-builder.Services.AddDatabaseContext(databaseConnectionString);
-builder.Services.AddAudiTrail(databaseConnectionString);
-builder.Services.ConfigureHangfireDatabase(databaseConnectionString);
+builder.Services.AddSecretOptions(builder.Configuration);
+builder.Services.AddDatabaseContext(builder.Configuration["ConnectionsString:Database"]);
+builder.Services.AddAudiTrail(builder.Configuration["ConnectionsString:Database"]);
+builder.Services.ConfigureHangfireDatabase(builder.Configuration["ConnectionsString:Database"]);
 
 builder.Services.AddStripeServices();
 builder.Services.AddServices(builder);
