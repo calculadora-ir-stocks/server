@@ -9,6 +9,7 @@ using Common;
 using Common.Configurations;
 using Common.Models.Handlers;
 using Common.Models.Secrets;
+using Common.Options;
 using Core.Calculators;
 using Core.Calculators.Assets;
 using Core.Clients.B3;
@@ -231,6 +232,18 @@ namespace Api
 
                 var xml = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
                 options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xml));
+            });
+        }
+
+        public static void AddOptions(this IServiceCollection services, IConfiguration configuration)
+        {
+            services.Configure<DatabaseOptions>(options =>
+            {
+                options.ConnectionString = configuration["DatabaseConnectionString"];
+            });
+            services.Configure<DatabaseEncryptionKeyOptions>(options =>
+            {
+                options.Key = configuration["PgCryptoKey"];
             });
         }
 

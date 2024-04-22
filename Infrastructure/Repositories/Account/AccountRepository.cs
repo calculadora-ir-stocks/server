@@ -2,9 +2,11 @@
 using Common;
 using Common.Configurations;
 using Common.Constants;
+using Common.Options;
 using Dapper;
 using Infrastructure.UnitOfWork;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using System.Data.Common;
 
 namespace Infrastructure.Repositories.Account
@@ -13,12 +15,14 @@ namespace Infrastructure.Repositories.Account
     {
         private readonly StocksContext context;
         private readonly AzureKeyVaultConfiguration keyVault;
+        private readonly IOptions<DatabaseEncryptionKeyOptions> encryptionKey;
         private readonly IUnitOfWork unitOfWork;
 
-        public AccountRepository(StocksContext context, AzureKeyVaultConfiguration keyVault, IUnitOfWork unitOfWork)
+        public AccountRepository(StocksContext context, AzureKeyVaultConfiguration keyVault, IOptions<DatabaseEncryptionKeyOptions> encryptionKey, IUnitOfWork unitOfWork)
         {
             this.context = context;
             this.keyVault = keyVault;
+            this.encryptionKey = encryptionKey;
             this.unitOfWork = unitOfWork;
         }
 
@@ -27,9 +31,9 @@ namespace Infrastructure.Repositories.Account
             DynamicParameters parameters = new();
             DbTransaction transaction = await unitOfWork.BeginTransactionAsync();
 
-            var key = await keyVault.SecretClient.GetSecretAsync("pgcrypto-key");
+            var key = encryptionKey.Value.Key;
 
-            parameters.Add("@Key", key.Value.Value);
+            parameters.Add("@Key", key);
             parameters.Add("@AccountId", account.Id);
             parameters.Add("@Auth0Id", account.Auth0Id);
             parameters.Add("@CPF", account.CPF);

@@ -19,6 +19,7 @@ if (builder.Environment.IsProduction())
     builder.Configuration.AddAzureKeyVault(new("https://server-keys-and-secrets.vault.azure.net/"), new DefaultAzureCredential());
 }
 
+builder.Services.AddOptions(builder.Configuration);
 builder.Services.AddDatabaseContext(builder.Configuration["DatabaseConnectionString"]);
 builder.Services.AddAudiTrail(builder.Configuration["DatabaseConnectionString"]);
 builder.Services.ConfigureHangfireDatabase(builder.Configuration["DatabaseConnectionString"]);
