@@ -6,7 +6,7 @@
     public class DatabaseEncryptionKeyOptions
     {
 #pragma warning disable CS8618 // Configured as an Option at DI.
-        public string Key { get; set; }
+        public string Value { get; set; }
 #pragma warning restore CS8618 
     }
 }

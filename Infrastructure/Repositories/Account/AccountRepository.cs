@@ -1,6 +1,5 @@
 ﻿using Api.Database;
 using Common;
-using Common.Configurations;
 using Common.Constants;
 using Common.Options;
 using Dapper;
@@ -14,15 +13,13 @@ namespace Infrastructure.Repositories.Account
     public class AccountRepository : IAccountRepository
     {
         private readonly StocksContext context;
-        private readonly AzureKeyVaultConfiguration keyVault;
-        private readonly IOptions<DatabaseEncryptionKeyOptions> encryptionKey;
+        private readonly IOptions<DatabaseEncryptionKeyOptions> key;
         private readonly IUnitOfWork unitOfWork;
 
-        public AccountRepository(StocksContext context, AzureKeyVaultConfiguration keyVault, IOptions<DatabaseEncryptionKeyOptions> encryptionKey, IUnitOfWork unitOfWork)
+        public AccountRepository(StocksContext context, IOptions<DatabaseEncryptionKeyOptions> key, IUnitOfWork unitOfWork)
         {
             this.context = context;
-            this.keyVault = keyVault;
-            this.encryptionKey = encryptionKey;
+            this.key = key;
             this.unitOfWork = unitOfWork;
         }
 
@@ -31,7 +28,7 @@ namespace Infrastructure.Repositories.Account
             DynamicParameters parameters = new();
             DbTransaction transaction = await unitOfWork.BeginTransactionAsync();
 
-            var key = encryptionKey.Value.Key;
+            string key = this.key.Value.Value;
 
             parameters.Add("@Key", key);
             parameters.Add("@AccountId", account.Id);
@@ -66,9 +63,9 @@ namespace Infrastructure.Repositories.Account
         {
             DynamicParameters parameters = new();
 
-            var key = await keyVault.SecretClient.GetSecretAsync("pgcrypto-key");
+            string key = this.key.Value.Value;
 
-            parameters.Add("@Key", key.Value.Value);
+            parameters.Add("@Key", key);
             parameters.Add("@CPF", cpf);
 
             string sql = @"

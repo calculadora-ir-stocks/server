@@ -58,7 +58,6 @@ namespace Api
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 
             services.AddSingleton<JsonSerializerConfiguration>();
-            services.AddSingleton<AzureKeyVaultConfiguration>();
 
             services.AddTransient<IUnitOfWork, UnitOfWork>();
 
@@ -243,7 +242,7 @@ namespace Api
             });
             services.Configure<DatabaseEncryptionKeyOptions>(options =>
             {
-                options.Key = configuration["PgCryptoKey"];
+                options.Value = configuration["PgCryptoKey"];
             });
         }
 

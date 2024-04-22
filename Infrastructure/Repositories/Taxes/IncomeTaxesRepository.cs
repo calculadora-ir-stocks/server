@@ -9,6 +9,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
 using Common.Configurations;
+using Microsoft.Extensions.Options;
+using Common.Options;
 
 namespace Infrastructure.Repositories.Taxes
 {
@@ -16,22 +18,22 @@ namespace Infrastructure.Repositories.Taxes
     {
         private readonly StocksContext context;
         private readonly IUnitOfWork unitOfWork;
-        private readonly AzureKeyVaultConfiguration keyVault;
+        private readonly IOptions<DatabaseEncryptionKeyOptions> key;
 
-        public IncomeTaxesRepository(StocksContext context, IUnitOfWork unitOfWork, AzureKeyVaultConfiguration keyVault)
+        public IncomeTaxesRepository(StocksContext context, IUnitOfWork unitOfWork, IOptions<DatabaseEncryptionKeyOptions> key)
         {
             this.context = context;
             this.unitOfWork = unitOfWork;
-            this.keyVault = keyVault;
+            this.key = key;
         }
 
         public async Task AddAsync(IncomeTaxes incomeTaxes)
         {
             DynamicParameters parameters = new();
 
-            var key = await keyVault.SecretClient.GetSecretAsync("pgcrypto-key");
+            string key = this.key.Value.Value;
 
-            parameters.Add("@Key", key.Value.Value);
+            parameters.Add("@Key", key);
             parameters.Add("@AssetId", incomeTaxes.AssetId);
             parameters.Add("@Month", incomeTaxes.Month);
             parameters.Add("@Taxes", incomeTaxes.Taxes);
@@ -86,9 +88,9 @@ namespace Infrastructure.Repositories.Taxes
         {
             DynamicParameters parameters = new();
 
-            var key = await keyVault.SecretClient.GetSecretAsync("pgcrypto-key");
+            string key = this.key.Value.Value;
 
-            parameters.Add("@Key", key.Value.Value);
+            parameters.Add("@Key", key);
             parameters.Add("@Month", month);
             parameters.Add("@AccountId", accountId);
 
@@ -117,9 +119,9 @@ namespace Infrastructure.Repositories.Taxes
         {
             DynamicParameters parameters = new();
 
-            var key = await keyVault.SecretClient.GetSecretAsync("pgcrypto-key");
+            string key = this.key.Value.Value;
 
-            parameters.Add("@Key", key.Value.Value);
+            parameters.Add("@Key", key);
             parameters.Add("@Year", year);
             parameters.Add("@AccountId", accountId);
 
@@ -148,9 +150,9 @@ namespace Infrastructure.Repositories.Taxes
         {
             DynamicParameters parameters = new();
 
-            var key = await keyVault.SecretClient.GetSecretAsync("pgcrypto-key");
+            string key = this.key.Value.Value;
 
-            parameters.Add("@Key", key.Value.Value);
+            parameters.Add("@Key", key);
             parameters.Add("@Date", date);
             parameters.Add("@AccountId", accountId);
 
