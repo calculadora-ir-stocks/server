@@ -1,7 +1,7 @@
 ﻿using Core.Models;
 using Core.Models.B3;
 
-namespace Core.Services.IncomeTaxes
+namespace Core.Services.B3ResponseCalculator
 {
     public interface IB3ResponseCalculatorService
     {

@@ -1,4 +1,6 @@
-﻿using Infrastructure.Repositories.Account;
+﻿using Common;
+using Common.Constants;
+using Infrastructure.Repositories.Account;
 using Microsoft.Extensions.Logging;
 
 namespace Core.Services.Account
@@ -22,10 +24,12 @@ namespace Core.Services.Account
                     throw new NullReferenceException($"O usuário de id {accountId} não foi encontrado na base de dados.");
 
                 repository.Delete(account);
+
+                logger.LogInformation("O usuário de id {accountId} deletou a sua conta da plataforma.", accountId);
             }
             catch (Exception e)
             {
-                logger.LogError(e, "Ocorreu um erro ao alterar a senha do usuário, {error}", e.Message);
+                logger.LogError(e, "Ocorreu um erro ao deletar a conta do usuário de id {id}.", accountId);
                 throw;
             }
         }

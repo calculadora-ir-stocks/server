@@ -8,19 +8,20 @@ using Infrastructure.Repositories.Taxes;
 using Infrastructure.Repositories;
 using Common.Exceptions;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.AspNetCore.Server.IIS.Core;
 
 namespace Core.Services.DarfGenerator
 {
     public class DarfGeneratorService : IDarfGeneratorService
     {
         private readonly IGenericRepository<Infrastructure.Models.Account> genericRepositoryAccount;
-        private readonly ITaxesRepository taxesRepository;
+        private readonly IIncomeTaxesRepository taxesRepository;
         private readonly IInfoSimplesClient infoSimplesClient;
         private const string DarfCode = "6015-01";
 
         public DarfGeneratorService(
             IGenericRepository<Infrastructure.Models.Account> genericRepositoryAccount,
-            ITaxesRepository taxesRepository,
+            IIncomeTaxesRepository taxesRepository,
             IInfoSimplesClient infoSimplesClient
         )
         {
@@ -32,6 +33,7 @@ namespace Core.Services.DarfGenerator
         public async Task<DARFResponse> Generate(Guid accountId, string month, double value = 0)
         {
             var account = await genericRepositoryAccount.GetByIdAsync(accountId);
+            if (account is null) throw new NotFoundException("Investidor", accountId.ToString());
 
             if (account.Status == EnumHelper.GetEnumDescription(AccountStatus.SubscriptionExpired))
                 throw new ForbiddenException("O plano do usuário está expirado.");

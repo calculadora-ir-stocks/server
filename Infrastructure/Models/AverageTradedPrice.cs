@@ -13,9 +13,9 @@ namespace Infrastructure.Models
         public AverageTradedPrice(string ticker, double averagePrice, double totalBought, int quantity, Account account, DateTime updatedAt)
         {
             Ticker = ticker;
-            AveragePrice = averagePrice;
-            TotalBought = totalBought;
-            Quantity = quantity;
+            AveragePrice = averagePrice.ToString().Replace(',', '.');
+            TotalBought = totalBought.ToString().Replace(',', '.');
+            Quantity = quantity.ToString().Replace(',', '.');
             Account = account;
             UpdatedAt = updatedAt;
         }
@@ -28,9 +28,9 @@ namespace Infrastructure.Models
         [DatabaseGenerated(DatabaseGeneratedOption.None)]
         public Guid Id { get; protected set; } = Guid.NewGuid();
         public string Ticker { get; set; }
-        public double AveragePrice { get; set; }
-        public double TotalBought { get; set; }
-        public int Quantity { get; set; }
+        public string AveragePrice { get; set; }
+        public string TotalBought { get; set; }
+        public string Quantity { get; set; }
         public Account Account { get; set; }
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
     }

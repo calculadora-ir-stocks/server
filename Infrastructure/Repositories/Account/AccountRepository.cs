@@ -1,6 +1,8 @@
 ﻿using Api.Database;
+using Common;
+using Common.Configurations;
+using Common.Constants;
 using Dapper;
-using Infrastructure.Models;
 using Infrastructure.UnitOfWork;
 using Microsoft.EntityFrameworkCore;
 using System.Data.Common;
@@ -10,11 +12,13 @@ namespace Infrastructure.Repositories.Account
     public class AccountRepository : IAccountRepository
     {
         private readonly StocksContext context;
+        private readonly AzureKeyVaultConfiguration keyVault;
         private readonly IUnitOfWork unitOfWork;
 
-        public AccountRepository(StocksContext context, IUnitOfWork unitOfWork)
+        public AccountRepository(StocksContext context, AzureKeyVaultConfiguration keyVault, IUnitOfWork unitOfWork)
         {
             this.context = context;
+            this.keyVault = keyVault;
             this.unitOfWork = unitOfWork;
         }
 
@@ -23,9 +27,9 @@ namespace Infrastructure.Repositories.Account
             DynamicParameters parameters = new();
             DbTransaction transaction = await unitOfWork.BeginTransactionAsync();
 
-            const string key = "GET THIS SHIT FROM A HSM";
-            parameters.Add("@Key", key);
+            var key = await keyVault.SecretClient.GetSecretAsync("pgcrypto-key");
 
+            parameters.Add("@Key", key.Value.Value);
             parameters.Add("@AccountId", account.Id);
             parameters.Add("@Auth0Id", account.Auth0Id);
             parameters.Add("@CPF", account.CPF);
@@ -50,31 +54,41 @@ namespace Infrastructure.Repositories.Account
             await transaction.Connection.QueryAsync(createAccount, parameters);
             await transaction.Connection.QueryAsync(createPlan, parameters);
             await transaction.CommitAsync();
+
+            Auditor.Audit($"{nameof(Account)}:{AuditOperation.Add}", comment: "O CPF do usuário foi criptografado na base de dados.");
         }
 
-        public async Task<bool> CPFExists(string cpf)
+        public async Task<bool> CPFExists(string cpf, Guid accountId)
         {
             DynamicParameters parameters = new();
 
-            const string key = "GET THIS SHIT FROM A HSM";
-            parameters.Add("@Key", key);
+            var key = await keyVault.SecretClient.GetSecretAsync("pgcrypto-key");
+
+            parameters.Add("@Key", key.Value.Value);
             parameters.Add("@CPF", cpf);
 
             string sql = @"
                 SELECT 
-                    PGP_SYM_DECRYPT(a.""CPF""::bytea, @Key) FROM ""Accounts"" a
+                    a.""CPF"" FROM ""Accounts"" a
                 WHERE
                     PGP_SYM_DECRYPT(a.""CPF""::bytea, @Key) = @CPF
             ";
 
-            var result = await context.Database.GetDbConnection().QueryAsync<string>(sql, parameters);
-            return result.Any();
+            string encryptedCPF = await context.Database.GetDbConnection().QuerySingleOrDefaultAsync<string>(sql, parameters);
+
+            Auditor.Audit($"{nameof(Account)}:{AuditOperation.Get}", null,
+                comment: $"O CPF criptografado do usuário foi descriptografado a nível de banco e processado pela aplicação para verificar se o CPF já está " +
+                "cadastrado na plataforma.", fields: new { CPF = encryptedCPF, AccountId = accountId }
+            );
+
+            return encryptedCPF is not null;
         }
 
         public void Delete(Models.Account account)
         {
             context.Accounts.Remove(account);
             context.SaveChanges();
+            Auditor.Audit($"{nameof(Models.Account)}:{AuditOperation.Delete}", fields: new { AccountId = account.Id });
         }
 
         public IEnumerable<Models.Account> GetAll()

@@ -2,10 +2,11 @@
 using Api.Database;
 using Api.Handler;
 using Api.Services.Auth;
+using Audit.Core;
+using Audit.PostgreSql.Configuration;
 using Billing.Services.Stripe;
 using Common;
 using Common.Configurations;
-using Common.Models;
 using Common.Models.Handlers;
 using Common.Models.Secrets;
 using Core.Calculators;
@@ -16,10 +17,10 @@ using Core.Filters;
 using Core.Hangfire.PlanExpirer;
 using Core.Notification;
 using Core.Services.Account;
+using Core.Services.B3ResponseCalculator;
 using Core.Services.B3Syncing;
 using Core.Services.DarfGenerator;
 using Core.Services.Hangfire.AverageTradedPriceUpdater;
-using Core.Services.IncomeTaxes;
 using Core.Services.Plan;
 using Core.Services.Taxes;
 using Hangfire;
@@ -35,6 +36,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Npgsql.Replication;
 using Polly;
 using Stripe;
 using System.Reflection;
@@ -53,7 +55,9 @@ namespace Api
             builder.Services.AddScoped<IAuthorizationHandler, CanAccessResourceHandler>();
 
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+
             services.AddSingleton<JsonSerializerConfiguration>();
+            services.AddSingleton<AzureKeyVaultConfiguration>();
 
             services.AddTransient<IUnitOfWork, UnitOfWork>();
 
@@ -80,6 +84,9 @@ namespace Api
             services.AddTransient<IIncomeTaxesCalculator, GoldIncomeTaxes>();
             services.AddTransient<IIncomeTaxesCalculator, InvestmentsFundsIncomeTaxes>();
             services.AddTransient<IIncomeTaxesCalculator, StocksIncomeTaxes>();
+
+            services.AddScoped<IAverageTradedPriceUpdaterHangfire, AverageTradedPriceUpdaterHangfire>();
+            services.AddScoped<IPlanExpirerHangfire, PlanExpirerHangfire>();
 
             services.AddMvc(options => options.Filters.Add<NotificationFilter>());
         }
@@ -122,33 +129,24 @@ namespace Api
             });
         }
 
-        public static void AddHangfireServices(this IServiceCollection services)
+        public static void ConfigureHangfireDatabase(this IServiceCollection services)
         {
-            services.AddHangfireServer();
+            DatabaseSecret secret = new();
 
-            services.AddScoped<IAverageTradedPriceUpdaterHangfire, AverageTradedPriceUpdaterHangfire>();
-            services.AddScoped<IPlanExpirerHangfire, PlanExpirerHangfire>();
+            services.AddHangfire(config =>
+                config.UsePostgreSqlStorage(c =>
+                    c.UseNpgsqlConnection(secret.GetConnectionString())));
         }
 
-        public static void ConfigureHangfireServices(this IServiceCollection services, WebApplicationBuilder builder)
+        public static void ConfigureHangfireServices(this WebApplication _)
         {
-            services.AddHangfire(x =>
-                x.UsePostgreSqlStorage(builder.Configuration.GetConnectionString("DefaultConnection"))
-                .SetDataCompatibilityLevel(CompatibilityLevel.Version_170)
-                .UseSimpleAssemblyNameTypeSerializer()
-                .UseRecommendedSerializerSettings()
-            );
-
-            // GlobalConfiguration.Configuration.UsePostgreSqlStorage(builder.Configuration.GetConnectionString("DefaultConnection"));
-
-            RecurringJob.RemoveIfExists(nameof(AverageTradedPriceUpdaterHangfire));
-            RecurringJob.RemoveIfExists(nameof(PlanExpirerHangfire));
+            DatabaseSecret secret = new();
 
             RecurringJob.AddOrUpdate<IAverageTradedPriceUpdaterHangfire>(
-                nameof(AverageTradedPriceUpdaterHangfire),
-                x => x.Execute(),
-                Cron.Monthly
-            );
+                    nameof(AverageTradedPriceUpdaterHangfire),
+                    x => x.Execute(),
+                    Cron.Monthly
+                );
 
             RecurringJob.AddOrUpdate<IPlanExpirerHangfire>(
                 nameof(PlanExpirerHangfire),
@@ -163,7 +161,6 @@ namespace Api
             // TODO: uncomment for production
             // AddCertificate(handler);
 
-            // TODO get from appsettings
             services.AddHttpClient("B3", c =>
                 c.BaseAddress = new Uri("https://apib3i-cert.b3.com.br:2443/api/")).ConfigurePrimaryHttpMessageHandler(() => handler)
                 .AddTransientHttpErrorPolicy(policy => policy.WaitAndRetryAsync(5, _ => TimeSpan.FromSeconds(10)))
@@ -200,7 +197,7 @@ namespace Api
             services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
             services.AddScoped<IAccountRepository, AccountRepository>();
             services.AddScoped<IAverageTradedPriceRepostory, AverageTradedPriceRepository>();
-            services.AddScoped<ITaxesRepository, TaxesRepository>();
+            services.AddScoped<IIncomeTaxesRepository, IncomeTaxesRepository>();
             services.AddScoped<IPlanRepository, PlanRepository>();
         }
 
@@ -241,7 +238,7 @@ namespace Api
             });
         }
 
-        public static void AddDatabase(this IServiceCollection services, WebApplicationBuilder builder)
+        public static void AddDatabase(this IServiceCollection services)
         {
             DatabaseSecret secret = new();
 
@@ -251,6 +248,19 @@ namespace Api
                 options.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
             });
             AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+        }
+
+        public static void AddAudiTrail(this IServiceCollection _)
+        {
+            DatabaseSecret secret = new();
+
+            Configuration.Setup().UsePostgreSql(config => config
+                .ConnectionString(secret.GetConnectionString())
+                .TableName("Audits")
+                .IdColumnName("Id")
+                .DataColumn("Data", DataType.JSONB)
+                .LastUpdatedColumnName("UpdatedAt")
+                .CustomColumn("EventType", ev => ev.EventType));
         }
 
         public static void InitializeEnvironmentVariables(this IServiceCollection _, string[] envFilesOnRoot)

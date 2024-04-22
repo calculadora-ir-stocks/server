@@ -4,18 +4,13 @@ using Common.Exceptions;
 using Common.Helpers;
 using Core.Models;
 using Core.Requests.BigBang;
-using Core.Services.IncomeTaxes;
+using Core.Services.B3ResponseCalculator;
 using Infrastructure.Models;
 using Infrastructure.Repositories.Account;
 using Infrastructure.Repositories.AverageTradedPrice;
 using Infrastructure.Repositories.Taxes;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Core.Services.B3Syncing
 {
@@ -23,7 +18,7 @@ namespace Core.Services.B3Syncing
     {
         private readonly IAccountRepository accountRepository;
         private readonly IAverageTradedPriceRepostory averageTradedPriceRepository;
-        private readonly ITaxesRepository taxesRepository;
+        private readonly IIncomeTaxesRepository taxesRepository;
 
         private readonly IB3ResponseCalculatorService b3CalculatorService;
         private readonly IB3Client b3Client;
@@ -33,7 +28,7 @@ namespace Core.Services.B3Syncing
         public B3SyncingService(
             IAccountRepository accountRepository,
             IAverageTradedPriceRepostory averageTradedPriceRepository,
-            ITaxesRepository taxesRepository,
+            IIncomeTaxesRepository taxesRepository,
             IB3ResponseCalculatorService b3CalculatorService,
             IB3Client b3Client,
             ILogger<B3SyncingService> logger
@@ -56,7 +51,6 @@ namespace Core.Services.B3Syncing
             {
                 logger.LogInformation("O usuário {accountId} tentou executar a sincronização mas " +
                     "já sincronizou sua conta anteriormente.", account.Id);
-
                 throw new BadRequestException($"O usuário {account.Id} tentou executar a sincronização mas " +
                     "já sincronizou sua conta anteriormente.");
             }
@@ -108,15 +102,22 @@ namespace Core.Services.B3Syncing
 
         private async Task SaveB3Data(InvestorMovementDetails response, Infrastructure.Models.Account account)
         {
-            List<Infrastructure.Models.IncomeTaxes> incomeTaxes = new();
+            List<IncomeTaxes> incomeTaxes = new();
             CreateIncomeTaxes(response.Assets, incomeTaxes, account);
 
             List<AverageTradedPrice> averageTradedPrices = new();
             CreateAverageTradedPrices(response.AverageTradedPrices, averageTradedPrices, account);
 
-            // TODO unit of work
-            await taxesRepository.AddAllAsync(incomeTaxes);
-            await averageTradedPriceRepository.AddAllAsync(averageTradedPrices);
+            // TODO unit of work and bulk insert. i swear to god i only did this because we're in a mvp
+            foreach (var i in incomeTaxes)
+            {
+                await taxesRepository.AddAsync(i);
+            }
+
+            foreach (var a in averageTradedPrices)
+            {
+                await averageTradedPriceRepository.AddAsync(a);
+            }
         }
 
         private static void CreateAverageTradedPrices(List<AverageTradedPriceDetails> response, List<AverageTradedPrice> averageTradedPrices, Infrastructure.Models.Account account)
@@ -142,18 +143,16 @@ namespace Core.Services.B3Syncing
                 if (MonthHadProfitOrLoss(asset))
                 {
                     incomeTaxes.Add(new Infrastructure.Models.IncomeTaxes
-                    {
-                        Month = asset.Month,
-                        Taxes = asset.Taxes,
-                        TotalSold = asset.TotalSold,
-                        SwingTradeProfit = asset.SwingTradeProfit,
-                        DayTradeProfit = asset.DayTradeProfit,
-                        TradedAssets = JsonConvert.SerializeObject(asset.TradedAssets),
-                        Account = account,
-                        AssetId = (int)asset.AssetTypeId,
-                        CompesatedSwingTradeLoss = asset.SwingTradeProfit < 0 ? false : null,
-                        CompesatedDayTradeLoss = asset.DayTradeProfit < 0 ? false : null
-                    });
+                    (
+                        asset.Month,
+                        asset.Taxes,
+                        asset.TotalSold,
+                        asset.SwingTradeProfit,
+                        asset.DayTradeProfit,
+                        JsonConvert.SerializeObject(asset.TradedAssets),
+                        account,
+                        (int)asset.AssetTypeId
+                    ));
                 }
             }
         }
@@ -169,6 +168,38 @@ namespace Core.Services.B3Syncing
         /// </summary>
         private static void AddBigBangDataSet(Models.B3.Movement.Root response)
         {
+            /**
+                AverageTradedPrices
+
+                BOVA11	
+                Total bought: 16,32
+                Quantity: 1
+                AVG: 16,32
+
+                IVVB11
+                Total bought: 187,76
+                Quantity: 2
+                AVG: 93,88
+
+                AMER3
+                Total bought: 292,65
+                Quantity: 2
+                AVG: 146,325
+
+                IncomeTaxes
+
+                01/2023
+
+                Taxes: 21,9825
+                Swing-trade profit: 144,55
+                Day-trade profit: 0
+
+                02/2023
+                Taxes: 11,74734
+                Swing-trade profit: 0
+                Day-trade profit: 58,7367            
+            */
+
             response.Data.EquitiesPeriods.EquitiesMovements.Add(new Models.B3.Movement.EquitMovement
             {
                 AssetType = "ETF - Exchange Traded Fund",
@@ -224,8 +255,8 @@ namespace Core.Services.B3Syncing
                 CorporationName = "IVVB 11 Corporation Inc.",
                 MovementType = "Compra",
                 OperationValue = 246.65,
-                UnitPrice = 246.65,
-                EquitiesQuantity = 1,
+                UnitPrice = 123.325,
+                EquitiesQuantity = 2,
                 ReferenceDate = new DateTime(2023, 01, 09)
             });
 

@@ -13,6 +13,7 @@ namespace Api.Database
         public DbSet<IncomeTaxes> IncomeTaxes { get; set; } = null!;
         public DbSet<Order> Orders { get; set; } = null!;
         public DbSet<Plan> Plans { get; set; } = null!;
+        public DbSet<Infrastructure.Models.Audit> Audits { get; set; } = null!;
 
         public ILogger<StocksContext> logger;
 

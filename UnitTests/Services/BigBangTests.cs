@@ -1,7 +1,7 @@
 ﻿using Common.Exceptions;
 using Core.Calculators;
 using Core.Models.B3;
-using Core.Services.IncomeTaxes;
+using Core.Services.B3ResponseCalculator;
 using Infrastructure.Dtos;
 using Infrastructure.Repositories.AverageTradedPrice;
 using Moq;
@@ -45,7 +45,7 @@ namespace stocks_unit_tests.Services
         [MemberData(nameof(BigBangData))]
         public async Task ShouldCalculateTaxesFromRetroactiveMonthsWhenSyncing(Root movement)
         {
-            repository.Setup(x => x.GetAverageTradedPricesDto(It.IsAny<Guid>(), null)).ReturnsAsync(Array.Empty<AverageTradedPriceDto>());
+            repository.Setup(x => x.GetAverageTradedPrices(It.IsAny<Guid>(), null)).ReturnsAsync(Array.Empty<AverageTradedPriceDto>());
 
             var result = await bigBang.Calculate(movement, It.IsAny<Guid>());
 
@@ -60,9 +60,9 @@ namespace stocks_unit_tests.Services
         [MemberData(nameof(AverageTradedPriceData))]
         public async Task ShouldCalculateAverageTradedPricesWhenSyncing(Root movement)
         {
-            repository.Setup(x => x.GetAverageTradedPricesDto(It.IsAny<Guid>(), It.IsAny<List<string>>())).ReturnsAsync(new List<AverageTradedPriceDto>
+            repository.Setup(x => x.GetAverageTradedPrices(It.IsAny<Guid>(), It.IsAny<List<string>>())).ReturnsAsync(new List<AverageTradedPriceDto>
             {
-                new("TETA4", 27, 54, 2)
+                new("TETA4", 27, 54, 2, It.IsAny<Guid>())
             });
 
             var result = await bigBang.Calculate(movement, It.IsAny<Guid>());

@@ -7,7 +7,7 @@ using Core.Models.B3;
 using Infrastructure.Repositories.AverageTradedPrice;
 using Microsoft.IdentityModel.Tokens;
 
-namespace Core.Services.IncomeTaxes
+namespace Core.Services.B3ResponseCalculator
 {
     public class B3ResponseCalculatorService : IB3ResponseCalculatorService
     {
@@ -22,7 +22,7 @@ namespace Core.Services.IncomeTaxes
 
         public async Task<InvestorMovementDetails?> Calculate(Movement.Root? request, Guid accountId)
         {
-            var movements = GetOnlyNecessaryMovementsFromResponse(request);
+            var movements = GetMovementsFromResponse(request);
 
             if (movements.IsNullOrEmpty()) 
                 throw new NotFoundException("O usuário não possui nenhuma movimentação até então.");
@@ -42,20 +42,18 @@ namespace Core.Services.IncomeTaxes
             return await CalculateTaxesAndAverageTradedPrices(monthlyMovements, accountId);
         }
 
-        private static List<Movement.EquitMovement> GetOnlyNecessaryMovementsFromResponse(Movement.Root? response)
+        private static List<Movement.EquitMovement> GetMovementsFromResponse(Movement.Root? response)
         {
             if (response is null || response.Data is null) return Array.Empty<Movement.EquitMovement>().ToList();
 
             var movements = response.Data.EquitiesPeriods.EquitiesMovements;
 
-            return movements
-                .Where(x =>
+            return movements.Where(x =>
                     x.MovementType.Equals(B3ResponseConstants.Buy) ||
                     x.MovementType.Equals(B3ResponseConstants.Sell) ||
                     x.MovementType.Equals(B3ResponseConstants.Split) ||
                     x.MovementType.Equals(B3ResponseConstants.ReverseSplit) ||
-                    x.MovementType.Equals(B3ResponseConstants.BonusShare))
-                .ToList();
+                    x.MovementType.Equals(B3ResponseConstants.BonusShare)).ToList();
         }
 
         /// <summary>
@@ -138,10 +136,9 @@ namespace Core.Services.IncomeTaxes
         /// Caso um investidor já possua o preço médio de um ticker salvo, é necessário usá-lo para calcular o novo preço médio desse ticker.
         /// </summary>
         /// <param name="movements">As movimentações daquele tipo de ativo.</param>
-        /// <returns></returns>
         private async Task<IEnumerable<AverageTradedPriceDetails>> GetAverageTradedPricesIfAny(Guid accountId, List<AverageTradedPriceDetails> averagePrices)
         {
-            var response = await averageTradedPriceRepository.GetAverageTradedPricesDto(accountId, averagePrices.Select(x => x.TickerSymbol).ToList());
+            var response = await averageTradedPriceRepository.GetAverageTradedPrices(accountId, averagePrices.Select(x => x.TickerSymbol).ToList());
 
             // ticker já foi adicionado na lista de preço médio
             if (response.Any(x => averagePrices.Any(y => y.TickerSymbol == x.Ticker))) return Array.Empty<AverageTradedPriceDetails>();

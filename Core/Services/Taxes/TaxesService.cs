@@ -6,7 +6,7 @@ using Common.Helpers;
 using Core.Models;
 using Core.Models.Api.Responses;
 using Core.Models.Responses;
-using Core.Services.IncomeTaxes;
+using Core.Services.B3ResponseCalculator;
 using Infrastructure.Dtos;
 using Infrastructure.Repositories;
 using Infrastructure.Repositories.Taxes;
@@ -20,7 +20,7 @@ public class TaxesService : ITaxesService
     private readonly IB3ResponseCalculatorService b3CalculatorService;
 
     private readonly IGenericRepository<Infrastructure.Models.Account> genericRepositoryAccount;
-    private readonly ITaxesRepository taxesRepository;
+    private readonly IIncomeTaxesRepository taxesRepository;
 
     private readonly IB3Client b3Client;
 
@@ -32,12 +32,14 @@ public class TaxesService : ITaxesService
      * 
      * É necessário alterar esse processo para armazenar um bool de plano expirado no token JWT,
      * usando a técnica de refresh token. É necessário discutir se o refresh token será armazenado no client ou no server.
+     * 
+     * Adicionar handler?
      * */
 
     public TaxesService(
         IB3ResponseCalculatorService b3CalculatorService,
         IGenericRepository<Infrastructure.Models.Account> genericRepositoryAccount,
-        ITaxesRepository taxesRepository,
+        IIncomeTaxesRepository taxesRepository,
         IB3Client b3Client,
         ILogger<TaxesService> logger
     )
@@ -55,16 +57,17 @@ public class TaxesService : ITaxesService
         try
         {
             // Caso seja dia 1, não há como obter os dados do mês atual já que a B3 disponibiliza os dados em D-1.
-            if (IsDayOne())
+            if (DateTime.Now.Day == 1)
             {
                 // Porém, sendo dia 1, o Worker já salvou os dados do mês passado na base.
-                return await Details(DateTime.Now.AddDays(-1).ToString("yyyy-MM"), accountId);
+                return await Details(DateTime.Now.AddDays(-1).ToString("MM/yyyy"), accountId);
             }
 
             string startDate = DateTime.Now.ToString("yyyy-MM-01");
             string yesterday = DateTime.Now.AddDays(-1).ToString("yyyy-MM-dd");
 
             Infrastructure.Models.Account account = await genericRepositoryAccount.GetByIdAsync(accountId);
+            if (account is null) throw new NotFoundException("Investidor", accountId.ToString());
 
             if (account.Status == EnumHelper.GetEnumDescription(AccountStatus.SubscriptionExpired))
                 throw new ForbiddenException("O plano do usuário está expirado.");
@@ -72,7 +75,7 @@ public class TaxesService : ITaxesService
             // var b3Response = await b3Client.GetAccountMovement(account.CPF, startDate, yesterday, account.Id);
             var b3Response = AddCurrentMonthSet();
 
-            var response = await b3CalculatorService.Calculate(b3Response, account.Id);            
+            var response = await b3CalculatorService.Calculate(b3Response, account.Id);
 
             if (response is null || response.Assets.IsNullOrEmpty())
                 throw new NotFoundException("Nenhuma movimentação foi feita no mês atual.");
@@ -86,16 +89,9 @@ public class TaxesService : ITaxesService
         }
     }
 
-    private static bool IsDayOne()
-    {
-        // D-1
-        DateTime yesterday = DateTime.Now.AddDays(-1);
-        return yesterday.Month < DateTime.Now.Month;
-    }
-
     private static TaxesDetailsResponse ToTaxesDetailsResponse(List<AssetIncomeTaxes> assets)
     {
-        // TODO O objeto de retorno é complexo o suficiente para não usar o AutoMapper?
+        // TODO O objeto de retorno é complexo o suficiente para usar o AutoMapper?
 
         TaxesDetailsResponse response = new(
             totalTaxes: assets.Select(x => x.Taxes).Sum(),
@@ -108,9 +104,9 @@ public class TaxesService : ITaxesService
         foreach (var day in days)
         {
             List<Details> details = new();
-            List<Movement> movements = new();            
+            List<Movement> movements = new();
 
-            var tradedAssetsOnThisDay = assets.SelectMany(x => x.TradedAssets.Where(x => x.Day == day));            
+            var tradedAssetsOnThisDay = assets.SelectMany(x => x.TradedAssets.Where(x => x.Day == day));
             string weekDay = string.Empty;
 
             foreach (var tradedAsset in tradedAssetsOnThisDay)
@@ -119,7 +115,7 @@ public class TaxesService : ITaxesService
                 {
                     string dayOfTheWeek = tradedAsset.Day.ToString();
                     weekDay = $"{tradedAsset.DayOfTheWeek}, dia {dayOfTheWeek}";
-                }   
+                }
 
                 details.Add(new Details(
                     tradedAsset.AssetTypeId,
@@ -249,18 +245,17 @@ public class TaxesService : ITaxesService
         {
             if (WorkerDidNotSaveDataForThisMonthYet(month))
             {
-                throw new BadRequestException("Para obter as informações de impostos do mês atual, acesse /assets/current.");
+                throw new BadRequestException("Para obter as informações de impostos do mês atual, acesse /taxes/home/{accountId}.");
             }
 
-            var account = genericRepositoryAccount.GetById(accountId);
+            var account = await genericRepositoryAccount.GetByIdAsync(accountId);
             if (account is null) throw new NotFoundException("Investidor", accountId.ToString());
 
             if (account.Status == EnumHelper.GetEnumDescription(AccountStatus.SubscriptionExpired))
                 throw new ForbiddenException("O plano do usuário está expirado.");
 
-            var response = await taxesRepository.GetSpecifiedMonthTaxes(System.Net.WebUtility.UrlDecode(month), accountId);
+            var response = await taxesRepository.GetSpecifiedMonthTaxes(System.Net.WebUtility.UrlDecode(month), account.Id);
             if (response.IsNullOrEmpty()) throw new NotFoundException("Nenhum imposto foi encontrado no mês especificado.");
-
             if (response.Select(x => x.Taxes).Sum() <= 0) throw new NotFoundException("Nenhum imposto foi encontrado no mês especificado.");
 
             return SpecifiedMonthTaxesDtoToTaxesDetailsResponse(response);
@@ -321,7 +316,7 @@ public class TaxesService : ITaxesService
 
     private static bool WorkerDidNotSaveDataForThisMonthYet(string month)
     {
-        string currentMonth = DateTime.Now.ToString("yyyy-MM");
+        string currentMonth = DateTime.Now.ToString("MM/yyyy");
         return month == currentMonth;
     }
     #endregion
@@ -331,13 +326,13 @@ public class TaxesService : ITaxesService
     {
         try
         {
-            var account = genericRepositoryAccount.GetById(accountId);
+            var account = await genericRepositoryAccount.GetByIdAsync(accountId);
             if (account is null) throw new NotFoundException("Investidor", accountId.ToString());
 
             if (account.Status == EnumHelper.GetEnumDescription(AccountStatus.SubscriptionExpired))
                 throw new ForbiddenException("O plano do usuário está expirado.");
 
-            var response = await taxesRepository.GetSpecifiedYearTaxes(System.Net.WebUtility.UrlDecode(year), accountId);
+            var response = await taxesRepository.GetSpecifiedYearTaxes(System.Net.WebUtility.UrlDecode(year), account.Id);
             if (response.IsNullOrEmpty()) throw new NotFoundException("Nenhum imposto de renda foi encontrado para o ano especificado.");
 
             return ToSpecifiedYearDto(response);
@@ -375,7 +370,7 @@ public class TaxesService : ITaxesService
     {
         try
         {
-            await taxesRepository.SetMonthAsPaidOrUnpaid(System.Net.WebUtility.UrlDecode(month), accountId);
+            await taxesRepository.SetMonthAsPaidOrUnpaid(month, accountId);
         }
         catch (Exception e)
         {

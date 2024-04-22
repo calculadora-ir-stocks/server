@@ -1,25 +1,25 @@
 using Api;
+using Api.Database;
 using Api.Middlewares;
 using Hangfire;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.InitializeEnvironmentVariables(new string[] { ".database.env", ".apis.env"});
+builder.Services.InitializeEnvironmentVariables(new string[] { ".database.env", ".apis.env" });
 builder.Services.AddControllers();
 
 builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.AddHttpContextAccessor();
 
+builder.Services.AddDatabase();
+builder.Services.AddAudiTrail();
+builder.Services.ConfigureHangfireDatabase();
+
 builder.Services.AddStripeServices();
 builder.Services.AddServices(builder);
 builder.Services.Add3rdPartiesClients();
 builder.Services.AddRepositories();
-
-builder.Services.AddDatabase(builder);
-
-// builder.Services.AddHangfireServices();
-// builder.Services.ConfigureHangfireServices(builder);
 
 builder.Services.AddAuth0Authentication(builder);
 
@@ -34,14 +34,15 @@ builder.Services.AddCors(policyBuilder =>
 
 var app = builder.Build();
 
-// app.UseHangfireDashboard("/dashboard");
-app.UseCors();
+using (var scope = app.Services.CreateAsyncScope())
+{
+    scope.ServiceProvider.GetRequiredService<StocksContext>();
+}
 
-// app.UseMiddleware<AuthorizationMiddleware>();
+app.UseCors();
 app.UseMiddleware<ExceptionHandlerMiddleware>();
 
 app.UseSwagger();
-
 app.UseSwaggerUI(c =>
     c.SwaggerEndpoint("v1/swagger.json", "Stocks v1")
 );
@@ -54,5 +55,8 @@ app.UseRouting();
 app.UseAuthorization();
 
 app.MapControllers();
+
+app.UseHangfireServer();
+app.ConfigureHangfireServices();
 
 app.Run();

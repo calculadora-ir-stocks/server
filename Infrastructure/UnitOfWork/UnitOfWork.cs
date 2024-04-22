@@ -1,9 +1,7 @@
-﻿using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using System.Data.Common;
-using System.Data;
-using Api.Database;
+﻿using Api.Database;
 using Microsoft.EntityFrameworkCore;
+using System.Data;
+using System.Data.Common;
 
 namespace Infrastructure.UnitOfWork
 {
@@ -12,12 +10,9 @@ namespace Infrastructure.UnitOfWork
         private readonly DbConnection connection;
         private readonly DbTransaction transaction = null!;
 
-        private readonly ILogger<UnitOfWork> logger;
-
-        public UnitOfWork(StocksContext stocksContext, ILogger<UnitOfWork> logger)
+        public UnitOfWork(StocksContext stocksContext)
         {
             connection = stocksContext.Database.GetDbConnection();
-            this.logger = logger;
         }
 
         public async Task<DbTransaction> BeginTransactionAsync()

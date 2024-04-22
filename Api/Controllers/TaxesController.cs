@@ -69,7 +69,7 @@ public class TaxesController : BaseController
     [ProducesResponseType(typeof(Core.Notification.Notification), 404)]
     public async Task<IActionResult> Details(string month, Guid accountId)
     {
-        var response = await taxesService.Details(month, accountId);
+        var response = await taxesService.Details(System.Net.WebUtility.UrlDecode(month), accountId);
         return Ok(response);
     }
 
@@ -97,7 +97,7 @@ public class TaxesController : BaseController
     [ProducesResponseType(typeof(Core.Notification.Notification), 404)]
     public async Task<IActionResult> SetMonthAsPaid(string month, Guid accountId)
     {
-        await taxesService.SetAsPaidOrUnpaid(month, accountId);
+        await taxesService.SetAsPaidOrUnpaid(System.Net.WebUtility.UrlDecode(month), accountId);
         return Ok(new { message = "O mês especificado foi alterado para pago/não pago com sucesso." });
     }
 

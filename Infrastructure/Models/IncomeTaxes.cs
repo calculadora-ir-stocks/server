@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Common.Models;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Infrastructure.Models
@@ -12,11 +13,12 @@ namespace Infrastructure.Models
         public IncomeTaxes(string month, double taxes, double totalSold, double swingTradeProfit, double dayTradeProfit,
             string tradedAssets, Account account, int assetId)
         {
+            // TODO override ToString method with Replace
             Month = month;
-            Taxes = taxes;
-            TotalSold = totalSold;
-            SwingTradeProfit = swingTradeProfit;
-            DayTradeProfit = dayTradeProfit;
+            Taxes = taxes.ToString().Replace(',', '.');
+            TotalSold = totalSold.ToString().Replace(',', '.');
+            SwingTradeProfit = swingTradeProfit.ToString().Replace(',', '.');
+            DayTradeProfit = dayTradeProfit.ToString().Replace(',', '.');
             TradedAssets = tradedAssets;
             CompesatedSwingTradeLoss = swingTradeProfit > 0 ? false : null;
             CompesatedDayTradeLoss = dayTradeProfit > 0 ? false : null;
@@ -33,41 +35,41 @@ namespace Infrastructure.Models
         /// <summary>
         /// Id do tipo de ativo.
         /// </summary>
-        public int AssetId { get; set; }
+        public int AssetId { get; init; }
 
-        public string Month { get; set; }
+        public string Month { get; init; }
 
         /// <summary>
         /// A quantidade de imposto referente a esse tipo de ativo.
         /// https://www.youtube.com/watch?v=VMwqYLSPg_c
         /// </summary>
-        public double Taxes { get; set; }
+        public string Taxes { get; set; }
 
-        public double TotalSold { get; set; }
+        public string TotalSold { get; set; }
 
         /// <summary>
         /// Define se o imposto do mês específico já foi pago.
         /// </summary>
-        public bool Paid { get; set; } = false;
+        public bool Paid { get; init; } = false;
 
-        public double SwingTradeProfit { get; set; }
+        public string SwingTradeProfit { get; set; }
 
-        public double DayTradeProfit { get; set; }
+        public string DayTradeProfit { get; set; }
 
         /// <summary>
         /// Uma lista em formato JSON que representa os ativos negociados.
         /// </summary>
-        public string TradedAssets { get; set; }
+        public string TradedAssets { get; init; }
 
         /// <summary>
         /// Define se o prejuízo de swing-trade já foi compensado em algum pagamento. É NULL caso
         /// o investidor não tenha tido prejuízo no mês.
-        public bool? CompesatedSwingTradeLoss { get; set; }
+        public bool? CompesatedSwingTradeLoss { get; init; }
 
         /// <summary>
         /// Define se o prejuízo de day-trade já foi compensado em algum pagamento. É NULL caso
         /// o investidor não tenha tido prejuízo no mês.
-        public bool? CompesatedDayTradeLoss { get; set; }
+        public bool? CompesatedDayTradeLoss { get; init; }
 
         public Account Account { get; set; }
     }

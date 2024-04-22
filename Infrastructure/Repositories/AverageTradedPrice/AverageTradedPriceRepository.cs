@@ -1,104 +1,158 @@
-﻿using Dapper;
-using Microsoft.EntityFrameworkCore;
-using Api.Database;
+﻿using Api.Database;
+using Common;
+using Common.Configurations;
+using Common.Constants;
+using Dapper;
 using Infrastructure.Dtos;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Update;
+using Microsoft.IdentityModel.Tokens;
 
 namespace Infrastructure.Repositories.AverageTradedPrice
 {
     public class AverageTradedPriceRepository : IAverageTradedPriceRepostory
     {
         private readonly StocksContext context;
+        private readonly AzureKeyVaultConfiguration keyVault;
 
-        public AverageTradedPriceRepository(StocksContext context)
+        public AverageTradedPriceRepository(StocksContext context, AzureKeyVaultConfiguration keyVault)
         {
             this.context = context;
+            this.keyVault = keyVault;
         }
 
         #region INSERT
-        public async Task Insert(Models.AverageTradedPrice averageTradedPrice)
+        public async Task AddAsync(Models.AverageTradedPrice averageTradedPrice)
         {
-            await context.AverageTradedPrices.AddAsync(averageTradedPrice);
-            context.SaveChanges();
-        }
+            DynamicParameters parameters = new();
 
-        public void InsertAll(IEnumerable<Models.AverageTradedPrice> averageTradedPrices)
-        {
-            context.AverageTradedPrices.AddRange(averageTradedPrices);
-            context.SaveChanges();
-        }
+            var key = await keyVault.SecretClient.GetSecretAsync("pgcrypto-key");
 
-        public async Task AddAllAsync(List<Models.AverageTradedPrice> averageTradedPrices)
-        {
-            context.AddRange(averageTradedPrices);
+            parameters.Add("@Key", key.Value.Value);
+            parameters.Add("@Ticker", averageTradedPrice.Ticker);
+            parameters.Add("@AveragePrice", averageTradedPrice.AveragePrice);
+            parameters.Add("@TotalBought", averageTradedPrice.TotalBought);
+            parameters.Add("@Quantity", averageTradedPrice.Quantity);
+            parameters.Add("@AccountId", averageTradedPrice.Account.Id);
 
-            context.AttachRange(averageTradedPrices.Select(x => x.Account));
+            string sql = @"
+                INSERT INTO ""AverageTradedPrices""
+                (
+	                ""Id"",
+	                ""Ticker"",
+	                ""AveragePrice"",
+	                ""TotalBought"",
+	                ""Quantity"",
+	                ""AccountId"",
+	                ""UpdatedAt""
+                )
+                VALUES
+                (
+	                gen_random_uuid(),
+                    PGP_SYM_ENCRYPT(@Ticker, @Key),
+                    PGP_SYM_ENCRYPT(@AveragePrice, @Key),
+                    PGP_SYM_ENCRYPT(@TotalBought, @Key),
+                    PGP_SYM_ENCRYPT(@Quantity, @Key),
+                    @AccountId,
+                    NOW()
+                )
+            ";
 
-            await context.SaveChangesAsync();
-        }
-        #endregion
-
-        #region UPDATE
-        public async Task UpdateAllAsync(List<Models.AverageTradedPrice> averageTradedPrices)
-        {
-            context.AverageTradedPrices.UpdateRange(averageTradedPrices);
-            await context.SaveChangesAsync();
+            await context.Database.GetDbConnection().QueryAsync(sql, parameters);
+            Auditor.Audit($"{nameof(AverageTradedPrice)}:{AuditOperation.Add}", comment: "Todas as informações de preços médios foram criptografadas na base de dados.");
         }
         #endregion
 
         #region GET
-        public async Task<IEnumerable<AverageTradedPriceDto>> GetAverageTradedPricesDto(Guid accountId, List<string>? tickers = null)
+        public async Task<IEnumerable<AverageTradedPriceDto>> GetAverageTradedPrices(Guid accountId, IEnumerable<string>? tickers = null)
         {
             DynamicParameters parameters = new();
 
+            var key = await keyVault.SecretClient.GetSecretAsync("pgcrypto-key");
+
+            parameters.Add("@Key", key.Value.Value);
             parameters.Add("@AccountId", accountId);
             parameters.Add("@Tickers", tickers);
 
             string sql =
                 @"SELECT 
-                    atp.""Ticker"",
-                    atp.""AveragePrice"" as AverageTradedPrice,
-                    atp.""TotalBought"" as TotalBought,
-                    atp.""Quantity""
+                    PGP_SYM_DECRYPT(atp.""Ticker""::bytea, @Key) as Ticker,
+                    CAST(PGP_SYM_DECRYPT(atp.""AveragePrice""::bytea, @Key) as double precision) as AverageTradedPrice,
+                    CAST(PGP_SYM_DECRYPT(atp.""TotalBought""::bytea, @Key) as double precision) as TotalBought,
+                    CAST(PGP_SYM_DECRYPT(atp.""Quantity""::bytea, @Key) as int) as Quantity,
+                    @AccountId as AccountId
                   FROM ""AverageTradedPrices"" atp
-                  WHERE atp.""AccountId"" = @AccountId AND
-                  atp.""Ticker"" = ANY(@Tickers);
+                  WHERE atp.""AccountId"" = @AccountId
                 ";
+
+            if (!tickers.IsNullOrEmpty())
+            {
+                sql += @" AND PGP_SYM_DECRYPT(atp.""Ticker""::bytea, @Key) = ANY(@Tickers);";
+            }
 
             var connection = context.Database.GetDbConnection();
             var response = await connection.QueryAsync<AverageTradedPriceDto>(sql, parameters);
 
+            Auditor.Audit($"{nameof(AverageTradedPrice)}:{AuditOperation.View}", comment: "Preços médios de tickers do investidor foram descriptografados e visualizados.");
             return response;
-        }
-
-        public List<Models.AverageTradedPrice>? GetAverageTradedPrices(Guid accountId, List<string>? tickers = null)
-        {
-            if (tickers is null) return context.AverageTradedPrices.Where(x => x.Account.Id == accountId).ToList();
-            return context.AverageTradedPrices.Where(x => tickers.Contains(x!.Ticker) && x.Account.Id.Equals(accountId)).ToList();
-        }
-
-        public Models.AverageTradedPrice? GetAverageTradedPrice(string ticker, Guid accountId)
-        {
-            return context.AverageTradedPrices.Where(x => x.Ticker == ticker && x.Account.Id == accountId).FirstOrDefault();
         }
         #endregion
 
         #region DELETE
-        public async Task RemoveAllAsync(IEnumerable<string?> tickers, Guid id)
+        public async Task RemoveByTickerNameAsync(Guid accountId, IEnumerable<string> tickers)
         {
             DynamicParameters parameters = new();
 
-            parameters.Add("@AccountId", id);
-            parameters.Add("@Tickers", tickers.ToList());
+            var key = await keyVault.SecretClient.GetSecretAsync("pgcrypto-key");
+
+            parameters.Add("@Key", key.Value.Value);
+            parameters.Add("@AccountId", accountId);
+            parameters.Add("@Tickers", tickers);
 
             string sql =
-                @"DELETE 
-                    FROM ""AverageTradedPrices"" atp
-                  WHERE atp.""AccountId"" = @AccountId AND
-                  atp.""Ticker"" = ANY(@Tickers);
+                @"DELETE FROM ""AverageTradedPrices"" atp
+                WHERE atp.""AccountId"" = @AccountId AND 
+                PGP_SYM_DECRYPT(atp.""Ticker""::bytea, @Key) IN @Tickers";
+
+            var connection = context.Database.GetDbConnection();
+            
+            var rowsAffected = await connection.ExecuteAsync(sql, parameters);
+
+            Auditor.Audit($"{nameof(AverageTradedPrice)}:{AuditOperation.Delete}",
+                comment: "Os preços médios de tickers do investidor foram removidos da base pois foram totalmente vendidos.",
+                fields: new { RowsAffected = rowsAffected });
+        }
+        #endregion
+
+        #region UPDATE
+        public async Task UpdateAsync(Models.Account account, Models.AverageTradedPrice averageTradedPrice)
+        {
+            DynamicParameters parameters = new();
+
+            var key = await keyVault.SecretClient.GetSecretAsync("pgcrypto-key");
+
+            parameters.Add("@Key", key.Value.Value);
+            parameters.Add("@Ticker", averageTradedPrice.Ticker);
+            parameters.Add("@AveragePrice", averageTradedPrice.AveragePrice);
+            parameters.Add("@TotalBought", averageTradedPrice.TotalBought);
+            parameters.Add("@Quantity", averageTradedPrice.Quantity);
+            parameters.Add("@AccountId", account.Id);
+
+            string sql =
+                @"UPDATE ""AverageTradedPrices"" SET 
+                    ""AveragePrice"" = PGP_SYM_ENCRYPT(@AveragePrice, @Key),
+                    ""TotalBought"" = PGP_SYM_ENCRYPT(@TotalBought, @Key),
+	                ""Quantity"" = PGP_SYM_ENCRYPT(@Quantity, @Key)
+                  WHERE ""AccountId"" = @AccountId AND
+                  PGP_SYM_DECRYPT(""Ticker""::bytea, @Key) = @Ticker
                 ";
 
             var connection = context.Database.GetDbConnection();
-            await connection.QueryAsync<AverageTradedPriceDto>(sql, parameters);
+            var rowsAffected = await connection.ExecuteAsync(sql, parameters);
+
+            Auditor.Audit($"{nameof(AverageTradedPrice)}:{AuditOperation.Update}",
+                comment: "Os preços médios de tickers do investidor foram atualizados na base.",
+                fields: new { RowsAffected = rowsAffected });
         }
         #endregion
     }
