@@ -1,5 +1,4 @@
-﻿using Common.Models.Secrets;
-using Common.Options;
+﻿using Common.Options;
 using Core.Models.InfoSimples;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;

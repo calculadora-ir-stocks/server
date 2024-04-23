@@ -1,9 +1,7 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Infrastructure.Models;
-using System.Reflection;
+﻿using Infrastructure.Models;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Common.Configurations;
-using Common.Models.Secrets;
+using System.Reflection;
 
 namespace Api.Database
 {

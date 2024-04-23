@@ -3,7 +3,6 @@ using Common.Constants;
 using Common.Enums;
 using Common.Exceptions;
 using Common.Helpers;
-using Common.Models.Secrets;
 using Common.Options;
 using Infrastructure.Repositories.Account;
 using Infrastructure.Repositories.Plan;

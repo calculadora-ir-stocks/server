@@ -5,10 +5,8 @@ using Api.Services.Auth;
 using Audit.Core;
 using Audit.PostgreSql.Configuration;
 using Billing.Services.Stripe;
-using Common;
 using Common.Configurations;
 using Common.Models.Handlers;
-using Common.Models.Secrets;
 using Common.Options;
 using Core.Calculators;
 using Core.Calculators.Assets;
@@ -37,7 +35,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using Npgsql.Replication;
 using Polly;
 using Stripe;
 using System.Reflection;
@@ -280,17 +277,6 @@ namespace Api
                 .DataColumn("Data", DataType.JSONB)
                 .LastUpdatedColumnName("UpdatedAt")
                 .CustomColumn("EventType", ev => ev.EventType));
-        }
-
-        public static void InitializeEnvironmentVariables(this IServiceCollection _, string[] envFilesOnRoot)
-        {
-            string root = Directory.GetCurrentDirectory();
-
-            foreach (string envFile in envFilesOnRoot)
-            {
-                string env = Path.Combine(root, envFile);
-                EnvironmentVariableInitializer.Load(env);
-            }
         }
     }
 }

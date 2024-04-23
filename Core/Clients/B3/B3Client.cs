@@ -1,6 +1,5 @@
 ﻿using Api.Clients.B3;
 using Api.DTOs.Auth;
-using Common.Models.Secrets;
 using Common.Options;
 using Core.Models.B3;
 using Microsoft.Extensions.Logging;
