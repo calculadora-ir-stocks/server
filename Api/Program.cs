@@ -23,7 +23,7 @@ builder.Services.AddDatabaseContext(builder.Configuration["ConnectionsString:Dat
 builder.Services.AddAudiTrail(builder.Configuration["ConnectionsString:Database"]);
 builder.Services.ConfigureHangfireDatabase(builder.Configuration["ConnectionsString:Database"]);
 
-builder.Services.AddStripeServices();
+builder.Services.AddStripeServices(builder.Configuration);
 builder.Services.AddServices(builder);
 builder.Services.Add3rdPartiesClients();
 builder.Services.AddRepositories();

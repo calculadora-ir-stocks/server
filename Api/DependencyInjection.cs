@@ -88,9 +88,9 @@ namespace Api
             services.AddMvc(options => options.Filters.Add<NotificationFilter>());
         }
 
-        public static void AddStripeServices(this IServiceCollection services)
+        public static void AddStripeServices(this IServiceCollection services, IConfiguration configuration)
         {
-            StripeConfiguration.ApiKey = Environment.GetEnvironmentVariable("STRIPE_API_TOKEN");
+            StripeConfiguration.ApiKey = configuration["Secrets:Stripe:Api:Token"];
 
             services.AddScoped<ChargeService>();
             services.AddScoped<CustomerService>();
