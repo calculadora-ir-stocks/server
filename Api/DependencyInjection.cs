@@ -255,6 +255,10 @@ namespace Api
                 options.WebhookToken = configuration["Secrets:Stripe:Webhook:Token"];
                 options.ApiToken = configuration["Secrets:Stripe:Api:Token"];
             });
+            services.Configure<InfoSimplesOptions>(options =>
+            {
+                options.ApiToken = configuration["Secrets:InfoSimples:Api:Token"];
+            });
         }
 
         public static void AddDatabaseContext(this IServiceCollection services, string connectionString)
