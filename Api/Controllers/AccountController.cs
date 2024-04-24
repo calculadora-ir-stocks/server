@@ -29,12 +29,34 @@ public class AccountController : BaseController
     }
 
     /// <summary>
+    /// Verifica se o usuário realizou o opt-in com a B3.
+    /// Deve ser consumido após o usuário abrir o link de opt-in com a B3.
+    /// </summary>
+    /// <param name="cpf">CPF no formato <c>11111111111</c>.</param>
+    [HttpGet("opt-in/{cpf}")]
+    public async Task<IActionResult> OptIn(string cpf)
+    {
+        var didOptIn = await service.OptIn(cpf);
+        return Ok(new { isAuthorized = didOptIn });
+    }
+
+    /// <summary>
+    /// Acessa o link de opt-in da B3.
+    /// </summary>
+    [HttpGet("opt-in/link")]
+    public IActionResult OptInLink()
+    {
+        string optInLink = service.GetOptInLink();
+        return Ok(new { link = optInLink });
+    }
+
+    /// <summary>
     /// Deleta a conta especificada e desvincula com a B3.
     /// </summary>
     [HttpDelete("{id}")]
-    public IActionResult Delete([FromRoute] Guid id)
+    public async Task<IActionResult> Delete([FromRoute] Guid id)
     {
-        service.Delete(id);
+        await service.Delete(id);
         return Ok(new { message = $"A conta do usuário {id} foi deletada com sucesso e sua conta foi desvinculada com a B3." });
     }
 }

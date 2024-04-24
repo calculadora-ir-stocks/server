@@ -41,6 +41,7 @@ using System.Reflection;
 using System.Security.Authentication;
 using System.Security.Claims;
 using System.Security.Cryptography.X509Certificates;
+using File = System.IO.File;
 
 namespace Api
 {
@@ -150,17 +151,18 @@ namespace Api
 
         public static void Add3rdPartiesClients(this IServiceCollection services)
         {
+            var b3Handler = new HttpClientHandler();
+            AddB3Certificate(b3Handler);
+
             var handler = new HttpClientHandler();
-            // TODO: uncomment for production
-            // AddCertificate(handler);
 
             services.AddHttpClient("B3", c =>
-                c.BaseAddress = new Uri("https://apib3i-cert.b3.com.br:2443/api/")).ConfigurePrimaryHttpMessageHandler(() => handler)
+                c.BaseAddress = new Uri("https://apib3i-cert.b3.com.br:2443/api/")).ConfigurePrimaryHttpMessageHandler(() => b3Handler)
                 .AddTransientHttpErrorPolicy(policy => policy.WaitAndRetryAsync(5, _ => TimeSpan.FromSeconds(10)))
                 .AddTransientHttpErrorPolicy(policy => policy.CircuitBreakerAsync(5, TimeSpan.FromSeconds(10)));
 
             services.AddHttpClient("Microsoft", c =>
-                c.BaseAddress = new Uri("https://login.microsoftonline.com/")).ConfigurePrimaryHttpMessageHandler(() => handler)
+                c.BaseAddress = new Uri("https://login.microsoftonline.com/")).ConfigurePrimaryHttpMessageHandler(() => b3Handler)
                 .AddTransientHttpErrorPolicy(policy => policy.WaitAndRetryAsync(5, _ => TimeSpan.FromSeconds(10)))
                 .AddTransientHttpErrorPolicy(policy => policy.CircuitBreakerAsync(5, TimeSpan.FromSeconds(10)));
 
@@ -175,14 +177,11 @@ namespace Api
                 .AddTransientHttpErrorPolicy(policy => policy.CircuitBreakerAsync(5, TimeSpan.FromSeconds(10)));
         }
 
-        private static void AddCertificate(HttpClientHandler handler)
+        private static void AddB3Certificate(HttpClientHandler handler)
         {
             handler.ClientCertificateOptions = ClientCertificateOption.Manual;
             handler.SslProtocols = SslProtocols.Tls12;
-
-            // C:\Users\Biscoitinho\Documents\Certificates\31788887000158.pfx
-            // /home/dickmann/Documents/certificates/31788887000158.pfx
-            handler.ClientCertificates.Add(new X509Certificate2("/home/dickmann/Documents/certificates/31788887000158.pfx", "C3MOHH", X509KeyStorageFlags.PersistKeySet));
+            // handler.ClientCertificates.Add(new X509Certificate2("test", "QDLVLG"));
         }
 
         public static void AddRepositories(this IServiceCollection services)

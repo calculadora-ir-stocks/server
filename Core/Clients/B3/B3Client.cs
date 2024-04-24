@@ -11,6 +11,8 @@ using System.Net.Http.Headers;
 
 namespace Core.Clients.B3
 {
+    // TODO refit
+    // TODO verificar se status code é 422. Se for, perdemos o vínculo do investidor com a API - notificar o front.
     public class B3Client : IB3Client
     {
         private readonly IHttpClientFactory clientFactory;
@@ -40,9 +42,9 @@ namespace Core.Clients.B3
             this.logger = logger;
         }
 
-#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
+#pragma warning disable CS8618
         public B3Client() { }
-#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
+#pragma warning restore CS8618
 
         public async Task<Movement.Root?> GetAccountMovement(string cpf, string referenceStartDate, string referenceEndDate, Guid accountId, string? nextUrl)
         {
@@ -105,9 +107,8 @@ namespace Core.Clients.B3
                 using var response = await b3Client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
                 response.EnsureSuccessStatusCode();
 
-                string? responseContentStream = await response.Content.ReadAsStringAsync();
-
-                var assets = JsonConvert.DeserializeObject<Movement.Root>(responseContentStream);
+                string? json = await response.Content.ReadAsStringAsync();
+                var assets = JsonConvert.DeserializeObject<Movement.Root>(json);
 
                 root.Links.Next = assets.Links.Next;
                 root.Data.EquitiesPeriods.EquitiesMovements.AddRange(assets.Data.EquitiesPeriods.EquitiesMovements);
@@ -162,6 +163,33 @@ namespace Core.Clients.B3
                 logger.LogError(e, "Uma exceção ocorreu ao tentar obter o token de autorização da B3. {exception} ", e.Message);
                 throw new Exception("Uma exceção ocorreu ao tentar obter o token de autorização da B3. " + e.Message);
             }
+        }
+
+        public async Task<bool> OptIn(string cpf)
+        {
+            HttpRequestMessage request = new(HttpMethod.Get, $"authorizations/investors/{cpf}");
+
+            var accessToken = await GetB3AuthorizationToken();
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken.AccessToken);
+
+            using var response = await b3Client.SendAsync(request);
+            response.EnsureSuccessStatusCode();
+
+            var json = await response.Content.ReadAsStringAsync();
+            var authorized = JsonConvert.DeserializeObject<OptIn>(json)!.Data.Authorized;
+
+            return authorized;
+        }
+
+        public async Task OptOut(string cpf)
+        {
+            HttpRequestMessage request = new(HttpMethod.Get, $"optout/investor/{cpf}");
+
+            var accessToken = await GetB3AuthorizationToken();
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken.AccessToken);
+
+            using var response = await b3Client.SendAsync(request);
+            response.EnsureSuccessStatusCode();
         }
     }
 }
