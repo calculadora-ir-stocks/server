@@ -1,11 +1,9 @@
 ﻿using Api.Clients.B3;
 using Common.Exceptions;
 using Common.Options;
-using Core.Models.B3;
 using Infrastructure.Repositories.Account;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using static System.Net.WebRequestMethods;
 
 namespace Core.Services.Account
 {
@@ -28,7 +26,7 @@ namespace Core.Services.Account
         {
             try
             {
-                var account = repository.GetById(accountId) ?? throw new NotFoundException("Investidor", accountId.ToString());
+                var account = await repository.GetById(accountId) ?? throw new NotFoundException("Investidor", accountId.ToString());
 
                 await b3Client.OptOut(account.CPF);
                 repository.Delete(account);
@@ -55,9 +53,10 @@ namespace Core.Services.Account
             return link;
         }
 
-        public async Task<bool> OptIn(string cpf)
+        public async Task<bool> OptIn(Guid accountId)
         {
-            return await b3Client.OptIn(cpf);
+            var account = await repository.GetById(accountId) ?? throw new NotFoundException("Investidor", accountId.ToString());
+            return await b3Client.OptIn(account.CPF);
         }
     }
 }

@@ -37,8 +37,7 @@ namespace Billing.Services.Stripe
 
         public async Task<Session> CreateCheckoutSession(Guid accountId, string productId, string? couponId = null)
         {
-            var account = accountRepository.GetById(accountId);
-            if (account is null) throw new NotFoundException("Investidor", accountId.ToString());
+            var account = await accountRepository.GetById(accountId) ?? throw new NotFoundException("Investidor", accountId.ToString());
 
             var options = new SessionCreateOptions
             {

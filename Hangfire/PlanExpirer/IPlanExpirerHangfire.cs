@@ -5,6 +5,6 @@
         /// <summary>
         /// Expira o plano de um usuário caso ele esteja expirado.
         /// </summary>
-        void Execute();
+        Task Execute();
     }
 }

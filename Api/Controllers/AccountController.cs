@@ -15,7 +15,7 @@ public class AccountController : BaseController
     }
 
     /// <summary>
-    /// Obtém um usuário pelo Auth0 Id.
+    /// Obtém um id de usuário pelo Auth0 Id.
     /// </summary>
     /// Esse endpoint atualmente é público pois o front-end precisa do id de usuário e não consegue gerar o JWT
     /// antes de inserir todos os claims necessários.
@@ -32,11 +32,10 @@ public class AccountController : BaseController
     /// Verifica se o usuário realizou o opt-in com a B3.
     /// Deve ser consumido após o usuário abrir o link de opt-in com a B3.
     /// </summary>
-    /// <param name="cpf">CPF no formato <c>11111111111</c>.</param>
-    [HttpGet("opt-in/{cpf}")]
-    public async Task<IActionResult> OptIn(string cpf)
+    [HttpGet("opt-in/{accountId}")]
+    public async Task<IActionResult> OptIn(Guid accountId)
     {
-        var didOptIn = await service.OptIn(cpf);
+        var didOptIn = await service.OptIn(accountId);
         return Ok(new { isAuthorized = didOptIn });
     }
 
@@ -53,10 +52,10 @@ public class AccountController : BaseController
     /// <summary>
     /// Deleta a conta especificada e desvincula com a B3.
     /// </summary>
-    [HttpDelete("{id}")]
-    public async Task<IActionResult> Delete([FromRoute] Guid id)
+    [HttpDelete("{accountId}")]
+    public async Task<IActionResult> Delete([FromRoute] Guid accountId)
     {
-        await service.Delete(id);
-        return Ok(new { message = $"A conta do usuário {id} foi deletada com sucesso e sua conta foi desvinculada com a B3." });
+        await service.Delete(accountId);
+        return Ok(new { message = $"A conta do usuário {accountId} foi deletada com sucesso e sua conta foi desvinculada com a B3." });
     }
 }

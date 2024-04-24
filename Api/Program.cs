@@ -12,7 +12,7 @@ builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.AddHttpContextAccessor();
 
-if (builder.Environment.IsDevelopment())
+if (builder.Environment.IsProduction())
 {
     // Sets Key Vault credentiais
     builder.Configuration.AddAzureKeyVault(new("https://server-keys-and-secrets.vault.azure.net/"), new DefaultAzureCredential());

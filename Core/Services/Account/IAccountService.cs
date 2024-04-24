@@ -10,7 +10,7 @@
         /// <summary>
         /// Diz se um usuário fez o opt-in com a B3.
         /// </summary>
-        Task<bool> OptIn(string cpf);
+        Task<bool> OptIn(Guid accountId);
 
         Task<Guid> GetByAuth0Id(string auth0Id);
 

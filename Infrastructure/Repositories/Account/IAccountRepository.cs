@@ -7,12 +7,12 @@
         /// </summary>
         Task Create(Models.Account account);
         Task<bool> CPFExists(string cpf, Guid accountId);
-        Models.Account? GetById(Guid accountId);
+        Task<Models.Account?> GetById(Guid accountId);
         Task<Guid> GetByAuth0IdAsNoTracking(string auth0Id);
         Models.Account GetByStripeCustomerId(string stripeCustomerId);
         IEnumerable<Models.Account> GetAll();
         void Delete(Models.Account account);
         void DeleteAll();
-        void Update(Models.Account account);
+        Task UpdateStatus(Models.Account account);
     }
 }
