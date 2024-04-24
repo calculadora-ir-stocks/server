@@ -149,10 +149,10 @@ namespace Api
             );
         }
 
-        public static void Add3rdPartiesClients(this IServiceCollection services)
+        public static void Add3rdPartiesClients(this IServiceCollection services, IConfiguration configuration)
         {
             var b3Handler = new HttpClientHandler();
-            AddB3Certificate(b3Handler);
+            AddB3Certificate(b3Handler, configuration);
 
             var handler = new HttpClientHandler();
 
@@ -177,11 +177,11 @@ namespace Api
                 .AddTransientHttpErrorPolicy(policy => policy.CircuitBreakerAsync(5, TimeSpan.FromSeconds(10)));
         }
 
-        private static void AddB3Certificate(HttpClientHandler handler)
+        private static void AddB3Certificate(HttpClientHandler handler, IConfiguration configuration)
         {
             handler.ClientCertificateOptions = ClientCertificateOption.Manual;
             handler.SslProtocols = SslProtocols.Tls12;
-            // handler.ClientCertificates.Add(new X509Certificate2("test", "QDLVLG"));
+            handler.ClientCertificates.Add(new X509Certificate2("C:\\31788887000158.cer", password: configuration["Certificates:B3:Password"]));
         }
 
         public static void AddRepositories(this IServiceCollection services)

@@ -25,7 +25,7 @@ builder.Services.ConfigureHangfireDatabase(builder.Configuration["ConnectionsStr
 
 builder.Services.AddStripeServices(builder.Configuration);
 builder.Services.AddServices(builder);
-builder.Services.Add3rdPartiesClients();
+builder.Services.Add3rdPartiesClients(builder.Configuration);
 builder.Services.AddRepositories();
 
 builder.Services.AddAuth0Authentication(builder);
