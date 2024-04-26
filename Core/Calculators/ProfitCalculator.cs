@@ -17,11 +17,10 @@ namespace Core.Calculators
         /// Além disso, atualiza a lista <c>averagePrices</c> com os novos preços médios e, caso algum ativo
         /// tenha sido totalmente vendido, o remove da lista.
         /// </summary>
-        public static CalculateProfitResponse CalculateProfitAndAverageTradedPrice
-            (IEnumerable<Movement.EquitMovement> movements, List<AverageTradedPriceDetails> averagePrices)
+        public static CalculateProfitResponse CalculateProfitAndAverageTradedPrice(IEnumerable<Movement.EquitMovement> movements, List<AverageTradedPriceDetails> averagePrices)
         
         {
-            CalculateProfitResponse investorMovements = new();
+            CalculateProfitResponse response = new();
 
             foreach (var movement in movements)
             {
@@ -29,25 +28,25 @@ namespace Core.Calculators
                 {
                     case B3ResponseConstants.Buy:
                         UpdateOrAddAveragePrice(movement, averagePrices, sellOperation: false);
-                        AddOperationHistory(movement, investorMovements.OperationHistory);
+                        AddOperationHistory(movement, response.OperationHistory);
                         break;
                     case B3ResponseConstants.Sell:
-                        AddTickerIntoResponse(investorMovements, movement);
-                        UpdateProfitOrLoss(investorMovements, movement, movements, averagePrices);
+                        AddTickerIntoResponse(response, movement);
+                        UpdateProfitOrLoss(response, movement, movements, averagePrices);
                         break;
                     case B3ResponseConstants.Split:
-                        CalculateSplitOperation(movement);
+                        CalculateSplitOperation(movement, ticker: averagePrices.Where(x => x.TickerSymbol.Equals(movement.TickerSymbol)).First());
                         break;
                     case B3ResponseConstants.ReverseSplit:
-                        CalculateReverseSplitOperation(movement);
+                        CalculateReverseSplitOperation(movement, ticker: averagePrices.Where(x => x.TickerSymbol.Equals(movement.TickerSymbol)).First());
                         break;
                     case B3ResponseConstants.BonusShare:
-                        CalculateBonusSharesOperation(movement);
+                        CalculateBonusSharesOperation(movement, ticker: averagePrices.Where(x => x.TickerSymbol.Equals(movement.TickerSymbol)).First());
                         break;
                 }
             }
 
-            return investorMovements;
+            return response;
         }
 
         private static void AddOperationHistory(
@@ -133,7 +132,7 @@ namespace Core.Calculators
                 quantity = ticker.TradedQuantity + movement.EquitiesQuantity;
             }
 
-            ticker.UpdateValues(totalBought, (int)quantity);
+            ticker.Update(totalBought, (int)quantity);
 
             if (InvestorSoldAllTicker(ticker))
             {
@@ -193,36 +192,35 @@ namespace Core.Calculators
                     taxes = (AliquotConstants.IncomeTaxesForDayTrade / 100m) * (decimal)profit;
                 else
                     taxes = (aliquot / 100m) * (decimal)profit;
-            }
+            } 
 
             return taxes;
         }
 
-        private static void CalculateSplitOperation(Movement.EquitMovement movement)
+        private static void CalculateSplitOperation(Movement.EquitMovement movement, AverageTradedPriceDetails ticker)
         {
-            // É necessário calcular os desdobramentos de um ativo pois a sua relação de preço/quantidade alteram. Caso elas se alterem,
-            // o cálculo do preço médio pode ser afetado.
+            // Segundo a B3, o desdobramento retornará a quantidade de ativos que serão adicionados na conta de um investidor.
+            int quantityAddedIntoPortfolio = (int)movement.EquitiesQuantity;
+            double newQuantity = quantityAddedIntoPortfolio + ticker.TradedQuantity;
 
-            // TO-DO: entrar em contato com a B3 e tirar a dúvida de como funciona o response de desdobramento.
-            throw new NotImplementedException();
+            ticker.Update(ticker.TotalBought, (int)newQuantity);
         }
 
-        private static void CalculateReverseSplitOperation(Movement.EquitMovement movement)
+        private static void CalculateReverseSplitOperation(Movement.EquitMovement movement, AverageTradedPriceDetails ticker)
         {
-            // É necessário calcular os agrupamentos de um ativo pois a sua relação de preço/quantidade alteram. Caso elas se alterem,
-            // o cálculo do preço médio pode ser afetado.
-
-            // TO-DO: entrar em contato com a B3 e tirar a dúvida de como funciona o response de agrupamento.
-            throw new NotImplementedException();
+            // Segundo a B3, o grupamento retornará a nova quantidade de ativos que o investidor terá em sua posição.
+            ticker.Update(ticker.TotalBought, (int)movement.EquitiesQuantity);
         }
 
-        private static void CalculateBonusSharesOperation(Movement.EquitMovement movement)
+        private static void CalculateBonusSharesOperation(Movement.EquitMovement movement, AverageTradedPriceDetails ticker)
         {
-            // É necessário calcular as bonificações de um ativo pois a sua relação de preço/quantidade alteram. Caso elas se alterem,
-            // o cálculo do preço médio pode ser afetado.
+            // Segundo a B3, a bonificação retornará a quantidade de ativos que serão adicionados na conta de um investidor.
+            int quantityAddedIntoPortfolio = (int)movement.EquitiesQuantity;
 
-            // TO-DO: entrar em contato com a B3 e tirar a dúvida de como funciona o response de bonificação.
-            throw new NotImplementedException();
+            double newQuantity = quantityAddedIntoPortfolio + ticker.TradedQuantity;
+            double newTotalBought = ticker.TotalBought + movement.OperationValue;
+
+            ticker.Update(newTotalBought, (int)newQuantity);
         }
     }
 }

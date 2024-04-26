@@ -142,12 +142,13 @@ namespace Core.Clients.B3
                 {
                     Content = new FormUrlEncodedContent(new KeyValuePair<string?, string?>[]
                     {
+                        new("content-type", "application/x-www-form-urlencoded"),
                         new("client_id", options.Value.ClientId),
                         new("client_secret", options.Value.ClientSecret),
-                        new("scope", options.Value.Scope),
+                        new("scope", "98ddf4b0-f66d4c96-97ea-9e30306599e7%2F.default"),
                         new("grant_type", options.Value.GrantType)
                     })
-                };
+                };             
 
                 using var response = await microsoftClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
                 response.EnsureSuccessStatusCode();

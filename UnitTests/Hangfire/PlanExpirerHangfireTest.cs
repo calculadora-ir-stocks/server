@@ -30,7 +30,7 @@ namespace stocks_unit_tests.Hangfire
         }
 
         [Fact(DisplayName = "Deve invalidar planos gratuitos, planos mensais, planos semestrais e planos anuais expirados.")]
-        public void Should_invalidate_users_with_expired_plans()
+        public async Task Should_invalidate_users_with_expired_plans()
         {
             var users = new Faker<Account>().Generate(10);
 
@@ -50,12 +50,12 @@ namespace stocks_unit_tests.Hangfire
 
             planRepository.Setup(x => x.GetAllAccountPlans()).Returns(plans);
 
-            accountRepository.Setup(x => x.GetById(users[0].Id)).Returns(users[0]);
-            accountRepository.Setup(x => x.GetById(users[3].Id)).Returns(users[3]);
-            accountRepository.Setup(x => x.GetById(users[4].Id)).Returns(users[4]);
-            accountRepository.Setup(x => x.GetById(users[8].Id)).Returns(users[8]);
+            accountRepository.Setup(x => x.GetById(users[0].Id)).ReturnsAsync(users[0]);
+            accountRepository.Setup(x => x.GetById(users[3].Id)).ReturnsAsync(users[3]);
+            accountRepository.Setup(x => x.GetById(users[4].Id)).ReturnsAsync(users[4]);
+            accountRepository.Setup(x => x.GetById(users[8].Id)).ReturnsAsync(users[8]);
 
-            service.Execute();
+            await service.Execute();
 
             int expiredPlans = users.Where(x => x.Status == EnumHelper.GetEnumDescription(AccountStatus.SubscriptionExpired)).Count();
 
