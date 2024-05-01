@@ -185,6 +185,7 @@ namespace stocks_unit_tests.Calculators
         public async Task TestIncomeTaxesAfterSpecialMovementsPart2(List<Movement.EquitMovement> movements)
         {
             repository.Setup(x => x.GetAverageTradedPrices(It.IsAny<Guid>(), null)).ReturnsAsync(Array.Empty<AverageTradedPriceDto>());
+
             var root = new Movement.Root
             {
                 Data = new Movement.Data
@@ -195,7 +196,26 @@ namespace stocks_unit_tests.Calculators
                     }
                 }
             };
+
             var response = await calculator.Calculate(root, It.IsAny<Guid>());
+
+            var month01 = response!.Assets.Where(x => x.Month.Equals("01/2023")).First();
+            var month02 = response.Assets.Where(x => x.Month.Equals("02/2023")).First();
+            var month03 = response.Assets.Where(x => x.Month.Equals("03/2023")).First();
+            var month04 = response.Assets.Where(x => x.Month.Equals("04/2023")).First();
+            var month05 = response.Assets.Where(x => x.Month.Equals("05/2023")).First();
+            var month06 = response.Assets.Where(x => x.Month.Equals("06/2023")).First();
+            var month07 = response.Assets.Where(x => x.Month.Equals("07/2023")).First();
+            var month08 = response.Assets.Where(x => x.Month.Equals("08/2023")).First();
+
+            Assert.Equal(2, month01.Taxes);
+            Assert.Equal(0, month02.Taxes);
+            Assert.Equal(4.05, month03.Taxes);
+            Assert.Equal(20, month04.Taxes);
+            Assert.Equal(0, month05.Taxes);
+            Assert.Equal(7.5, month06.Taxes);
+            Assert.Equal(12.50, Convert.ToDouble(month07.Taxes.ToString("00.00")));
+            Assert.Equal(16.11, Convert.ToDouble(month08.Taxes.ToString("00.00")));
         }
 
         public static IEnumerable<object[]> Part2DataSet()
@@ -212,42 +232,48 @@ namespace stocks_unit_tests.Calculators
                     new("PETR4", "Petróleo Brasileiro S/A", B3ResponseConstants.Stocks, B3ResponseConstants.Buy, 150, 1, 150, new DateTime(2023, 01, 03)),
                     new("PETR4", "Petróleo Brasileiro S/A", B3ResponseConstants.Stocks, B3ResponseConstants.Sell, 180, 1, 180, new DateTime(2023, 01, 03), true),
 
-                    // Teste para fazer: prejuízo no day-trade, depois lucro mas em meses diferentes. Aí não deve descontar o prejuízo do day-trade.
+                    // Mês 02
+                    // IR: 0, teve prejuízo
+                    // Preço médio GOOGL34: 136,5
+                    new("GOOGL34", "Google LLC", B3ResponseConstants.BDRs, B3ResponseConstants.Buy, 100, 2, 50, new DateTime(2023, 02, 01)),
+                    new("GOOGL34", "Google LLC", B3ResponseConstants.BDRs, B3ResponseConstants.Buy, 203, 2, 101.50, new DateTime(2023, 02, 01)),
+                    new("GOOGL34", "Google LLC", B3ResponseConstants.BDRs, B3ResponseConstants.Sell, 30, 2, 15, new DateTime(2023, 02, 01), true),
 
-                    /** 
-                     * BUG NO CÁLCULO
-                     * 
-                     * No exemplo acima, o investidor tem -20 de prejuízo e depois 30 de lucro. O imposto final deve ser com base em 30 - 20 = 10, ou seja, com 
-                     * o prejuízo já deduzido. O prejuízo a ser compensado deve ser deixado apenas pra quando o mês fechar no negativo com um tipo de ativo.
-                     * Se teve prejuízo e depois lucro, tem que calcular tirando o prejuízo.
-                     * 
-                     * No ProfitCalculator, o método TickerAlreadyAdded não tá funcionando. Se tem ticker na lista ele não encontra
-                     * UpdateProfitOrLoss linha 170, tem que ser asset.Profit += totalProfit; e não asset.Profit = totalProfit;
-                     */
+                    // Mês 03
+                    // Lucro swing-trade: 27
+                    // IR: 4,05
+                    new("GOOGL34", "Google LLC", B3ResponseConstants.BDRs, B3ResponseConstants.Sell, 300, 2, 150, new DateTime(2023, 03, 01)),
 
-                    //// Mês 02
-                    //// IR: 0, teve prejuízo
-                    //// Preço médio GOOGL34: 136,5
-                    //new("GOOGL34", "Google LLC", B3ResponseConstants.BDRs, B3ResponseConstants.Buy, 100, 2, 50, new DateTime(2023, 02, 01)),
-                    //new("GOOGL34", "Google LLC", B3ResponseConstants.BDRs, B3ResponseConstants.Buy, 203, 2, 101.50, new DateTime(2023, 02, 01)),
-                    //new("GOOGL34", "Google LLC", B3ResponseConstants.BDRs, B3ResponseConstants.Sell, 30, 2, 15, new DateTime(2023, 02, 01)),
+                    // Mês 04
+                    // IR: 20, teve prejuízo de -50 em day-trade, porém teve lucro de 100 em swing-trade. 20% no swing-trade por ser FII
+                    new("BLMO11", "BVI OFFICE FUND II FII", B3ResponseConstants.FIIs, B3ResponseConstants.Buy, 400, 2, 200, new DateTime(2023, 04, 01)),
+                    new("BLMO11", "BVI OFFICE FUND II FII", B3ResponseConstants.FIIs, B3ResponseConstants.Sell, 150, 1, 150, new DateTime(2023, 04, 01), true),
+                    new("BLMO11", "BVI OFFICE FUND II FII", B3ResponseConstants.FIIs, B3ResponseConstants.Sell, 350, 1, 350, new DateTime(2023, 04, 03)),
 
-                    //// Mês 03
-                    //// Lucro swing-trade: 163,5
-                    //// IR: 27,3
-                    //new("GOOGL34", "Google LLC", B3ResponseConstants.BDRs, B3ResponseConstants.Sell, 300, 2, 150, new DateTime(2023, 03, 01)),
+                    // Mês 05
+                    // IR: 0, teve prejuízo. Burro
+                    new("BOVA11", "Ibovespa", B3ResponseConstants.ETFs, B3ResponseConstants.Buy, 600, 3, 200, new DateTime(2023, 05, 01)),
+                    new("BOVA11", "Ibovespa", B3ResponseConstants.ETFs, B3ResponseConstants.Sell, 100, 1, 100, new DateTime(2023, 05, 02)),
 
-                    //new("BLMO11", "BVI OFFICE FUND II FII", B3ResponseConstants.FIIs, B3ResponseConstants.Buy, 190.92, 3, 63.64, new DateTime(2023, 04, 01)),
-                    //new("BLMO11", "BVI OFFICE FUND II FII", B3ResponseConstants.FIIs, B3ResponseConstants.Sell, 87.43, 1, 87.43, new DateTime(2023, 04, 01), true),
-                    //new("BLMO11", "BVI OFFICE FUND II FII", B3ResponseConstants.FIIs, B3ResponseConstants.BonusShare, 200, 10, 20, new DateTime(2023, 04, 02)),
-                    //// B3 vai retornar 10 porque é a quantidade de ativos que será adicionado na posição do investidor após a bonificação.
-                    //new("BLMO11", "BVI OFFICE FUND II FII", B3ResponseConstants.FIIs, B3ResponseConstants.Buy, 50.43, 1, 50.43, new DateTime(2023, 04, 03)),
-                    //new("BLMO11", "BVI OFFICE FUND II FII", B3ResponseConstants.FIIs, B3ResponseConstants.Sell, 90, 2, 45, new DateTime(2023, 04, 04)),
-                    //// Preço médio: 263.92 / 11 = 23.99
+                    // Mês 06
+                    // Lucro swing-trade: 50
+                    // IR: 7,5
+                    new("BOVA11", "Ibovespa", B3ResponseConstants.ETFs, B3ResponseConstants.Sell, 300, 1, 300, new DateTime(2023, 06, 01)),
+                    new("BOVA11", "Ibovespa", B3ResponseConstants.ETFs, B3ResponseConstants.Split, 0, 2, 0, new DateTime(2023, 06, 20)), // Split 1 pra 3.
 
-                    //new("PETR4", "Petróleo Brasileiro S/A", B3ResponseConstants.Stocks, B3ResponseConstants.Buy, 4954, 2, 2.477, new DateTime(2023, 05, 01)),
-                    //new("PETR4", "Petróleo Brasileiro S/A", B3ResponseConstants.Stocks, B3ResponseConstants.BonusShare, 100, 2, 50, new DateTime(2023, 05, 31)),
-                    //// Preço médio: 12707 / 6 = 2.117,83 
+                    // Mês 07
+                    // Lucro swing-trade: 83,34
+                    // IR: 12,50
+                    new("BOVA11", "Ibovespa", B3ResponseConstants.ETFs, B3ResponseConstants.Sell, 150, 1, 150, new DateTime(2023, 07, 20)),
+
+                    // Mês 08
+                    // Lucro day-trade: 5,56
+                    // Lucro swing-trade: 100
+                    // IR: 16,11
+                    new("IVVB11", "iShares S&P 500", B3ResponseConstants.ETFs, B3ResponseConstants.Buy, 1000, 10, 100, new DateTime(2023, 08, 01)),
+                    new("IVVB11", "iShares S&P 500", B3ResponseConstants.ETFs, B3ResponseConstants.Sell, 150, 1, 150, new DateTime(2023, 08, 01), true),
+                    new("IVVB11", "iShares S&P 500", B3ResponseConstants.ETFs, B3ResponseConstants.Sell, 50, 1, 50, new DateTime(2023, 08, 01), true),
+                    new("IVVB11", "iShares S&P 500", B3ResponseConstants.ETFs, B3ResponseConstants.Sell, 200, 1, 200, new DateTime(2023, 08, 02)),
                 }
             };
         }
