@@ -18,7 +18,6 @@ namespace Core.Calculators
         /// tenha sido totalmente vendido, o remove da lista.
         /// </summary>
         public static CalculateProfitResponse CalculateProfitAndAverageTradedPrice(IEnumerable<Movement.EquitMovement> movements, List<AverageTradedPriceDetails> averagePrices)
-        
         {
             CalculateProfitResponse response = new();
 
@@ -82,10 +81,12 @@ namespace Core.Calculators
                 investorMovements.SwingTradeOperations.Add(new(movement.TickerSymbol));
         }
 
-        private static bool TickerAlreadyAdded(List<MovementProperties> dayTradeResponse, List<MovementProperties> swingTradeResponse, Movement.EquitMovement movement)
+        private static bool TickerAlreadyAdded(List<MovementProperties> dayTradeOperations, List<MovementProperties> swingTradeOperations, Movement.EquitMovement movement)
         {
-            return dayTradeResponse.Select(x => x.TickerSymbol).Equals(movement.TickerSymbol) ||
-                swingTradeResponse.Select(x => x.TickerSymbol).Equals(movement.TickerSymbol);
+            if (movement.DayTraded)
+                return dayTradeOperations.Any(x => x.TickerSymbol.Contains(movement.TickerSymbol));
+            else
+                return swingTradeOperations.Any(x => x.TickerSymbol.Contains(movement.TickerSymbol));
         }
 
         private static bool InvestorSoldAllTicker(AverageTradedPriceDetails ticker)
@@ -150,13 +151,13 @@ namespace Core.Calculators
             MovementProperties asset = null!;
 
             if (movement.DayTraded)
-                asset = investorMovements.DayTradeOperations.First(x => x.TickerSymbol == movement.TickerSymbol);
+                asset = investorMovements.DayTradeOperations.First(x => x.TickerSymbol.Equals(movement.TickerSymbol));
             else
-                asset = investorMovements.SwingTradeOperations.First(x => x.TickerSymbol == movement.TickerSymbol);
+                asset = investorMovements.SwingTradeOperations.First(x => x.TickerSymbol.Equals(movement.TickerSymbol));
 
             if (AssetBoughtAfterB3MinimumDate(movement, averagePrices))
             {
-                var averageTradedPrice = averagePrices.Where(x => x.TickerSymbol == movement.TickerSymbol).First();
+                var averageTradedPrice = averagePrices.Where(x => x.TickerSymbol.Equals(movement.TickerSymbol)).First();
 
                 double profitPerShare = movement.UnitPrice - averageTradedPrice.AverageTradedPrice;
                 double totalProfit = profitPerShare * movement.EquitiesQuantity;
@@ -167,7 +168,7 @@ namespace Core.Calculators
                     // TODO (MVP?): calcular emolumentos.
                 }
 
-                asset.Profit = totalProfit;
+                asset.Profit += totalProfit;
 
                 UpdateOrAddAveragePrice(movement, averagePrices, sellOperation: true);
                 AddOperationHistory(movement, investorMovements.OperationHistory, asset.Profit);

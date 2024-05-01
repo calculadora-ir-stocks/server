@@ -212,7 +212,7 @@ namespace stocks_unit_tests.Calculators
                     new("PETR4", "Petróleo Brasileiro S/A", B3ResponseConstants.Stocks, B3ResponseConstants.Buy, 150, 1, 150, new DateTime(2023, 01, 03)),
                     new("PETR4", "Petróleo Brasileiro S/A", B3ResponseConstants.Stocks, B3ResponseConstants.Sell, 180, 1, 180, new DateTime(2023, 01, 03), true),
 
-                    // Teste para fazer: prejuízo com day-trade, lucro com swing-trade
+                    // Teste para fazer: prejuízo no day-trade, depois lucro mas em meses diferentes. Aí não deve descontar o prejuízo do day-trade.
 
                     /** 
                      * BUG NO CÁLCULO

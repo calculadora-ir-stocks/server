@@ -47,9 +47,8 @@ namespace stocks_unit_tests.Business
             Assert.Equal(expectedTotalSold, stocks.TotalSold);
         }
 
-        [Theory(DisplayName = "Não deve aplicar 20% de imposto em operações day-trade sob ações quando houver prejuízo, mas deve aplicar" +
-        " em operações de lucro.")]
-        [MemberData(nameof(LossDayTradeDataWithProfit))]
+        [Theory(DisplayName = "Não deve aplicar 20% de imposto em operações day-trade se a soma de todos os prejuízos e lucros forem negativos ou 0s.")]
+        [MemberData(nameof(LossDayTradeDataWithProfit))] // Teve lucro, mas os prejuízos foram maiores; logo, não paga imposto.
         public void TestDayTradeLossWithProfit(List<Movement.EquitMovement> movements)
         {
             InvestorMovementDetails response = new();
@@ -58,7 +57,7 @@ namespace stocks_unit_tests.Business
 
             AssetIncomeTaxes stocks = response.Assets.Where(x => x.AssetTypeId == Asset.Stocks).Single();
 
-            double expectedTaxes = 193.8;
+            double expectedTaxes = 0;
             double expectedTotalSold = movements.Where(x => x.MovementType.Equals(B3ResponseConstants.Sell)).Select(x => x.OperationValue).Sum();
 
             Assert.Equal(expectedTaxes, stocks.Taxes);
@@ -188,7 +187,7 @@ namespace stocks_unit_tests.Business
                 new("PETR4", "Petróleo Brasileiro S/A", "Ações", "Compra", 24043, 1, 24043, new DateTime(2023, 01, 01), false),
                 new("PETR4", "Petróleo Brasileiro S/A", "Ações", "Venda", 28394, 1, 28394, new DateTime(2023, 01, 01), false),
                 new("PETR4", "Petróleo Brasileiro S/A", "Ações", "Compra", 9032, 1, 9032, new DateTime(2023, 01, 01), false),
-                new("PETR4", "Petróleo Brasileiro S/A", "Ações", "Venda", 10492, 1, 10492, new DateTime(2023, 01, 01), false)
+                new("PETR4", "Petróleo Brasileiro S/A", "Ações", "Venda", 6500, 1, 6500, new DateTime(2023, 01, 01), false)
             };
 
             // Lucro em operações com vendas em > 20k.
