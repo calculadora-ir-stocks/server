@@ -36,8 +36,8 @@ public class TaxesController : BaseController
     /// somado no valor total da DARF.</param>
     /// <returns>O código de barras da DARF e outras informações referentes ao imposto sendo pago.</returns>
     [HttpGet("generate-darf/{accountId}")]
-    [ProducesResponseType(typeof(DARFResponse), 200)]
-    [ProducesResponseType(typeof(Core.Notification.Notification), 404)]
+    [ProducesResponseType(typeof(DARFResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(Core.Notification.Notification), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GenerateDarf(Guid accountId, string month, double value = 0)
     {
         var response = await darfGeneratorService.Generate(accountId, month, value);
@@ -48,8 +48,8 @@ public class TaxesController : BaseController
     /// Retorna todas as informações referentes a impostos do mês atual.
     /// </summary>
     [HttpGet("home/{accountId}")]
-    [ProducesResponseType(typeof(TaxesDetailsResponse), 200)]
-    [ProducesResponseType(typeof(Core.Notification.Notification), 404)]
+    [ProducesResponseType(typeof(TaxesDetailsResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(Core.Notification.Notification), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Home(Guid accountId)
     {
         var response = await taxesService.GetCurrentMonthTaxes(accountId);
@@ -65,8 +65,8 @@ public class TaxesController : BaseController
     /// <param name="month">Formato: MM/yyyy</param>
     /// <param name="accountId">O id do usuário</param>
     [HttpGet("details/{month}/{accountId}")]
-    [ProducesResponseType(typeof(TaxesDetailsResponse), 200)]
-    [ProducesResponseType(typeof(Core.Notification.Notification), 404)]
+    [ProducesResponseType(typeof(TaxesDetailsResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(Core.Notification.Notification), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Details(string month, Guid accountId)
     {
         var response = await taxesService.Details(System.Net.WebUtility.UrlDecode(month), accountId);
@@ -79,8 +79,8 @@ public class TaxesController : BaseController
     /// <param name="year">Formato: yyyy</param>
     /// <param name="accountId">O id do usuário</param>
     [HttpGet("calendar/{year}/{accountId}")]
-    [ProducesResponseType(typeof(CalendarResponse), 200)]
-    [ProducesResponseType(typeof(Core.Notification.Notification), 404)]
+    [ProducesResponseType(typeof(CalendarResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(Core.Notification.Notification), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Calendar(string year, Guid accountId)
     {
         var response = await taxesService.GetCalendarTaxes(year, accountId);
@@ -93,8 +93,8 @@ public class TaxesController : BaseController
     /// <param name="month">Formato: MM/yyyy</param>
     /// <param name="accountId">O id do usuário</param>
     [HttpPut("set-paid-or-unpaid/{month}/{accountId}")]
-    [ProducesResponseType(typeof(Core.Notification.Notification), 200)]
-    [ProducesResponseType(typeof(Core.Notification.Notification), 404)]
+    [ProducesResponseType(typeof(Core.Notification.Notification), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(Core.Notification.Notification), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> SetMonthAsPaid(string month, Guid accountId)
     {
         await taxesService.SetAsPaidOrUnpaid(System.Net.WebUtility.UrlDecode(month), accountId);
@@ -106,8 +106,8 @@ public class TaxesController : BaseController
     /// Deve ser executado uma única vez quando um usuário cadastrar-se na plataforma.
     /// </summary>
     [HttpPost("big-bang/{accountId}")]
-    [ProducesResponseType(typeof(Core.Notification.Notification), 200)]
-    [ProducesResponseType(typeof(Core.Notification.Notification), 404)]
+    [ProducesResponseType(typeof(Core.Notification.Notification), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(Core.Notification.Notification), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> BigBang(Guid accountId, [FromBody] List<BigBangRequest> request)
     {
         await syncingService.Sync(accountId, request);

@@ -21,7 +21,7 @@ namespace Core.Hangfire.PlanExpirer
             this.logger = logger;
         }
 
-        public void Execute()
+        public async Task Execute()
         {
             try
             {
@@ -40,10 +40,9 @@ namespace Core.Hangfire.PlanExpirer
                 {
                     if (plan.ExpiresAt <= DateTime.Now)
                     {
-                        var account = accountRepository.GetById(plan.AccountId)!;
-                        account.Status = EnumHelper.GetEnumDescription(AccountStatus.SubscriptionExpired);
-
-                        accountRepository.Update(account);
+                        var account = await accountRepository.GetById(plan.AccountId);
+                        account!.Status = EnumHelper.GetEnumDescription(AccountStatus.SubscriptionExpired);
+                        await accountRepository.UpdateStatus(account);
                     }
                 }
 

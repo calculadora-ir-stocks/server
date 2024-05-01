@@ -1,10 +1,12 @@
 ﻿using Api.Database;
 using Common;
-using Common.Configurations;
 using Common.Constants;
+using Common.Options;
 using Dapper;
 using Infrastructure.UnitOfWork;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+using Microsoft.Identity.Client;
 using System.Data.Common;
 
 namespace Infrastructure.Repositories.Account
@@ -12,13 +14,13 @@ namespace Infrastructure.Repositories.Account
     public class AccountRepository : IAccountRepository
     {
         private readonly StocksContext context;
-        private readonly AzureKeyVaultConfiguration keyVault;
+        private readonly IOptions<DatabaseEncryptionKeyOptions> key;
         private readonly IUnitOfWork unitOfWork;
 
-        public AccountRepository(StocksContext context, AzureKeyVaultConfiguration keyVault, IUnitOfWork unitOfWork)
+        public AccountRepository(StocksContext context, IOptions<DatabaseEncryptionKeyOptions> key, IUnitOfWork unitOfWork)
         {
             this.context = context;
-            this.keyVault = keyVault;
+            this.key = key;
             this.unitOfWork = unitOfWork;
         }
 
@@ -27,9 +29,9 @@ namespace Infrastructure.Repositories.Account
             DynamicParameters parameters = new();
             DbTransaction transaction = await unitOfWork.BeginTransactionAsync();
 
-            var key = await keyVault.SecretClient.GetSecretAsync("pgcrypto-key");
+            string key = this.key.Value.Value;
 
-            parameters.Add("@Key", key.Value.Value);
+            parameters.Add("@Key", key);
             parameters.Add("@AccountId", account.Id);
             parameters.Add("@Auth0Id", account.Auth0Id);
             parameters.Add("@CPF", account.CPF);
@@ -62,9 +64,9 @@ namespace Infrastructure.Repositories.Account
         {
             DynamicParameters parameters = new();
 
-            var key = await keyVault.SecretClient.GetSecretAsync("pgcrypto-key");
+            string key = this.key.Value.Value;
 
-            parameters.Add("@Key", key.Value.Value);
+            parameters.Add("@Key", key);
             parameters.Add("@CPF", cpf);
 
             string sql = @"
@@ -96,9 +98,34 @@ namespace Infrastructure.Repositories.Account
             return context.Accounts.AsList();
         }
 
-        public Models.Account? GetById(Guid accountId)
+        public async Task<Models.Account?> GetById(Guid accountId)
         {
-            return context.Accounts.Where(x => x.Id == accountId).FirstOrDefault();
+            DynamicParameters parameters = new();
+
+            string key = this.key.Value.Value;
+
+            parameters.Add("@Key", key);
+            parameters.Add("@AccountId", accountId);
+
+            string sql = @"
+                SELECT 
+                    a.""Id"",
+                    a.""Auth0Id"",
+                    PGP_SYM_DECRYPT(a.""CPF""::bytea, @Key) as CPF,
+                    a.""BirthDate"",
+                    a.""StripeCustomerId"",
+                    a.""Status"",
+                    a.""CreatedAt""
+                FROM ""Accounts"" a
+                WHERE a.""Id"" = @AccountId;";
+
+            var account = await context.Database.GetDbConnection().QueryFirstOrDefaultAsync<Models.Account>(sql, parameters);
+
+            Auditor.Audit($"{nameof(Account)}:{AuditOperation.Get}", null,
+                comment: $"O objeto {nameof(Account)} foi obtido por inteiro pela aplicação e o CPF foi descriptografado.", fields: new { AccountId = accountId }
+            );
+
+            return account;
         }
 
         public Models.Account GetByStripeCustomerId(string stripeCustomerId)
@@ -106,10 +133,23 @@ namespace Infrastructure.Repositories.Account
             return context.Accounts.Where(x => x.StripeCustomerId == stripeCustomerId).First();
         }
 
-        public void Update(Models.Account account)
+        public async Task UpdateStatus(Models.Account account)
         {
-            context.Accounts.Update(account);
-            context.SaveChanges();
+            DynamicParameters parameters = new();
+
+            string key = this.key.Value.Value;
+
+            parameters.Add("@AccountId", account.Id);
+            parameters.Add("@Status", account.Status);
+
+            string sql = @"
+                UPDATE
+                    ""Accounts"" SET ""Status"" = @Status
+                WHERE ""Id"" = @AccountId;";
+
+            await context.Database.GetDbConnection().ExecuteAsync(sql, parameters);
+
+            Auditor.Audit($"{nameof(Account)}:{AuditOperation.Update}", fields: new { NewStatus = account.Status });
         }
 
         public void DeleteAll()

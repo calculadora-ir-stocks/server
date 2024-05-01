@@ -1,11 +1,11 @@
 ﻿using Api.Database;
 using Common;
-using Common.Configurations;
 using Common.Constants;
+using Common.Options;
 using Dapper;
 using Infrastructure.Dtos;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Update;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 
 namespace Infrastructure.Repositories.AverageTradedPrice
@@ -13,12 +13,12 @@ namespace Infrastructure.Repositories.AverageTradedPrice
     public class AverageTradedPriceRepository : IAverageTradedPriceRepostory
     {
         private readonly StocksContext context;
-        private readonly AzureKeyVaultConfiguration keyVault;
+        private readonly IOptions<DatabaseEncryptionKeyOptions> key;
 
-        public AverageTradedPriceRepository(StocksContext context, AzureKeyVaultConfiguration keyVault)
+        public AverageTradedPriceRepository(StocksContext context, IOptions<DatabaseEncryptionKeyOptions> encryptionKey)
         {
             this.context = context;
-            this.keyVault = keyVault;
+            this.key = encryptionKey;
         }
 
         #region INSERT
@@ -26,9 +26,9 @@ namespace Infrastructure.Repositories.AverageTradedPrice
         {
             DynamicParameters parameters = new();
 
-            var key = await keyVault.SecretClient.GetSecretAsync("pgcrypto-key");
+            string key = this.key.Value.Value;
 
-            parameters.Add("@Key", key.Value.Value);
+            parameters.Add("@Key", key);
             parameters.Add("@Ticker", averageTradedPrice.Ticker);
             parameters.Add("@AveragePrice", averageTradedPrice.AveragePrice);
             parameters.Add("@TotalBought", averageTradedPrice.TotalBought);
@@ -68,9 +68,9 @@ namespace Infrastructure.Repositories.AverageTradedPrice
         {
             DynamicParameters parameters = new();
 
-            var key = await keyVault.SecretClient.GetSecretAsync("pgcrypto-key");
+            string key = this.key.Value.Value;
 
-            parameters.Add("@Key", key.Value.Value);
+            parameters.Add("@Key", key);
             parameters.Add("@AccountId", accountId);
             parameters.Add("@Tickers", tickers);
 
@@ -103,9 +103,9 @@ namespace Infrastructure.Repositories.AverageTradedPrice
         {
             DynamicParameters parameters = new();
 
-            var key = await keyVault.SecretClient.GetSecretAsync("pgcrypto-key");
+            string key = this.key.Value.Value;
 
-            parameters.Add("@Key", key.Value.Value);
+            parameters.Add("@Key", key);
             parameters.Add("@AccountId", accountId);
             parameters.Add("@Tickers", tickers);
 
@@ -129,9 +129,9 @@ namespace Infrastructure.Repositories.AverageTradedPrice
         {
             DynamicParameters parameters = new();
 
-            var key = await keyVault.SecretClient.GetSecretAsync("pgcrypto-key");
+            string key = this.key.Value.Value;
 
-            parameters.Add("@Key", key.Value.Value);
+            parameters.Add("@Key", key);
             parameters.Add("@Ticker", averageTradedPrice.Ticker);
             parameters.Add("@AveragePrice", averageTradedPrice.AveragePrice);
             parameters.Add("@TotalBought", averageTradedPrice.TotalBought);

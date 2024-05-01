@@ -9,31 +9,32 @@ using Infrastructure.Repositories;
 using Common.Exceptions;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.AspNetCore.Server.IIS.Core;
+using Infrastructure.Repositories.Account;
 
 namespace Core.Services.DarfGenerator
 {
     public class DarfGeneratorService : IDarfGeneratorService
     {
-        private readonly IGenericRepository<Infrastructure.Models.Account> genericRepositoryAccount;
+        private readonly IAccountRepository accountRepository;
         private readonly IIncomeTaxesRepository taxesRepository;
         private readonly IInfoSimplesClient infoSimplesClient;
         private const string DarfCode = "6015-01";
 
         public DarfGeneratorService(
-            IGenericRepository<Infrastructure.Models.Account> genericRepositoryAccount,
+            IAccountRepository accountRepository,
             IIncomeTaxesRepository taxesRepository,
             IInfoSimplesClient infoSimplesClient
         )
         {
-            this.genericRepositoryAccount = genericRepositoryAccount;
+            this.accountRepository = accountRepository;
             this.taxesRepository = taxesRepository;
             this.infoSimplesClient = infoSimplesClient;
         }
 
         public async Task<DARFResponse> Generate(Guid accountId, string month, double value = 0)
         {
-            var account = await genericRepositoryAccount.GetByIdAsync(accountId);
-            if (account is null) throw new NotFoundException("Investidor", accountId.ToString());
+            // TODO tá pegando o CPF criptografado
+            var account = await accountRepository.GetById(accountId) ?? throw new NotFoundException("Investidor", accountId.ToString());
 
             if (account.Status == EnumHelper.GetEnumDescription(AccountStatus.SubscriptionExpired))
                 throw new ForbiddenException("O plano do usuário está expirado.");
@@ -51,19 +52,19 @@ namespace Core.Services.DarfGenerator
 
             // TODO uncomment for production
 
-            // var response = await infoSimplesClient.GenerateDARF(
-            //     new GenerateDARFRequest
-            //     (
-            //         UtilsHelper.RemoveSpecialCharacters(account.CPF),
-            //         account.BirthDate,
-            //         $"Venda de ativos no mês {taxesReferenceDate}. Essa DARF foi gerada automaticamente " +
-            //         $"pelo Stocks IR em {today}.",
-            //         DarfCode,
-            //         totalTaxes,
-            //         taxesReferenceDate,
-            //         today
-            //     )
-            // );
+            var response = await infoSimplesClient.GenerateDARF(
+                new GenerateDARFRequest
+                (
+                    UtilsHelper.RemoveSpecialCharacters(account.CPF),
+                    account.BirthDate,
+                    $"Venda de ativos no mês {taxesReferenceDate}. Essa DARF foi gerada automaticamente " +
+                    $"pelo Stocks IR em {today}.",
+                    DarfCode,
+                    totalTaxes,
+                    taxesReferenceDate,
+                    today
+                )
+            );
 
             // string? observation = null;
 

@@ -82,6 +82,8 @@ namespace Core.Services.B3ResponseCalculator
 
                 if (stocks.Any())
                 {
+                    // TODO arrumar isso aqui. Acho que tá certo pq na segunda iteração ele vai ter valores, por isso
+                    // tem que fazer um teste com o mesmo ativo negociado em dois meses diferentes.
                     movementDetails.AverageTradedPrices.AddRange(await GetAverageTradedPricesIfAny(accountId, movementDetails.AverageTradedPrices));
 
                     calculator = new StocksIncomeTaxes();

@@ -3,7 +3,7 @@ using Common.Constants;
 using Common.Enums;
 using Common.Exceptions;
 using Common.Helpers;
-using Common.Models.Secrets;
+using Common.Options;
 using Infrastructure.Repositories.Account;
 using Infrastructure.Repositories.Plan;
 using Microsoft.Extensions.Logging;
@@ -18,27 +18,26 @@ namespace Billing.Services.Stripe
         private readonly IAccountRepository accountRepository;
         private readonly IPlanRepository planRepository;
 
-        private readonly StripeSecret secret;
+        private readonly IOptions<StripeOptions> options;
 
         private readonly ILogger<StripeService> logger;
 
         public StripeService(
             IAccountRepository accountRepository,
             IPlanRepository planRepository,
-            IOptions<StripeSecret> secret,
+            IOptions<StripeOptions> options,
             ILogger<StripeService> logger
         )
         {
             this.accountRepository = accountRepository;
             this.planRepository = planRepository;
-            this.secret = secret.Value;
+            this.options = options;
             this.logger = logger;
         }
 
         public async Task<Session> CreateCheckoutSession(Guid accountId, string productId, string? couponId = null)
         {
-            var account = accountRepository.GetById(accountId);
-            if (account is null) throw new NotFoundException("Investidor", accountId.ToString());
+            var account = await accountRepository.GetById(accountId) ?? throw new NotFoundException("Investidor", accountId.ToString());
 
             var options = new SessionCreateOptions
             {
@@ -94,7 +93,7 @@ namespace Billing.Services.Stripe
 
             try
             {
-                stripeEvent = EventUtility.ConstructEvent(json, stripeSignatureHeader, secret.WebhookSecret);
+                stripeEvent = EventUtility.ConstructEvent(json, stripeSignatureHeader, options.Value.WebhookToken);
             }
             catch (Exception e)
             {

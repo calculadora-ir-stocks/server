@@ -5,10 +5,9 @@ using Api.Services.Auth;
 using Audit.Core;
 using Audit.PostgreSql.Configuration;
 using Billing.Services.Stripe;
-using Common;
 using Common.Configurations;
 using Common.Models.Handlers;
-using Common.Models.Secrets;
+using Common.Options;
 using Core.Calculators;
 using Core.Calculators.Assets;
 using Core.Clients.B3;
@@ -36,13 +35,13 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using Npgsql.Replication;
 using Polly;
 using Stripe;
 using System.Reflection;
 using System.Security.Authentication;
 using System.Security.Claims;
 using System.Security.Cryptography.X509Certificates;
+using File = System.IO.File;
 
 namespace Api
 {
@@ -57,7 +56,6 @@ namespace Api
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 
             services.AddSingleton<JsonSerializerConfiguration>();
-            services.AddSingleton<AzureKeyVaultConfiguration>();
 
             services.AddTransient<IUnitOfWork, UnitOfWork>();
 
@@ -91,9 +89,9 @@ namespace Api
             services.AddMvc(options => options.Filters.Add<NotificationFilter>());
         }
 
-        public static void AddStripeServices(this IServiceCollection services)
+        public static void AddStripeServices(this IServiceCollection services, IConfiguration configuration)
         {
-            StripeConfiguration.ApiKey = Environment.GetEnvironmentVariable("STRIPE_API_TOKEN");
+            StripeConfiguration.ApiKey = configuration["Secrets:Stripe:Api:Token"];
 
             services.AddScoped<ChargeService>();
             services.AddScoped<CustomerService>();
@@ -129,19 +127,15 @@ namespace Api
             });
         }
 
-        public static void ConfigureHangfireDatabase(this IServiceCollection services)
+        public static void ConfigureHangfireDatabase(this IServiceCollection services, string connectionString)
         {
-            DatabaseSecret secret = new();
-
             services.AddHangfire(config =>
                 config.UsePostgreSqlStorage(c =>
-                    c.UseNpgsqlConnection(secret.GetConnectionString())));
+                    c.UseNpgsqlConnection(connectionString)));
         }
 
         public static void ConfigureHangfireServices(this WebApplication _)
         {
-            DatabaseSecret secret = new();
-
             RecurringJob.AddOrUpdate<IAverageTradedPriceUpdaterHangfire>(
                     nameof(AverageTradedPriceUpdaterHangfire),
                     x => x.Execute(),
@@ -155,19 +149,20 @@ namespace Api
             );
         }
 
-        public static void Add3rdPartiesClients(this IServiceCollection services)
+        public static void Add3rdPartiesClients(this IServiceCollection services, IConfiguration configuration)
         {
+            var b3Handler = new HttpClientHandler();
+            AddB3Certificate(b3Handler, configuration);
+
             var handler = new HttpClientHandler();
-            // TODO: uncomment for production
-            // AddCertificate(handler);
 
             services.AddHttpClient("B3", c =>
-                c.BaseAddress = new Uri("https://apib3i-cert.b3.com.br:2443/api/")).ConfigurePrimaryHttpMessageHandler(() => handler)
+                c.BaseAddress = new Uri("https://apib3i-cert.b3.com.br:2443/api/")).ConfigurePrimaryHttpMessageHandler(() => b3Handler)
                 .AddTransientHttpErrorPolicy(policy => policy.WaitAndRetryAsync(5, _ => TimeSpan.FromSeconds(10)))
                 .AddTransientHttpErrorPolicy(policy => policy.CircuitBreakerAsync(5, TimeSpan.FromSeconds(10)));
 
             services.AddHttpClient("Microsoft", c =>
-                c.BaseAddress = new Uri("https://login.microsoftonline.com/")).ConfigurePrimaryHttpMessageHandler(() => handler)
+                c.BaseAddress = new Uri("https://login.microsoftonline.com/")).ConfigurePrimaryHttpMessageHandler(() => b3Handler)
                 .AddTransientHttpErrorPolicy(policy => policy.WaitAndRetryAsync(5, _ => TimeSpan.FromSeconds(10)))
                 .AddTransientHttpErrorPolicy(policy => policy.CircuitBreakerAsync(5, TimeSpan.FromSeconds(10)));
 
@@ -182,14 +177,11 @@ namespace Api
                 .AddTransientHttpErrorPolicy(policy => policy.CircuitBreakerAsync(5, TimeSpan.FromSeconds(10)));
         }
 
-        private static void AddCertificate(HttpClientHandler handler)
+        private static void AddB3Certificate(HttpClientHandler handler, IConfiguration configuration)
         {
             handler.ClientCertificateOptions = ClientCertificateOption.Manual;
             handler.SslProtocols = SslProtocols.Tls12;
-
-            // C:\Users\Biscoitinho\Documents\Certificates\31788887000158.pfx
-            // /home/dickmann/Documents/certificates/31788887000158.pfx
-            handler.ClientCertificates.Add(new X509Certificate2("/home/dickmann/Documents/certificates/31788887000158.pfx", "C3MOHH", X509KeyStorageFlags.PersistKeySet));
+            handler.ClientCertificates.Add(new X509Certificate2("C:\\31788887000158.cer", password: configuration["Certificates:B3:Password"]));
         }
 
         public static void AddRepositories(this IServiceCollection services)
@@ -238,40 +230,52 @@ namespace Api
             });
         }
 
-        public static void AddDatabase(this IServiceCollection services)
+        public static void AddSecretOptions(this IServiceCollection services, IConfiguration configuration)
         {
-            DatabaseSecret secret = new();
+            services.Configure<DatabaseOptions>(options =>
+            {
+                options.ConnectionString = configuration["ConnectionsString:Database"];
+            });
+            services.Configure<DatabaseEncryptionKeyOptions>(options =>
+            {
+                options.Value = configuration["Keys:PgCrypto"];
+            });
+            services.Configure<B3ApiOptions>(options =>
+            {
+                options.ClientId = configuration["Secrets:B3:ClientId"];
+                options.ClientSecret = configuration["Secrets:B3:ClientSecret"];
+                options.Scope = configuration["Secrets:B3:Scope"];
+            });
+            services.Configure<StripeOptions>(options =>
+            {
+                options.WebhookToken = configuration["Secrets:Stripe:Webhook:Token"];
+                options.ApiToken = configuration["Secrets:Stripe:Api:Token"];
+            });
+            services.Configure<InfoSimplesOptions>(options =>
+            {
+                options.ApiToken = configuration["Secrets:InfoSimples:Api:Token"];
+            });
+        }
 
+        public static void AddDatabaseContext(this IServiceCollection services, string connectionString)
+        {
             services.AddDbContext<StocksContext>(options =>
             {
-                options.UseNpgsql(secret.GetConnectionString());
+                options.UseNpgsql(connectionString);
                 options.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
             });
             AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
         }
 
-        public static void AddAudiTrail(this IServiceCollection _)
+        public static void AddAudiTrail(this IServiceCollection _, string connectionString)
         {
-            DatabaseSecret secret = new();
-
             Configuration.Setup().UsePostgreSql(config => config
-                .ConnectionString(secret.GetConnectionString())
+                .ConnectionString(connectionString)
                 .TableName("Audits")
                 .IdColumnName("Id")
                 .DataColumn("Data", DataType.JSONB)
                 .LastUpdatedColumnName("UpdatedAt")
                 .CustomColumn("EventType", ev => ev.EventType));
-        }
-
-        public static void InitializeEnvironmentVariables(this IServiceCollection _, string[] envFilesOnRoot)
-        {
-            string root = Directory.GetCurrentDirectory();
-
-            foreach (string envFile in envFilesOnRoot)
-            {
-                string env = Path.Combine(root, envFile);
-                EnvironmentVariableInitializer.Load(env);
-            }
         }
     }
 }

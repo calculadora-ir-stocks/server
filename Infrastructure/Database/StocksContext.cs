@@ -1,7 +1,7 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Infrastructure.Models;
-using System.Reflection;
+﻿using Infrastructure.Models;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using System.Reflection;
 
 namespace Api.Database
 {
@@ -15,7 +15,7 @@ namespace Api.Database
         public DbSet<Plan> Plans { get; set; } = null!;
         public DbSet<Infrastructure.Models.Audit> Audits { get; set; } = null!;
 
-        public ILogger<StocksContext> logger;
+        private readonly ILogger<StocksContext> logger;
 
         public StocksContext(DbContextOptions<StocksContext> options, ILogger<StocksContext> logger) : base(options)
         {
@@ -26,12 +26,8 @@ namespace Api.Database
                 Database.EnsureCreated();
             } catch (Exception e)
             {
-                logger.LogError(e, "Ocorreu um erro ao carregar o banco de dados.");
+                this.logger.LogError(e, "Ocorreu um erro ao carregar o banco de dados.");
             }
-        }
-
-        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        {
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

@@ -1,6 +1,6 @@
 ﻿using Api.Clients.B3;
 using Api.DTOs.Auth;
-using Common.Models.Secrets;
+using Common.Options;
 using Core.Models.B3;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -11,14 +11,15 @@ using System.Net.Http.Headers;
 
 namespace Core.Clients.B3
 {
+    // TODO refit
+    // TODO verificar se status code é 422. Se for, perdemos o vínculo do investidor com a API - notificar o front.
     public class B3Client : IB3Client
     {
         private readonly IHttpClientFactory clientFactory;
+        private readonly IOptions<B3ApiOptions> options;
 
         private readonly HttpClient b3Client;
         private readonly HttpClient microsoftClient;
-
-        private readonly B3Secret @params;
 
         private static B3Token? token;
 
@@ -29,10 +30,10 @@ namespace Core.Clients.B3
         /// </summary>
         private const string B3TokenAuthorizationRequestUri = "/4bee639f-5388-44c7-bbac-cb92a93911e6/oauth2/v2.0/token";
 
-        public B3Client(IHttpClientFactory clientFactory, IOptions<B3Secret> @params, ILogger<B3Client> logger)
+        public B3Client(IHttpClientFactory clientFactory, IOptions<B3ApiOptions> options, ILogger<B3Client> logger)
         {
             this.clientFactory = clientFactory;
-            this.@params = @params.Value;
+            this.options = options;
 
             b3Client = this.clientFactory.CreateClient("B3");
             microsoftClient = this.clientFactory.CreateClient("Microsoft");
@@ -41,9 +42,9 @@ namespace Core.Clients.B3
             this.logger = logger;
         }
 
-#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
+#pragma warning disable CS8618
         public B3Client() { }
-#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
+#pragma warning restore CS8618
 
         public async Task<Movement.Root?> GetAccountMovement(string cpf, string referenceStartDate, string referenceEndDate, Guid accountId, string? nextUrl)
         {
@@ -106,9 +107,8 @@ namespace Core.Clients.B3
                 using var response = await b3Client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
                 response.EnsureSuccessStatusCode();
 
-                string? responseContentStream = await response.Content.ReadAsStringAsync();
-
-                var assets = JsonConvert.DeserializeObject<Movement.Root>(responseContentStream);
+                string? json = await response.Content.ReadAsStringAsync();
+                var assets = JsonConvert.DeserializeObject<Movement.Root>(json);
 
                 root.Links.Next = assets.Links.Next;
                 root.Data.EquitiesPeriods.EquitiesMovements.AddRange(assets.Data.EquitiesPeriods.EquitiesMovements);
@@ -142,12 +142,13 @@ namespace Core.Clients.B3
                 {
                     Content = new FormUrlEncodedContent(new KeyValuePair<string?, string?>[]
                     {
-                        new("client_id", @params.ClientId),
-                        new("client_secret", @params.ClientSecret),
-                        new("scope", @params.Scope),
-                        new("grant_type", @params.GrantType)
+                        new("content-type", "application/x-www-form-urlencoded"),
+                        new("client_id", options.Value.ClientId),
+                        new("client_secret", options.Value.ClientSecret),
+                        new("scope", "98ddf4b0-f66d4c96-97ea-9e30306599e7%2F.default"),
+                        new("grant_type", options.Value.GrantType)
                     })
-                };
+                };             
 
                 using var response = await microsoftClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
                 response.EnsureSuccessStatusCode();
@@ -163,6 +164,33 @@ namespace Core.Clients.B3
                 logger.LogError(e, "Uma exceção ocorreu ao tentar obter o token de autorização da B3. {exception} ", e.Message);
                 throw new Exception("Uma exceção ocorreu ao tentar obter o token de autorização da B3. " + e.Message);
             }
+        }
+
+        public async Task<bool> OptIn(string cpf)
+        {
+            HttpRequestMessage request = new(HttpMethod.Get, $"authorizations/investors/{cpf}");
+
+            var accessToken = await GetB3AuthorizationToken();
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken.AccessToken);
+
+            using var response = await b3Client.SendAsync(request);
+            response.EnsureSuccessStatusCode();
+
+            var json = await response.Content.ReadAsStringAsync();
+            var authorized = JsonConvert.DeserializeObject<OptIn>(json)!.Data.Authorized;
+
+            return authorized;
+        }
+
+        public async Task OptOut(string cpf)
+        {
+            HttpRequestMessage request = new(HttpMethod.Get, $"optout/investor/{cpf}");
+
+            var accessToken = await GetB3AuthorizationToken();
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken.AccessToken);
+
+            using var response = await b3Client.SendAsync(request);
+            response.EnsureSuccessStatusCode();
         }
     }
 }

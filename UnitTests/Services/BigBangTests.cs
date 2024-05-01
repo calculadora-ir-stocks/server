@@ -7,6 +7,7 @@ using Infrastructure.Repositories.AverageTradedPrice;
 using Moq;
 using System.Security.Policy;
 using static Core.Models.B3.Movement;
+using Data = Core.Models.B3.Movement.Data;
 
 namespace stocks_unit_tests.Services
 {

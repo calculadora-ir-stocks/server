@@ -1,4 +1,4 @@
-﻿using Common.Models.Secrets;
+﻿using Common.Options;
 using Core.Models.InfoSimples;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -12,15 +12,15 @@ namespace Core.Clients.InfoSimples
         private readonly IHttpClientFactory httpClient;
         private readonly HttpClient client;
 
-        private readonly InfoSimplesSecret secret;
+        private readonly IOptions<InfoSimplesOptions> secret;
         private readonly ILogger<InfoSimplesClient> logger;
 
-        public InfoSimplesClient(IHttpClientFactory httpClient, IOptions<InfoSimplesSecret> secret, ILogger<InfoSimplesClient> logger)
+        public InfoSimplesClient(IHttpClientFactory httpClient, IOptions<InfoSimplesOptions> secret, ILogger<InfoSimplesClient> logger)
         {
             this.httpClient = httpClient;
             client = this.httpClient.CreateClient("Infosimples");
 
-            this.secret = secret.Value;
+            this.secret = secret;
             this.logger = logger;
         }
 
@@ -29,7 +29,7 @@ namespace Core.Clients.InfoSimples
             logger.LogInformation("Iniciando geração de DARF.");
 
             string encodedUrl =
-                    $"receita-federal/sicalc/darf?token={secret.Secret}&cnpj=&cpf={request.CPF}&birthdate={HttpUtility.UrlEncode(request.BirthDate)}" +
+                    $"receita-federal/sicalc/darf?token={secret.Value.ApiToken}&cnpj=&cpf={request.CPF}&birthdate={HttpUtility.UrlEncode(request.BirthDate)}" +
                     $"&observacoes={HttpUtility.UrlEncode(request.Observacoes)}&codigo={request.Codigo}" +
                     $"&valor_principal={request.ValorPrincipal.ToString().Replace(",", ".")}" +
                     $"&periodo_apuracao={HttpUtility.UrlEncode(request.PeriodoApuracao)}&data_consolidacao={HttpUtility.UrlEncode(request.DataConsolidacao)}" +

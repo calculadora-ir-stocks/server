@@ -1,28 +1,34 @@
-﻿using Common;
-using Common.Constants;
+﻿using Api.Clients.B3;
+using Common.Exceptions;
+using Common.Options;
 using Infrastructure.Repositories.Account;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace Core.Services.Account
 {
     public class AccountService : IAccountService
     {
         private readonly IAccountRepository repository;
+        private readonly IB3Client b3Client;
+        private readonly IOptions<B3ApiOptions> b3Options;
         private readonly ILogger<AccountService> logger;
 
-        public AccountService(IAccountRepository repository, ILogger<AccountService> logger)
+        public AccountService(IAccountRepository repository, IB3Client b3Client, IOptions<B3ApiOptions> b3Options, ILogger<AccountService> logger)
         {
             this.repository = repository;
+            this.b3Client = b3Client;
+            this.b3Options = b3Options;
             this.logger = logger;
         }
 
-        public void Delete(Guid accountId)
+        public async Task Delete(Guid accountId)
         {
             try
             {
-                var account = repository.GetById(accountId) ?? 
-                    throw new NullReferenceException($"O usuário de id {accountId} não foi encontrado na base de dados.");
+                var account = await repository.GetById(accountId) ?? throw new NotFoundException("Investidor", accountId.ToString());
 
+                await b3Client.OptOut(account.CPF);
                 repository.Delete(account);
 
                 logger.LogInformation("O usuário de id {accountId} deletou a sua conta da plataforma.", accountId);
@@ -37,6 +43,20 @@ namespace Core.Services.Account
         public async Task<Guid> GetByAuth0Id(string auth0Id)
         {
             return await repository.GetByAuth0IdAsNoTracking(auth0Id);
+        }
+
+        public string GetOptInLink()
+        {
+            string link = $"https://b3Investidorcer.b2clogin.com/b3Investidorcer.onmicrosoft.com/oauth2/v2.0/" +
+                $"authorize?p=B2C_1A_FINTECH&client_id={b3Options.Value.ClientId}&nonce=defaultNonce" +
+                $"&redirect_uri=https%3A%2F%2Fwww.investidor.b3.com.br&scope=openid&response_type=code&prompt=login";
+            return link;
+        }
+
+        public async Task<bool> OptIn(Guid accountId)
+        {
+            var account = await repository.GetById(accountId) ?? throw new NotFoundException("Investidor", accountId.ToString());
+            return await b3Client.OptIn(account.CPF);
         }
     }
 }

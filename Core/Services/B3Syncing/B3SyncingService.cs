@@ -44,8 +44,7 @@ namespace Core.Services.B3Syncing
 
         public async Task Sync(Guid accountId, List<BigBangRequest> request)
         {
-            Infrastructure.Models.Account? account = accountRepository.GetById(accountId);
-            if (account is null) throw new NotFoundException("Investidor", accountId.ToString());
+            var account = await accountRepository.GetById(accountId) ?? throw new NotFoundException("Investidor", accountId.ToString());
 
             if (!AccountCanExecuteSyncing(account))
             {
@@ -72,7 +71,7 @@ namespace Core.Services.B3Syncing
             await SaveB3Data(response, account);
 
             account.Status = EnumHelper.GetEnumDescription(AccountStatus.SubscriptionValid);
-            accountRepository.Update(account);
+            await accountRepository.UpdateStatus(account);
 
             logger.LogInformation("Big Bang executado com sucesso para o usuário {accountId}.", accountId);
         }
@@ -142,7 +141,7 @@ namespace Core.Services.B3Syncing
             {
                 if (MonthHadProfitOrLoss(asset))
                 {
-                    incomeTaxes.Add(new Infrastructure.Models.IncomeTaxes
+                    incomeTaxes.Add(new IncomeTaxes
                     (
                         asset.Month,
                         asset.Taxes,
