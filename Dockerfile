@@ -13,9 +13,6 @@ FROM mcr.microsoft.com/dotnet/aspnet:6.0-alpine as runtime
 WORKDIR /publish
 COPY --from=build-env /publish .
 
-COPY .apis.env /publish/.apis.env
-COPY .database.env /publish/.database.env
-
 COPY init.sql /docker-entrypoint-initdb.d/
 
 EXPOSE 80

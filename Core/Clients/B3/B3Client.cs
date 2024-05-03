@@ -25,9 +25,6 @@ namespace Core.Clients.B3
 
         private readonly ILogger<B3Client> logger;
 
-        /// <summary>
-        /// https://clientes.b3.com.br/data/files/50/E0/18/FD/B623F7107E3811F7BFC9F9C2/Informacoes%20de%20APIs%20%20Ambiente%20certificacao.pdf
-        /// </summary>
         private const string B3TokenAuthorizationRequestUri = "/4bee639f-5388-44c7-bbac-cb92a93911e6/oauth2/v2.0/token";
 
         public B3Client(IHttpClientFactory clientFactory, IOptions<B3ApiOptions> options, ILogger<B3Client> logger)
@@ -142,13 +139,14 @@ namespace Core.Clients.B3
                 {
                     Content = new FormUrlEncodedContent(new KeyValuePair<string?, string?>[]
                     {
-                        new("content-type", "application/x-www-form-urlencoded"),
+                        new("grant_type", "client_credentials"),
                         new("client_id", options.Value.ClientId),
                         new("client_secret", options.Value.ClientSecret),
-                        new("scope", "98ddf4b0-f66d4c96-97ea-9e30306599e7%2F.default"),
-                        new("grant_type", options.Value.GrantType)
+                        new("scope", options.Value.Scope)
                     })
-                };             
+                };
+
+                request.Content.Headers.ContentType = new MediaTypeWithQualityHeaderValue("application/x-www-form-urlencoded");
 
                 using var response = await microsoftClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
                 response.EnsureSuccessStatusCode();
