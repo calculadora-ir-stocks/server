@@ -15,9 +15,9 @@ on:
 
 env:
   # Use docker.io for Docker Hub if empty
-  REGISTRY: ghcr.io
+  REGISTRY: docker.io
   # github.repository as <account>/<repo>
-  IMAGE_NAME: calculadora-ir-stocks/server
+  IMAGE_NAME: stocksirofficial/server
 
 
 jobs:
