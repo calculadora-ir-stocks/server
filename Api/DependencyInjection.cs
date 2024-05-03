@@ -181,7 +181,7 @@ namespace Api
         {
             handler.ClientCertificateOptions = ClientCertificateOption.Manual;
             handler.SslProtocols = SslProtocols.Tls12;
-            handler.ClientCertificates.Add(new X509Certificate2("C:\\31788887000158.cer", password: configuration["Certificates:B3:Password"]));
+            handler.ClientCertificates.Add(new X509Certificate2("C:\\54107822000103.p12", password: configuration["Certificates:B3:Password"], X509KeyStorageFlags.PersistKeySet));
         }
 
         public static void AddRepositories(this IServiceCollection services)
