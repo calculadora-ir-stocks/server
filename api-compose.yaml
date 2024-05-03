@@ -3,7 +3,6 @@ version: '3'
 services:
   database:
     restart: always
-    env_file: .database.env
     container_name: database
     image: postgres:16
     ports:
@@ -13,7 +12,6 @@ services:
       - pgdata:/var/lib/postgresql/data
    api:
     restart: always
-    env_file: .apis.env
     container_name: api
     build:
       context: .
