@@ -3,6 +3,7 @@ using Api.Database;
 using Api.Middlewares;
 using Azure.Identity;
 using Hangfire;
+using System.Collections;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -57,9 +58,9 @@ builder.Services.AddCors(policyBuilder =>
 var app = builder.Build();
 
 var credentials = Environment.GetEnvironmentVariables();
-foreach(var credential in credentials)
+foreach(DictionaryEntry i in credentials)
 {
-    app.Logger.LogInformation("Envs: " + credential.ToString());
+    app.Logger.LogInformation("Envs: " + i.Key + ":" + i.Value);
 }
 
 using (var scope = app.Services.CreateAsyncScope())
