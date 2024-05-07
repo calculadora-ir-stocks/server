@@ -14,11 +14,22 @@ builder.Services.AddHttpContextAccessor();
 
 if (builder.Environment.IsProduction())
 {
+    var credentials = Environment.GetEnvironmentVariables();
+
+    string? azureTenantId = credentials["AZURE_TENANT_ID"]?.ToString();
+    if (azureTenantId is null) throw new Exception("A variável de ambiente AZURE_TENANT_ID não está configurada.");
+
+    string? azureClientId = credentials["AZURE_CLIENT_ID"]?.ToString();
+    if (azureClientId is null) throw new Exception("A variável de ambiente AZURE_CLIENT_ID não está configurada.");
+
+    string? azureSecretId = credentials["AZURE_CLIENT_SECRET"]?.ToString();
+    if (azureSecretId is null) throw new Exception("A variável de ambiente AZURE_CLIENT_SECRET não está configurada.");
+
     // Sets Key Vault credentiais
     builder.Configuration.AddAzureKeyVault(new("https://server-keys-and-secrets.vault.azure.net/"), new ClientSecretCredential(
-        Environment.GetEnvironmentVariable("AZURE_TENANT_ID"),
-        Environment.GetEnvironmentVariable("AZURE_CLIENT_ID"),
-        Environment.GetEnvironmentVariable("AZURE_CLIENT_SECRET")));
+        azureTenantId,
+        azureClientId,
+        azureSecretId));
 }
 
 builder.Services.AddSecretOptions(builder.Configuration);
