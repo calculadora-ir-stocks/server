@@ -57,12 +57,6 @@ builder.Services.AddCors(policyBuilder =>
 
 var app = builder.Build();
 
-var credentials = Environment.GetEnvironmentVariables();
-foreach(DictionaryEntry i in credentials)
-{
-    app.Logger.LogInformation("Envs: " + i.Key + ":" + i.Value);
-}
-
 using (var scope = app.Services.CreateAsyncScope())
 {
     scope.ServiceProvider.GetRequiredService<StocksContext>();
