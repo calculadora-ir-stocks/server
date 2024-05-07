@@ -15,10 +15,14 @@ builder.Services.AddHttpContextAccessor();
 if (builder.Environment.IsProduction())
 {
     // Sets Key Vault credentiais
-    builder.Configuration.AddAzureKeyVault(new("https://server-keys-and-secrets.vault.azure.net/"), new DefaultAzureCredential());
+    builder.Configuration.AddAzureKeyVault(new("https://server-keys-and-secrets.vault.azure.net/"), new ClientSecretCredential(
+        Environment.GetEnvironmentVariable("AZURE_TENANT_ID"),
+        Environment.GetEnvironmentVariable("AZURE_CLIENT_ID"),
+        Environment.GetEnvironmentVariable("AZURE_CLIENT_SECRET")));
 }
 
 builder.Services.AddSecretOptions(builder.Configuration);
+
 builder.Services.AddDatabaseContext(builder.Configuration["ConnectionsString:Database"]);
 builder.Services.AddAudiTrail(builder.Configuration["ConnectionsString:Database"]);
 builder.Services.ConfigureHangfireDatabase(builder.Configuration["ConnectionsString:Database"]);
