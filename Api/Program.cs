@@ -57,7 +57,10 @@ builder.Services.AddCors(policyBuilder =>
 var app = builder.Build();
 
 var credentials = Environment.GetEnvironmentVariables();
-app.Logger.LogInformation("Envs: " + credentials);
+foreach(var credential in credentials)
+{
+    app.Logger.LogInformation("Envs: " + credential);
+}
 
 using (var scope = app.Services.CreateAsyncScope())
 {
