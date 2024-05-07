@@ -152,7 +152,8 @@ namespace Api
         public static void Add3rdPartiesClients(this IServiceCollection services, IConfiguration configuration)
         {
             var b3Handler = new HttpClientHandler();
-            AddB3Certificate(b3Handler, configuration);
+            // TODO uncomment for production
+            // AddB3Certificate(b3Handler, configuration);
 
             var handler = new HttpClientHandler();
 
