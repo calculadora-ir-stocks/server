@@ -12,38 +12,38 @@ builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.AddHttpContextAccessor();
 
-if (builder.Environment.IsProduction())
-{
-    var credentials = Environment.GetEnvironmentVariables();
+//if (builder.Environment.IsProduction())
+//{
+//    var credentials = Environment.GetEnvironmentVariables();
 
-    string? azureTenantId = credentials["AZURE_TENANT_ID"]?.ToString();
-    if (azureTenantId is null) throw new Exception("A variável de ambiente AZURE_TENANT_ID não está configurada.");
+//    string? azureTenantId = credentials["AZURE_TENANT_ID"]?.ToString();
+//    if (azureTenantId is null) throw new Exception("A variável de ambiente AZURE_TENANT_ID não está configurada.");
 
-    string? azureClientId = credentials["AZURE_CLIENT_ID"]?.ToString();
-    if (azureClientId is null) throw new Exception("A variável de ambiente AZURE_CLIENT_ID não está configurada.");
+//    string? azureClientId = credentials["AZURE_CLIENT_ID"]?.ToString();
+//    if (azureClientId is null) throw new Exception("A variável de ambiente AZURE_CLIENT_ID não está configurada.");
 
-    string? azureSecretId = credentials["AZURE_CLIENT_SECRET"]?.ToString();
-    if (azureSecretId is null) throw new Exception("A variável de ambiente AZURE_CLIENT_SECRET não está configurada.");
+//    string? azureSecretId = credentials["AZURE_CLIENT_SECRET"]?.ToString();
+//    if (azureSecretId is null) throw new Exception("A variável de ambiente AZURE_CLIENT_SECRET não está configurada.");
 
-    // Sets Key Vault credentiais
-    builder.Configuration.AddAzureKeyVault(new("https://server-keys-and-secrets.vault.azure.net/"), new ClientSecretCredential(
-        azureTenantId,
-        azureClientId,
-        azureSecretId));
-}
+//    // Sets Key Vault credentiais
+//    builder.Configuration.AddAzureKeyVault(new("https://server-keys-and-secrets.vault.azure.net/"), new ClientSecretCredential(
+//        azureTenantId,
+//        azureClientId,
+//        azureSecretId));
+//}
 
-builder.Services.AddSecretOptions(builder.Configuration);
+//builder.Services.AddSecretOptions(builder.Configuration);
 
-builder.Services.AddDatabaseContext(builder.Configuration["ConnectionsString:Database"]);
-builder.Services.AddAudiTrail(builder.Configuration["ConnectionsString:Database"]);
-builder.Services.ConfigureHangfireDatabase(builder.Configuration["ConnectionsString:Database"]);
+//builder.Services.AddDatabaseContext(builder.Configuration["ConnectionsString:Database"]);
+//builder.Services.AddAudiTrail(builder.Configuration["ConnectionsString:Database"]);
+//builder.Services.ConfigureHangfireDatabase(builder.Configuration["ConnectionsString:Database"]);
 
-builder.Services.AddStripeServices(builder.Configuration);
-builder.Services.AddServices(builder);
-builder.Services.Add3rdPartiesClients(builder.Configuration);
-builder.Services.AddRepositories();
+//builder.Services.AddStripeServices(builder.Configuration);
+//builder.Services.AddServices(builder);
+//builder.Services.Add3rdPartiesClients(builder.Configuration);
+//builder.Services.AddRepositories();
 
-builder.Services.AddAuth0Authentication(builder);
+//builder.Services.AddAuth0Authentication(builder);
 
 builder.Services.AddRouting(options => options.LowercaseUrls = true);
 
@@ -55,6 +55,9 @@ builder.Services.AddCors(policyBuilder =>
 );
 
 var app = builder.Build();
+
+var credentials = Environment.GetEnvironmentVariables();
+app.Logger.LogInformation("Envs: " + credentials);
 
 using (var scope = app.Services.CreateAsyncScope())
 {
