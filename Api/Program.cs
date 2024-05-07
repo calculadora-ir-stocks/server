@@ -59,7 +59,7 @@ var app = builder.Build();
 var credentials = Environment.GetEnvironmentVariables();
 foreach(var credential in credentials)
 {
-    app.Logger.LogInformation("Envs: " + credential);
+    app.Logger.LogInformation("Envs: " + credential.ToString());
 }
 
 using (var scope = app.Services.CreateAsyncScope())
