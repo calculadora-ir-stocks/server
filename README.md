@@ -26,7 +26,8 @@ A execução da aplicação pode ser feita através do Docker. Para isso, certif
 3. Execute a aplicação através do Docker Compose na raíz do projeto:
 
    ```
-   $ docker compose up app
+   $ docker compose -f compose-dev.yaml up -d
    ```
 
+Caso os contâiners sejam pausados, execute o mesmo comando novamente para iniciá-los.
 O Swagger UI é utilizado para a documentação de todos os endpoints do servidor. Para visualizá-lo, acesse `http://localhost:8080/swagger/index.html`.
