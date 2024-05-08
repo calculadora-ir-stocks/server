@@ -15,5 +15,5 @@ COPY --from=build-env /publish .
 
 COPY init.sql /docker-entrypoint-initdb.d/
 
-EXPOSE 80
+EXPOSE 8080:80
 ENTRYPOINT ["dotnet", "Api.dll"]
