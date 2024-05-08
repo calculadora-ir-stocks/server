@@ -7,6 +7,7 @@ services:
     ports:
       - "80:80"
       - "443:443"
+    network_mode: bridge
     volumes:
       - "/etc/nginx/vhost.d"
       - "/usr/share/nginx/html"
