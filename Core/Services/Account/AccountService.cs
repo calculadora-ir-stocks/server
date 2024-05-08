@@ -1,4 +1,5 @@
 ﻿using Api.Clients.B3;
+using common.Helpers;
 using Common.Exceptions;
 using Common.Options;
 using Infrastructure.Repositories.Account;
@@ -28,7 +29,7 @@ namespace Core.Services.Account
             {
                 var account = await repository.GetById(accountId) ?? throw new NotFoundException("Investidor", accountId.ToString());
 
-                await b3Client.OptOut(account.CPF);
+                await b3Client.OptOut(UtilsHelper.RemoveSpecialCharacters(account.CPF));
                 repository.Delete(account);
 
                 logger.LogInformation("O usuário de id {accountId} deletou a sua conta da plataforma.", accountId);
@@ -56,7 +57,7 @@ namespace Core.Services.Account
         public async Task<bool> OptIn(Guid accountId)
         {
             var account = await repository.GetById(accountId) ?? throw new NotFoundException("Investidor", accountId.ToString());
-            return await b3Client.OptIn(account.CPF);
+            return await b3Client.OptIn(UtilsHelper.RemoveSpecialCharacters(account.CPF));
         }
     }
 }
