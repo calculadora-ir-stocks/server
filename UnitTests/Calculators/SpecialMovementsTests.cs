@@ -1,5 +1,4 @@
 ﻿using Core.Calculators;
-using Core.Calculators.Assets;
 using Core.Constants;
 using Core.Models;
 using Core.Models.B3;

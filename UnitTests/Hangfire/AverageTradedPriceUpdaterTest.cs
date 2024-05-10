@@ -157,11 +157,164 @@ namespace stocks_unit_tests.Hangfire
                     new("IVVB11", 93.88, 187.76, 2, id),
                     new("AMER3", 146.32, 292.65, 2, id)
                 },
-                new Answer(1, 2, 3)
+                new Answer(1, 2, 2)
             };
             yield return new object[]
             {
-                
+                new Core.Models.B3.Movement.Root()
+                {
+                    Data = new()
+                    {
+                        EquitiesPeriods = new()
+                        {
+                            EquitiesMovements = new()
+                            {
+                                // add
+                                new()
+                                {
+                                    AssetType = "FII - Fundo de Investimento Imobiliário",
+                                    TickerSymbol = "KFOF11",
+                                    CorporationName = "KFOF11 Corporation Inc.",
+                                    MovementType = "Compra",
+                                    OperationValue = 231.34,
+                                    EquitiesQuantity = 1,
+                                    ReferenceDate = new DateTime(2022, 01, 16)
+                                },
+                                // add
+                                new()
+                                {
+                                    AssetType = "ETF - Exchange Traded Fund",
+                                    TickerSymbol = "IVVB11",
+                                    CorporationName = "IVVB 11 Corporation Inc.",
+                                    MovementType = "Compra",
+                                    OperationValue = 12376.43,
+                                    EquitiesQuantity = 4,
+                                    ReferenceDate = new DateTime(2022, 01, 09)
+                                },
+                                // update
+                                new()
+                                {
+                                    AssetType = "ETF - Exchange Traded Fund",
+                                    TickerSymbol = "BOVA11",
+                                    CorporationName = "IVVB 11 Corporation Inc.",
+                                    MovementType = "Compra",
+                                    OperationValue = 12376.43,
+                                    EquitiesQuantity = 4,
+                                    ReferenceDate = new DateTime(2022, 01, 09)
+                                },
+                                // remove
+                                new()
+                                {
+                                    AssetType = "Ações",
+                                    TickerSymbol = "AMER3",
+                                    CorporationName = "Americanas S/A",
+                                    MovementType = "Venda",
+                                    OperationValue = 234.43,
+                                    UnitPrice = 234.43,
+                                    EquitiesQuantity = 2,
+                                    ReferenceDate = new DateTime(2022, 02, 01)
+                                }
+                            }
+                        }
+                    }
+                },
+                new List<AverageTradedPriceDto>()
+                {
+                    new("BOVA11", 16.32, 16.32, 1, id),
+                    new("AMER3", 146.32, 292.65, 2, id)
+                },
+                new Answer(2, 1, 1)
+            };
+            yield return new object[]
+            {
+                new Core.Models.B3.Movement.Root()
+                {
+                    Data = new()
+                    {
+                        EquitiesPeriods = new()
+                        {
+                            EquitiesMovements = new()
+                            {
+                                new()
+                                {
+                                    AssetType = "ETF - Exchange Traded Fund",
+                                    TickerSymbol = "BOVA11",
+                                    CorporationName = "IVVB 11 Corporation Inc.",
+                                    MovementType = "Compra",
+                                    OperationValue = 12376.43,
+                                    EquitiesQuantity = 4,
+                                    ReferenceDate = new DateTime(2022, 01, 09)
+                                },
+                                // remove
+                                new()
+                                {
+                                    AssetType = "ETF - Exchange Traded Fund",
+                                    TickerSymbol = "BOVA11",
+                                    CorporationName = "IVVB 11 Corporation Inc.",
+                                    MovementType = "Venda",
+                                    OperationValue = 12376.43,
+                                    EquitiesQuantity = 6,
+                                    ReferenceDate = new DateTime(2022, 01, 09)
+                                }
+                            }
+                        }
+                    }
+                },
+                new List<AverageTradedPriceDto>()
+                {
+                    new("BOVA11", 16.32, 16.32, 2, id),
+                },
+                new Answer(0, 0, 1)
+            };
+            yield return new object[]
+            {
+                new Core.Models.B3.Movement.Root()
+                {
+                    Data = new()
+                    {
+                        EquitiesPeriods = new()
+                        {
+                            EquitiesMovements = new()
+                            {
+                                new()
+                                {
+                                    AssetType = "ETF - Exchange Traded Fund",
+                                    TickerSymbol = "BOVA11",
+                                    CorporationName = "IVVB 11 Corporation Inc.",
+                                    MovementType = "Compra",
+                                    OperationValue = 12376.43,
+                                    EquitiesQuantity = 4,
+                                    ReferenceDate = new DateTime(2022, 01, 09)
+                                },
+                                new()
+                                {
+                                    AssetType = "ETF - Exchange Traded Fund",
+                                    TickerSymbol = "BOVA11",
+                                    CorporationName = "IVVB 11 Corporation Inc.",
+                                    MovementType = "Venda",
+                                    OperationValue = 12376.43,
+                                    EquitiesQuantity = 6,
+                                    ReferenceDate = new DateTime(2022, 01, 09)
+                                },
+                                new()
+                                {
+                                    AssetType = "ETF - Exchange Traded Fund",
+                                    TickerSymbol = "BOVA11",
+                                    CorporationName = "IVVB 11 Corporation Inc.",
+                                    MovementType = "Compra",
+                                    OperationValue = 12376.43,
+                                    EquitiesQuantity = 1,
+                                    ReferenceDate = new DateTime(2022, 01, 09)
+                                }
+                            }
+                        }
+                    }
+                },
+                new List<AverageTradedPriceDto>()
+                {
+                    new("BOVA11", 16.32, 16.32, 2, id),
+                },
+                new Answer(0, 1, 0)
             };
         }
     }

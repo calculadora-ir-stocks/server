@@ -16,7 +16,7 @@ namespace Hangfire.AverageTradedPriceUpdater
         public static IEnumerable<string> GetTickersToAdd(List<AverageTradedPriceDetails> tradedTickers,
             IEnumerable<AverageTradedPriceDto> allTickers)
         {
-            return tradedTickers.Select(x => x.TickerSymbol).ToList().Except(allTickers.Select(x => x.Ticker));
+            return tradedTickers.Select(x => x.TickerSymbol).ToList().Except(allTickers.Select(x => x.Ticker)).Distinct();
         }
 
         /// <summary>
@@ -31,7 +31,7 @@ namespace Hangfire.AverageTradedPriceUpdater
         {
 
             var tickers = tradedTickers.Where(x => allTickers.Any(y => y.Ticker.Equals(x.TickerSymbol)));
-            return tickers.Select(x => x.TickerSymbol);
+            return tickers.Select(x => x.TickerSymbol).Distinct();
         }
 
         /// <summary>
@@ -43,7 +43,7 @@ namespace Hangfire.AverageTradedPriceUpdater
         /// <returns><c>IEnumerable<string></c> contendo o nome dos ativos a serem removidos na carteira do investidor.</returns>
         public static IEnumerable<string> GetTickersToRemove(List<AverageTradedPriceDetails> tradedTickers, List<EquitMovement> movements)
         {
-            return movements.Where(m => !tradedTickers.Any(l => l.TickerSymbol == m.TickerSymbol)).Select(x => x.TickerSymbol);
+            return movements.Where(m => !tradedTickers.Any(l => l.TickerSymbol == m.TickerSymbol)).Select(x => x.TickerSymbol).Distinct();
         }
     }
 }
