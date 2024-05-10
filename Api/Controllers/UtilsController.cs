@@ -19,15 +19,5 @@ namespace Api.Controllers
         {
             return Ok(await accountRepository.GetAll());
         }
-
-        /// <summary>
-        /// Deleta todos os usuários da base.
-        /// </summary>
-        [HttpDelete("nuke")]
-        public IActionResult Nuke()
-        {
-            accountRepository.DeleteAll();
-            return Ok();
-        }
     }
 }

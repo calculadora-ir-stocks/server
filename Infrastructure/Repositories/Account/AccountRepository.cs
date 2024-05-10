@@ -148,12 +148,6 @@ namespace Infrastructure.Repositories.Account
             Auditor.Audit($"{nameof(Account)}:{AuditOperation.Update}", fields: new { NewStatus = account.Status });
         }
 
-        public void DeleteAll()
-        {
-            context.Accounts.RemoveRange(context.Accounts);
-            context.SaveChanges();
-        }
-
         public Task<Guid> GetByAuth0IdAsNoTracking(string auth0Id)
         {
             return context.Accounts.AsNoTracking().Where(x => x.Auth0Id.Equals(auth0Id)).Select(x => x.Id).FirstOrDefaultAsync();

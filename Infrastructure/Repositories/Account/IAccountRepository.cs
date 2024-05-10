@@ -12,7 +12,6 @@
         Task<Guid> GetByAuth0IdAsNoTracking(string auth0Id);
         Models.Account GetByStripeCustomerId(string stripeCustomerId);
         void Delete(Models.Account account);
-        void DeleteAll();
         Task UpdateStatus(Models.Account account);
     }
 }
