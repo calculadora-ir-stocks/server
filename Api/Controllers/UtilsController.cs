@@ -15,9 +15,9 @@ namespace Api.Controllers
         }
 
         [HttpGet("accounts")]
-        public IActionResult GetAllAccounts()
+        public async Task<IActionResult> GetAllAccounts()
         {
-            return Ok(accountRepository.GetAll());
+            return Ok(await accountRepository.GetAll());
         }
 
         /// <summary>
