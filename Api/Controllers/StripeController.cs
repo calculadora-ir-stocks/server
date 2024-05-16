@@ -61,7 +61,7 @@ namespace Api.Controllers
 
             if (json is null || stripeSignature is null)
             {
-                return BadRequest("É necessário enviar o JSON no body da requisição e a assinatura digital" +
+                return BadRequest("É necessário enviar o JSON no body da requisição e a assinatura digital " +
                     "do Stripe no Header Stripe-Signature.");
             }
 
