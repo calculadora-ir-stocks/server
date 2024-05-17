@@ -52,19 +52,19 @@ namespace Core.Services.DarfGenerator
 
             // TODO uncomment for production
 
-            var response = await infoSimplesClient.GenerateDARF(
-                new GenerateDARFRequest
-                (
-                    UtilsHelper.RemoveSpecialCharacters(account.CPF),
-                    account.BirthDate,
-                    $"Venda de ativos no mês {taxesReferenceDate}. Essa DARF foi gerada automaticamente " +
-                    $"pelo Stocks IR em {today}.",
-                    DarfCode,
-                    totalTaxes,
-                    taxesReferenceDate,
-                    today
-                )
-            );
+            //var response = await infoSimplesClient.GenerateDARF(
+            //    new GenerateDARFRequest
+            //    (
+            //        UtilsHelper.RemoveSpecialCharacters(account.CPF),
+            //        account.BirthDate,
+            //        $"Venda de ativos no mês {taxesReferenceDate}. Essa DARF foi gerada automaticamente " +
+            //        $"pelo Stocks IR em {today}.",
+            //        DarfCode,
+            //        totalTaxes,
+            //        taxesReferenceDate,
+            //        today
+            //    )
+            //);
 
             // string? observation = null;
 
