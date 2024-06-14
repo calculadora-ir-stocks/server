@@ -2,15 +2,11 @@
 using AutoFixture;
 using Core.Calculators;
 using Core.Models;
-using Core.Models.Api.Responses;
-using Core.Models.B3;
 using Core.Services.Hangfire.AverageTradedPriceUpdater;
 using Hangfire.AverageTradedPriceUpdater;
 using Infrastructure.Dtos;
-using Infrastructure.Models;
 using Infrastructure.Repositories.Account;
 using Infrastructure.Repositories.AverageTradedPrice;
-using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.Logging;
 using Moq;
 

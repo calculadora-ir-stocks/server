@@ -5,6 +5,8 @@ using Core.Models.B3;
 using Core.Services.B3ResponseCalculator;
 using Infrastructure.Dtos;
 using Infrastructure.Repositories.AverageTradedPrice;
+using Infrastructure.Repositories.BonusShare;
+using Microsoft.Extensions.Logging;
 using Moq;
 
 namespace stocks_unit_tests.Calculators
@@ -15,14 +17,23 @@ namespace stocks_unit_tests.Calculators
     public class SpecialMovementsTests : ProfitCalculator
     {
         private readonly IB3ResponseCalculatorService calculator;
+        private readonly IIncomeTaxesCalculator incomeTaxesCalculator = null!;
 
-        private readonly IIncomeTaxesCalculator incomeTaxesCalculator;
-        private readonly Mock<IAverageTradedPriceRepostory> repository;
+        private readonly Mock<IAverageTradedPriceRepostory> averageTradedPriceRepository;
+        private readonly Mock<IBonusShareRepository> bonusShareRepository;
+        private readonly Mock<ILogger<B3ResponseCalculatorService>> logger;
 
         public SpecialMovementsTests()
         {
-            repository = new Mock<IAverageTradedPriceRepostory>();
-            calculator = new B3ResponseCalculatorService(incomeTaxesCalculator, repository.Object);
+            averageTradedPriceRepository = new Mock<IAverageTradedPriceRepostory>();
+            bonusShareRepository = new Mock<IBonusShareRepository>();
+            logger = new Mock<ILogger<B3ResponseCalculatorService>>();
+
+            calculator = new B3ResponseCalculatorService(
+                incomeTaxesCalculator,
+                averageTradedPriceRepository.Object,
+                bonusShareRepository.Object,
+                logger.Object);
         }
 
         #region Desdobramentos
@@ -134,10 +145,27 @@ namespace stocks_unit_tests.Calculators
         #region Preço médio em operações de compra, venda, desdobramentos, grupamentos e bonificações 
         [Theory(DisplayName = "Deve calcular corretamente o preço médio após operações de desdobramento, grupamentos e bonificações.")]
         [MemberData(nameof(AllOperationsDataSet))]
-        public void TestAverageTradedPricesAfterSpecialMovements(List<Movement.EquitMovement> movements)
+        public async Task TestAverageTradedPricesAfterSpecialMovements(List<Movement.EquitMovement> movements)
         {
-            List<AverageTradedPriceDetails> averageTradedPrices = new();
-            CalculateProfitAndAverageTradedPrice(movements, averageTradedPrices);
+            bonusShareRepository.Setup(x => x.GetByTickerAndDate("PETR4", It.IsAny<DateTime>()))
+                .ReturnsAsync(new Infrastructure.Models.BonusShare("PETR4", new DateTime(), 50, 0));
+
+            bonusShareRepository.Setup(x => x.GetByTickerAndDate("BLMO11", It.IsAny<DateTime>()))
+                .ReturnsAsync(new Infrastructure.Models.BonusShare("BLMO11", new DateTime(), 20, 0));
+
+            var root = new Movement.Root
+            {
+                Data = new Movement.Data
+                {
+                    EquitiesPeriods = new Movement.EquitiesPeriods
+                    {
+                        EquitiesMovements = movements
+                    }
+                }
+            };
+
+            var response = await calculator.Calculate(root, It.IsAny<Guid>());
+            var averageTradedPrices = response!.AverageTradedPrices;
 
             var petr4 = averageTradedPrices.Where(x => x.TickerSymbol.Equals("PETR4")).First();
             var googl34 = averageTradedPrices.Where(x => x.TickerSymbol.Equals("GOOGL34")).First();
@@ -156,8 +184,15 @@ namespace stocks_unit_tests.Calculators
         [MemberData(nameof(AllOperationsDataSet))]
         public async Task TestIncomeTaxesAfterSpecialMovements(List<Movement.EquitMovement> movements)
         {
-            repository.Setup(x => x.GetAverageTradedPrices(It.IsAny<Guid>(), null)).ReturnsAsync(Array.Empty<AverageTradedPriceDto>());
-            var root = new Movement.Root 
+            averageTradedPriceRepository.Setup(x => x.GetAverageTradedPrices(It.IsAny<Guid>(), null)).ReturnsAsync(Array.Empty<AverageTradedPriceDto>());
+
+            bonusShareRepository.Setup(x => x.GetByTickerAndDate("PETR4", It.IsAny<DateTime>()))
+                .ReturnsAsync(new Infrastructure.Models.BonusShare("PETR4", new DateTime(), 50, 0));
+
+            bonusShareRepository.Setup(x => x.GetByTickerAndDate("BLMO11", It.IsAny<DateTime>()))
+                .ReturnsAsync(new Infrastructure.Models.BonusShare("BLMO11", new DateTime(), 20, 0));
+
+            var root = new Movement.Root
             {
                 Data = new Movement.Data
                 {
@@ -183,7 +218,7 @@ namespace stocks_unit_tests.Calculators
         [MemberData(nameof(Part2DataSet))]
         public async Task TestIncomeTaxesAfterSpecialMovementsPart2(List<Movement.EquitMovement> movements)
         {
-            repository.Setup(x => x.GetAverageTradedPrices(It.IsAny<Guid>(), null)).ReturnsAsync(Array.Empty<AverageTradedPriceDto>());
+            averageTradedPriceRepository.Setup(x => x.GetAverageTradedPrices(It.IsAny<Guid>(), null)).ReturnsAsync(Array.Empty<AverageTradedPriceDto>());
 
             var root = new Movement.Root
             {
@@ -281,6 +316,8 @@ namespace stocks_unit_tests.Calculators
 
         public static IEnumerable<object[]> AllOperationsDataSet()
         {
+            // Detalhe: nas operações de bonificações, o UnitPrice e OperationValue não estão sendo passados, pois esses valores são definidos manualmente
+            // através de uma consulta na base. A B3 não informa esses valores, então usamos um provedor terceiro para obtê-los.
             yield return new object[]
             {
                 new List<Movement.EquitMovement>
@@ -292,7 +329,7 @@ namespace stocks_unit_tests.Calculators
                     new("PETR4", "Petróleo Brasileiro S/A", B3ResponseConstants.Stocks, B3ResponseConstants.Sell, 6587, 1, 6587, new DateTime(2023, 01, 01), true),
                     new("PETR4", "Petróleo Brasileiro S/A", B3ResponseConstants.Stocks, B3ResponseConstants.Buy, 7653, 1, 7653, new DateTime(2023, 01, 03)),
                     new("PETR4", "Petróleo Brasileiro S/A", B3ResponseConstants.Stocks, B3ResponseConstants.Split, 0, 1, 0, new DateTime(2023, 01, 31)),
- 
+
                     new("GOOGL34", "Google LLC", B3ResponseConstants.BDRs, B3ResponseConstants.Buy, 100, 2, 50, new DateTime(2023, 02, 01)), // Comprou 2 ativos por 50. Quantidade: 2 
                     new("TTWO", "Take Two Interactive", B3ResponseConstants.BDRs, B3ResponseConstants.Buy, 203, 2, 101.50, new DateTime(2023, 02, 01)), // Comprou outro BDR aleatório que não deve ser considerado 
                     new("GOOGL34", "Google LLC", B3ResponseConstants.BDRs, B3ResponseConstants.Buy, 240, 4, 60, new DateTime(2023, 02, 01)), // Comprou 4 ativos por 60. Quantidade: 6
@@ -313,14 +350,14 @@ namespace stocks_unit_tests.Calculators
                     // IR: 11,86 
                     new("BLMO11", "BVI OFFICE FUND II FII", B3ResponseConstants.FIIs, B3ResponseConstants.Buy, 190.92, 3, 63.64, new DateTime(2023, 03, 01)), // Comprou 3 ativos por 63.64. Quantidade: 3
                     new("BLMO11", "BVI OFFICE FUND II FII", B3ResponseConstants.FIIs, B3ResponseConstants.Sell, 87.43, 1, 87.43, new DateTime(2023, 03, 01), true), // Vendeu 1 ativo por 87.43. Quantidade: 2
-                    new("BLMO11", "BVI OFFICE FUND II FII", B3ResponseConstants.FIIs, B3ResponseConstants.BonusShare, 200, 10, 20, new DateTime(2023, 03, 02)), // Foi bonificado com 10 ativos. Quantidade: 12.
+                    new("BLMO11", "BVI OFFICE FUND II FII", B3ResponseConstants.FIIs, B3ResponseConstants.BonusShare, 0, 10, 0, new DateTime(2023, 03, 02)), // Foi bonificado com 10 ativos. Quantidade: 12.
                     // B3 vai retornar 10 porque é a quantidade de ativos que será adicionado na posição do investidor após a bonificação.
                     new("BLMO11", "BVI OFFICE FUND II FII", B3ResponseConstants.FIIs, B3ResponseConstants.Buy, 50.43, 1, 50.43, new DateTime(2023, 03, 03)), // Comprou 1 ativo por 50.43. Quantidade: 13
                     new("BLMO11", "BVI OFFICE FUND II FII", B3ResponseConstants.FIIs, B3ResponseConstants.Sell, 90, 2, 45, new DateTime(2023, 03, 04)), // Vendeu 2 ativos por 45. Quantidade: 11
                     // Preço médio: 263.92 / 11 = 23.99
 
                     new("PETR4", "Petróleo Brasileiro S/A", B3ResponseConstants.Stocks, B3ResponseConstants.Buy, 4954, 2, 2.477, new DateTime(2023, 05, 01)), // Comprou 2 ativos. Quantidade: 4
-                    new("PETR4", "Petróleo Brasileiro S/A", B3ResponseConstants.Stocks, B3ResponseConstants.BonusShare, 100, 2, 50, new DateTime(2023, 05, 31)), // Foi bonificado com 2 ativos. Quantidade: 6
+                    new("PETR4", "Petróleo Brasileiro S/A", B3ResponseConstants.Stocks, B3ResponseConstants.BonusShare, 0, 2, 0, new DateTime(2023, 05, 31)), // Foi bonificado com 2 ativos. Quantidade: 6
                     // Preço médio: 12707 / 6 = 2.117,83 
                 }
             };

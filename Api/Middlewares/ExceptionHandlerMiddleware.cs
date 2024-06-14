@@ -34,6 +34,7 @@ namespace Api.Middlewares
                     ForbiddenException => (int)HttpStatusCode.Forbidden,
                     InternalServerErrorException => (int)HttpStatusCode.InternalServerError,
                     KeyNotFoundException _ => (int)HttpStatusCode.NotFound,
+                    BadGatewayException _ => (int)HttpStatusCode.BadGateway,
                     _ => (int)HttpStatusCode.InternalServerError,
                 };
 

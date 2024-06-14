@@ -26,6 +26,11 @@ namespace Core.Calculators
                 switch (movement.MovementType)
                 {
                     case B3ResponseConstants.Buy:
+                        if (movement.TickerSymbol.Equals("NVDA"))
+                        {
+
+                        }
+
                         UpdateOrAddAveragePrice(movement, averagePrices, sellOperation: false);
                         AddOperationHistory(movement, response.OperationHistory);
                         break;
@@ -193,7 +198,7 @@ namespace Core.Calculators
                     taxes = (AliquotConstants.IncomeTaxesForDayTrade / 100m) * (decimal)profit;
                 else
                     taxes = (aliquot / 100m) * (decimal)profit;
-            } 
+            }
 
             return taxes;
         }

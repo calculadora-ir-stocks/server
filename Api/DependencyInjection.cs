@@ -27,6 +27,7 @@ using Hangfire.PostgreSql;
 using Infrastructure.Repositories;
 using Infrastructure.Repositories.Account;
 using Infrastructure.Repositories.AverageTradedPrice;
+using Infrastructure.Repositories.BonusShare;
 using Infrastructure.Repositories.Plan;
 using Infrastructure.Repositories.Taxes;
 using Infrastructure.UnitOfWork;
@@ -192,6 +193,7 @@ namespace Api
             services.AddScoped<IAverageTradedPriceRepostory, AverageTradedPriceRepository>();
             services.AddScoped<IIncomeTaxesRepository, IncomeTaxesRepository>();
             services.AddScoped<IPlanRepository, PlanRepository>();
+            services.AddScoped<IBonusShareRepository, BonusShareRepository>();
         }
 
         public static void AddSwaggerConfiguration(this IServiceCollection services)
