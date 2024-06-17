@@ -26,11 +26,6 @@ namespace Core.Calculators
                 switch (movement.MovementType)
                 {
                     case B3ResponseConstants.Buy:
-                        if (movement.TickerSymbol.Equals("NVDA"))
-                        {
-
-                        }
-
                         UpdateOrAddAveragePrice(movement, averagePrices, sellOperation: false);
                         AddOperationHistory(movement, response.OperationHistory);
                         break;

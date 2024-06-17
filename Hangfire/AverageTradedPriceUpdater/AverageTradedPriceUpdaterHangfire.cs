@@ -38,6 +38,8 @@ namespace Core.Services.Hangfire.AverageTradedPriceUpdater
         {
             try
             {
+                if (DateTime.UtcNow.Day != 1) return;
+
                 var accounts = await accountRepository.GetAll();
 
                 string lastMonthFirstDay = GetLastMonthFirstDay();

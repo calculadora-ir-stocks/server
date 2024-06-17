@@ -3,7 +3,6 @@ using Api.Database;
 using Api.Middlewares;
 using Azure.Identity;
 using Hangfire;
-using System.Collections;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -37,7 +36,7 @@ builder.Services.AddSecretOptions(builder.Configuration);
 
 builder.Services.AddDatabaseContext(builder.Configuration["ConnectionsString:Database"]);
 builder.Services.AddAudiTrail(builder.Configuration["ConnectionsString:Database"]);
-// builder.Services.ConfigureHangfireDatabase(builder.Configuration["ConnectionsString:Database"]);
+builder.Services.ConfigureHangfireDatabase(builder.Configuration["ConnectionsString:Database"]);
 
 builder.Services.AddStripeServices(builder.Configuration);
 builder.Services.AddServices(builder);
@@ -81,7 +80,7 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-// app.UseHangfireServer();
-// app.ConfigureHangfireServices();
+app.UseHangfireServer();
+app.ConfigureHangfireServices();
 
 app.Run();

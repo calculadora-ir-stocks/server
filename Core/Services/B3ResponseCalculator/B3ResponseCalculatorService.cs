@@ -8,6 +8,7 @@ using Infrastructure.Repositories.AverageTradedPrice;
 using Infrastructure.Repositories.BonusShare;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
+using System.Collections.Generic;
 using static Core.Models.B3.Movement;
 
 namespace Core.Services.B3ResponseCalculator
@@ -31,7 +32,7 @@ namespace Core.Services.B3ResponseCalculator
             this.logger = logger;
         }
 
-        public async Task<InvestorMovementDetails?> Calculate(Movement.Root? b3Response, Guid accountId)
+        public async Task<InvestorMovementDetails?> Calculate(Root? b3Response, Guid accountId)
         {
             var movements = GetOnlyNecessaryMovements(b3Response);
 
@@ -45,7 +46,7 @@ namespace Core.Services.B3ResponseCalculator
             SetDayTradeMovementsAsDayTrade(movements);
             await SetBonusShareUnitPriceValue(movements);
 
-            Dictionary<string, List<Movement.EquitMovement>> monthlyMovements = new();
+            Dictionary<string, List<EquitMovement>> monthlyMovements = new();
             var monthsThatHadMovements = movements.Select(x => x.ReferenceDate.ToString("MM/yyyy")).Distinct();
 
             foreach (var month in monthsThatHadMovements)
@@ -58,7 +59,7 @@ namespace Core.Services.B3ResponseCalculator
             return response;
         }
 
-        private async Task SetBonusShareUnitPriceValue(List<Movement.EquitMovement> movements)
+        private async Task SetBonusShareUnitPriceValue(List<EquitMovement> movements)
         {
             var bonusShareMovements = movements.Where(x => x.MovementType.Equals(B3ResponseConstants.BonusShare));
             if (bonusShareMovements.IsNullOrEmpty()) return;
@@ -82,9 +83,9 @@ namespace Core.Services.B3ResponseCalculator
             }
         }
 
-        private static List<Movement.EquitMovement> GetOnlyNecessaryMovements(Movement.Root? response)
+        private static List<EquitMovement> GetOnlyNecessaryMovements(Root? response)
         {
-            if (response is null || response.Data is null) return Array.Empty<Movement.EquitMovement>().ToList();
+            if (response is null || response.Data is null) return Array.Empty<EquitMovement>().ToList();
 
             var movements = response.Data.EquitiesPeriods.EquitiesMovements;
 
@@ -100,23 +101,21 @@ namespace Core.Services.B3ResponseCalculator
         /// Ordena as operações por ordem crescente através da data - a B3 retorna em ordem decrescente - e
         /// ordena operações de compra antes das operações de venda em operações day trade.
         /// </summary>
-        private static List<Movement.EquitMovement> OrderMovementsByDateAndMovementType(IList<Movement.EquitMovement> movements)
+        private static List<EquitMovement> OrderMovementsByDateAndMovementType(IList<EquitMovement> movements)
         {
             return movements.OrderBy(x => x.MovementType).OrderBy(x => x.ReferenceDate).ToList();
         }
 
         private async Task<InvestorMovementDetails?> CalculateTaxesAndAverageTradedPrices(
-            Dictionary<string, List<Movement.EquitMovement>> monthlyMovements, Guid accountId)
+            Dictionary<string,
+            List<EquitMovement>> monthlyMovements,
+            Guid accountId)
         {
             InvestorMovementDetails movementDetails = new();
 
             foreach (var monthMovements in monthlyMovements)
             {
-                // TODO arrumar isso aqui. Acho que tá certo pq na segunda iteração ele vai ter valores, por isso
-                // tem que fazer um teste com o mesmo ativo negociado em dois meses diferentes.
-                movementDetails.AverageTradedPrices.AddRange(await GetAverageTradedPricesIfAny(
-                    accountId,
-                    movementDetails.AverageTradedPrices));
+                movementDetails.AverageTradedPrices.AddRange(await GetAverageTradedPricesIfAny(accountId, movementDetails.AverageTradedPrices));
 
                 var stocks = monthMovements.Value.Where(x => x.AssetType.Equals(B3ResponseConstants.Stocks));
                 var etfs = monthMovements.Value.Where(x => x.AssetType.Equals(B3ResponseConstants.ETFs));
@@ -175,20 +174,18 @@ namespace Core.Services.B3ResponseCalculator
             Guid accountId,
             List<AverageTradedPriceDetails> averagePrices)
         {
-            var response = await averageTradedPriceRepository.GetAverageTradedPrices(accountId, averagePrices.Select(x => x.TickerSymbol).ToList());
+            var allAverageTradedPrices = await averageTradedPriceRepository.GetAverageTradedPrices(accountId);
+            var averageTradedPricesNotAddedYet = allAverageTradedPrices.Where(x => !averagePrices.Any(x => x.TickerSymbol == x.TickerSymbol)).ToList();
 
-            // ticker já foi adicionado na lista de preço médio
-            if (response.Any(x => averagePrices.Any(y => y.TickerSymbol == x.Ticker))) return Array.Empty<AverageTradedPriceDetails>();
-
-            return response
+            return averageTradedPricesNotAddedYet
                 .Select(x => new AverageTradedPriceDetails(x.Ticker, x.AverageTradedPrice, x.TotalBought, x.Quantity))
                 .ToList();
         }
 
         /// <summary>
-        /// Altera a propriedade booleana <c>Movement.EquitMovement.DayTraded</c> para verdadeiro em operações de venda day-trade.
+        /// Altera a propriedade booleana <c>EquitMovement.DayTraded</c> para verdadeiro em operações de venda day-trade.
         /// </summary>
-        private static void SetDayTradeMovementsAsDayTrade(List<Movement.EquitMovement> movements)
+        private static void SetDayTradeMovementsAsDayTrade(List<EquitMovement> movements)
         {
             var buys = movements.Where(x => x.MovementType == B3ResponseConstants.Buy);
             var sells = movements.Where(x => x.MovementType == B3ResponseConstants.Sell);

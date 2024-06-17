@@ -50,6 +50,7 @@ public class TaxesController : BaseController
     [HttpGet("home/{accountId}")]
     [ProducesResponseType(typeof(TaxesDetailsResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(Core.Notification.Notification), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(Core.Notification.Notification), StatusCodes.Status502BadGateway)]
     public async Task<IActionResult> Home(Guid accountId)
     {
         var response = await taxesService.GetCurrentMonthTaxes(accountId);
@@ -108,6 +109,7 @@ public class TaxesController : BaseController
     [HttpPost("big-bang/{accountId}")]
     [ProducesResponseType(typeof(Core.Notification.Notification), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(Core.Notification.Notification), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(Core.Notification.Notification), StatusCodes.Status502BadGateway)]
     public async Task<IActionResult> BigBang(Guid accountId, [FromBody] List<BigBangRequest> request)
     {
         await syncingService.Sync(accountId, request);
