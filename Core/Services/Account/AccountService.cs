@@ -50,9 +50,9 @@ namespace Core.Services.Account
 
         public string GetOptInLink()
         {
-            string link = $"https://b3Investidorcer.b2clogin.com/b3Investidorcer.onmicrosoft.com/oauth2/v2.0/" +
-                $"authorize?p=B2C_1A_FINTECH&client_id={b3Options.Value.ClientId}&nonce=defaultNonce" +
-                $"&redirect_uri=https%3A%2F%2Fwww.investidor.b3.com.br&scope=openid&response_type=code&prompt=login";
+            string link = $"https://b3investidor.b2clogin.com/b3investidor.onmicrosoft.com/oauth2/" +
+                $"v2.0/authorize?p=B2C_1A_FINTECH&client_id={b3Options.Value.ClientId}&nonce=defaultNonce&redirect_uri=" +
+                $"https%3A%2F%2Fwww.investidor.b3.com.br&scope=openid&response_type=code&prompt=login";
             return link;
         }
 

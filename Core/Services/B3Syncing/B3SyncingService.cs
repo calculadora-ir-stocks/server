@@ -55,7 +55,7 @@ namespace Core.Services.B3Syncing
                     "já sincronizou sua conta anteriormente.");
             }
 
-            string startDate = "2019-11-01"; //
+            string startDate = "2019-11-01";
 
             string lastMonth = new DateTime(year: DateTime.Now.Year, month: DateTime.Now.Month, day: 1)
                 .AddMonths(-1)
