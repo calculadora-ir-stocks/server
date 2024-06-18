@@ -172,7 +172,7 @@ namespace Core.Services.B3Syncing
                 AverageTradedPrices
 
                 BOVA11	
-                Total bought: 16,32
+                Total bought: 16,32 
                 Quantity: 1
                 AVG: 16,32
 
