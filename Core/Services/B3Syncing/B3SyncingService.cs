@@ -55,16 +55,17 @@ namespace Core.Services.B3Syncing
                     "já sincronizou sua conta anteriormente.");
             }
 
-#pragma warning disable CS0219 // Variable is assigned but its value is never used
             string startDate = "2019-11-01";
 
             string lastMonth = new DateTime(year: DateTime.Now.Year, month: DateTime.Now.Month, day: 1)
                 .AddMonths(-1)
                 .ToString("yyyy-MM-dd");
-#pragma warning restore CS0219 // Variable is assigned but its value is never used
 
-            // var b3Response = await b3Client.GetAccountMovement(account.CPF, startDate, lastMonth, accountId);
+#if !DEBUG
+            var b3Response = await b3Client.GetAccountMovement(account.CPF, startDate, lastMonth, accountId);
+#else
             var b3Response = GetBigBangMockedDataBeforeB3Contract();
+#endif
             var calculatedTaxesResponse = await b3CalculatorService.Calculate(b3Response, accountId);
 
             if (calculatedTaxesResponse is null) return;

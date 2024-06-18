@@ -72,8 +72,11 @@ public class TaxesService : ITaxesService
             if (account.Status == EnumHelper.GetEnumDescription(AccountStatus.SubscriptionExpired))
                 throw new ForbiddenException("O plano do usuário está expirado.");
 
-            // var b3Response = await b3Client.GetAccountMovement(account.CPF, startDate, yesterday, account.Id);
+#if !DEBUG
+            var b3Response = await b3Client.GetAccountMovement(account.CPF, startDate, yesterday, account.Id);
+#else
             var b3Response = AddCurrentMonthSet();
+#endif
 
             var response = await b3CalculatorService.Calculate(b3Response, account.Id);
 
@@ -236,9 +239,9 @@ public class TaxesService : ITaxesService
 
         return response;
     }
-    #endregion
+#endregion
 
-    #region Calcula o imposto de renda do mês especificado.
+#region Calcula o imposto de renda do mês especificado.
     public async Task<TaxesDetailsResponse> Details(string month, Guid accountId)
     {
         try
@@ -319,9 +322,9 @@ public class TaxesService : ITaxesService
         string currentMonth = DateTime.Now.ToString("MM/yyyy");
         return month == currentMonth;
     }
-    #endregion
+#endregion
 
-    #region Calcula o imposto de renda do ano especificado
+#region Calcula o imposto de renda do ano especificado
     public async Task<IEnumerable<CalendarResponse>> GetCalendarTaxes(string year, Guid accountId)
     {
         try
@@ -363,9 +366,9 @@ public class TaxesService : ITaxesService
 
         return response;
     }
-    #endregion
+#endregion
 
-    #region Altera um mês como pago/não pago
+#region Altera um mês como pago/não pago
     public async Task SetAsPaidOrUnpaid(string month, Guid accountId)
     {
         try
@@ -378,5 +381,5 @@ public class TaxesService : ITaxesService
             throw;
         }
     }
-    #endregion
+#endregion
 }

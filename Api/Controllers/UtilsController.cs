@@ -1,5 +1,4 @@
-﻿using Infrastructure.Repositories.Account;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Api.Controllers
@@ -7,17 +6,10 @@ namespace Api.Controllers
     [AllowAnonymous]
     public class UtilsController : BaseController
     {
-        private readonly IAccountRepository accountRepository;
-
-        public UtilsController(IAccountRepository accountRepository)
+        [HttpGet("ping")]
+        public IActionResult PingPong()
         {
-            this.accountRepository = accountRepository;
-        }
-
-        [HttpGet("accounts")]
-        public async Task<IActionResult> GetAllAccounts()
-        {
-            return Ok(await accountRepository.GetAll());
+            return Ok("pong!");
         }
     }
 }
