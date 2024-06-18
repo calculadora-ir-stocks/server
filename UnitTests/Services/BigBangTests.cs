@@ -1,9 +1,12 @@
-﻿using Common.Exceptions;
+﻿using Castle.Core.Logging;
+using Common.Exceptions;
 using Core.Calculators;
 using Core.Models.B3;
 using Core.Services.B3ResponseCalculator;
 using Infrastructure.Dtos;
 using Infrastructure.Repositories.AverageTradedPrice;
+using Infrastructure.Repositories.BonusShare;
+using Microsoft.Extensions.Logging;
 using Moq;
 using System.Security.Policy;
 using static Core.Models.B3.Movement;
@@ -15,13 +18,22 @@ namespace stocks_unit_tests.Services
     {
         private readonly IB3ResponseCalculatorService bigBang;
 
-        private readonly IIncomeTaxesCalculator calculator;
-        private readonly Mock<IAverageTradedPriceRepostory> repository;
+        private readonly IIncomeTaxesCalculator calculator = null!;
+        private readonly Mock<IAverageTradedPriceRepostory> averageTradedPriceRepository;
+        private readonly Mock<IBonusShareRepository> bonusShareRepository;
+        private readonly Mock<ILogger<B3ResponseCalculatorService>> logger;
 
         public BigBangTests()
         {
-            repository = new Mock<IAverageTradedPriceRepostory>();
-            bigBang = new B3ResponseCalculatorService(calculator, repository.Object);
+            averageTradedPriceRepository = new Mock<IAverageTradedPriceRepostory>();
+            bonusShareRepository = new Mock<IBonusShareRepository>();
+            logger = new Mock<ILogger<B3ResponseCalculatorService>>();
+
+            bigBang = new B3ResponseCalculatorService(
+                calculator,
+                averageTradedPriceRepository.Object,
+                bonusShareRepository.Object,
+                logger.Object);
         }
 
         [Fact(DisplayName = "Se um investidor executar o Big Bang e não houver movimentos feitos anteriormente, uma exceção deve ser lançada.")]
@@ -46,7 +58,7 @@ namespace stocks_unit_tests.Services
         [MemberData(nameof(BigBangData))]
         public async Task ShouldCalculateTaxesFromRetroactiveMonthsWhenSyncing(Root movement)
         {
-            repository.Setup(x => x.GetAverageTradedPrices(It.IsAny<Guid>(), null)).ReturnsAsync(Array.Empty<AverageTradedPriceDto>());
+            averageTradedPriceRepository.Setup(x => x.GetAverageTradedPrices(It.IsAny<Guid>(), null)).ReturnsAsync(Array.Empty<AverageTradedPriceDto>());
 
             var result = await bigBang.Calculate(movement, It.IsAny<Guid>());
 
@@ -61,7 +73,7 @@ namespace stocks_unit_tests.Services
         [MemberData(nameof(AverageTradedPriceData))]
         public async Task ShouldCalculateAverageTradedPricesWhenSyncing(Root movement)
         {
-            repository.Setup(x => x.GetAverageTradedPrices(It.IsAny<Guid>(), It.IsAny<List<string>>())).ReturnsAsync(new List<AverageTradedPriceDto>
+            averageTradedPriceRepository.Setup(x => x.GetAverageTradedPrices(It.IsAny<Guid>(), It.IsAny<List<string>>())).ReturnsAsync(new List<AverageTradedPriceDto>
             {
                 new("TETA4", 27, 54, 2, It.IsAny<Guid>())
             });
@@ -197,5 +209,5 @@ namespace stocks_unit_tests.Services
                 }
             };
         }
-    }    
+    }
 }

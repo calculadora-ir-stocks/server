@@ -3,6 +3,7 @@ using Common;
 using Common.Constants;
 using Common.Options;
 using Dapper;
+using Infrastructure.Models;
 using Infrastructure.UnitOfWork;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -93,11 +94,6 @@ namespace Infrastructure.Repositories.Account
             Auditor.Audit($"{nameof(Models.Account)}:{AuditOperation.Delete}", fields: new { AccountId = account.Id });
         }
 
-        public IEnumerable<Models.Account> GetAll()
-        {
-            return context.Accounts.AsList();
-        }
-
         public async Task<Models.Account?> GetById(Guid accountId)
         {
             DynamicParameters parameters = new();
@@ -152,15 +148,37 @@ namespace Infrastructure.Repositories.Account
             Auditor.Audit($"{nameof(Account)}:{AuditOperation.Update}", fields: new { NewStatus = account.Status });
         }
 
-        public void DeleteAll()
-        {
-            context.Accounts.RemoveRange(context.Accounts);
-            context.SaveChanges();
-        }
-
         public Task<Guid> GetByAuth0IdAsNoTracking(string auth0Id)
         {
             return context.Accounts.AsNoTracking().Where(x => x.Auth0Id.Equals(auth0Id)).Select(x => x.Id).FirstOrDefaultAsync();
+        }
+
+        public async Task<IEnumerable<Models.Account>> GetAll()
+        {
+            DynamicParameters parameters = new();
+
+            string key = this.key.Value.Value;
+
+            parameters.Add("@Key", key);
+
+            string sql = @"
+                SELECT 
+                    a.""Id"",
+                    a.""Auth0Id"",
+                    PGP_SYM_DECRYPT(a.""CPF""::bytea, @Key) as CPF,
+                    a.""BirthDate"",
+                    a.""StripeCustomerId"",
+                    a.""Status"",
+                    a.""CreatedAt""
+                FROM ""Accounts"" a;";
+
+            var accounts = await context.Database.GetDbConnection().QueryAsync<Models.Account>(sql, parameters);
+
+            Auditor.Audit($"{nameof(Account)}:{AuditOperation.Get}", null,
+                comment: $"Todos os usuários foram obtidos da base com o CPF descriptografado."
+            );
+
+            return accounts;
         }
     }
 }

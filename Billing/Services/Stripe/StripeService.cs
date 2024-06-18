@@ -93,7 +93,7 @@ namespace Billing.Services.Stripe
 
             try
             {
-                stripeEvent = EventUtility.ConstructEvent(json, stripeSignatureHeader, options.Value.WebhookToken);
+                stripeEvent = EventUtility.ConstructEvent(json, stripeSignatureHeader, options.Value.WebhookToken, throwOnApiVersionMismatch: false);
             }
             catch (Exception e)
             {

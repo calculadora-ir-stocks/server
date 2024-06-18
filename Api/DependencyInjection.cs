@@ -27,6 +27,7 @@ using Hangfire.PostgreSql;
 using Infrastructure.Repositories;
 using Infrastructure.Repositories.Account;
 using Infrastructure.Repositories.AverageTradedPrice;
+using Infrastructure.Repositories.BonusShare;
 using Infrastructure.Repositories.Plan;
 using Infrastructure.Repositories.Taxes;
 using Infrastructure.UnitOfWork;
@@ -152,10 +153,9 @@ namespace Api
         public static void Add3rdPartiesClients(this IServiceCollection services, IConfiguration configuration)
         {
             var b3Handler = new HttpClientHandler();
-            // TODO uncomment for production
-            // AddB3Certificate(b3Handler, configuration);
+            AddB3Certificate(b3Handler, configuration);
 
-            var handler = new HttpClientHandler();
+            var otherServicesHandler = new HttpClientHandler();
 
             services.AddHttpClient("B3", c =>
                 c.BaseAddress = new Uri("https://apib3i-cert.b3.com.br:2443/api/")).ConfigurePrimaryHttpMessageHandler(() => b3Handler)
@@ -168,21 +168,26 @@ namespace Api
                 .AddTransientHttpErrorPolicy(policy => policy.CircuitBreakerAsync(5, TimeSpan.FromSeconds(10)));
 
             services.AddHttpClient("Infosimples", c =>
-                c.BaseAddress = new Uri("https://api.infosimples.com/api/v2/consultas/")).ConfigurePrimaryHttpMessageHandler(() => handler)
+                c.BaseAddress = new Uri("https://api.infosimples.com/api/v2/consultas/")).ConfigurePrimaryHttpMessageHandler(() => otherServicesHandler)
                 .AddTransientHttpErrorPolicy(policy => policy.WaitAndRetryAsync(5, _ => TimeSpan.FromSeconds(10)))
                 .AddTransientHttpErrorPolicy(policy => policy.CircuitBreakerAsync(5, TimeSpan.FromSeconds(10)));
 
             services.AddHttpClient("Auth0", c =>
-                c.BaseAddress = new Uri("https://dev-cfdhp4yerdn6st6a.us.auth0.com/oauth/")).ConfigurePrimaryHttpMessageHandler(() => handler)
+                c.BaseAddress = new Uri("https://dev-cfdhp4yerdn6st6a.us.auth0.com/oauth/")).ConfigurePrimaryHttpMessageHandler(() => otherServicesHandler)
                 .AddTransientHttpErrorPolicy(policy => policy.WaitAndRetryAsync(5, _ => TimeSpan.FromSeconds(10)))
                 .AddTransientHttpErrorPolicy(policy => policy.CircuitBreakerAsync(5, TimeSpan.FromSeconds(10)));
         }
 
         private static void AddB3Certificate(HttpClientHandler handler, IConfiguration configuration)
         {
+            string? b3CertLocation = Environment.GetEnvironmentVariable("B3_CERT_LOCATION");
+            if (b3CertLocation is null) 
+                throw new InvalidOperationException("Configure a variável de ambiente B3_CERT_LOCATION contendo a localização do arquivo de certificação" +
+                " da API da Área Logada da B3.");
+
             handler.ClientCertificateOptions = ClientCertificateOption.Manual;
             handler.SslProtocols = SslProtocols.Tls12;
-            handler.ClientCertificates.Add(new X509Certificate2("C:\\54107822000103.p12", password: configuration["Certificates:B3:Password"], X509KeyStorageFlags.PersistKeySet));
+            handler.ClientCertificates.Add(new X509Certificate2(b3CertLocation, password: configuration["Certificates:B3:Password"], X509KeyStorageFlags.PersistKeySet));
         }
 
         public static void AddRepositories(this IServiceCollection services)
@@ -192,6 +197,7 @@ namespace Api
             services.AddScoped<IAverageTradedPriceRepostory, AverageTradedPriceRepository>();
             services.AddScoped<IIncomeTaxesRepository, IncomeTaxesRepository>();
             services.AddScoped<IPlanRepository, PlanRepository>();
+            services.AddScoped<IBonusShareRepository, BonusShareRepository>();
         }
 
         public static void AddSwaggerConfiguration(this IServiceCollection services)

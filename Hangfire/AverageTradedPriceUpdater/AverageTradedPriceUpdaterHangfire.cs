@@ -3,6 +3,7 @@ using common.Helpers;
 using Core.Calculators;
 using Core.Models;
 using Core.Models.B3;
+using Hangfire.AverageTradedPriceUpdater;
 using Infrastructure.Dtos;
 using Infrastructure.Models;
 using Infrastructure.Repositories.Account;
@@ -37,7 +38,9 @@ namespace Core.Services.Hangfire.AverageTradedPriceUpdater
         {
             try
             {
-                var accounts = accountRepository.GetAll();
+                if (DateTime.UtcNow.Day != 1) return;
+
+                var accounts = await accountRepository.GetAll();
 
                 string lastMonthFirstDay = GetLastMonthFirstDay();
                 string lastMonthFinalDay = GetLastMonthFinalDay();
@@ -45,14 +48,17 @@ namespace Core.Services.Hangfire.AverageTradedPriceUpdater
                 // TODO background job? we dont need multithread
                 foreach (var account in accounts)
                 {
-                    //var lastMonthMovements = await client.GetAccountMovement(
-                    //    UtilsHelper.RemoveSpecialCharacters(account.CPF),
-                    //    lastMonthFirstDay,
-                    //    lastMonthFinalDay,
-                    //    account.Id
-                    //);
-
-                    var lastMonthMovements = GenerateMockMovements();
+                    Root? lastMonthMovements = null;
+#if DEBUG
+                    lastMonthMovements = GenerateMockMovements();
+#else
+                    lastMonthMovements = await client.GetAccountMovement(
+                        UtilsHelper.RemoveSpecialCharacters(account.CPF),
+                        lastMonthFirstDay,
+                        lastMonthFinalDay,
+                        account.Id
+                    );
+#endif
 
                     if (lastMonthMovements is null || lastMonthMovements.Data is null) continue;
 
@@ -63,9 +69,9 @@ namespace Core.Services.Hangfire.AverageTradedPriceUpdater
 
                     var _ = CalculateProfitAndAverageTradedPrice(movements, lastMonthAverageTradedPrices);
 
-                    var tickersNamesToAdd = GetTickersToAdd(lastMonthAverageTradedPrices, allAverageTradedPrices);
-                    var tickersNamesToUpdate = GetTickersToUpdate(lastMonthAverageTradedPrices, allAverageTradedPrices);
-                    var tickersNamesToRemove = GetTickerToRemove(lastMonthAverageTradedPrices, movements);
+                    var tickersNamesToAdd = AverageTradedPriceUpdaterHelper.GetTickersToAdd(lastMonthAverageTradedPrices, allAverageTradedPrices);
+                    var tickersNamesToUpdate = AverageTradedPriceUpdaterHelper.GetTickersToUpdate(lastMonthAverageTradedPrices, allAverageTradedPrices);
+                    var tickersNamesToRemove = AverageTradedPriceUpdaterHelper.GetTickersToRemove(lastMonthAverageTradedPrices, movements);
 
                     await AddTickers(account,
                         lastMonthAverageTradedPrices.Where(x => tickersNamesToAdd.Any(y => y.Equals(x.TickerSymbol))));
@@ -118,25 +124,6 @@ namespace Core.Services.Hangfire.AverageTradedPriceUpdater
             }
         }
 
-        private static IEnumerable<string> GetTickersToUpdate(List<AverageTradedPriceDetails> lastMonthAverageTradedPrices,
-            IEnumerable<AverageTradedPriceDto> allTickers)
-        {
-
-            var tickers = lastMonthAverageTradedPrices.Where(x => allTickers.Any(y => y.Ticker.Equals(x.TickerSymbol)));
-            return tickers.Select(x => x.TickerSymbol);
-        }
-
-        private static IEnumerable<string> GetTickersToAdd(List<AverageTradedPriceDetails> lastMonthAverageTradedPrices,
-            IEnumerable<AverageTradedPriceDto> allTickers)
-        {
-            return lastMonthAverageTradedPrices.Select(x => x.TickerSymbol).ToList().Except(allTickers.Select(x => x.Ticker));
-        }
-
-        private static IEnumerable<string> GetTickerToRemove(List<AverageTradedPriceDetails> lastMonthAverageTradedPrices, List<EquitMovement> movements)
-        {
-            return movements.Where(m => !lastMonthAverageTradedPrices.Any(l => l.TickerSymbol == m.TickerSymbol)).Select(x => x.TickerSymbol);
-        }
-
         private async Task<List<AverageTradedPriceDetails>> GetLastMonthTradedAverageTradedPrices(
             List<EquitMovement> movements, Guid id
         )
@@ -150,12 +137,24 @@ namespace Core.Services.Hangfire.AverageTradedPriceUpdater
 
         private static string GetLastMonthFinalDay()
         {
-            var yearInTheLastMonth = DateTime.Now.AddMonths(-1).Year;
-            // TODO o lastMonth tá retornando '3' ao invés de '03' pra mês. A API da B3 aceita?
-            var lastMonth = DateTime.Now.AddMonths(-1).Month;
-            var lastMonthLastDay = DateTime.DaysInMonth(yearInTheLastMonth, lastMonth);
+            int yearInTheLastMonth = DateTime.Now.AddMonths(-1).Year;
+            string lastMonth = FormatLastMonth(DateTime.Now.AddMonths(-1).Month);
+            int lastMonthLastDay = DateTime.DaysInMonth(yearInTheLastMonth, int.Parse(lastMonth));
 
             return $"{yearInTheLastMonth}-{lastMonth}-{lastMonthLastDay}";
+        }
+
+        /// <summary>
+        /// Converte números do <see cref="DateTime.Month"/> de 1 dígito para 2.
+        /// </summary>
+        /// <param name="month"></param>
+        /// <returns>Um número de dois dígitos sendo o primeiro um 0 caso <see cref="DateTime.Month"/> tenha apenas 1 dígito.</returns>
+        private static string FormatLastMonth(int month)
+        {
+            if (month.ToString().Length == 1)
+                return $"0{month}";
+
+            return month.ToString();
         }
 
         private static string GetLastMonthFirstDay()

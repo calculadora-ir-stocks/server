@@ -16,10 +16,5 @@ namespace Core.Services.Plan
         {
             return planRepository.GetAllStripePlans();
         }
-
-        public Infrastructure.Models.Plan GetByAccountId(Guid accountId)
-        {
-            return planRepository.GetByAccountId(accountId);
-        }
     }
 }

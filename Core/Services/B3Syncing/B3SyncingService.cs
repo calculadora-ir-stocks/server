@@ -2,6 +2,7 @@
 using Common.Enums;
 using Common.Exceptions;
 using Common.Helpers;
+using Core.Constants;
 using Core.Models;
 using Core.Requests.BigBang;
 using Core.Services.B3ResponseCalculator;
@@ -64,11 +65,11 @@ namespace Core.Services.B3Syncing
 
             // var b3Response = await b3Client.GetAccountMovement(account.CPF, startDate, lastMonth, accountId);
             var b3Response = GetBigBangMockedDataBeforeB3Contract();
-            var response = await b3CalculatorService.Calculate(b3Response, accountId);
+            var calculatedTaxesResponse = await b3CalculatorService.Calculate(b3Response, accountId);
 
-            if (response is null) return;
+            if (calculatedTaxesResponse is null) return;
 
-            await SaveB3Data(response, account);
+            await SaveB3Data(calculatedTaxesResponse, account);
 
             account.Status = EnumHelper.GetEnumDescription(AccountStatus.SubscriptionValid);
             await accountRepository.UpdateStatus(account);
@@ -185,8 +186,6 @@ namespace Core.Services.B3Syncing
                 Quantity: 2
                 AVG: 146,325
 
-                IncomeTaxes
-
                 01/2023
 
                 Taxes: 21,9825
@@ -220,7 +219,7 @@ namespace Core.Services.B3Syncing
                 OperationValue = 18.43,
                 UnitPrice = 18.43,
                 EquitiesQuantity = 1,
-                ReferenceDate = new DateTime(2023, 01, 03)
+                ReferenceDate = new DateTime(2023, 01, 03).ToUniversalTime(),
             });
 
             response.Data.EquitiesPeriods.EquitiesMovements.Add(new Models.B3.Movement.EquitMovement
@@ -330,6 +329,30 @@ namespace Core.Services.B3Syncing
                 EquitiesQuantity = 1,
                 ReferenceDate = new DateTime(2023, 02, 01)
             });
+
+            // response.Data.EquitiesPeriods.EquitiesMovements.Add(new Models.B3.Movement.EquitMovement
+            // {
+            //     AssetType = "Ações",
+            //     TickerSymbol = "NVDA",
+            //     MovementType = "Compra",
+            //     CorporationName = "Nvidia Corporation",
+            //     OperationValue = 200,
+            //     UnitPrice = 100,
+            //     EquitiesQuantity = 2,
+            //     ReferenceDate = new DateTime(2023, 03, 01)
+            // });
+
+            // response.Data.EquitiesPeriods.EquitiesMovements.Add(new Models.B3.Movement.EquitMovement
+            // {
+            //     AssetType = "Ações",
+            //     TickerSymbol = "NVDA",
+            //     MovementType = B3ResponseConstants.BonusShare,
+            //     CorporationName = "Nvidia Corporation",
+            //     OperationValue = 0, // 50
+            //     UnitPrice = 0, // 25
+            //     EquitiesQuantity = 2,
+            //     ReferenceDate = new DateTime(2023, 03, 01)
+            // });
         }
     }
 }

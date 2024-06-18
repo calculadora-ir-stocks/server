@@ -193,7 +193,7 @@ namespace Core.Calculators
                     taxes = (AliquotConstants.IncomeTaxesForDayTrade / 100m) * (decimal)profit;
                 else
                     taxes = (aliquot / 100m) * (decimal)profit;
-            } 
+            }
 
             return taxes;
         }

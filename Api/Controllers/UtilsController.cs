@@ -15,19 +15,9 @@ namespace Api.Controllers
         }
 
         [HttpGet("accounts")]
-        public IActionResult GetAllAccounts()
+        public async Task<IActionResult> GetAllAccounts()
         {
-            return Ok(accountRepository.GetAll());
-        }
-
-        /// <summary>
-        /// Deleta todos os usuários da base.
-        /// </summary>
-        [HttpDelete("nuke")]
-        public IActionResult Nuke()
-        {
-            accountRepository.DeleteAll();
-            return Ok();
+            return Ok(await accountRepository.GetAll());
         }
     }
 }
