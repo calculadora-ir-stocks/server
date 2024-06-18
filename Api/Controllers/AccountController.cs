@@ -35,10 +35,8 @@ public class AccountController : BaseController
     [HttpGet("opt-in/{accountId}")]
     public async Task<IActionResult> OptIn(Guid accountId)
     {
-        // TODO uncomment for production.
-        // var didOptIn = await service.OptIn(accountId);
-        // return Ok(new { isAuthorized = didOptIn });
-        return Ok(new { isAuthorized = true });
+        var didOptIn = await service.OptIn(accountId);
+        return Ok(new { isAuthorized = didOptIn });
     }
 
     /// <summary>

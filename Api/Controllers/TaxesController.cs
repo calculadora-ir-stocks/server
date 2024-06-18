@@ -54,9 +54,7 @@ public class TaxesController : BaseController
     public async Task<IActionResult> Home(Guid accountId)
     {
         var response = await taxesService.GetCurrentMonthTaxes(accountId);
-
         if (response.Movements.IsNullOrEmpty()) return NotFound("Por enquanto não há nenhum imposto de renda a ser pago.");
-
         return Ok(response);
     }
 

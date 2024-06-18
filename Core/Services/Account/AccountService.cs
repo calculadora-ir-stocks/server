@@ -29,8 +29,9 @@ namespace Core.Services.Account
             {
                 var account = await repository.GetById(accountId) ?? throw new NotFoundException("Investidor", accountId.ToString());
 
-                // TODO remove for production
-                // await b3Client.OptOut(UtilsHelper.RemoveSpecialCharacters(account.CPF));
+#if !DEBUG
+                await b3Client.OptOut(UtilsHelper.RemoveSpecialCharacters(account.CPF));
+#endif
                 repository.Delete(account);
 
                 logger.LogInformation("O usuário de id {accountId} deletou a sua conta da plataforma.", accountId);

@@ -1,15 +1,13 @@
-﻿using Common.Enums;
-using common.Helpers;
+﻿using common.Helpers;
+using Common.Enums;
+using Common.Exceptions;
 using Common.Helpers;
 using Core.Clients.InfoSimples;
 using Core.Models.InfoSimples;
 using Core.Models.Responses;
-using Infrastructure.Repositories.Taxes;
-using Infrastructure.Repositories;
-using Common.Exceptions;
-using Microsoft.IdentityModel.Tokens;
-using Microsoft.AspNetCore.Server.IIS.Core;
 using Infrastructure.Repositories.Account;
+using Infrastructure.Repositories.Taxes;
+using Microsoft.IdentityModel.Tokens;
 
 namespace Core.Services.DarfGenerator
 {
@@ -33,7 +31,6 @@ namespace Core.Services.DarfGenerator
 
         public async Task<DARFResponse> Generate(Guid accountId, string month, double value = 0)
         {
-            // TODO tá pegando o CPF criptografado
             var account = await accountRepository.GetById(accountId) ?? throw new NotFoundException("Investidor", accountId.ToString());
 
             if (account.Status == EnumHelper.GetEnumDescription(AccountStatus.SubscriptionExpired))
@@ -50,51 +47,38 @@ namespace Core.Services.DarfGenerator
             string taxesReferenceDate = taxes.Select(x => x.Month).First();
             string today = DateTime.Now.ToString("dd/MM/yyyy");
 
-            // TODO uncomment for production
+            var response = await infoSimplesClient.GenerateDARF(
+                new GenerateDARFRequest
+                (
+                    UtilsHelper.RemoveSpecialCharacters(account.CPF),
+                    account.BirthDate,
+                    $"Venda de ativos no mês {taxesReferenceDate}. Essa DARF foi gerada automaticamente " +
+                    $"pelo Stocks IR em {today}.",
+                    DarfCode,
+                    totalTaxes,
+                    taxesReferenceDate,
+                    today
+                )
+            );
 
-            //var response = await infoSimplesClient.GenerateDARF(
-            //    new GenerateDARFRequest
-            //    (
-            //        UtilsHelper.RemoveSpecialCharacters(account.CPF),
-            //        account.BirthDate,
-            //        $"Venda de ativos no mês {taxesReferenceDate}. Essa DARF foi gerada automaticamente " +
-            //        $"pelo Stocks IR em {today}.",
-            //        DarfCode,
-            //        totalTaxes,
-            //        taxesReferenceDate,
-            //        today
-            //    )
-            //);
+            string? observation = null;
 
-            // string? observation = null;
-
-            // if (response.Data[0].TotalTaxes.TotalWithFineAndInterests < 10)
-            // {
-            //     observation = "Valor total da DARF é inferior ao valor mínimo de R$10,00. \n" +
-            //         "Para pagá-la, adicione esse imposto em algum mês subsequente até que o valor total seja igual ou maior que R$10,00.";
-            // }
+            if (response.Data[0].TotalTaxes.TotalWithFineAndInterests < 10)
+            {
+                observation = "Valor total da DARF é inferior ao valor mínimo de R$10,00. \n" +
+                    "Para pagá-la, adicione esse imposto em algum mês subsequente até que o valor total seja igual ou maior que R$10,00.";
+            }
 
             var monthsToCompensate = await taxesRepository.GetTaxesLessThanMinimumRequired(accountId, month);
 
             return new DARFResponse(
-                "423454257291",
-                totalTaxes,
-                0,
-                7,
-                string.Empty,
+                response.Data[0].BarCode,
+                response.Data[0].TotalTaxes.TotalWithFineAndInterests,
+                double.Parse(response.Data[0].TotalTaxes.Fine),
+                double.Parse(response.Data[0].TotalTaxes.Interests),
+                observation,
                 monthsToCompensate
             );
-
-            // TODO uncomment for production
-
-            // return new DARFResponse(
-            //     response.Data[0].BarCode,
-            //     response.Data[0].TotalTaxes.TotalWithFineAndInterests,
-            //     double.Parse(response.Data[0].TotalTaxes.Fine),
-            //     double.Parse(response.Data[0].TotalTaxes.Interests),
-            //     observation,
-            //     monthsToCompensate
-            // );
         }
     }
 }
