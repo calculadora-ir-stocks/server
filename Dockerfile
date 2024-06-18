@@ -14,7 +14,7 @@ WORKDIR /publish
 COPY --from=build-env /publish .
 
 COPY init.sql /docker-entrypoint-initdb.d/
-ARG B3_CERT_LOCATION=/home
+ARG B3_CERT_LOCATION=/certs
 
 EXPOSE 80
 ENTRYPOINT ["dotnet", "Api.dll"]
