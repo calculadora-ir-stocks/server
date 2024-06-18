@@ -1,15 +1,13 @@
-﻿using Common.Enums;
-using common.Helpers;
+﻿using common.Helpers;
+using Common.Enums;
+using Common.Exceptions;
 using Common.Helpers;
 using Core.Clients.InfoSimples;
 using Core.Models.InfoSimples;
 using Core.Models.Responses;
-using Infrastructure.Repositories.Taxes;
-using Infrastructure.Repositories;
-using Common.Exceptions;
-using Microsoft.IdentityModel.Tokens;
-using Microsoft.AspNetCore.Server.IIS.Core;
 using Infrastructure.Repositories.Account;
+using Infrastructure.Repositories.Taxes;
+using Microsoft.IdentityModel.Tokens;
 
 namespace Core.Services.DarfGenerator
 {
