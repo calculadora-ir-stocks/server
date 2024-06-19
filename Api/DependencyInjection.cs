@@ -158,7 +158,7 @@ namespace Api
             var otherServicesHandler = new HttpClientHandler();
 
             services.AddHttpClient("B3", c =>
-                c.BaseAddress = new Uri("https://api.b3.com.br/api/")).ConfigurePrimaryHttpMessageHandler(() => b3Handler)
+                c.BaseAddress = new Uri("https://investidor.b3.com.br:2443/api/")).ConfigurePrimaryHttpMessageHandler(() => b3Handler)
                 .AddTransientHttpErrorPolicy(policy => policy.WaitAndRetryAsync(5, _ => TimeSpan.FromSeconds(10)))
                 .AddTransientHttpErrorPolicy(policy => policy.CircuitBreakerAsync(5, TimeSpan.FromSeconds(10)));
 
