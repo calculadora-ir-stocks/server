@@ -9,6 +9,7 @@ using Infrastructure.Repositories.BonusShare;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using System.Collections.Generic;
+using System.Text.Json;
 using static Core.Models.B3.Movement;
 
 namespace Core.Services.B3ResponseCalculator
@@ -45,6 +46,11 @@ namespace Core.Services.B3ResponseCalculator
 
             SetDayTradeMovementsAsDayTrade(movements);
             await SetBonusShareUnitPriceValue(movements);
+
+            foreach (var movement in movements)
+            {
+                Console.WriteLine(JsonSerializer.Serialize(movement));
+            }
 
             Dictionary<string, List<EquitMovement>> monthlyMovements = new();
             var monthsThatHadMovements = movements.Select(x => x.ReferenceDate.ToString("MM/yyyy")).Distinct();
