@@ -108,9 +108,9 @@ public class TaxesController : BaseController
     [ProducesResponseType(typeof(Core.Notification.Notification), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(Core.Notification.Notification), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(Core.Notification.Notification), StatusCodes.Status502BadGateway)]
-    public async Task<IActionResult> BigBang(Guid accountId, [FromBody] List<BigBangRequest> request)
+    public async Task<IActionResult> BigBang(Guid accountId)
     {
-        await syncingService.Sync(accountId, request);
+        await syncingService.Sync(accountId, new List<BigBangRequest>());
         return Ok(new { message = "Imposto de renda e preço médio mais recente calculados e armazenados com sucesso." });
     }
 }
