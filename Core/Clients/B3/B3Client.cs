@@ -70,6 +70,7 @@ namespace Core.Clients.B3
             var responseContentStream = await response.Content.ReadAsStringAsync();
 
             var assets = JsonConvert.DeserializeObject<Movement.Root>(responseContentStream);
+            if (assets is null) return null;
 
             await GetAccountMovementsInAllPages(assets);
 
@@ -88,13 +89,11 @@ namespace Core.Clients.B3
         /// Como a API da B3 separa o response por páginas, é necessário percorrê-las
         /// afim de obter todos os dados.
         /// </summary>
-        private async Task GetAccountMovementsInAllPages(Movement.Root? root)
+        private async Task GetAccountMovementsInAllPages(Movement.Root root)
         {
-            if (root is null || root.Links.Next is null) return;
-
             try
             {
-                HttpRequestMessage request = new(HttpMethod.Get, root.Links.Next);
+                HttpRequestMessage request = new(HttpMethod.Get, root?.Links.Next);
 
                 ServicePointManager.FindServicePoint(request.RequestUri).ConnectionLimit = 5;
 
@@ -105,11 +104,14 @@ namespace Core.Clients.B3
                 using var response = await b3Client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
                 response.EnsureSuccessStatusCode();
 
-                string? json = await response.Content.ReadAsStringAsync();
-                var assets = JsonConvert.DeserializeObject<Movement.Root>(json);
 
-                root.Links.Next = assets.Links.Next;
-                root.Data.EquitiesPeriods.EquitiesMovements.AddRange(assets.Data.EquitiesPeriods.EquitiesMovements);
+                string json = await response.Content.ReadAsStringAsync();
+                var assets = JsonConvert.DeserializeObject<Movement.Root>(json)!;
+
+                if (assets?.Links.Next is null) return;
+
+                root!.Links.Next = assets?.Links.Next;
+                root.Data.EquitiesPeriods.EquitiesMovements.AddRange(assets!.Data.EquitiesPeriods.EquitiesMovements);
             }
             catch (Exception e)
             {
@@ -120,7 +122,6 @@ namespace Core.Clients.B3
                 return;
             }
 
-            // https://t.ly/p27y
             await GetAccountMovementsInAllPages(root);
         }
 
