@@ -3,6 +3,7 @@ using Api.DTOs.Auth;
 using common.Helpers;
 using Common.Options;
 using Core.Models.B3;
+using Microsoft.Extensions.Azure;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
@@ -43,6 +44,22 @@ namespace Core.Clients.B3
 #pragma warning disable CS8618
         public B3Client() { }
 #pragma warning restore CS8618
+
+        public async Task<HttpStatusCode> B3HealthCheck()
+        {
+            var accessToken = await GetB3AuthorizationToken();
+
+            HttpRequestMessage request = new(
+                HttpMethod.Get,
+                $"acesso/healthcheck"
+            );
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken.AccessToken);
+            
+            var response = await b3Client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
+            response.Dispose();
+
+            return response.StatusCode;
+        }
 
         public async Task<Movement.Root?> GetAccountMovement(string cpf, string referenceStartDate, string referenceEndDate, Guid accountId, string? nextUrl)
         {

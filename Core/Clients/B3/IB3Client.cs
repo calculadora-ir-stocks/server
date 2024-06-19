@@ -1,9 +1,11 @@
 ﻿using Core.Models.B3;
+using System.Net;
 
 namespace Api.Clients.B3
 {
     public interface IB3Client
     {
+        Task<HttpStatusCode> B3HealthCheck();
         /// <summary>
         /// Dados referentes a movimentação de ações, fundos imobiliários, ouro e ETF.
         /// </summary>
