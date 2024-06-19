@@ -70,8 +70,9 @@ namespace Core.Clients.B3
             {
                 Console.WriteLine(e.Message);
                 Console.WriteLine(e);
-            }
 
+                throw;
+            }
         }
 
         public async Task<Movement.Root?> GetAccountMovement(string cpf, string referenceStartDate, string referenceEndDate, Guid accountId, string? nextUrl)
