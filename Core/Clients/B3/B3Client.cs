@@ -49,21 +49,30 @@ namespace Core.Clients.B3
         {
             var accessToken = await GetB3AuthorizationToken();
 
-            HttpRequestMessage request = new(
-                HttpMethod.Get,
-                $"acesso/healthcheck"
-            );
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken.AccessToken);
+            try
+            {
+                HttpRequestMessage request = new(
+                    HttpMethod.Get,
+                    $"acesso/healthcheck"
+                );
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken.AccessToken);
 
-            Console.WriteLine("Antes da requisição.");
+                Console.WriteLine("Antes da requisição.");
 
-            var response = await b3Client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
+                var response = await b3Client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
 
-            Console.WriteLine("Depois da requisição.");
+                Console.WriteLine("Depois da requisição.");
 
-            response.Dispose();
+                response.Dispose();
 
-            return response.StatusCode;
+                return response.StatusCode;
+            } catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+                Console.WriteLine(e);
+
+                throw;
+            }
         }
 
         public async Task<Movement.Root?> GetAccountMovement(string cpf, string referenceStartDate, string referenceEndDate, Guid accountId, string? nextUrl)
