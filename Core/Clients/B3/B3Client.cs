@@ -1,5 +1,6 @@
 ﻿using Api.Clients.B3;
 using Api.DTOs.Auth;
+using common.Helpers;
 using Common.Options;
 using Core.Models.B3;
 using Microsoft.Extensions.Logging;
@@ -49,7 +50,7 @@ namespace Core.Clients.B3
 
             HttpRequestMessage request = new(
                 HttpMethod.Get,
-                $"movement/v2/equities/investors/{cpf}?referenceStartDate={referenceStartDate}&referenceEndDate={referenceEndDate}"
+                $"movement/v2/equities/investors/{UtilsHelper.RemoveSpecialCharacters(cpf)}?referenceStartDate={referenceStartDate}&referenceEndDate={referenceEndDate}"
             );
 
             if (nextUrl != null)
@@ -148,10 +149,11 @@ namespace Core.Clients.B3
 
                 request.Content.Headers.ContentType = new MediaTypeWithQualityHeaderValue("application/x-www-form-urlencoded");
 
-                using var response = await microsoftClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
+                var response = await microsoftClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
                 response.EnsureSuccessStatusCode();
 
                 var responseContentStream = response.Content.ReadAsStringAsync().Result;
+                response.Dispose();
 
                 token = JsonConvert.DeserializeObject<B3Token>(responseContentStream)!;
 
