@@ -54,8 +54,13 @@ namespace Core.Clients.B3
                 $"acesso/healthcheck"
             );
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken.AccessToken);
-            
+
+            Console.WriteLine("Antes da requisição.");
+
             var response = await b3Client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
+
+            Console.WriteLine("Depois da requisição.");
+
             response.Dispose();
 
             return response.StatusCode;
