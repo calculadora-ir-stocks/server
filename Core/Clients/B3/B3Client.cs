@@ -128,7 +128,6 @@ namespace Core.Clients.B3
                 using var response = await b3Client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
                 response.EnsureSuccessStatusCode();
 
-
                 string json = await response.Content.ReadAsStringAsync();
                 var assets = JsonConvert.DeserializeObject<Movement.Root>(json)!;
 
@@ -180,7 +179,6 @@ namespace Core.Clients.B3
                 var responseContentStream = response.Content.ReadAsStringAsync().Result;
 
                 token = JsonConvert.DeserializeObject<B3Token>(responseContentStream)!;
-
 
                 Console.WriteLine(token.AccessToken);
 
