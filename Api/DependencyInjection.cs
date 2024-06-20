@@ -155,25 +155,23 @@ namespace Api
             var b3Handler = new HttpClientHandler();
             AddB3Certificate(b3Handler, configuration);
 
-            var otherServicesHandler = new HttpClientHandler();
-
             services.AddHttpClient("B3", c =>
                 c.BaseAddress = new Uri("https://apib3i-cert.b3.com.br:2443/api/")).ConfigurePrimaryHttpMessageHandler(() => b3Handler)
                 .AddTransientHttpErrorPolicy(policy => policy.WaitAndRetryAsync(5, _ => TimeSpan.FromSeconds(10)))
                 .AddTransientHttpErrorPolicy(policy => policy.CircuitBreakerAsync(5, TimeSpan.FromSeconds(10)));
 
             services.AddHttpClient("Microsoft", c =>
-                c.BaseAddress = new Uri("https://login.microsoftonline.com/")).ConfigurePrimaryHttpMessageHandler(() => b3Handler)
+                c.BaseAddress = new Uri("https://login.microsoftonline.com/")).ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler())
                 .AddTransientHttpErrorPolicy(policy => policy.WaitAndRetryAsync(5, _ => TimeSpan.FromSeconds(10)))
                 .AddTransientHttpErrorPolicy(policy => policy.CircuitBreakerAsync(5, TimeSpan.FromSeconds(10)));
 
             services.AddHttpClient("Infosimples", c =>
-                c.BaseAddress = new Uri("https://api.infosimples.com/api/v2/consultas/")).ConfigurePrimaryHttpMessageHandler(() => otherServicesHandler)
+                c.BaseAddress = new Uri("https://api.infosimples.com/api/v2/consultas/")).ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler())
                 .AddTransientHttpErrorPolicy(policy => policy.WaitAndRetryAsync(5, _ => TimeSpan.FromSeconds(10)))
                 .AddTransientHttpErrorPolicy(policy => policy.CircuitBreakerAsync(5, TimeSpan.FromSeconds(10)));
 
             services.AddHttpClient("Auth0", c =>
-                c.BaseAddress = new Uri("https://dev-cfdhp4yerdn6st6a.us.auth0.com/oauth/")).ConfigurePrimaryHttpMessageHandler(() => otherServicesHandler)
+                c.BaseAddress = new Uri("https://dev-cfdhp4yerdn6st6a.us.auth0.com/oauth/")).ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler())
                 .AddTransientHttpErrorPolicy(policy => policy.WaitAndRetryAsync(5, _ => TimeSpan.FromSeconds(10)))
                 .AddTransientHttpErrorPolicy(policy => policy.CircuitBreakerAsync(5, TimeSpan.FromSeconds(10)));
         }
@@ -187,7 +185,7 @@ namespace Api
 
             handler.ClientCertificateOptions = ClientCertificateOption.Manual;
             handler.SslProtocols = SslProtocols.Tls12;
-            handler.ClientCertificates.Add(new X509Certificate2(b3CertLocation, password: configuration["Certificates:B3:Password"], X509KeyStorageFlags.PersistKeySet));
+            handler.ClientCertificates.Add(new X509Certificate2(b3CertLocation, password: "DRLCMH", X509KeyStorageFlags.PersistKeySet));
         }
 
         public static void AddRepositories(this IServiceCollection services)
