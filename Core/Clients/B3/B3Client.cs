@@ -59,11 +59,9 @@ namespace Core.Clients.B3
 
                 Console.WriteLine("Antes da requisição.");
 
-                var response = await b3Client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
+                using var response = await b3Client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
 
                 Console.WriteLine("Depois da requisição.");
-
-                response.Dispose();
 
                 return response.StatusCode;
             } catch (Exception e)
