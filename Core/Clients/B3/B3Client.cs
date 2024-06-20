@@ -57,12 +57,7 @@ namespace Core.Clients.B3
                 );
                 request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken.AccessToken);
 
-                Console.WriteLine("Antes da requisição.");
-
                 using var response = await b3Client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
-
-                Console.WriteLine("Depois da requisição.");
-
                 return response.StatusCode;
             } catch (Exception e)
             {
@@ -179,13 +174,15 @@ namespace Core.Clients.B3
 
                 request.Content.Headers.ContentType = new MediaTypeWithQualityHeaderValue("application/x-www-form-urlencoded");
 
-                var response = await microsoftClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
+                using var response = await microsoftClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
                 response.EnsureSuccessStatusCode();
 
                 var responseContentStream = response.Content.ReadAsStringAsync().Result;
-                response.Dispose();
 
                 token = JsonConvert.DeserializeObject<B3Token>(responseContentStream)!;
+
+
+                Console.WriteLine(token.AccessToken);
 
                 return token ?? throw new Exception("Uma exceção ocorreu ao deserializar o objeto de Token de autenticação da B3");
             }
