@@ -20,8 +20,8 @@ namespace Core.Clients.B3
         private readonly IHttpClientFactory clientFactory;
         private readonly IOptions<B3ApiOptions> options;
 
-        private readonly HttpClient b3Client;
-        private readonly HttpClient microsoftClient;
+        private static HttpClient b3Client = null!;
+        private static HttpClient microsoftClient = null!;
 
         private static B3Token? token;
 
@@ -34,7 +34,6 @@ namespace Core.Clients.B3
             this.clientFactory = clientFactory;
             this.options = options;
 
-            b3Client = this.clientFactory.CreateClient("B3");
             microsoftClient = this.clientFactory.CreateClient("Microsoft");
 
             token = null!;
@@ -57,10 +56,12 @@ namespace Core.Clients.B3
                 );
                 request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken.AccessToken);
 
-                using var response = await b3Client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
+                b3Client = clientFactory.CreateClient("B3");
+                var response = await b3Client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
 
                 Console.WriteLine(response.Content);
                 Console.WriteLine(response);
+
                 return response.StatusCode;
             } catch (Exception e)
             {
@@ -91,7 +92,8 @@ namespace Core.Clients.B3
 
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken.AccessToken);
 
-            using var response = await b3Client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
+            b3Client = clientFactory.CreateClient("B3");
+            var response = await b3Client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
             response.EnsureSuccessStatusCode();
 
             var responseContentStream = await response.Content.ReadAsStringAsync();
@@ -128,7 +130,8 @@ namespace Core.Clients.B3
 
                 request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken.AccessToken);
 
-                using var response = await b3Client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
+                b3Client = clientFactory.CreateClient("B3");
+                var response = await b3Client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
                 response.EnsureSuccessStatusCode();
 
                 string json = await response.Content.ReadAsStringAsync();
@@ -176,7 +179,8 @@ namespace Core.Clients.B3
 
                 request.Content.Headers.ContentType = new MediaTypeWithQualityHeaderValue("application/x-www-form-urlencoded");
 
-                using var response = await microsoftClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
+                microsoftClient = clientFactory.CreateClient("Microsoft");
+                var response = await microsoftClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
                 response.EnsureSuccessStatusCode();
 
                 var responseContentStream = response.Content.ReadAsStringAsync().Result;
@@ -199,7 +203,8 @@ namespace Core.Clients.B3
             var accessToken = await GetB3AuthorizationToken();
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken.AccessToken);
 
-            using var response = await b3Client.SendAsync(request);
+            b3Client = clientFactory.CreateClient("B3");
+            var response = await b3Client.SendAsync(request);
             response.EnsureSuccessStatusCode();
 
             var json = await response.Content.ReadAsStringAsync();
@@ -215,7 +220,8 @@ namespace Core.Clients.B3
             var accessToken = await GetB3AuthorizationToken();
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken.AccessToken);
 
-            using var response = await b3Client.SendAsync(request);
+            b3Client = clientFactory.CreateClient("B3");
+            var response = await b3Client.SendAsync(request);
             response.EnsureSuccessStatusCode();
         }
     }
