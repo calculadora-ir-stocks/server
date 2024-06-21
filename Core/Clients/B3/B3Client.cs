@@ -57,17 +57,12 @@ namespace Core.Clients.B3
                 request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken.AccessToken);
 
                 b3Client = clientFactory.CreateClient("B3");
+
                 var response = await b3Client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
-
-                Console.WriteLine(response.Content);
-                Console.WriteLine(response);
-
                 return response.StatusCode;
             } catch (Exception e)
             {
-                Console.WriteLine(e.Message);
-                Console.WriteLine(e);
-
+                logger.LogError(e, e.Message);
                 throw;
             }
         }
