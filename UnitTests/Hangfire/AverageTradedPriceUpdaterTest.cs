@@ -1,7 +1,7 @@
-﻿using Api.Clients.B3;
-using AutoFixture;
+﻿using AutoFixture;
 using Core.Calculators;
 using Core.Models;
+using Core.Refit.B3;
 using Core.Services.Hangfire.AverageTradedPriceUpdater;
 using Hangfire.AverageTradedPriceUpdater;
 using Infrastructure.Dtos;

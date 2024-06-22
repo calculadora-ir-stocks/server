@@ -1,4 +1,3 @@
-using Api.Clients.B3;
 using common.Helpers;
 using Common.Enums;
 using Common.Exceptions;
@@ -6,6 +5,7 @@ using Common.Helpers;
 using Core.Models;
 using Core.Models.Api.Responses;
 using Core.Models.Responses;
+using Core.Refit.B3;
 using Core.Services.B3ResponseCalculator;
 using Infrastructure.Dtos;
 using Infrastructure.Repositories;

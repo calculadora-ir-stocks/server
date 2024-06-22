@@ -1,8 +1,8 @@
-﻿using Api.Clients.B3;
-using common.Helpers;
+﻿using common.Helpers;
 using Core.Calculators;
 using Core.Models;
 using Core.Models.B3;
+using Core.Refit.B3;
 using Hangfire.AverageTradedPriceUpdater;
 using Infrastructure.Dtos;
 using Infrastructure.Models;
