@@ -1,7 +1,7 @@
-﻿using Api.Clients.B3;
-using common.Helpers;
+﻿using common.Helpers;
 using Common.Exceptions;
 using Common.Options;
+using Core.Refit.B3;
 using Infrastructure.Repositories.Account;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;

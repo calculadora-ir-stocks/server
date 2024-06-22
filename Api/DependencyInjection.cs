@@ -1,5 +1,4 @@
-﻿using Api.Clients.B3;
-using Api.Database;
+﻿using Api.Database;
 using Api.Handler;
 using Api.Services.Auth;
 using Audit.Core;
@@ -10,11 +9,12 @@ using Common.Models.Handlers;
 using Common.Options;
 using Core.Calculators;
 using Core.Calculators.Assets;
-using Core.Clients.B3;
 using Core.Clients.InfoSimples;
 using Core.Filters;
 using Core.Hangfire.PlanExpirer;
 using Core.Notification;
+using Core.Refit;
+using Core.Refit.B3;
 using Core.Services.Account;
 using Core.Services.B3ResponseCalculator;
 using Core.Services.B3Syncing;
@@ -37,12 +37,12 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Polly;
+using Refit;
 using Stripe;
 using System.Reflection;
 using System.Security.Authentication;
 using System.Security.Claims;
 using System.Security.Cryptography.X509Certificates;
-using File = System.IO.File;
 
 namespace Api
 {
@@ -155,14 +155,13 @@ namespace Api
             var b3Handler = new HttpClientHandler();
             AddB3Certificate(b3Handler, configuration);
 
-            services.AddHttpClient("B3", c =>
-                c.BaseAddress = new Uri("https://investidor.b3.com.br:2443/api/")).ConfigurePrimaryHttpMessageHandler(() => b3Handler)
+            services.AddRefitClient<IB3Refit>()
+                .ConfigureHttpClient(c => c.BaseAddress = new Uri("https://investidor.b3.com.br:2443/api")).ConfigurePrimaryHttpMessageHandler(() => b3Handler)
                 .AddTransientHttpErrorPolicy(policy => policy.WaitAndRetryAsync(5, _ => TimeSpan.FromSeconds(10)))
-                .AddTransientHttpErrorPolicy(policy => policy.CircuitBreakerAsync(5, TimeSpan.FromSeconds(10)))
-                .SetHandlerLifetime(TimeSpan.FromMinutes(5));
+                .AddTransientHttpErrorPolicy(policy => policy.CircuitBreakerAsync(5, TimeSpan.FromSeconds(10)));
 
-            services.AddHttpClient("Microsoft", c =>
-                c.BaseAddress = new Uri("https://login.microsoftonline.com/")).ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler())
+            services.AddRefitClient<IMicrosoftRefit>()
+                .ConfigureHttpClient(c => c.BaseAddress = new Uri("https://login.microsoftonline.com/")).ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler())
                 .AddTransientHttpErrorPolicy(policy => policy.WaitAndRetryAsync(5, _ => TimeSpan.FromSeconds(10)))
                 .AddTransientHttpErrorPolicy(policy => policy.CircuitBreakerAsync(5, TimeSpan.FromSeconds(10)))
                 .SetHandlerLifetime(TimeSpan.FromMinutes(5));
@@ -189,7 +188,7 @@ namespace Api
 
             handler.ClientCertificateOptions = ClientCertificateOption.Manual;
             handler.SslProtocols = SslProtocols.Tls12;
-            handler.ClientCertificates.Add(new X509Certificate2(b3CertLocation, password: "DRLCMH", X509KeyStorageFlags.PersistKeySet));
+            handler.ClientCertificates.Add(new X509Certificate2(b3CertLocation, password: configuration["Certificates:B3:Password"], X509KeyStorageFlags.PersistKeySet));
         }
 
         public static void AddRepositories(this IServiceCollection services)
@@ -241,6 +240,7 @@ namespace Api
 
         public static void AddSecretOptions(this IServiceCollection services, IConfiguration configuration)
         {
+#pragma warning disable CS8601 // Possible null reference assignment.
             services.Configure<DatabaseOptions>(options =>
             {
                 options.ConnectionString = configuration["ConnectionsString:Database"];
@@ -264,6 +264,7 @@ namespace Api
             {
                 options.ApiToken = configuration["Secrets:InfoSimples:Api:Token"];
             });
+#pragma warning restore CS8601 // Possible null reference assignment.
         }
 
         public static void AddDatabaseContext(this IServiceCollection services, string connectionString)

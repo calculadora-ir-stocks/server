@@ -1,4 +1,4 @@
-﻿using Api.Clients.B3;
+﻿using Core.Refit.B3;
 using Infrastructure.Repositories.Account;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

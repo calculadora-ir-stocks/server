@@ -1,29 +1,20 @@
-﻿using Newtonsoft.Json;
+﻿using System.Text.Json.Serialization;
 
 namespace Api.DTOs.Auth
 {
     public class B3Token
     {
-        public B3Token(string accessToken, string scheme, int expiresInSeconds)
-        {
-            AccessToken = accessToken;
-            Scheme = scheme;
-            ExpiresInSeconds = expiresInSeconds;
-            Expires = DateTime.Now.AddSeconds(expiresInSeconds);
-        }
-
-
-        [JsonProperty("access_token")]
+        [JsonPropertyName("access_token")]
         public string AccessToken { get; set; }
 
-        [JsonProperty("token_type")]
+        [JsonPropertyName("token_type")]
         public string Scheme { get; set; }
 
-        [JsonProperty("expires_in")]
+        [JsonPropertyName("expires_in")]
         public int ExpiresInSeconds { get; set; }
 
-        public DateTime Expires { get; }
-
+        public DateTime Expires { get; private set; }
+        public void SetExpiration() => Expires = DateTime.Now.AddSeconds(ExpiresInSeconds);
         public bool Expired => Expires <= DateTime.Now;
     }
 }
