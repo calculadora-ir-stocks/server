@@ -14,8 +14,8 @@
   
   <ItemGroup>
     <PackageReference Include="Azure.Identity" Version="1.11.0" />
-    <PackageReference Include="Refit" Version="7.1.0" />
-    <PackageReference Include="Refit.Newtonsoft.Json" Version="7.1.0" />
+    <PackageReference Include="Refit" Version="6.3.2" />
+    <PackageReference Include="Refit.Newtonsoft.Json" Version="6.3.2" />
     <PackageReference Include="Stripe.net" Version="42.3.0" />
     <PackageReference Include="System.Runtime.Serialization.Json" Version="4.3.0" />
   </ItemGroup>
