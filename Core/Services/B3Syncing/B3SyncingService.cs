@@ -1,9 +1,8 @@
-﻿using Api.Clients.B3;
-using Common.Enums;
+﻿using Common.Enums;
 using Common.Exceptions;
 using Common.Helpers;
-using Core.Constants;
 using Core.Models;
+using Core.Refit.B3;
 using Core.Requests.BigBang;
 using Core.Services.B3ResponseCalculator;
 using Infrastructure.Models;
