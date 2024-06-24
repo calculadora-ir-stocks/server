@@ -161,7 +161,7 @@ namespace Api
                 .AddTransientHttpErrorPolicy(policy => policy.CircuitBreakerAsync(5, TimeSpan.FromSeconds(10)));
 
             services.AddRefitClient<IMicrosoftRefit>()
-                .ConfigureHttpClient(c => c.BaseAddress = new Uri("https://login.microsoftonline.com/")).ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler())
+                .ConfigureHttpClient(c => c.BaseAddress = new Uri("https://login.microsoftonline.com/")).ConfigurePrimaryHttpMessageHandler(() => b3Handler)
                 .AddTransientHttpErrorPolicy(policy => policy.WaitAndRetryAsync(5, _ => TimeSpan.FromSeconds(10)))
                 .AddTransientHttpErrorPolicy(policy => policy.CircuitBreakerAsync(5, TimeSpan.FromSeconds(10)))
                 .SetHandlerLifetime(TimeSpan.FromMinutes(5));
@@ -188,7 +188,8 @@ namespace Api
 
             handler.ClientCertificateOptions = ClientCertificateOption.Manual;
             handler.SslProtocols = SslProtocols.Tls12;
-            handler.ClientCertificates.Add(new X509Certificate2(b3CertLocation, password: configuration["Certificates:B3:Password"], X509KeyStorageFlags.PersistKeySet));
+            handler.ClientCertificates.Add(new X509Certificate2(b3CertLocation, password: configuration["Certificates:B3:Password"]));
+            handler.ServerCertificateCustomValidationCallback = (httpRequestMessage, cert, cetChain, policyErrors) => { return true; };
         }
 
         public static void AddRepositories(this IServiceCollection services)
