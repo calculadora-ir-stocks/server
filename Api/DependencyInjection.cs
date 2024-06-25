@@ -152,8 +152,10 @@ namespace Api
 
         public static void Add3rdPartiesClients(this IServiceCollection services, IConfiguration configuration)
         {
-            var b3Handler = new HttpClientHandler();
-            AddB3Certificate(b3Handler, configuration);
+            HttpClientHandler b3Handler = new();
+            HttpClientHandler microsoftHandler = new();
+
+            AddB3Certificate(b3Handler, microsoftHandler, configuration);
 
             services.AddRefitClient<IB3Refit>()
                 .ConfigureHttpClient(c => c.BaseAddress = new Uri("https://investidor.b3.com.br:2443/api")).ConfigurePrimaryHttpMessageHandler(() => b3Handler)
@@ -161,7 +163,7 @@ namespace Api
                 .AddTransientHttpErrorPolicy(policy => policy.CircuitBreakerAsync(5, TimeSpan.FromSeconds(10)));
 
             services.AddRefitClient<IMicrosoftRefit>()
-                .ConfigureHttpClient(c => c.BaseAddress = new Uri("https://login.microsoftonline.com/")).ConfigurePrimaryHttpMessageHandler(() => b3Handler)
+                .ConfigureHttpClient(c => c.BaseAddress = new Uri("https://login.microsoftonline.com/")).ConfigurePrimaryHttpMessageHandler(() => microsoftHandler)
                 .AddTransientHttpErrorPolicy(policy => policy.WaitAndRetryAsync(5, _ => TimeSpan.FromSeconds(10)))
                 .AddTransientHttpErrorPolicy(policy => policy.CircuitBreakerAsync(5, TimeSpan.FromSeconds(10)))
                 .SetHandlerLifetime(TimeSpan.FromMinutes(5));
@@ -179,17 +181,23 @@ namespace Api
                 .SetHandlerLifetime(TimeSpan.FromMinutes(5));
         }
 
-        private static void AddB3Certificate(HttpClientHandler handler, IConfiguration configuration)
+        private static void AddB3Certificate(HttpClientHandler b3Handler, HttpClientHandler microsoftHandler, IConfiguration configuration)
         {
             string? b3CertLocation = Environment.GetEnvironmentVariable("B3_CERT_LOCATION");
+
             if (b3CertLocation is null) 
                 throw new InvalidOperationException("Configure a variável de ambiente B3_CERT_LOCATION contendo a localização do arquivo de certificação" +
                 " da API da Área Logada da B3.");
 
-            handler.ClientCertificateOptions = ClientCertificateOption.Manual;
-            handler.SslProtocols = SslProtocols.Tls12;
-            handler.ClientCertificates.Add(new X509Certificate2(b3CertLocation, password: configuration["Certificates:B3:Password"]));
-            handler.ServerCertificateCustomValidationCallback = (httpRequestMessage, cert, cetChain, policyErrors) => { return true; };
+            b3Handler.ClientCertificateOptions = ClientCertificateOption.Manual;
+            b3Handler.SslProtocols = SslProtocols.Tls12;
+            b3Handler.ClientCertificates.Add(new X509Certificate2(b3CertLocation, password: configuration["Certificates:B3:Password"]));
+            b3Handler.ServerCertificateCustomValidationCallback = (httpRequestMessage, cert, cetChain, policyErrors) => { return true; };
+
+            microsoftHandler.ClientCertificateOptions = ClientCertificateOption.Manual;
+            microsoftHandler.SslProtocols = SslProtocols.Tls12;
+            microsoftHandler.ClientCertificates.Add(new X509Certificate2(b3CertLocation, password: configuration["Certificates:B3:Password"]));
+            microsoftHandler.ServerCertificateCustomValidationCallback = (httpRequestMessage, cert, cetChain, policyErrors) => { return true; };
         }
 
         public static void AddRepositories(this IServiceCollection services)
