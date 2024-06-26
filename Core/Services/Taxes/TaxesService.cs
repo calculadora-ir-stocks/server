@@ -94,8 +94,6 @@ public class TaxesService : ITaxesService
 
     private static TaxesDetailsResponse ToTaxesDetailsResponse(List<AssetIncomeTaxes> assets)
     {
-        // TODO O objeto de retorno é complexo o suficiente para usar o AutoMapper?
-
         TaxesDetailsResponse response = new(
             totalTaxes: assets.Select(x => x.Taxes).Sum(),
             TaxesStatus.Pending,

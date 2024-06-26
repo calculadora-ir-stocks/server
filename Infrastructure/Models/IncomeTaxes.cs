@@ -12,7 +12,7 @@ namespace Infrastructure.Models
         public IncomeTaxes(string month, double taxes, double totalSold, double swingTradeProfit, double dayTradeProfit,
             string tradedAssets, Account account, int assetId)
         {
-            // TODO override ToString method with Replace
+            // TODO override ToString method w this implementation
             Month = month;
             Taxes = taxes.ToString().Replace(',', '.');
             TotalSold = totalSold.ToString().Replace(',', '.');

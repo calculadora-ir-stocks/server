@@ -130,9 +130,6 @@ namespace Core.Refit.B3
             token = await microsoftClient.GetAuthToken(xWwwFormUrlEncoded);
             token.SetExpiration();
 
-            // TODO remover
-            Console.WriteLine(token.AccessToken is not null ? "não é null" : "é null");
-
             return token.AccessToken;
         }
     }
