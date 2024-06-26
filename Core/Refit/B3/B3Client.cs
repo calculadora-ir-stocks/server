@@ -130,6 +130,8 @@ namespace Core.Refit.B3
             token = await microsoftClient.GetAuthToken(xWwwFormUrlEncoded);
             token.SetExpiration();
 
+            Console.WriteLine(token.AccessToken);
+
             return token.AccessToken;
         }
     }
