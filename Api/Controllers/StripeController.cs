@@ -8,6 +8,8 @@ using Stripe.Checkout;
 namespace Api.Controllers
 {
     [Tags("Stripe")]
+    // TODO remove for prd
+    [AllowAnonymous]
     public class StripeController : BaseController
     {
         private readonly IStripeService stripeService;
