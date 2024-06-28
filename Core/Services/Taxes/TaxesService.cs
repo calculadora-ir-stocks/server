@@ -51,7 +51,7 @@ public class TaxesService : ITaxesService
         this.logger = logger;
     }
 
-    #region Calcula o imposto de renda do mês atual.
+#region Calcula o imposto de renda do mês atual.
     public async Task<TaxesDetailsResponse> GetCurrentMonthTaxes(Guid accountId)
     {
         try

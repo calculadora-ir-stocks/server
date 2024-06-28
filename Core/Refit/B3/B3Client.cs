@@ -29,17 +29,10 @@ namespace Core.Refit.B3
 
         public async Task<HttpStatusCode> B3HealthCheck()
         {
-            try
-            {
-                string b3Token = await GetOrGenerateAuthToken();
-                var statusCode = await b3Client.B3HealthCheck(b3Token);
+            string b3Token = await GetOrGenerateAuthToken();
+            var response = await b3Client.B3HealthCheck(b3Token);
 
-                return statusCode;
-            } catch (Exception e)
-            {
-                logger.LogError(e, e.Message);
-                throw;
-            }
+            return response.StatusCode;
         }        
 
         public async Task<Movement.Root?> GetAccountMovement(string cpf, string referenceStartDate, string referenceEndDate, Guid accountId)
@@ -50,6 +43,7 @@ namespace Core.Refit.B3
             var accessToken = await GetOrGenerateAuthToken();
 
             var assets = await b3Client.GetAccountMovements(accessToken, UtilsHelper.RemoveSpecialCharacters(cpf), referenceStartDate, referenceEndDate);
+
             if (assets.Content is null) return null;
 
             if (assets.Content.Links.Next is not null)
@@ -130,7 +124,7 @@ namespace Core.Refit.B3
             token = await microsoftClient.GetAuthToken(xWwwFormUrlEncoded);
             token.SetExpiration();
 
-            Console.WriteLine(token.AccessToken);
+            logger.LogInformation($"Token da autenticação da Microsoft obtido às {DateTime.Now}");
 
             return token.AccessToken;
         }
