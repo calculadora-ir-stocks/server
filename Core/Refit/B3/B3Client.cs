@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.Diagnostics;
 using System.Net;
+using static System.Net.WebRequestMethods;
 
 namespace Core.Refit.B3
 {
@@ -70,9 +71,11 @@ namespace Core.Refit.B3
             {
                 var accessToken = await GetOrGenerateAuthToken();
 
+                // TODO não urgente: abstrair baseUrlSize pra funcionar no ambiente de dev
+
                 // A B3 retorna a URL completa como a próxima página. Não podemos usar ela porque o Refit
                 // não vai permitir passar uma URL com baseUrl no parâmetro. Por isso, a baseURL é removida.
-                int baseUrlSize = "https://apib3i-cert.b3.com.br:2443/api".Length;
+                int baseUrlSize = "https://investidor.b3.com.br:2443/api".Length;
                 var url = root.Links.Next!.Remove(0, baseUrlSize);
 
                 var assets = await b3Client.GetAccountMovementsByPage(accessToken, url);
