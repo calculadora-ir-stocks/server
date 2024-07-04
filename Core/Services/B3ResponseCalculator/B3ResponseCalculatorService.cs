@@ -45,8 +45,12 @@ namespace Core.Services.B3ResponseCalculator
             movements = OrderMovementsByDateAndMovementType(movements);
 
             SetDayTradeMovementsAsDayTrade(movements);
+
+            // A B3 não retorna todas as informações de bonificações que precisamos. Por isso, uma base externa e manualmente gerenciada em nossa base - a Fintz - é
+            // utilizada.
             await SetBonusShareUnitPriceValue(movements);
 
+            // TODO remover
             foreach (var movement in movements)
             {
                 Console.WriteLine(JsonSerializer.Serialize(movement));
@@ -95,9 +99,7 @@ namespace Core.Services.B3ResponseCalculator
 
             var movements = response.Data.EquitiesPeriods.EquitiesMovements;
 
-            return movements.Where(x =>
-                    x.MovementType.Equals(B3ResponseConstants.Buy) ||
-                    x.MovementType.Equals(B3ResponseConstants.Sell) ||
+            return movements.Where(x => x.IsBuy()|| x.IsSell() ||
                     x.MovementType.Equals(B3ResponseConstants.Split) ||
                     x.MovementType.Equals(B3ResponseConstants.ReverseSplit) ||
                     x.MovementType.Equals(B3ResponseConstants.BonusShare)).ToList();
@@ -109,6 +111,7 @@ namespace Core.Services.B3ResponseCalculator
         /// </summary>
         private static List<EquitMovement> OrderMovementsByDateAndMovementType(IList<EquitMovement> movements)
         {
+            // TODO cobrar B3 disso
             return movements.OrderBy(x => x.MovementType).OrderBy(x => x.ReferenceDate).ToList();
         }
 
@@ -193,8 +196,8 @@ namespace Core.Services.B3ResponseCalculator
         /// </summary>
         private static void SetDayTradeMovementsAsDayTrade(List<EquitMovement> movements)
         {
-            var buys = movements.Where(x => x.MovementType == B3ResponseConstants.Buy);
-            var sells = movements.Where(x => x.MovementType == B3ResponseConstants.Sell);
+            var buys = movements.Where(x => x.IsBuy());
+            var sells = movements.Where(x => x.IsSell());
 
             var dayTradeSellsOperationsIds = sells.Where(b => buys.Any(s =>
                 s.ReferenceDate == b.ReferenceDate &&
@@ -203,7 +206,7 @@ namespace Core.Services.B3ResponseCalculator
 
             foreach (var id in dayTradeSellsOperationsIds)
             {
-                var dayTradeOperation = movements.Where(x => x.Id == id).Single();
+                var dayTradeOperation = movements.Single(x => x.Id == id);
                 dayTradeOperation.DayTraded = true;
             }
         }

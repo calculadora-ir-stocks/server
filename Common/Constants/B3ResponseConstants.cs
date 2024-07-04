@@ -3,11 +3,13 @@
     public class B3ResponseConstants
     {
         #region Operações
-        public const string Buy = "Compra";
+        public const string TransferenciaLiquidacao = "Transferência - Liquidação";
         public const string Sell = "Venda";
         public const string Split = "Desdobro";
         public const string ReverseSplit = "Grupamento";
         public const string BonusShare = "Bonificação";
+        public const string BuyOperationType = "Credito";
+        public const string SellOperationType = "Debito";
         #endregion
 
         #region Diferentes tipos de ativos

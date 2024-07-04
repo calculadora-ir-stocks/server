@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using Core.Constants;
+using Newtonsoft.Json;
 
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
 
@@ -79,6 +80,9 @@ namespace Core.Models.B3
                 DayTraded = dayTraded;
             }
 
+            public bool IsBuy() => MovementType.Equals(B3ResponseConstants.TransferenciaLiquidacao) && OperationType.Equals(B3ResponseConstants.BuyOperationType);
+            public bool IsSell() => MovementType.Equals(B3ResponseConstants.TransferenciaLiquidacao) && OperationType.Equals(B3ResponseConstants.SellOperationType);
+
             public EquitMovement() { }
 
             // Obrigado por não retornarem ids, B3!
@@ -97,6 +101,9 @@ namespace Core.Models.B3
 
             [JsonProperty("movementType")]
             public string MovementType { get; set; }
+
+            [JsonProperty("operationType")]
+            public string OperationType { get; set; }
 
             [JsonProperty("tickerSymbol")]
             public string TickerSymbol { get; set; }
