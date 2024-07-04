@@ -24,7 +24,7 @@ namespace stocks_unit_tests.Business
             AssetIncomeTaxes stocks = response.Assets.Where(x => x.AssetTypeId == Asset.Stocks).Single();
 
             decimal expectedTaxes = (AliquotConstants.IncomeTaxesForDayTrade / 100m) * (decimal)stocks.DayTradeProfit;
-            double expectedTotalSold = movements.Where(x => x.MovementType.Equals(B3ResponseConstants.Sell)).Select(x => x.OperationValue).Sum();
+            double expectedTotalSold = movements.Where(x => x.IsSell()).Select(x => x.OperationValue).Sum();
 
             Assert.Equal((double)expectedTaxes, stocks.Taxes);
             Assert.Equal(expectedTotalSold, stocks.TotalSold);
@@ -41,7 +41,7 @@ namespace stocks_unit_tests.Business
             AssetIncomeTaxes stocks = response.Assets.Where(x => x.AssetTypeId == Asset.Stocks).Single();
 
             decimal expectedTaxes = 0;
-            double expectedTotalSold = movements.Where(x => x.MovementType.Equals(B3ResponseConstants.Sell)).Select(x => x.OperationValue).Sum();
+            double expectedTotalSold = movements.Where(x => x.IsSell()).Select(x => x.OperationValue).Sum();
 
             Assert.Equal((double)expectedTaxes, stocks.Taxes);
             Assert.Equal(expectedTotalSold, stocks.TotalSold);
@@ -58,7 +58,7 @@ namespace stocks_unit_tests.Business
             AssetIncomeTaxes stocks = response.Assets.Where(x => x.AssetTypeId == Asset.Stocks).Single();
 
             double expectedTaxes = 0;
-            double expectedTotalSold = movements.Where(x => x.MovementType.Equals(B3ResponseConstants.Sell)).Select(x => x.OperationValue).Sum();
+            double expectedTotalSold = movements.Where(x => x.IsSell()).Select(x => x.OperationValue).Sum();
 
             Assert.Equal(expectedTaxes, stocks.Taxes);
             Assert.Equal(expectedTotalSold, stocks.TotalSold);
@@ -71,14 +71,14 @@ namespace stocks_unit_tests.Business
             double buy = 10000;
             double sell = 15054.43;
 
-            movements.Add(new("PETR4", "Petróleo Brasileiro S/A", "Ações", "Compra", buy, 1, buy, new DateTime(2023, 01, 01), true));
-            movements.Add(new("PETR4", "Petróleo Brasileiro S/A", "Ações", "Venda", sell, 1, sell, new DateTime(2023, 01, 01), true));
+            movements.Add(new("PETR4", "Petróleo Brasileiro S/A", "Ações", B3ResponseConstants.TransferenciaLiquidacao, B3ResponseConstants.BuyOperationType, buy, 1, buy, new DateTime(2023, 01, 01), true));
+            movements.Add(new("PETR4", "Petróleo Brasileiro S/A", "Ações", B3ResponseConstants.TransferenciaLiquidacao, B3ResponseConstants.SellOperationType, sell, 1, sell, new DateTime(2023, 01, 01), true));
 
             buy = 9432;
             sell = 11324;
 
-            movements.Add(new("PETR4", "Petróleo Brasileiro S/A", "Ações", "Compra", buy, 1, buy, new DateTime(2023, 01, 01), true));
-            movements.Add(new("PETR4", "Petróleo Brasileiro S/A", "Ações", "Venda", sell, 1, sell, new DateTime(2023, 01, 01), true));
+            movements.Add(new("PETR4", "Petróleo Brasileiro S/A", "Ações", B3ResponseConstants.TransferenciaLiquidacao, B3ResponseConstants.BuyOperationType, buy, 1, buy, new DateTime(2023, 01, 01), true));
+            movements.Add(new("PETR4", "Petróleo Brasileiro S/A", "Ações", B3ResponseConstants.TransferenciaLiquidacao, B3ResponseConstants.Sell, sell, 1, sell, new DateTime(2023, 01, 01), true));
 
             yield return new object[]
             {
@@ -93,20 +93,20 @@ namespace stocks_unit_tests.Business
             int buy = 12324;
             double sell = 10324.32;
 
-            movements.Add(new("PETR4", "Petróleo Brasileiro S/A", "Ações", "Compra", buy, 1, buy, new DateTime(2023, 01, 01), true));
-            movements.Add(new("PETR4", "Petróleo Brasileiro S/A", "Ações", "Venda", sell, 1, sell, new DateTime(2023, 01, 01), true));
+            movements.Add(new("PETR4", "Petróleo Brasileiro S/A", "Ações", B3ResponseConstants.TransferenciaLiquidacao, B3ResponseConstants.BuyOperationType, buy, 1, buy, new DateTime(2023, 01, 01), true));
+            movements.Add(new("PETR4", "Petróleo Brasileiro S/A", "Ações", B3ResponseConstants.TransferenciaLiquidacao, B3ResponseConstants.SellOperationType, sell, 1, sell, new DateTime(2023, 01, 01), true));
 
             buy = 5465;
             sell = 3487;
 
-            movements.Add(new("PETR4", "Petróleo Brasileiro S/A", "Ações", "Compra", buy, 1, buy, new DateTime(2023, 01, 01), true));
-            movements.Add(new("PETR4", "Petróleo Brasileiro S/A", "Ações", "Venda", sell, 1, sell, new DateTime(2023, 01, 01), true));
+            movements.Add(new("PETR4", "Petróleo Brasileiro S/A", "Ações", B3ResponseConstants.TransferenciaLiquidacao, B3ResponseConstants.BuyOperationType, buy, 1, buy, new DateTime(2023, 01, 01), true));
+            movements.Add(new("PETR4", "Petróleo Brasileiro S/A", "Ações", B3ResponseConstants.TransferenciaLiquidacao, B3ResponseConstants.SellOperationType, sell, 1, sell, new DateTime(2023, 01, 01), true));
 
             buy = 2355;
             sell = 1324;
 
-            movements.Add(new("PETR4", "Petróleo Brasileiro S/A", "Ações", "Compra", buy, 1, buy, new DateTime(2023, 01, 01), true));
-            movements.Add(new("PETR4", "Petróleo Brasileiro S/A", "Ações", "Venda", sell, 1, sell, new DateTime(2023, 01, 01), true));
+            movements.Add(new("PETR4", "Petróleo Brasileiro S/A", "Ações", B3ResponseConstants.TransferenciaLiquidacao, B3ResponseConstants.BuyOperationType, buy, 1, buy, new DateTime(2023, 01, 01), true));
+            movements.Add(new("PETR4", "Petróleo Brasileiro S/A", "Ações", B3ResponseConstants.TransferenciaLiquidacao, B3ResponseConstants.SellOperationType, sell, 1, sell, new DateTime(2023, 01, 01), true));
 
             yield return new object[]
             {
@@ -121,20 +121,20 @@ namespace stocks_unit_tests.Business
             int buy = 12324;
             double sell = 10324.32;
 
-            movements.Add(new("PETR4", "Petróleo Brasileiro S/A", "Ações", "Compra", buy, 1, buy, new DateTime(2023, 01, 01), true));
-            movements.Add(new("PETR4", "Petróleo Brasileiro S/A", "Ações", "Venda", sell, 1, sell, new DateTime(2023, 01, 01), true));
+            movements.Add(new("PETR4", "Petróleo Brasileiro S/A", "Ações", B3ResponseConstants.TransferenciaLiquidacao, B3ResponseConstants.BuyOperationType, buy, 1, buy, new DateTime(2023, 01, 01), true));
+            movements.Add(new("PETR4", "Petróleo Brasileiro S/A", "Ações", B3ResponseConstants.TransferenciaLiquidacao, B3ResponseConstants.SellOperationType, sell, 1, sell, new DateTime(2023, 01, 01), true));
 
             buy = 5465;
             sell = 3487;
 
-            movements.Add(new("PETR4", "Petróleo Brasileiro S/A", "Ações", "Compra", buy, 1, buy, new DateTime(2023, 01, 01), true));
-            movements.Add(new("PETR4", "Petróleo Brasileiro S/A", "Ações", "Venda", sell, 1, sell, new DateTime(2023, 01, 01), true));
+            movements.Add(new("PETR4", "Petróleo Brasileiro S/A", "Ações", B3ResponseConstants.TransferenciaLiquidacao, B3ResponseConstants.BuyOperationType, buy, 1, buy, new DateTime(2023, 01, 01), true));
+            movements.Add(new("PETR4", "Petróleo Brasileiro S/A", "Ações", B3ResponseConstants.TransferenciaLiquidacao, B3ResponseConstants.SellOperationType, sell, 1, sell, new DateTime(2023, 01, 01), true));
 
             buy = 2355;
             sell = 3324;
 
-            movements.Add(new("PETR4", "Petróleo Brasileiro S/A", "Ações", "Compra", buy, 1, buy, new DateTime(2023, 01, 01), true));
-            movements.Add(new("PETR4", "Petróleo Brasileiro S/A", "Ações", "Venda", sell, 1, sell, new DateTime(2023, 01, 01), true));
+            movements.Add(new("PETR4", "Petróleo Brasileiro S/A", "Ações", B3ResponseConstants.TransferenciaLiquidacao, B3ResponseConstants.BuyOperationType, buy, 1, buy, new DateTime(2023, 01, 01), true));
+            movements.Add(new("PETR4", "Petróleo Brasileiro S/A", "Ações", B3ResponseConstants.TransferenciaLiquidacao, B3ResponseConstants.SellOperationType, sell, 1, sell, new DateTime(2023, 01, 01), true));
 
             yield return new object[]
             {
@@ -157,7 +157,7 @@ namespace stocks_unit_tests.Business
             AssetIncomeTaxes stocks = response.Assets.Where(x => x.AssetTypeId == Asset.Stocks).Single();
 
             decimal expectedTaxes = (AliquotConstants.IncomeTaxesForStocks / 100m) * (decimal)stocks.SwingTradeProfit;
-            double expectedTotalSold = movements.Where(x => x.MovementType.Equals(B3ResponseConstants.Sell)).Select(x => x.OperationValue).Sum();
+            double expectedTotalSold = movements.Where(x => x.IsSell()).Select(x => x.OperationValue).Sum();
 
             Assert.Equal((double)expectedTaxes, stocks.Taxes);
             Assert.Equal(expectedTotalSold, stocks.TotalSold);
@@ -174,7 +174,7 @@ namespace stocks_unit_tests.Business
             AssetIncomeTaxes stocksResponse = response.Assets.Where(x => x.AssetTypeId == Asset.Stocks).Single();
 
             decimal expectedTaxes = (AliquotConstants.IncomeTaxesForStocks / 100m) * (decimal)stocksResponse.SwingTradeProfit;
-            double expectedTotalSold = movements.Where(x => x.MovementType.Equals(B3ResponseConstants.Sell)).Select(x => x.OperationValue).Sum();
+            double expectedTotalSold = movements.Where(x => x.IsSell()).Select(x => x.OperationValue).Sum();
 
             Assert.Equal(0, stocksResponse.Taxes);
             Assert.Equal(expectedTotalSold, stocksResponse.TotalSold);
@@ -184,10 +184,10 @@ namespace stocks_unit_tests.Business
         {
             List<Movement.EquitMovement> movements = new()
             {
-                new("PETR4", "Petróleo Brasileiro S/A", "Ações", "Compra", 24043, 1, 24043, new DateTime(2023, 01, 01), false),
-                new("PETR4", "Petróleo Brasileiro S/A", "Ações", "Venda", 28394, 1, 28394, new DateTime(2023, 01, 01), false),
-                new("PETR4", "Petróleo Brasileiro S/A", "Ações", "Compra", 9032, 1, 9032, new DateTime(2023, 01, 01), false),
-                new("PETR4", "Petróleo Brasileiro S/A", "Ações", "Venda", 6500, 1, 6500, new DateTime(2023, 01, 01), false)
+                new("PETR4", "Petróleo Brasileiro S/A", "Ações", B3ResponseConstants.TransferenciaLiquidacao, B3ResponseConstants.BuyOperationType, 24043, 1, 24043, new DateTime(2023, 01, 01), false),
+                new("PETR4", "Petróleo Brasileiro S/A", "Ações", B3ResponseConstants.TransferenciaLiquidacao, B3ResponseConstants.SellOperationType, 28394, 1, 28394, new DateTime(2023, 01, 01), false),
+                new("PETR4", "Petróleo Brasileiro S/A", "Ações", B3ResponseConstants.TransferenciaLiquidacao, B3ResponseConstants.BuyOperationType, 9032, 1, 9032, new DateTime(2023, 01, 01), false),
+                new("PETR4", "Petróleo Brasileiro S/A", "Ações", B3ResponseConstants.TransferenciaLiquidacao, B3ResponseConstants.SellOperationType, 6500, 1, 6500, new DateTime(2023, 01, 01), false)
             };
 
             // Lucro em operações com vendas em > 20k.
@@ -208,8 +208,8 @@ namespace stocks_unit_tests.Business
                 int buy = Random.Shared.Next(0, 10);
                 int sell = Random.Shared.Next(0, 100);
 
-                movements.Add(new("PETR4", "Petróleo Brasileiro S/A", "Ações", "Compra", buy, 1, buy, new DateTime(2023, 01, 01), false));
-                movements.Add(new("PETR4", "Petróleo Brasileiro S/A", "Ações", "Venda", sell, 1, sell, new DateTime(2023, 01, 01), false));
+                movements.Add(new("PETR4", "Petróleo Brasileiro S/A", "Ações", B3ResponseConstants.TransferenciaLiquidacao, B3ResponseConstants.BuyOperationType, buy, 1, buy, new DateTime(2023, 01, 01), false));
+                movements.Add(new("PETR4", "Petróleo Brasileiro S/A", "Ações", B3ResponseConstants.TransferenciaLiquidacao, B3ResponseConstants.SellOperationType, sell, 1, sell, new DateTime(2023, 01, 01), false));
             }
 
             // Lucro em operações com vendas em < 20k.
@@ -236,7 +236,7 @@ namespace stocks_unit_tests.Business
             decimal swingTradeTaxes = (AliquotConstants.IncomeTaxesForStocks / 100m) * (decimal)stocks.SwingTradeProfit;
             decimal dayTradeTaxes = (AliquotConstants.IncomeTaxesForDayTrade / 100m) * (decimal)stocks.DayTradeProfit;
 
-            double totalSold = movements.Where(x => x.MovementType.Equals(B3ResponseConstants.Sell)).Select(x => x.OperationValue).Sum();
+            double totalSold = movements.Where(x => x.IsSell()).Select(x => x.OperationValue).Sum();
             double expectedTaxes = 200;
 
             Assert.Equal(totalSold, stocks.TotalSold);
@@ -256,7 +256,7 @@ namespace stocks_unit_tests.Business
             decimal swingTradeTaxes = (AliquotConstants.IncomeTaxesForStocks / 100m) * (decimal)stocks.SwingTradeProfit;
             decimal dayTradeTaxes = (AliquotConstants.IncomeTaxesForDayTrade / 100m) * (decimal)stocks.DayTradeProfit;
 
-            double totalSold = movements.Where(x => x.MovementType.Equals(B3ResponseConstants.Sell)).Select(x => x.OperationValue).Sum();
+            double totalSold = movements.Where(x => x.IsSell()).Select(x => x.OperationValue).Sum();
             double expectedTaxes = 2568.2;
 
             Assert.Equal(totalSold, stocks.TotalSold);
@@ -271,10 +271,10 @@ namespace stocks_unit_tests.Business
             {
                 new List<Movement.EquitMovement>
                 {
-                    new("PETR4", "Petróleo Brasileiro S/A", "Ações", "Compra", 5467, 1, 5467, new DateTime(2023, 01, 01)),
-                    new("PETR4", "Petróleo Brasileiro S/A", "Ações", "Venda", 6587, 1, 6587, new DateTime(2023, 01, 02)),
-                    new("PETR4", "Petróleo Brasileiro S/A", "Ações", "Compra", 7653, 1, 7653, new DateTime(2023, 01, 03), true),
-                    new("PETR4", "Petróleo Brasileiro S/A", "Ações", "Venda", 8653, 1, 8653, new DateTime(2023, 01, 03), true)
+                    new("PETR4", "Petróleo Brasileiro S/A", "Ações", B3ResponseConstants.TransferenciaLiquidacao, B3ResponseConstants.BuyOperationType, 5467, 1, 5467, new DateTime(2023, 01, 01)),
+                    new("PETR4", "Petróleo Brasileiro S/A", "Ações", B3ResponseConstants.TransferenciaLiquidacao, B3ResponseConstants.SellOperationType, 6587, 1, 6587, new DateTime(2023, 01, 02)),
+                    new("PETR4", "Petróleo Brasileiro S/A", "Ações", B3ResponseConstants.TransferenciaLiquidacao, B3ResponseConstants.BuyOperationType, 7653, 1, 7653, new DateTime(2023, 01, 03), true),
+                    new("PETR4", "Petróleo Brasileiro S/A", "Ações", B3ResponseConstants.TransferenciaLiquidacao, B3ResponseConstants.SellOperationType, 8653, 1, 8653, new DateTime(2023, 01, 03), true)
                 }
             };
         }
@@ -287,10 +287,10 @@ namespace stocks_unit_tests.Business
             {
                 new List<Movement.EquitMovement>
                 {
-                    new("PETR4", "Petróleo Brasileiro S/A", "Ações", "Compra", 5467, 1, 5467, new DateTime(2023, 01, 01)),
-                    new("PETR4", "Petróleo Brasileiro S/A", "Ações", "Venda", 6587, 1, 6587, new DateTime(2023, 01, 02)),
-                    new("PETR4", "Petróleo Brasileiro S/A", "Ações", "Compra", 7653, 1, 7653, new DateTime(2023, 01, 03), true),
-                    new("PETR4", "Petróleo Brasileiro S/A", "Ações", "Venda", 19654, 1, 19654, new DateTime(2023, 01, 03), true)
+                    new("PETR4", "Petróleo Brasileiro S/A", "Ações", B3ResponseConstants.TransferenciaLiquidacao, B3ResponseConstants.BuyOperationType, 5467, 1, 5467, new DateTime(2023, 01, 01)),
+                    new("PETR4", "Petróleo Brasileiro S/A", "Ações", B3ResponseConstants.TransferenciaLiquidacao, B3ResponseConstants.SellOperationType, 6587, 1, 6587, new DateTime(2023, 01, 02)),
+                    new("PETR4", "Petróleo Brasileiro S/A", "Ações", B3ResponseConstants.TransferenciaLiquidacao, B3ResponseConstants.BuyOperationType, 7653, 1, 7653, new DateTime(2023, 01, 03), true),
+                    new("PETR4", "Petróleo Brasileiro S/A", "Ações", B3ResponseConstants.TransferenciaLiquidacao, B3ResponseConstants.SellOperationType, 19654, 1, 19654, new DateTime(2023, 01, 03), true)
                 }
             };
         }

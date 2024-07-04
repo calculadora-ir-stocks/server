@@ -50,6 +50,7 @@ namespace Core.Models.B3
                 string corporationName,
                 string assetType,
                 string movementType,
+                string operationType,
                 double operationValue,
                 double quantity,
                 double unitPrice,
@@ -59,8 +60,9 @@ namespace Core.Models.B3
             {
                 TickerSymbol = tickerSymbol;
                 CorporationName = corporationName;
-                AssetType = assetType;
+                ProductTypeName = assetType;
                 MovementType = movementType;
+                OperationType = operationType;
                 OperationValue = operationValue;
                 EquitiesQuantity = quantity;
                 UnitPrice = unitPrice;
@@ -71,7 +73,7 @@ namespace Core.Models.B3
             public EquitMovement(string tickerSymbol, string assetType, string movementType, double operationValue, double equitiesQuantity, DateTime referenceDate, bool dayTraded = false)
             {
                 TickerSymbol = tickerSymbol;
-                AssetType = assetType;
+                ProductTypeName = assetType;
                 MovementType = movementType;
                 OperationValue = operationValue;
                 UnitPrice = operationValue;
@@ -97,7 +99,7 @@ namespace Core.Models.B3
             public DateTime ReferenceDate { get; set; }
 
             [JsonProperty("productTypeName")]
-            public string AssetType { get; set; }
+            public string ProductTypeName { get; set; }
 
             [JsonProperty("movementType")]
             public string MovementType { get; set; }

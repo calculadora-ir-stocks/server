@@ -1,5 +1,6 @@
 ﻿using AutoFixture;
 using Core.Calculators;
+using Core.Constants;
 using Core.Models;
 using Core.Refit.B3;
 using Core.Services.Hangfire.AverageTradedPriceUpdater;
@@ -78,10 +79,11 @@ namespace stocks_unit_tests.Hangfire
                                 // add
                                 new()
                                 {
-                                    AssetType = "FII - Fundo de Investimento Imobiliário",
+                                    ProductTypeName = "FII - Fundo de Investimento Imobiliário",
                                     TickerSymbol = "KFOF11",
                                     CorporationName = "KFOF11 Corporation Inc.",
-                                    MovementType = "Compra",
+                                    MovementType = B3ResponseConstants.TransferenciaLiquidacao,
+                                    OperationType = B3ResponseConstants.BuyOperationType,
                                     OperationValue = 231.34,
                                     EquitiesQuantity = 1,
                                     ReferenceDate = new DateTime(2022, 01, 16)
@@ -89,10 +91,11 @@ namespace stocks_unit_tests.Hangfire
                                 // update
                                 new()
                                 {
-                                    AssetType = "ETF - Exchange Traded Fund",
+                                    ProductTypeName = "ETF - Exchange Traded Fund",
                                     TickerSymbol = "IVVB11",
                                     CorporationName = "IVVB 11 Corporation Inc.",
-                                    MovementType = "Compra",
+                                    MovementType = B3ResponseConstants.TransferenciaLiquidacao,
+                                    OperationType = B3ResponseConstants.BuyOperationType,
                                     OperationValue = 12376.43,
                                     EquitiesQuantity = 4,
                                     ReferenceDate = new DateTime(2022, 01, 09)
@@ -100,10 +103,11 @@ namespace stocks_unit_tests.Hangfire
                                 // update
                                 new()
                                 {
-                                    AssetType = "ETF - Exchange Traded Fund",
+                                    ProductTypeName = "ETF - Exchange Traded Fund",
                                     TickerSymbol = "BOVA11",
                                     CorporationName = "IVVB 11 Corporation Inc.",
-                                    MovementType = "Compra",
+                                    MovementType = B3ResponseConstants.TransferenciaLiquidacao,
+                                    OperationType = B3ResponseConstants.BuyOperationType,
                                     OperationValue = 12376.43,
                                     EquitiesQuantity = 4,
                                     ReferenceDate = new DateTime(2022, 01, 09)
@@ -111,10 +115,11 @@ namespace stocks_unit_tests.Hangfire
                                 // remove
                                 new()
                                 {
-                                    AssetType = "Ações",
+                                    ProductTypeName = "Ações",
                                     TickerSymbol = "AMER3",
                                     CorporationName = "Americanas S/A",
-                                    MovementType = "Venda",
+                                    OperationType = B3ResponseConstants.SellOperationType,
+                                    MovementType = B3ResponseConstants.TransferenciaLiquidacao,
                                     OperationValue = 234.43,
                                     UnitPrice = 234.43,
                                     EquitiesQuantity = 2,
@@ -123,10 +128,11 @@ namespace stocks_unit_tests.Hangfire
                                 // comprado e vendido na mesma operação. vai cair no tickersToRemove
                                 new()
                                 {
-                                    AssetType = "Ações",
+                                    ProductTypeName = "Ações",
                                     TickerSymbol = "DONT",
                                     CorporationName = "DONT DO ANYTHING",
-                                    MovementType = "Compra",
+                                    MovementType = B3ResponseConstants.TransferenciaLiquidacao,
+                                    OperationType = B3ResponseConstants.BuyOperationType,
                                     OperationValue = 234.43,
                                     UnitPrice = 234.43,
                                     EquitiesQuantity = 1,
@@ -134,10 +140,11 @@ namespace stocks_unit_tests.Hangfire
                                 },
                                 new()
                                 {
-                                    AssetType = "Ações",
+                                    ProductTypeName = "Ações",
                                     TickerSymbol = "DONT",
                                     CorporationName = "DONT DO ANYTHING",
-                                    MovementType = "Venda",
+                                    MovementType = B3ResponseConstants.TransferenciaLiquidacao,
+                                    OperationType = B3ResponseConstants.SellOperationType,
                                     OperationValue = 234.43,
                                     UnitPrice = 234.43,
                                     EquitiesQuantity = 1,
@@ -168,10 +175,11 @@ namespace stocks_unit_tests.Hangfire
                                 // add
                                 new()
                                 {
-                                    AssetType = "FII - Fundo de Investimento Imobiliário",
+                                    ProductTypeName = "FII - Fundo de Investimento Imobiliário",
                                     TickerSymbol = "KFOF11",
                                     CorporationName = "KFOF11 Corporation Inc.",
-                                    MovementType = "Compra",
+                                    MovementType = B3ResponseConstants.TransferenciaLiquidacao,
+                                    OperationType = B3ResponseConstants.BuyOperationType,
                                     OperationValue = 231.34,
                                     EquitiesQuantity = 1,
                                     ReferenceDate = new DateTime(2022, 01, 16)
@@ -179,10 +187,11 @@ namespace stocks_unit_tests.Hangfire
                                 // add
                                 new()
                                 {
-                                    AssetType = "ETF - Exchange Traded Fund",
+                                    ProductTypeName = "ETF - Exchange Traded Fund",
                                     TickerSymbol = "IVVB11",
                                     CorporationName = "IVVB 11 Corporation Inc.",
-                                    MovementType = "Compra",
+                                    MovementType = B3ResponseConstants.TransferenciaLiquidacao,
+                                    OperationType = B3ResponseConstants.BuyOperationType,
                                     OperationValue = 12376.43,
                                     EquitiesQuantity = 4,
                                     ReferenceDate = new DateTime(2022, 01, 09)
@@ -190,10 +199,11 @@ namespace stocks_unit_tests.Hangfire
                                 // update
                                 new()
                                 {
-                                    AssetType = "ETF - Exchange Traded Fund",
+                                    ProductTypeName = "ETF - Exchange Traded Fund",
                                     TickerSymbol = "BOVA11",
                                     CorporationName = "IVVB 11 Corporation Inc.",
-                                    MovementType = "Compra",
+                                    MovementType = B3ResponseConstants.TransferenciaLiquidacao,
+                                    OperationType = B3ResponseConstants.BuyOperationType,
                                     OperationValue = 12376.43,
                                     EquitiesQuantity = 4,
                                     ReferenceDate = new DateTime(2022, 01, 09)
@@ -201,10 +211,11 @@ namespace stocks_unit_tests.Hangfire
                                 // remove
                                 new()
                                 {
-                                    AssetType = "Ações",
+                                    ProductTypeName = "Ações",
                                     TickerSymbol = "AMER3",
                                     CorporationName = "Americanas S/A",
-                                    MovementType = "Venda",
+                                    MovementType = B3ResponseConstants.TransferenciaLiquidacao,
+                                    OperationType = B3ResponseConstants.SellOperationType,
                                     OperationValue = 234.43,
                                     UnitPrice = 234.43,
                                     EquitiesQuantity = 2,
@@ -233,10 +244,11 @@ namespace stocks_unit_tests.Hangfire
                             {
                                 new()
                                 {
-                                    AssetType = "ETF - Exchange Traded Fund",
+                                    ProductTypeName = "ETF - Exchange Traded Fund",
                                     TickerSymbol = "BOVA11",
                                     CorporationName = "IVVB 11 Corporation Inc.",
-                                    MovementType = "Compra",
+                                    MovementType = B3ResponseConstants.TransferenciaLiquidacao,
+                                    OperationType = B3ResponseConstants.BuyOperationType,
                                     OperationValue = 12376.43,
                                     EquitiesQuantity = 4,
                                     ReferenceDate = new DateTime(2022, 01, 09)
@@ -244,10 +256,11 @@ namespace stocks_unit_tests.Hangfire
                                 // remove
                                 new()
                                 {
-                                    AssetType = "ETF - Exchange Traded Fund",
+                                    ProductTypeName = "ETF - Exchange Traded Fund",
                                     TickerSymbol = "BOVA11",
                                     CorporationName = "IVVB 11 Corporation Inc.",
-                                    MovementType = "Venda",
+                                    MovementType = B3ResponseConstants.TransferenciaLiquidacao,
+                                    OperationType = B3ResponseConstants.SellOperationType,
                                     OperationValue = 12376.43,
                                     EquitiesQuantity = 6,
                                     ReferenceDate = new DateTime(2022, 01, 09)
@@ -274,30 +287,33 @@ namespace stocks_unit_tests.Hangfire
                             {
                                 new()
                                 {
-                                    AssetType = "ETF - Exchange Traded Fund",
+                                    ProductTypeName = "ETF - Exchange Traded Fund",
                                     TickerSymbol = "BOVA11",
                                     CorporationName = "IVVB 11 Corporation Inc.",
-                                    MovementType = "Compra",
+                                    MovementType = B3ResponseConstants.TransferenciaLiquidacao,
+                                    OperationType = B3ResponseConstants.BuyOperationType,
                                     OperationValue = 12376.43,
                                     EquitiesQuantity = 4,
                                     ReferenceDate = new DateTime(2022, 01, 09)
                                 },
                                 new()
                                 {
-                                    AssetType = "ETF - Exchange Traded Fund",
+                                    ProductTypeName = "ETF - Exchange Traded Fund",
                                     TickerSymbol = "BOVA11",
                                     CorporationName = "IVVB 11 Corporation Inc.",
-                                    MovementType = "Venda",
+                                    MovementType = B3ResponseConstants.TransferenciaLiquidacao,
+                                    OperationType = B3ResponseConstants.BuyOperationType,
                                     OperationValue = 12376.43,
                                     EquitiesQuantity = 6,
                                     ReferenceDate = new DateTime(2022, 01, 09)
                                 },
                                 new()
                                 {
-                                    AssetType = "ETF - Exchange Traded Fund",
+                                    ProductTypeName = "ETF - Exchange Traded Fund",
                                     TickerSymbol = "BOVA11",
                                     CorporationName = "IVVB 11 Corporation Inc.",
-                                    MovementType = "Compra",
+                                    MovementType = B3ResponseConstants.TransferenciaLiquidacao,
+                                    OperationType = B3ResponseConstants.BuyOperationType,
                                     OperationValue = 12376.43,
                                     EquitiesQuantity = 1,
                                     ReferenceDate = new DateTime(2022, 01, 09)

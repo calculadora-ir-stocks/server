@@ -19,7 +19,7 @@ namespace Core.Calculators.Assets
             var dayTradeProfit = profit.DayTradeOperations.Select(x => x.Profit).Sum();
             var swingTradeProfit = profit.SwingTradeOperations.Select(x => x.Profit).Sum();
 
-            var sells = movements.Where(x => x.MovementType.Equals(B3ResponseConstants.Sell));
+            var sells = movements.Where(x => x.IsSell());
             double totalSold = sells.Sum(bdr => bdr.OperationValue);
 
             decimal taxes = 0;

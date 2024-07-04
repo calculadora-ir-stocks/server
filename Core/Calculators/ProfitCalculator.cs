@@ -3,6 +3,7 @@ using Common.Helpers;
 using Core.Constants;
 using Core.Models;
 using Core.Models.B3;
+using System.Data;
 
 namespace Core.Calculators
 {
@@ -23,16 +24,22 @@ namespace Core.Calculators
 
             foreach (var movement in movements)
             {
+                if (movement.IsBuy())
+                {
+                    UpdateOrAddAveragePrice(movement, averagePrices, sellOperation: false);
+                    response.OperationHistory.Add(CreateOperationDetails(movement));
+
+                    continue;
+                }
+                if (movement.IsSell())
+                {
+                    AddTickerIntoResponse(response, movement);
+                    UpdateProfitOrLoss(response, movement, movements, averagePrices);
+                    continue;
+                }
+
                 switch (movement.MovementType)
                 {
-                    case B3ResponseConstants.Buy:
-                        UpdateOrAddAveragePrice(movement, averagePrices, sellOperation: false);
-                        AddOperationHistory(movement, response.OperationHistory);
-                        break;
-                    case B3ResponseConstants.Sell:
-                        AddTickerIntoResponse(response, movement);
-                        UpdateProfitOrLoss(response, movement, movements, averagePrices);
-                        break;
                     case B3ResponseConstants.Split:
                         CalculateSplitOperation(movement, ticker: averagePrices.Where(x => x.TickerSymbol.Equals(movement.TickerSymbol)).First());
                         break;
@@ -48,24 +55,23 @@ namespace Core.Calculators
             return response;
         }
 
-        private static void AddOperationHistory(
+        private static OperationDetails CreateOperationDetails(
             Movement.EquitMovement movement,
-            List<OperationDetails> operationsHistory,
             double profit = 0
         )
         {
-            operationsHistory.Add(new OperationDetails(
+            return new OperationDetails(
                 movement.ReferenceDate.Day,
                 UtilsHelper.GetDayOfTheWeekName((int)movement.ReferenceDate.DayOfWeek),
-                movement.AssetType,
-                AssetEnumHelper.GetEnumByName(movement.AssetType),
+                movement.ProductTypeName,
+                AssetEnumHelper.GetEnumByName(movement.ProductTypeName),
                 movement.TickerSymbol,
                 movement.CorporationName,
                 movement.MovementType,
                 (int)movement.EquitiesQuantity,
                 movement.OperationValue,
                 profit
-            ));
+            );
         }
 
         private static void AddTickerIntoResponse(
@@ -142,7 +148,7 @@ namespace Core.Calculators
         }
 
         private static void UpdateProfitOrLoss(
-            CalculateProfitResponse investorMovements,
+            CalculateProfitResponse response,
             Movement.EquitMovement movement,
             IEnumerable<Movement.EquitMovement> movements,
             List<AverageTradedPriceDetails> averagePrices
@@ -151,9 +157,9 @@ namespace Core.Calculators
             MovementProperties asset = null!;
 
             if (movement.DayTraded)
-                asset = investorMovements.DayTradeOperations.First(x => x.TickerSymbol.Equals(movement.TickerSymbol));
+                asset = response.DayTradeOperations.First(x => x.TickerSymbol.Equals(movement.TickerSymbol));
             else
-                asset = investorMovements.SwingTradeOperations.First(x => x.TickerSymbol.Equals(movement.TickerSymbol));
+                asset = response.SwingTradeOperations.First(x => x.TickerSymbol.Equals(movement.TickerSymbol));
 
             if (AssetBoughtAfterB3MinimumDate(movement, averagePrices))
             {
@@ -171,7 +177,7 @@ namespace Core.Calculators
                 asset.Profit += totalProfit;
 
                 UpdateOrAddAveragePrice(movement, averagePrices, sellOperation: true);
-                AddOperationHistory(movement, investorMovements.OperationHistory, asset.Profit);
+                response.OperationHistory.Add(CreateOperationDetails(movement, asset.Profit));
             }
             else
             {

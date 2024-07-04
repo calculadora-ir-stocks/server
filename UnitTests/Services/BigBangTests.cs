@@ -1,6 +1,7 @@
 ﻿using Castle.Core.Logging;
 using Common.Exceptions;
 using Core.Calculators;
+using Core.Constants;
 using Core.Models.B3;
 using Core.Services.B3ResponseCalculator;
 using Infrastructure.Dtos;
@@ -105,8 +106,8 @@ namespace stocks_unit_tests.Services
                         {
                             EquitiesMovements = new List<EquitMovement>()
                             {
-                                new("PETR4", "Petróleo Brasileiro S/A", "Ações", "Compra", 128, 2, 64, new DateTime(2023, 01, 02), true),
-                                new("PETR4", "Petróleo Brasileiro S/A", "Ações", "Venda", 204, 2, 102, new DateTime(2023, 01, 02)),
+                                new("PETR4", "Petróleo Brasileiro S/A", "Ações", B3ResponseConstants.TransferenciaLiquidacao, B3ResponseConstants.BuyOperationType, 128, 2, 64, new DateTime(2023, 01, 02), true),
+                                new("PETR4", "Petróleo Brasileiro S/A", "Ações", B3ResponseConstants.TransferenciaLiquidacao, B3ResponseConstants.SellOperationType, 204, 2, 102, new DateTime(2023, 01, 02)),
                             }
                         }
                     }
@@ -129,46 +130,46 @@ namespace stocks_unit_tests.Services
                                 // Mês 01
 
                                 // Lucro com PETR4. Como a operação abaixo ultrapassou 20k de vendas, há imposto de 15% a ser pago.
-                                new("PETR4", "Petróleo Brasileiro S/A", "Ações", "Compra", 53, 1, 53, new DateTime(2023, 01, 01)),
-                                new("PETR4", "Petróleo Brasileiro S/A", "Ações", "Compra", 64, 1, 64, new DateTime(2023, 01, 02)),
-                                new("PETR4", "Petróleo Brasileiro S/A", "Ações", "Venda", 102, 1, 102, new DateTime(2023, 01, 03)),
+                                new("PETR4", "Petróleo Brasileiro S/A", "Ações", B3ResponseConstants.TransferenciaLiquidacao, B3ResponseConstants.BuyOperationType, 53, 1, 53, new DateTime(2023, 01, 01)),
+                                new("PETR4", "Petróleo Brasileiro S/A", "Ações", B3ResponseConstants.TransferenciaLiquidacao, B3ResponseConstants.BuyOperationType, 64, 1, 64, new DateTime(2023, 01, 02)),
+                                new("PETR4", "Petróleo Brasileiro S/A", "Ações", B3ResponseConstants.TransferenciaLiquidacao, B3ResponseConstants.SellOperationType, 102, 1, 102, new DateTime(2023, 01, 03)),
 
                                 // Lucro com VALE3 em day-trade, paga imposto de 20% sob lucro
-                                new("VALE3", "Vale S.A.", "Ações", "Compra", 53, 1, 53, new DateTime(2023, 01, 01)),
-                                new("VALE3", "Vale S.A.", "Ações", "Compra", 64, 1, 64, new DateTime(2023, 01, 03)),
-                                new("VALE3", "Vale S.A.", "Ações", "Compra", 102, 1, 102, new DateTime(2023, 01, 03)),
-                                new("VALE3", "Vale S.A.", "Ações", "Venda", 104, 1, 104, new DateTime(2023, 01, 03), true),
+                                new("VALE3", "Vale S.A.", "Ações", B3ResponseConstants.TransferenciaLiquidacao, B3ResponseConstants.BuyOperationType, 53, 1, 53, new DateTime(2023, 01, 01)),
+                                new("VALE3", "Vale S.A.", "Ações", B3ResponseConstants.TransferenciaLiquidacao, B3ResponseConstants.BuyOperationType, 64, 1, 64, new DateTime(2023, 01, 03)),
+                                new("VALE3", "Vale S.A.", "Ações", B3ResponseConstants.TransferenciaLiquidacao, B3ResponseConstants.BuyOperationType, 102, 1, 102, new DateTime(2023, 01, 03)),
+                                new("VALE3", "Vale S.A.", "Ações", B3ResponseConstants.TransferenciaLiquidacao, B3ResponseConstants.SellOperationType, 104, 1, 104, new DateTime(2023, 01, 03), true),
 
                                 // Lucro com MUS3 com 20k > vendidos, paga imposto de 15% sob lucro
-                                new("MUS3", "Music S.A.", "Ações", "Compra", 18320, 1, 18320, new DateTime(2023, 01, 10)),
-                                new("MUS3", "Music S.A.", "Ações", "Venda", 21439, 1, 21439, new DateTime(2023, 01, 11)),
+                                new("MUS3", "Music S.A.", "Ações", B3ResponseConstants.TransferenciaLiquidacao, B3ResponseConstants.BuyOperationType, 18320, 1, 18320, new DateTime(2023, 01, 10)),
+                                new("MUS3", "Music S.A.", "Ações", B3ResponseConstants.TransferenciaLiquidacao, B3ResponseConstants.SellOperationType, 21439, 1, 21439, new DateTime(2023, 01, 11)),
 
                                  // Lucro com CORP4 em day-trade, paga imposto de 20% sob lucro
-                                new("CORP4", "Corporation S/A", "Ações", "Compra", 743, 1, 743, new DateTime(2023, 01, 16)),
-                                new("CORP4", "Corporation S/A", "Ações", "Venda", 893, 1, 893, new DateTime(2023, 01, 16), true),
+                                new("CORP4", "Corporation S/A", "Ações", B3ResponseConstants.TransferenciaLiquidacao, B3ResponseConstants.BuyOperationType, 743, 1, 743, new DateTime(2023, 01, 16)),
+                                new("CORP4", "Corporation S/A", "Ações", B3ResponseConstants.TransferenciaLiquidacao, B3ResponseConstants.SellOperationType, 893, 1, 893, new DateTime(2023, 01, 16), true),
 
                                 // Prejuízo com TETA4 em day-trade. Porém, como no final desse mês houve lucro ao invés de prejuízo, o imposto de 20% será aplicado
                                 // nas operações day-trade.
-                                new("TETA4", "Tetris S.A.", "Ações", "Compra", 20, 1, 20, new DateTime(2023, 01, 17)),
-                                new("TETA4", "Tetris S.A.", "Ações", "Venda", 10, 1, 10, new DateTime(2023, 01, 17), true),
+                                new("TETA4", "Tetris S.A.", "Ações", B3ResponseConstants.TransferenciaLiquidacao, B3ResponseConstants.BuyOperationType, 20, 1, 20, new DateTime(2023, 01, 17)),
+                                new("TETA4", "Tetris S.A.", "Ações", B3ResponseConstants.TransferenciaLiquidacao, B3ResponseConstants.SellOperationType, 10, 1, 10, new DateTime(2023, 01, 17), true),
 
                                 // Lucro com GOOGL, paga imposto de 20% sob lucro
-                                new("GOOGL", "Alphabet Inc.", "BDR - Brazilian Depositary Receipts", "Compra", 743, 1, 743, new DateTime(2023, 01, 20)),
-                                new("GOOGL", "Alphabet Inc.", "BDR - Brazilian Depositary Receipts", "Venda", 893, 1, 893, new DateTime(2023, 01, 21)),
+                                new("GOOGL", "Alphabet Inc.", "BDR - Brazilian Depositary Receipts", B3ResponseConstants.TransferenciaLiquidacao, B3ResponseConstants.BuyOperationType, 743, 1, 743, new DateTime(2023, 01, 20)),
+                                new("GOOGL", "Alphabet Inc.", "BDR - Brazilian Depositary Receipts", B3ResponseConstants.TransferenciaLiquidacao, B3ResponseConstants.SellOperationType, 893, 1, 893, new DateTime(2023, 01, 21)),
 
                                 // Mês 02
 
                                 // Lucro com CPTS11, paga imposto de 20% sob lucro
-                                new("CPTS11", "Capitania Securities II", "FII - Fundo de Investimento Imobiliário", "Compra", 201, 1, 201, new DateTime(2023, 02, 01)),
-                                new("CPTS11", "Capitania Securities II", "FII - Fundo de Investimento Imobiliário", "Venda", 302, 1, 302, new DateTime(2023, 02, 02)),
+                                new("CPTS11", "Capitania Securities II", "FII - Fundo de Investimento Imobiliário", B3ResponseConstants.TransferenciaLiquidacao, B3ResponseConstants.BuyOperationType, 201, 1, 201, new DateTime(2023, 02, 01)),
+                                new("CPTS11", "Capitania Securities II", "FII - Fundo de Investimento Imobiliário", B3ResponseConstants.TransferenciaLiquidacao, B3ResponseConstants.SellOperationType, 302, 1, 302, new DateTime(2023, 02, 02)),
 
                                 // Lucro com BOVA11, paga imposto de 15% sob lucro
-                                new("BOVA11", "Ibovespa", "ETF - Exchange Traded Fund", "Compra", 50, 1, 50, new DateTime(2023, 02, 01)),
-                                new("BOVA11", "Ibovespa", "ETF - Exchange Traded Fund", "Venda", 72, 1, 72, new DateTime(2023, 02, 02)),
+                                new("BOVA11", "Ibovespa", "ETF - Exchange Traded Fund", B3ResponseConstants.TransferenciaLiquidacao, B3ResponseConstants.BuyOperationType, 50, 1, 50, new DateTime(2023, 02, 01)),
+                                new("BOVA11", "Ibovespa", "ETF - Exchange Traded Fund", B3ResponseConstants.TransferenciaLiquidacao, B3ResponseConstants.SellOperationType, 72, 1, 72, new DateTime(2023, 02, 02)),
 
                                 // Lucro com IVVB11 em day-trade, paga imposto de 20% sob lucro
-                                new("IVVB11", "iShares S&P 500", "ETF - Exchange Traded Fund", "Compra", 50, 1, 50, new DateTime(2023, 02, 04)),
-                                new("IVVB11", "iShares S&P 500", "ETF - Exchange Traded Fund", "Venda", 92, 1, 92, new DateTime(2023, 02, 04), true)
+                                new("IVVB11", "iShares S&P 500", "ETF - Exchange Traded Fund", B3ResponseConstants.TransferenciaLiquidacao, B3ResponseConstants.BuyOperationType, 50, 1, 50, new DateTime(2023, 02, 04)),
+                                new("IVVB11", "iShares S&P 500", "ETF - Exchange Traded Fund", B3ResponseConstants.TransferenciaLiquidacao, B3ResponseConstants.SellOperationType, 92, 1, 92, new DateTime(2023, 02, 04), true)
                             }
                         }
                     }
@@ -188,21 +189,21 @@ namespace stocks_unit_tests.Services
                         {
                             EquitiesMovements = new List<EquitMovement>()
                             {
-                                new("PETR4", "Petróleo Brasileiro S/A", "Ações", "Compra", 53, 1, 53, new DateTime(2023, 01, 01)),
-                                new("PETR4", "Petróleo Brasileiro S/A", "Ações", "Compra", 64, 1, 64, new DateTime(2023, 01, 02)),
-                                new("PETR4", "Petróleo Brasileiro S/A", "Ações", "Venda", 102, 1, 102, new DateTime(2023, 01, 03)),
+                                new("PETR4", "Petróleo Brasileiro S/A", "Ações", B3ResponseConstants.TransferenciaLiquidacao, B3ResponseConstants.BuyOperationType, 53, 1, 53, new DateTime(2023, 01, 01)),
+                                new("PETR4", "Petróleo Brasileiro S/A", "Ações", B3ResponseConstants.TransferenciaLiquidacao, B3ResponseConstants.BuyOperationType, 64, 1, 64, new DateTime(2023, 01, 02)),
+                                new("PETR4", "Petróleo Brasileiro S/A", "Ações", B3ResponseConstants.TransferenciaLiquidacao, B3ResponseConstants.SellOperationType, 102, 1, 102, new DateTime(2023, 01, 03)),
 
-                                new("VALE3", "Vale S.A.", "Ações", "Compra", 53, 1, 53, new DateTime(2023, 01, 01)),
-                                new("VALE3", "Vale S.A.", "Ações", "Compra", 64, 1, 64, new DateTime(2023, 01, 03)),
-                                new("VALE3", "Vale S.A.", "Ações", "Compra", 102, 1, 102, new DateTime(2023, 01, 03)),
-                                new("VALE3", "Vale S.A.", "Ações", "Venda", 104, 1, 104, new DateTime(2023, 01, 03), true),
+                                new("VALE3", "Vale S.A.", "Ações", B3ResponseConstants.TransferenciaLiquidacao, B3ResponseConstants.BuyOperationType, 53, 1, 53, new DateTime(2023, 01, 01)),
+                                new("VALE3", "Vale S.A.", "Ações", B3ResponseConstants.TransferenciaLiquidacao, B3ResponseConstants.BuyOperationType, 64, 1, 64, new DateTime(2023, 01, 03)),
+                                new("VALE3", "Vale S.A.", "Ações", B3ResponseConstants.TransferenciaLiquidacao, B3ResponseConstants.BuyOperationType, 102, 1, 102, new DateTime(2023, 01, 03)),
+                                new("VALE3", "Vale S.A.", "Ações", B3ResponseConstants.TransferenciaLiquidacao, B3ResponseConstants.SellOperationType, 104, 1, 104, new DateTime(2023, 01, 03), true),
 
-                                new("MUS3", "Music S.A.", "Ações", "Compra", 18320, 1, 18320, new DateTime(2023, 01, 10)),
-                                new("MUS3", "Music S.A.", "Ações", "Compra", 34640, 2, 17320, new DateTime(2023, 01, 10)),
-                                new("MUS3", "Music S.A.", "Ações", "Venda", 21439, 1, 21439, new DateTime(2023, 01, 11)),
+                                new("MUS3", "Music S.A.", "Ações", B3ResponseConstants.TransferenciaLiquidacao, B3ResponseConstants.BuyOperationType, 18320, 1, 18320, new DateTime(2023, 01, 10)),
+                                new("MUS3", "Music S.A.", "Ações", B3ResponseConstants.TransferenciaLiquidacao, B3ResponseConstants.BuyOperationType, 34640, 2, 17320, new DateTime(2023, 01, 10)),
+                                new("MUS3", "Music S.A.", "Ações", B3ResponseConstants.TransferenciaLiquidacao, B3ResponseConstants.SellOperationType, 21439, 1, 21439, new DateTime(2023, 01, 11)),
 
-                                new("TETA4", "Tetris S.A.", "Ações", "Compra", 20, 1, 20, new DateTime(2023, 01, 17)),
-                                new("TETA4", "Tetris S.A.", "Ações", "Venda", 20, 2, 10, new DateTime(2023, 01, 17), true),
+                                new("TETA4", "Tetris S.A.", "Ações", B3ResponseConstants.TransferenciaLiquidacao, B3ResponseConstants.BuyOperationType, 20, 1, 20, new DateTime(2023, 01, 17)),
+                                new("TETA4", "Tetris S.A.", "Ações", B3ResponseConstants.TransferenciaLiquidacao, B3ResponseConstants.SellOperationType, 20, 2, 10, new DateTime(2023, 01, 17), true),
                             }
                         }
                     }

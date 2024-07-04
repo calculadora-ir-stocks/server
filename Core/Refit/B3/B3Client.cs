@@ -1,4 +1,5 @@
 ﻿using Api.DTOs.Auth;
+using Azure;
 using common.Helpers;
 using Common.Options;
 using Core.Models.B3;
@@ -43,22 +44,26 @@ namespace Core.Refit.B3
 
             var accessToken = await GetOrGenerateAuthToken();
 
-            var assets = await b3Client.GetAccountMovements(accessToken, UtilsHelper.RemoveSpecialCharacters(cpf), referenceStartDate, referenceEndDate);
+            var response = await b3Client.GetAccountMovements(accessToken, UtilsHelper.RemoveSpecialCharacters(cpf), referenceStartDate, referenceEndDate);
 
-            if (assets.Content is null) return null;
+            if (response.Content is null) return null;
 
-            if (assets.Content.Links.Next is not null)
-                await GetAccountMovementsInAllPages(assets.Content);
+            if (response.Content.Links.Next is not null)
+                await GetAccountMovementsInAllPages(response.Content);
 
             watch.Stop();
 
-            int? total = assets?.Content.Data.EquitiesPeriods.EquitiesMovements.Count;
+            int? total = response?.Content.Data.EquitiesPeriods.EquitiesMovements.Count;
             long seconds = watch.ElapsedMilliseconds / 1000;
 
             logger.LogInformation("O usuário {accountId} importou um total de {total} movimentações. O tempo " +
                 "de execução foi de {seconds} segundos.", accountId, total, seconds);
 
-            return assets.Content;
+            // A B3 retorna as últimas operações como as primeiras da lista. Todos os serviços que consomem esse endpoint
+            // querem a ordem contrária.
+            response.Content.Data.EquitiesPeriods.EquitiesMovements.Reverse();
+
+            return response.Content;
         }
 
         /// <summary>

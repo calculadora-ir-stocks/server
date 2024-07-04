@@ -178,7 +178,7 @@ namespace Core.Services.Hangfire.AverageTradedPriceUpdater
             // ticker to add
             response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
             {
-                AssetType = "FII - Fundo de Investimento Imobiliário",
+                ProductTypeName = "FII - Fundo de Investimento Imobiliário",
                 TickerSymbol = "KFOF11",
                 CorporationName = "KFOF11 Corporation Inc.",
                 MovementType = "Compra",
@@ -190,7 +190,7 @@ namespace Core.Services.Hangfire.AverageTradedPriceUpdater
             // ticker to update
             response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
             {
-                AssetType = "ETF - Exchange Traded Fund",
+                ProductTypeName = "ETF - Exchange Traded Fund",
                 TickerSymbol = "IVVB11",
                 CorporationName = "IVVB 11 Corporation Inc.",
                 MovementType = "Compra",
@@ -202,7 +202,7 @@ namespace Core.Services.Hangfire.AverageTradedPriceUpdater
             // ticker to update
             response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
             {
-                AssetType = "ETF - Exchange Traded Fund",
+                ProductTypeName = "ETF - Exchange Traded Fund",
                 TickerSymbol = "BOVA11",
                 CorporationName = "IVVB 11 Corporation Inc.",
                 MovementType = "Compra",
@@ -214,7 +214,7 @@ namespace Core.Services.Hangfire.AverageTradedPriceUpdater
             // ticker to remove
             response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
             {
-                AssetType = "Ações",
+                ProductTypeName = "Ações",
                 TickerSymbol = "AMER3",
                 CorporationName = "Americanas S/A",
                 MovementType = "Venda",
@@ -227,7 +227,7 @@ namespace Core.Services.Hangfire.AverageTradedPriceUpdater
             // don't do anything
             response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
             {
-                AssetType = "Ações",
+                ProductTypeName = "Ações",
                 TickerSymbol = "DONT",
                 CorporationName = "Americanas S/A",
                 MovementType = "Compra",
@@ -240,7 +240,7 @@ namespace Core.Services.Hangfire.AverageTradedPriceUpdater
             // don't do anything
             response.Data.EquitiesPeriods.EquitiesMovements.Add(new Movement.EquitMovement
             {
-                AssetType = "Ações",
+                ProductTypeName = "Ações",
                 TickerSymbol = "DONT",
                 CorporationName = "Americanas S/A",
                 MovementType = "Venda",

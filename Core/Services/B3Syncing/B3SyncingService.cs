@@ -1,6 +1,8 @@
-﻿using Common.Enums;
+﻿using Azure;
+using Common.Enums;
 using Common.Exceptions;
 using Common.Helpers;
+using Core.Constants;
 using Core.Models;
 using Core.Refit.B3;
 using Core.Requests.BigBang;
@@ -60,7 +62,12 @@ namespace Core.Services.B3Syncing
                 .AddMonths(-1)
                 .ToString("yyyy-MM-dd");
 
+#if !DEBUG
             var b3Response = await b3Client.GetAccountMovement(account.CPF, startDate, lastMonth, accountId);
+#else
+            var b3Response = GetBigBangMockedDataBeforeB3Contract();
+#endif
+
             var calculatedTaxesResponse = await b3CalculatorService.Calculate(b3Response, accountId);
 
             if (calculatedTaxesResponse is null) return;
@@ -178,9 +185,9 @@ namespace Core.Services.B3Syncing
                 AVG: 93,88
 
                 AMER3
-                Total bought: 292,65
+                Total bought: 527,08
                 Quantity: 2
-                AVG: 146,325
+                AVG: 175,69
 
                 01/2023
 
@@ -196,132 +203,133 @@ namespace Core.Services.B3Syncing
 
             response.Data.EquitiesPeriods.EquitiesMovements.Add(new Models.B3.Movement.EquitMovement
             {
-                AssetType = "ETF - Exchange Traded Fund",
+                ProductTypeName = "ETF - Exchange Traded Fund",
                 TickerSymbol = "BOVA11",
                 CorporationName = "BOVA 11 Corporation Inc.",
-                MovementType = "Compra",
+                MovementType = B3ResponseConstants.TransferenciaLiquidacao,
+                OperationType = B3ResponseConstants.BuyOperationType,
                 OperationValue = 10.43,
                 UnitPrice = 10.43,
                 EquitiesQuantity = 1,
                 ReferenceDate = new DateTime(2023, 01, 01)
             });
-
             response.Data.EquitiesPeriods.EquitiesMovements.Add(new Models.B3.Movement.EquitMovement
             {
-                AssetType = "ETF - Exchange Traded Fund",
+                ProductTypeName = "ETF - Exchange Traded Fund",
                 TickerSymbol = "BOVA11",
                 CorporationName = "BOVA 11 Corporation Inc.",
-                MovementType = "Compra",
+                MovementType = B3ResponseConstants.TransferenciaLiquidacao,
+                OperationType = B3ResponseConstants.BuyOperationType,
                 OperationValue = 18.43,
                 UnitPrice = 18.43,
                 EquitiesQuantity = 1,
                 ReferenceDate = new DateTime(2023, 01, 03).ToUniversalTime(),
             });
-
             response.Data.EquitiesPeriods.EquitiesMovements.Add(new Models.B3.Movement.EquitMovement
             {
-                AssetType = "ETF - Exchange Traded Fund",
+                ProductTypeName = "ETF - Exchange Traded Fund",
                 TickerSymbol = "BOVA11",
                 CorporationName = "BOVA 11 Corporation Inc.",
-                MovementType = "Venda",
+                MovementType = B3ResponseConstants.TransferenciaLiquidacao,
+                OperationType = B3ResponseConstants.SellOperationType,
                 OperationValue = 12.54,
                 UnitPrice = 12.54,
                 EquitiesQuantity = 1,
                 ReferenceDate = new DateTime(2023, 01, 08)
             });
-
             response.Data.EquitiesPeriods.EquitiesMovements.Add(new Models.B3.Movement.EquitMovement
             {
-                AssetType = "ETF - Exchange Traded Fund",
+                ProductTypeName = "ETF - Exchange Traded Fund",
                 TickerSymbol = "IVVB11",
                 CorporationName = "IVVB 11 Corporation Inc.",
-                MovementType = "Compra",
+                MovementType = B3ResponseConstants.TransferenciaLiquidacao,
+                OperationType = B3ResponseConstants.BuyOperationType,
                 OperationValue = 245.65,
                 UnitPrice = 245.65,
                 EquitiesQuantity = 1,
                 ReferenceDate = new DateTime(2023, 01, 09)
             });
-
             response.Data.EquitiesPeriods.EquitiesMovements.Add(new Models.B3.Movement.EquitMovement
             {
-                AssetType = "ETF - Exchange Traded Fund",
+                ProductTypeName = "ETF - Exchange Traded Fund",
                 TickerSymbol = "IVVB11",
                 CorporationName = "IVVB 11 Corporation Inc.",
-                MovementType = "Compra",
+                MovementType = B3ResponseConstants.TransferenciaLiquidacao,
+                OperationType = B3ResponseConstants.BuyOperationType,
                 OperationValue = 246.65,
                 UnitPrice = 123.325,
                 EquitiesQuantity = 2,
                 ReferenceDate = new DateTime(2023, 01, 09)
             });
-
             response.Data.EquitiesPeriods.EquitiesMovements.Add(new Models.B3.Movement.EquitMovement
             {
-                AssetType = "ETF - Exchange Traded Fund",
+                ProductTypeName = "ETF - Exchange Traded Fund",
                 TickerSymbol = "IVVB11",
                 CorporationName = "IVVB 11 Corporation Inc.",
-                MovementType = "Venda",
+                MovementType = B3ResponseConstants.TransferenciaLiquidacao,
+                OperationType = B3ResponseConstants.SellOperationType,
                 OperationValue = 304.54,
                 UnitPrice = 304.54,
                 EquitiesQuantity = 1,
                 ReferenceDate = new DateTime(2023, 01, 10)
             });
-
             response.Data.EquitiesPeriods.EquitiesMovements.Add(new Models.B3.Movement.EquitMovement
             {
-                AssetType = "FII - Fundo de Investimento Imobiliário",
+                ProductTypeName = "FII - Fundo de Investimento Imobiliário",
                 TickerSymbol = "KFOF11",
                 CorporationName = "KFOF11 Corporation Inc.",
-                MovementType = "Compra",
+                MovementType = B3ResponseConstants.TransferenciaLiquidacao,
+                OperationType = B3ResponseConstants.BuyOperationType,
                 OperationValue = 231.34,
                 UnitPrice = 231.34,
                 EquitiesQuantity = 1,
                 ReferenceDate = new DateTime(2023, 01, 16)
             });
-
             response.Data.EquitiesPeriods.EquitiesMovements.Add(new Models.B3.Movement.EquitMovement
             {
-                AssetType = "FII - Fundo de Investimento Imobiliário",
+                ProductTypeName = "FII - Fundo de Investimento Imobiliário",
                 TickerSymbol = "KFOF11",
                 CorporationName = "KFOF11 Corporation Inc.",
-                MovementType = "Venda",
+                MovementType = B3ResponseConstants.TransferenciaLiquidacao,
+                OperationType = B3ResponseConstants.SellOperationType,
                 OperationValue = 237.34,
                 UnitPrice = 237.34,
                 EquitiesQuantity = 1,
                 ReferenceDate = new DateTime(2023, 01, 28)
             });
-
             response.Data.EquitiesPeriods.EquitiesMovements.Add(new Models.B3.Movement.EquitMovement
             {
-                AssetType = "Ações",
+                ProductTypeName = "Ações",
                 TickerSymbol = "AMER3",
-                CorporationName = "Americanas S/A",
-                MovementType = "Venda",
-                OperationValue = 234.43,
-                UnitPrice = 234.43,
-                EquitiesQuantity = 1,
-                ReferenceDate = new DateTime(2023, 02, 01)
-            });
-
-            response.Data.EquitiesPeriods.EquitiesMovements.Add(new Models.B3.Movement.EquitMovement
-            {
-                AssetType = "Ações",
-                TickerSymbol = "AMER3",
-                MovementType = "Compra",
+                MovementType = B3ResponseConstants.TransferenciaLiquidacao,
+                OperationType = B3ResponseConstants.BuyOperationType,
                 CorporationName = "Americanas S/A",
                 OperationValue = 265.54,
                 UnitPrice = 132.77,
                 EquitiesQuantity = 2,
                 ReferenceDate = new DateTime(2023, 02, 01)
             });
-
             response.Data.EquitiesPeriods.EquitiesMovements.Add(new Models.B3.Movement.EquitMovement
             {
-                AssetType = "Ações",
+                ProductTypeName = "Ações",
                 TickerSymbol = "AMER3",
-                MovementType = "Compra",
+                MovementType = B3ResponseConstants.TransferenciaLiquidacao,
+                OperationType = B3ResponseConstants.BuyOperationType,
                 CorporationName = "Americanas S/A",
                 OperationValue = 261.54,
                 UnitPrice = 261.54,
+                EquitiesQuantity = 1,
+                ReferenceDate = new DateTime(2023, 02, 01)
+            });
+            response.Data.EquitiesPeriods.EquitiesMovements.Add(new Models.B3.Movement.EquitMovement
+            {
+                ProductTypeName = "Ações",
+                TickerSymbol = "AMER3",
+                CorporationName = "Americanas S/A",
+                MovementType = B3ResponseConstants.TransferenciaLiquidacao,
+                OperationType = B3ResponseConstants.SellOperationType,
+                OperationValue = 234.43,
+                UnitPrice = 234.43,
                 EquitiesQuantity = 1,
                 ReferenceDate = new DateTime(2023, 02, 01)
             });

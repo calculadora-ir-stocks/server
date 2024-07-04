@@ -40,10 +40,6 @@ namespace Core.Services.B3ResponseCalculator
             if (movements.IsNullOrEmpty())
                 throw new NotFoundException("O usuário não possui nenhuma movimentação até então.");
 
-            // TODO nao da pra fazer ordem alfabetica, pq a bonificacao vai ficar antes da compra, mas tem que fazer
-            // compra antes da venda.
-            movements = OrderMovementsByDateAndMovementType(movements);
-
             SetDayTradeMovementsAsDayTrade(movements);
 
             // A B3 não retorna todas as informações de bonificações que precisamos. Por isso, uma base externa e manualmente gerenciada em nossa base - a Fintz - é
@@ -105,16 +101,6 @@ namespace Core.Services.B3ResponseCalculator
                     x.MovementType.Equals(B3ResponseConstants.BonusShare)).ToList();
         }
 
-        /// <summary>
-        /// Ordena as operações por ordem crescente através da data - a B3 retorna em ordem decrescente - e
-        /// ordena operações de compra antes das operações de venda em operações day trade.
-        /// </summary>
-        private static List<EquitMovement> OrderMovementsByDateAndMovementType(IList<EquitMovement> movements)
-        {
-            // TODO cobrar B3 disso
-            return movements.OrderBy(x => x.MovementType).OrderBy(x => x.ReferenceDate).ToList();
-        }
-
         private async Task<InvestorMovementDetails?> CalculateTaxesAndAverageTradedPrices(
             Dictionary<string,
             List<EquitMovement>> monthlyMovements,
@@ -126,12 +112,12 @@ namespace Core.Services.B3ResponseCalculator
             {
                 movementDetails.AverageTradedPrices.AddRange(await GetAverageTradedPricesIfAny(accountId, movementDetails.AverageTradedPrices));
 
-                var stocks = monthMovements.Value.Where(x => x.AssetType.Equals(B3ResponseConstants.Stocks));
-                var etfs = monthMovements.Value.Where(x => x.AssetType.Equals(B3ResponseConstants.ETFs));
-                var fiis = monthMovements.Value.Where(x => x.AssetType.Equals(B3ResponseConstants.FIIs));
-                var bdrs = monthMovements.Value.Where(x => x.AssetType.Equals(B3ResponseConstants.BDRs));
-                var gold = monthMovements.Value.Where(x => x.AssetType.Equals(B3ResponseConstants.Gold));
-                var fundInvestments = monthMovements.Value.Where(x => x.AssetType.Equals(B3ResponseConstants.InvestmentsFunds));
+                var stocks = monthMovements.Value.Where(x => x.ProductTypeName.Equals(B3ResponseConstants.Stocks));
+                var etfs = monthMovements.Value.Where(x => x.ProductTypeName.Equals(B3ResponseConstants.ETFs));
+                var fiis = monthMovements.Value.Where(x => x.ProductTypeName.Equals(B3ResponseConstants.FIIs));
+                var bdrs = monthMovements.Value.Where(x => x.ProductTypeName.Equals(B3ResponseConstants.BDRs));
+                var gold = monthMovements.Value.Where(x => x.ProductTypeName.Equals(B3ResponseConstants.Gold));
+                var fundInvestments = monthMovements.Value.Where(x => x.ProductTypeName.Equals(B3ResponseConstants.InvestmentsFunds));
 
                 // TODO factory design pattern
 

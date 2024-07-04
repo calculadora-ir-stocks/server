@@ -157,7 +157,7 @@ public class TaxesService : ITaxesService
 
         response.Data.EquitiesPeriods.EquitiesMovements.Add(new Models.B3.Movement.EquitMovement
         {
-            AssetType = "ETF - Exchange Traded Fund",
+            ProductTypeName = "ETF - Exchange Traded Fund",
             TickerSymbol = "BOVA11",
             CorporationName = "BOVA11 Corporation Inc.",
             MovementType = "Compra",
@@ -168,7 +168,7 @@ public class TaxesService : ITaxesService
 
         response.Data.EquitiesPeriods.EquitiesMovements.Add(new Models.B3.Movement.EquitMovement
         {
-            AssetType = "ETF - Exchange Traded Fund",
+            ProductTypeName = "ETF - Exchange Traded Fund",
             TickerSymbol = "BOVA11",
             CorporationName = "BOVA11 Corporation Inc.",
             MovementType = "Compra",
@@ -179,7 +179,7 @@ public class TaxesService : ITaxesService
 
         response.Data.EquitiesPeriods.EquitiesMovements.Add(new Models.B3.Movement.EquitMovement
         {
-            AssetType = "ETF - Exchange Traded Fund",
+            ProductTypeName = "ETF - Exchange Traded Fund",
             TickerSymbol = "BOVA11",
             CorporationName = "BOVA11 Corporation Inc.",
             MovementType = "Venda",
@@ -191,7 +191,7 @@ public class TaxesService : ITaxesService
 
         response.Data.EquitiesPeriods.EquitiesMovements.Add(new Models.B3.Movement.EquitMovement
         {
-            AssetType = "FII - Fundo de Investimento Imobiliário",
+            ProductTypeName = "FII - Fundo de Investimento Imobiliário",
             TickerSymbol = "VISC11",
             CorporationName = "VISC11 Corporation Inc.",
             MovementType = "Compra",
@@ -202,7 +202,7 @@ public class TaxesService : ITaxesService
 
         response.Data.EquitiesPeriods.EquitiesMovements.Add(new Models.B3.Movement.EquitMovement
         {
-            AssetType = "FII - Fundo de Investimento Imobiliário",
+            ProductTypeName = "FII - Fundo de Investimento Imobiliário",
             TickerSymbol = "VISC11",
             CorporationName = "VISC11 Corporation Inc.",
             MovementType = "Venda",
@@ -214,7 +214,7 @@ public class TaxesService : ITaxesService
 
         response.Data.EquitiesPeriods.EquitiesMovements.Add(new Models.B3.Movement.EquitMovement
         {
-            AssetType = "Ações",
+            ProductTypeName = "Ações",
             TickerSymbol = "AMER3",
             CorporationName = "Americanas S/A",
             MovementType = "Compra",
@@ -225,7 +225,7 @@ public class TaxesService : ITaxesService
 
         response.Data.EquitiesPeriods.EquitiesMovements.Add(new Models.B3.Movement.EquitMovement
         {
-            AssetType = "Ações",
+            ProductTypeName = "Ações",
             TickerSymbol = "AMER3",
             CorporationName = "Americanas S/A",
             MovementType = "Venda",
