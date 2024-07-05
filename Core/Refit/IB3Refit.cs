@@ -36,7 +36,7 @@ namespace Core.Refit.B3
         /// Consome o endpoint <c>/optout/investor/{documentNumber}</c> para realizar o opt-out.
         /// </summary>
         /// <param name="cpf">Não deve conter caracteres especiais</param>
-        [Get("/optout/investor/{cpf}")]
-        Task OptOut([Authorize] string token, string cpf);
+        [Get("/authorization-investor/v1/optout/investor/{cpf}")]
+        Task<ApiResponse<object>> OptOut([Authorize] string token, string cpf);
     }
 }

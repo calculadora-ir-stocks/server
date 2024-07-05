@@ -1,4 +1,5 @@
 ﻿using Core.Models.B3;
+using Refit;
 using System.Net;
 
 namespace Core.Refit.B3
@@ -19,6 +20,6 @@ namespace Core.Refit.B3
         /// <summary>
         /// Consome o endpoint <c>/optout/investor/{documentNumber}</c> para realizar o opt-out.
         /// </summary>
-        Task OptOut(string cpf);
+        Task<ApiResponse<object>> OptOut(string cpf);
     }
 }

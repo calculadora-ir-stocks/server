@@ -5,6 +5,7 @@ using Common.Options;
 using Core.Models.B3;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Refit;
 using System.Diagnostics;
 using System.Net;
 using static System.Net.WebRequestMethods;
@@ -106,10 +107,12 @@ namespace Core.Refit.B3
             return response.Data.Authorized;
         }
 
-        public async Task OptOut(string cpf)
+        public async Task<ApiResponse<object>> OptOut(string cpf)
         {
             var accessToken = await GetOrGenerateAuthToken();
-            await b3Client.OptOut(accessToken, UtilsHelper.RemoveSpecialCharacters(cpf));
+            var response = await b3Client.OptOut(accessToken, UtilsHelper.RemoveSpecialCharacters(cpf));
+
+            return response;
         }
 
         private async Task<string> GetOrGenerateAuthToken()

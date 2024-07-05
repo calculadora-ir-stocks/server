@@ -56,7 +56,14 @@ public class AccountController : BaseController
     [HttpDelete("{accountId}")]
     public async Task<IActionResult> Delete([FromRoute] Guid accountId)
     {
-        await service.Delete(accountId);
-        return Ok(new { message = $"A conta do usuário {accountId} foi deletada com sucesso e sua conta foi desvinculada com a B3." });
+        bool successfullOptOut = await service.Delete(accountId);
+        string message;
+
+        if (successfullOptOut)
+            message = $"A conta do usuário {accountId} foi deletada com sucesso e sua conta foi desvinculada com a B3.";
+        else
+            message = $"A conta do usuário {accountId} foi deletada com sucesso, mas a B3 não autorizou o desvínculo.";
+
+        return Ok(new { message, successOptOut = successfullOptOut });
     }
 }

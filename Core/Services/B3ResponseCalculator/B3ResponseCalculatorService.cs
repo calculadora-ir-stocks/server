@@ -46,12 +46,6 @@ namespace Core.Services.B3ResponseCalculator
             // utilizada.
             await SetBonusShareUnitPriceValue(movements);
 
-            // TODO remover
-            foreach (var movement in movements)
-            {
-                Console.WriteLine(JsonSerializer.Serialize(movement));
-            }
-
             Dictionary<string, List<EquitMovement>> monthlyMovements = new();
             var monthsThatHadMovements = movements.Select(x => x.ReferenceDate.ToString("MM/yyyy")).Distinct();
 

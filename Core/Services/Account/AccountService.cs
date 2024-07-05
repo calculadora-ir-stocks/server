@@ -23,18 +23,16 @@ namespace Core.Services.Account
             this.logger = logger;
         }
 
-        public async Task Delete(Guid accountId)
+        public async Task<bool> Delete(Guid accountId)
         {
             try
             {
                 var account = await repository.GetById(accountId) ?? throw new NotFoundException("Investidor", accountId.ToString());
-
-#if !DEBUG
-                await b3Client.OptOut(UtilsHelper.RemoveSpecialCharacters(account.CPF));
-#endif
                 repository.Delete(account);
-
                 logger.LogInformation("O usuário de id {accountId} deletou a sua conta da plataforma.", accountId);
+
+                var response = await b3Client.OptOut(UtilsHelper.RemoveSpecialCharacters(account.CPF));
+                return response.IsSuccessStatusCode;
             }
             catch (Exception e)
             {

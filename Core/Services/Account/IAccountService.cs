@@ -5,7 +5,8 @@
         /// <summary>
         /// Deleta fisicamente o usuário da base e desvincula sua conta com a B3.
         /// </summary>
-        Task Delete(Guid accountId);
+        /// <returns><c>true</c> se o desvínculo com a B3 for bem-sucedida; <c>false</c> caso contrário.</returns>
+        Task<bool> Delete(Guid accountId);
 
         /// <summary>
         /// Diz se um usuário fez o opt-in com a B3.
