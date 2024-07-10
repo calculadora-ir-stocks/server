@@ -110,9 +110,7 @@ namespace Infrastructure.Repositories.AverageTradedPrice
             parameters.Add("@Tickers", tickers);
 
             string sql =
-                @"DELETE FROM ""AverageTradedPrices"" atp
-                WHERE atp.""AccountId"" = @AccountId AND 
-                PGP_SYM_DECRYPT(atp.""Ticker""::bytea, @Key) IN @Tickers";
+                @"DELETE FROM ""AverageTradedPrices"" atp WHERE atp.""AccountId"" = @AccountId AND PGP_SYM_DECRYPT(atp.""Ticker""::bytea, @Key) = ANY(@Tickers::text[])";
 
             var connection = context.Database.GetDbConnection();
             

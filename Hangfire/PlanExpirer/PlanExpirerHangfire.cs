@@ -25,13 +25,7 @@ namespace Core.Hangfire.PlanExpirer
         {
             try
             {
-                Guid threadId = new();
-
-                logger.LogInformation("Iniciando Hangfire para atualizar planos expirados de investidores. " +
-                    "Id do processo: {id}", threadId);
-
-                Stopwatch timer = new();
-                timer.Start();
+                logger.LogInformation("Iniciando Hangfire para atualizar planos expirados de investidores.");
 
                 var plans = planRepository.GetAllAccountPlans();
                 int expiredPlans = 0;
@@ -45,9 +39,6 @@ namespace Core.Hangfire.PlanExpirer
                         await accountRepository.UpdateStatus(account);
                     }
                 }
-
-                timer.Stop();
-                var timeTakenForEach = timer.Elapsed;
 
                 logger.LogInformation("Finalizando Hangfire para reavaliar planos expirados. " +
                     "{expiredPlans} planos foram expirados de um total de {total} planos.", expiredPlans, plans.Count());

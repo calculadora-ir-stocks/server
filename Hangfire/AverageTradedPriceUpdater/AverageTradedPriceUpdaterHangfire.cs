@@ -1,10 +1,9 @@
-﻿using common.Helpers;
-using Core.Calculators;
+﻿using Core.Calculators;
+using Core.Constants;
 using Core.Models;
 using Core.Models.B3;
 using Core.Refit.B3;
 using Hangfire.AverageTradedPriceUpdater;
-using Infrastructure.Dtos;
 using Infrastructure.Models;
 using Infrastructure.Repositories.Account;
 using Infrastructure.Repositories.AverageTradedPrice;
@@ -69,9 +68,9 @@ namespace Core.Services.Hangfire.AverageTradedPriceUpdater
 
                     var _ = CalculateProfitAndAverageTradedPrice(movements, lastMonthAverageTradedPrices);
 
-                    var tickersNamesToAdd = AverageTradedPriceUpdaterHelper.GetTickersToAdd(lastMonthAverageTradedPrices, allAverageTradedPrices);
-                    var tickersNamesToUpdate = AverageTradedPriceUpdaterHelper.GetTickersToUpdate(lastMonthAverageTradedPrices, allAverageTradedPrices);
-                    var tickersNamesToRemove = AverageTradedPriceUpdaterHelper.GetTickersToRemove(lastMonthAverageTradedPrices, movements);
+                    var tickersNamesToAdd = AverageTradedPriceUpdaterHelper.GetTickersToAdd(lastMonthAverageTradedPrices, allAverageTradedPrices).ToList();
+                    var tickersNamesToUpdate = AverageTradedPriceUpdaterHelper.GetTickersToUpdate(lastMonthAverageTradedPrices, allAverageTradedPrices).ToList();
+                    var tickersNamesToRemove = AverageTradedPriceUpdaterHelper.GetTickersToRemove(lastMonthAverageTradedPrices, movements).ToList();
 
                     await AddTickers(account,
                         lastMonthAverageTradedPrices.Where(x => tickersNamesToAdd.Any(y => y.Equals(x.TickerSymbol))));
@@ -181,7 +180,8 @@ namespace Core.Services.Hangfire.AverageTradedPriceUpdater
                 ProductTypeName = "FII - Fundo de Investimento Imobiliário",
                 TickerSymbol = "KFOF11",
                 CorporationName = "KFOF11 Corporation Inc.",
-                MovementType = "Compra",
+                MovementType = B3ResponseConstants.TransferenciaLiquidacao,
+                OperationType = B3ResponseConstants.BuyOperationType,
                 OperationValue = 231.34,
                 EquitiesQuantity = 1,
                 ReferenceDate = new DateTime(2022, 01, 16)
@@ -193,7 +193,8 @@ namespace Core.Services.Hangfire.AverageTradedPriceUpdater
                 ProductTypeName = "ETF - Exchange Traded Fund",
                 TickerSymbol = "IVVB11",
                 CorporationName = "IVVB 11 Corporation Inc.",
-                MovementType = "Compra",
+                MovementType = B3ResponseConstants.TransferenciaLiquidacao,
+                OperationType = B3ResponseConstants.BuyOperationType,
                 OperationValue = 12376.43,
                 EquitiesQuantity = 4,
                 ReferenceDate = new DateTime(2022, 01, 09)
@@ -205,7 +206,8 @@ namespace Core.Services.Hangfire.AverageTradedPriceUpdater
                 ProductTypeName = "ETF - Exchange Traded Fund",
                 TickerSymbol = "BOVA11",
                 CorporationName = "IVVB 11 Corporation Inc.",
-                MovementType = "Compra",
+                MovementType = B3ResponseConstants.TransferenciaLiquidacao,
+                OperationType = B3ResponseConstants.BuyOperationType,
                 OperationValue = 12376.43,
                 EquitiesQuantity = 4,
                 ReferenceDate = new DateTime(2022, 01, 09)
@@ -217,7 +219,8 @@ namespace Core.Services.Hangfire.AverageTradedPriceUpdater
                 ProductTypeName = "Ações",
                 TickerSymbol = "AMER3",
                 CorporationName = "Americanas S/A",
-                MovementType = "Venda",
+                MovementType = B3ResponseConstants.TransferenciaLiquidacao,
+                OperationType = B3ResponseConstants.SellOperationType,
                 OperationValue = 234.43,
                 UnitPrice = 234.43,
                 EquitiesQuantity = 2,
@@ -230,7 +233,8 @@ namespace Core.Services.Hangfire.AverageTradedPriceUpdater
                 ProductTypeName = "Ações",
                 TickerSymbol = "DONT",
                 CorporationName = "Americanas S/A",
-                MovementType = "Compra",
+                MovementType = B3ResponseConstants.TransferenciaLiquidacao,
+                OperationType = B3ResponseConstants.BuyOperationType,
                 OperationValue = 234.43,
                 UnitPrice = 234.43,
                 EquitiesQuantity = 1,
@@ -243,7 +247,8 @@ namespace Core.Services.Hangfire.AverageTradedPriceUpdater
                 ProductTypeName = "Ações",
                 TickerSymbol = "DONT",
                 CorporationName = "Americanas S/A",
-                MovementType = "Venda",
+                MovementType = B3ResponseConstants.TransferenciaLiquidacao,
+                OperationType = B3ResponseConstants.SellOperationType,
                 OperationValue = 234.43,
                 UnitPrice = 234.43,
                 EquitiesQuantity = 1,
