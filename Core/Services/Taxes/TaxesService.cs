@@ -9,6 +9,7 @@ using Core.Refit.B3;
 using Core.Services.B3ResponseCalculator;
 using Infrastructure.Dtos;
 using Infrastructure.Repositories;
+using Infrastructure.Repositories.Account;
 using Infrastructure.Repositories.Taxes;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
@@ -20,6 +21,7 @@ public class TaxesService : ITaxesService
     private readonly IB3ResponseCalculatorService b3CalculatorService;
 
     private readonly IGenericRepository<Infrastructure.Models.Account> genericRepositoryAccount;
+    private readonly IAccountRepository accountRepository;
     private readonly IIncomeTaxesRepository taxesRepository;
 
     private readonly IB3Client b3Client;
@@ -39,6 +41,7 @@ public class TaxesService : ITaxesService
     public TaxesService(
         IB3ResponseCalculatorService b3CalculatorService,
         IGenericRepository<Infrastructure.Models.Account> genericRepositoryAccount,
+        IAccountRepository accountRepository,
         IIncomeTaxesRepository taxesRepository,
         IB3Client b3Client,
         ILogger<TaxesService> logger
@@ -46,12 +49,13 @@ public class TaxesService : ITaxesService
     {
         this.b3CalculatorService = b3CalculatorService;
         this.genericRepositoryAccount = genericRepositoryAccount;
+        this.accountRepository = accountRepository;
         this.taxesRepository = taxesRepository;
         this.b3Client = b3Client;
         this.logger = logger;
     }
 
-#region Calcula o imposto de renda do mês atual.
+    #region Calcula o imposto de renda do mês atual.
     public async Task<TaxesDetailsResponse> GetCurrentMonthTaxes(Guid accountId)
     {
         try
@@ -66,8 +70,7 @@ public class TaxesService : ITaxesService
             string startDate = DateTime.Now.ToString("yyyy-MM-01");
             string yesterday = DateTime.Now.AddDays(-1).ToString("yyyy-MM-dd");
 
-            Infrastructure.Models.Account account = await genericRepositoryAccount.GetByIdAsync(accountId);
-            if (account is null) throw new NotFoundException("Investidor", accountId.ToString());
+            var account = await accountRepository.GetById(accountId) ?? throw new NotFoundException("Investidor", accountId.ToString());
 
             if (account.Status == EnumHelper.GetEnumDescription(AccountStatus.SubscriptionExpired))
                 throw new ForbiddenException("O plano do usuário está expirado.");
@@ -237,9 +240,9 @@ public class TaxesService : ITaxesService
 
         return response;
     }
-#endregion
+    #endregion
 
-#region Calcula o imposto de renda do mês especificado.
+    #region Calcula o imposto de renda do mês especificado.
     public async Task<TaxesDetailsResponse> Details(string month, Guid accountId)
     {
         try
@@ -249,8 +252,7 @@ public class TaxesService : ITaxesService
                 throw new BadRequestException("Para obter as informações de impostos do mês atual, acesse /taxes/home/{accountId}.");
             }
 
-            var account = await genericRepositoryAccount.GetByIdAsync(accountId);
-            if (account is null) throw new NotFoundException("Investidor", accountId.ToString());
+            var account = await genericRepositoryAccount.GetByIdAsync(accountId) ?? throw new NotFoundException("Investidor", accountId.ToString());
 
             if (account.Status == EnumHelper.GetEnumDescription(AccountStatus.SubscriptionExpired))
                 throw new ForbiddenException("O plano do usuário está expirado.");
@@ -320,15 +322,14 @@ public class TaxesService : ITaxesService
         string currentMonth = DateTime.Now.ToString("MM/yyyy");
         return month == currentMonth;
     }
-#endregion
+    #endregion
 
-#region Calcula o imposto de renda do ano especificado
+    #region Calcula o imposto de renda do ano especificado
     public async Task<IEnumerable<CalendarResponse>> GetCalendarTaxes(string year, Guid accountId)
     {
         try
         {
-            var account = await genericRepositoryAccount.GetByIdAsync(accountId);
-            if (account is null) throw new NotFoundException("Investidor", accountId.ToString());
+            var account = await genericRepositoryAccount.GetByIdAsync(accountId) ?? throw new NotFoundException("Investidor", accountId.ToString());
 
             if (account.Status == EnumHelper.GetEnumDescription(AccountStatus.SubscriptionExpired))
                 throw new ForbiddenException("O plano do usuário está expirado.");
@@ -364,9 +365,9 @@ public class TaxesService : ITaxesService
 
         return response;
     }
-#endregion
+    #endregion
 
-#region Altera um mês como pago/não pago
+    #region Altera um mês como pago/não pago
     public async Task SetAsPaidOrUnpaid(string month, Guid accountId)
     {
         try
@@ -379,5 +380,5 @@ public class TaxesService : ITaxesService
             throw;
         }
     }
-#endregion
+    #endregion
 }
