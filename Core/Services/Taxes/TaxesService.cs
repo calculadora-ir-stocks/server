@@ -12,6 +12,7 @@ using Infrastructure.Repositories;
 using Infrastructure.Repositories.Account;
 using Infrastructure.Repositories.Taxes;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Configuration;
 using Microsoft.IdentityModel.Tokens;
 
 namespace Core.Services.Taxes;
@@ -68,18 +69,14 @@ public class TaxesService : ITaxesService
             }
 
             string startDate = DateTime.Now.ToString("yyyy-MM-01");
-            string yesterday = DateTime.Now.AddDays(-3).ToString("yyyy-MM-dd");
+            string threeDaysAgo = DateTime.Now.AddDays(-3).ToString("yyyy-MM-dd");
 
             var account = await accountRepository.GetById(accountId) ?? throw new NotFoundException("Investidor", accountId.ToString());
 
             if (account.Status == EnumHelper.GetEnumDescription(AccountStatus.SubscriptionExpired))
                 throw new ForbiddenException("O plano do usuário está expirado.");
 
-#if !DEBUG
-            var b3Response = await b3Client.GetAccountMovement(account.CPF, startDate, yesterday, account.Id);
-#else
-            var b3Response = AddCurrentMonthSet();
-#endif
+            var b3Response = await b3Client.GetAccountMovement(account.CPF, startDate, threeDaysAgo, account.Id);
 
             var response = await b3CalculatorService.Calculate(b3Response, account.Id);
 
@@ -95,7 +92,7 @@ public class TaxesService : ITaxesService
         }
     }
 
-    private static TaxesDetailsResponse ToTaxesDetailsResponse(List<AssetIncomeTaxes> assets)
+    private TaxesDetailsResponse ToTaxesDetailsResponse(List<AssetIncomeTaxes> assets)
     {
         TaxesDetailsResponse response = new(
             totalTaxes: assets.Select(x => x.Taxes).Sum(),
@@ -129,6 +126,8 @@ public class TaxesService : ITaxesService
                     tradedAsset.Total,
                     tradedAsset.Quantity
                 ));
+
+                logger.LogInformation($"Movement type of {tradedAsset.TickerSymbol} is {tradedAsset.MovementType}");
             }
 
             movements.Add(new Movement(weekDay, details));
