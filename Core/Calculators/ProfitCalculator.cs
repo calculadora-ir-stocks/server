@@ -60,6 +60,13 @@ namespace Core.Calculators
             double profit = 0
         )
         {
+            string operationType = string.Empty;
+
+            if (movement.IsBuy())
+                operationType = "Compra";
+            else if (movement.IsSell())
+                operationType = "Venda";
+
             return new OperationDetails(
                 movement.ReferenceDate.Day,
                 UtilsHelper.GetDayOfTheWeekName((int)movement.ReferenceDate.DayOfWeek),
@@ -67,7 +74,7 @@ namespace Core.Calculators
                 AssetEnumHelper.GetEnumByName(movement.ProductTypeName),
                 movement.TickerSymbol,
                 movement.CorporationName,
-                movement.MovementType,
+                operationType,
                 (int)movement.EquitiesQuantity,
                 movement.OperationValue,
                 profit

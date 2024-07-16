@@ -82,10 +82,10 @@ namespace Core.Models.B3
                 DayTraded = dayTraded;
             }
 
+            public EquitMovement() { }
+
             public bool IsBuy() => MovementType.Equals(B3ResponseConstants.TransferenciaLiquidacao) && OperationType.Equals(B3ResponseConstants.BuyOperationType);
             public bool IsSell() => MovementType.Equals(B3ResponseConstants.TransferenciaLiquidacao) && OperationType.Equals(B3ResponseConstants.SellOperationType);
-
-            public EquitMovement() { }
 
             // Obrigado por não retornarem ids, B3!
             [JsonIgnore]
@@ -93,7 +93,6 @@ namespace Core.Models.B3
 
             [JsonIgnore]
             public bool DayTraded { get; set; } = false;
-
 
             [JsonProperty("referenceDate")]
             public DateTime ReferenceDate { get; set; }

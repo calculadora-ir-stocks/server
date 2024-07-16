@@ -76,8 +76,11 @@ public class TaxesService : ITaxesService
             if (account.Status == EnumHelper.GetEnumDescription(AccountStatus.SubscriptionExpired))
                 throw new ForbiddenException("O plano do usuário está expirado.");
 
+#if !DEBUG
             var b3Response = await b3Client.GetAccountMovement(account.CPF, startDate, threeDaysAgo, account.Id);
-
+#else
+            var b3Response = AddCurrentMonthSet();
+#endif
             var response = await b3CalculatorService.Calculate(b3Response, account.Id);
 
             if (response is null || response.Assets.IsNullOrEmpty())
