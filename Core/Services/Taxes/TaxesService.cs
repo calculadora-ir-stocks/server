@@ -2,6 +2,7 @@ using common.Helpers;
 using Common.Enums;
 using Common.Exceptions;
 using Common.Helpers;
+using Core.Constants;
 using Core.Models;
 using Core.Models.Api.Responses;
 using Core.Models.Responses;
@@ -165,7 +166,8 @@ public class TaxesService : ITaxesService
             ProductTypeName = "ETF - Exchange Traded Fund",
             TickerSymbol = "BOVA11",
             CorporationName = "BOVA11 Corporation Inc.",
-            MovementType = "Compra",
+            MovementType = B3ResponseConstants.TransferenciaLiquidacao,
+            OperationType = B3ResponseConstants.BuyOperationType,
             OperationValue = 19.54,
             EquitiesQuantity = 1,
             ReferenceDate = new DateTime(2023, 01, 01)
@@ -176,7 +178,8 @@ public class TaxesService : ITaxesService
             ProductTypeName = "ETF - Exchange Traded Fund",
             TickerSymbol = "BOVA11",
             CorporationName = "BOVA11 Corporation Inc.",
-            MovementType = "Compra",
+            MovementType = B3ResponseConstants.TransferenciaLiquidacao,
+            OperationType = B3ResponseConstants.BuyOperationType,
             OperationValue = 34.65,
             EquitiesQuantity = 1,
             ReferenceDate = new DateTime(2023, 01, 03)
@@ -187,7 +190,8 @@ public class TaxesService : ITaxesService
             ProductTypeName = "ETF - Exchange Traded Fund",
             TickerSymbol = "BOVA11",
             CorporationName = "BOVA11 Corporation Inc.",
-            MovementType = "Venda",
+            MovementType = B3ResponseConstants.TransferenciaLiquidacao,
+            OperationType = B3ResponseConstants.SellOperationType,
             OperationValue = 10.43,
             UnitPrice = 10.43,
             EquitiesQuantity = 1,
@@ -199,7 +203,8 @@ public class TaxesService : ITaxesService
             ProductTypeName = "FII - Fundo de Investimento Imobiliário",
             TickerSymbol = "VISC11",
             CorporationName = "VISC11 Corporation Inc.",
-            MovementType = "Compra",
+            MovementType = B3ResponseConstants.TransferenciaLiquidacao,
+            OperationType = B3ResponseConstants.BuyOperationType,
             OperationValue = 231.34,
             EquitiesQuantity = 1,
             ReferenceDate = new DateTime(2023, 01, 29)
@@ -210,7 +215,8 @@ public class TaxesService : ITaxesService
             ProductTypeName = "FII - Fundo de Investimento Imobiliário",
             TickerSymbol = "VISC11",
             CorporationName = "VISC11 Corporation Inc.",
-            MovementType = "Venda",
+            MovementType = B3ResponseConstants.TransferenciaLiquidacao,
+            OperationType = B3ResponseConstants.SellOperationType,
             OperationValue = 304.43,
             UnitPrice = 304.43,
             EquitiesQuantity = 1,
@@ -222,7 +228,8 @@ public class TaxesService : ITaxesService
             ProductTypeName = "Ações",
             TickerSymbol = "AMER3",
             CorporationName = "Americanas S/A",
-            MovementType = "Compra",
+            MovementType = B3ResponseConstants.TransferenciaLiquidacao,
+            OperationType = B3ResponseConstants.BuyOperationType,
             OperationValue = 234.43,
             EquitiesQuantity = 1,
             ReferenceDate = new DateTime(2023, 01, 29)
@@ -233,7 +240,8 @@ public class TaxesService : ITaxesService
             ProductTypeName = "Ações",
             TickerSymbol = "AMER3",
             CorporationName = "Americanas S/A",
-            MovementType = "Venda",
+            MovementType = B3ResponseConstants.TransferenciaLiquidacao,
+            OperationType = B3ResponseConstants.SellOperationType,
             OperationValue = 265.54,
             UnitPrice = 265.54,
             EquitiesQuantity = 1,

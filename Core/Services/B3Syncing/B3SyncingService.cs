@@ -46,38 +46,45 @@ namespace Core.Services.B3Syncing
 
         public async Task Sync(Guid accountId, List<BigBangRequest> request)
         {
-            var account = await accountRepository.GetById(accountId) ?? throw new NotFoundException("Investidor", accountId.ToString());
-
-            if (!AccountCanExecuteSyncing(account))
+            try
             {
-                logger.LogInformation("O usuário {accountId} tentou executar a sincronização mas " +
-                    "já sincronizou sua conta anteriormente.", account.Id);
-                throw new BadRequestException($"O usuário {account.Id} tentou executar a sincronização mas " +
-                    "já sincronizou sua conta anteriormente.");
-            }
+                var account = await accountRepository.GetById(accountId) ?? throw new NotFoundException("Investidor", accountId.ToString());
 
-            string startDate = "2019-11-01";
+                if (!AccountCanExecuteSyncing(account))
+                {
+                    logger.LogInformation("O usuário {accountId} tentou executar a sincronização mas " +
+                        "já sincronizou sua conta anteriormente.", account.Id);
+                    throw new BadRequestException($"O usuário {account.Id} tentou executar a sincronização mas " +
+                        "já sincronizou sua conta anteriormente.");
+                }
 
-            string lastMonth = new DateTime(year: DateTime.Now.Year, month: DateTime.Now.Month, day: 1)
-                .AddMonths(-1)
-                .ToString("yyyy-MM-dd");
+                string startDate = "2019-11-01";
+
+                string lastMonth = new DateTime(year: DateTime.Now.Year, month: DateTime.Now.Month, day: 1)
+                    .AddMonths(-1)
+                    .ToString("yyyy-MM-dd");
 
 #if !DEBUG
             var b3Response = await b3Client.GetAccountMovement(account.CPF, startDate, lastMonth, accountId);
 #else
-            var b3Response = GetBigBangMockedDataBeforeB3Contract();
+                var b3Response = GetBigBangMockedDataBeforeB3Contract();
 #endif
 
-            var calculatedTaxesResponse = await b3CalculatorService.Calculate(b3Response, accountId);
+                var calculatedTaxesResponse = await b3CalculatorService.Calculate(b3Response, accountId);
 
-            if (calculatedTaxesResponse is null) return;
+                if (calculatedTaxesResponse is null) return;
 
-            await SaveB3Data(calculatedTaxesResponse, account);
+                await SaveB3Data(calculatedTaxesResponse, account);
 
-            account.Status = EnumHelper.GetEnumDescription(AccountStatus.SubscriptionValid);
-            await accountRepository.UpdateStatus(account);
+                account.Status = EnumHelper.GetEnumDescription(AccountStatus.SubscriptionValid);
+                await accountRepository.UpdateStatus(account);
 
-            logger.LogInformation("Big Bang executado com sucesso para o usuário {accountId}.", accountId);
+                logger.LogInformation("Big Bang executado com sucesso para o usuário {accountId}.", accountId);
+            } catch (Exception e)
+            {
+                logger.LogError(e, "Ocorreu um erro ao executar a sincronização pro usuário de id {id}.", accountId);
+                throw;
+            }
         }
 
         private static bool AccountCanExecuteSyncing(Infrastructure.Models.Account account)
