@@ -70,7 +70,7 @@ public class TaxesService : ITaxesService
             }
 
             string startDate = DateTime.Now.ToString("yyyy-MM-01");
-            string threeDaysAgo = DateTime.Now.AddDays(-3).ToString("yyyy-MM-dd");
+            string threeDaysAgo = DateTime.Now.AddDays(-1).ToString("yyyy-MM-dd");
 
             var account = await accountRepository.GetById(accountId) ?? throw new NotFoundException("Investidor", accountId.ToString());
 
