@@ -74,6 +74,8 @@ namespace Core.Services.B3Syncing
 
                 if (calculatedTaxesResponse is null) return;
 
+                logger.LogInformation($"Operações: {JsonConvert.SerializeObject(calculatedTaxesResponse.Assets)}");
+
                 await SaveB3Data(calculatedTaxesResponse, account);
 
                 account.Status = EnumHelper.GetEnumDescription(AccountStatus.SubscriptionValid);
