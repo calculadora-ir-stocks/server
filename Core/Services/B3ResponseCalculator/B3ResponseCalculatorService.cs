@@ -8,6 +8,7 @@ using Infrastructure.Repositories.AverageTradedPrice;
 using Infrastructure.Repositories.BonusShare;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
+using Newtonsoft.Json;
 using System.Collections.Generic;
 using System.Text.Json;
 using static Core.Models.B3.Movement;
@@ -125,6 +126,11 @@ namespace Core.Services.B3ResponseCalculator
                 {
                     calculator = new ETFsIncomeTaxes();
                     calculator.Execute(movementDetails, etfs, monthMovements.Key);
+
+                    foreach (var operation in movementDetails.Assets)
+                    {
+                        logger.LogInformation($"N.: {operation.AssetName}, P.: {operation.SwingTradeProfit}, T.S.: {operation.TotalSold}, T.A: {JsonConvert.SerializeObject(operation.TradedAssets)}");
+                    }
                 }
 
                 if (fiis.Any())
