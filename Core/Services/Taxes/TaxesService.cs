@@ -70,7 +70,9 @@ public class TaxesService : ITaxesService
             }
 
             string startDate = DateTime.Now.ToString("yyyy-MM-01");
-            string threeDaysAgo = DateTime.Now.AddDays(-1).ToString("yyyy-MM-dd");
+            string yesterday = DateTime.Now.AddDays(-1).ToString("yyyy-MM-dd");
+
+            logger.LogInformation($"Calculando IR da home page do investidor {accountId}. StartDate: {startDate} e Yesterday: {yesterday}");
 
             var account = await accountRepository.GetById(accountId) ?? throw new NotFoundException("Investidor", accountId.ToString());
 
@@ -78,7 +80,7 @@ public class TaxesService : ITaxesService
                 throw new ForbiddenException("O plano do usuário está expirado.");
 
 #if !DEBUG
-            var b3Response = await b3Client.GetAccountMovement(account.CPF, startDate, threeDaysAgo, account.Id);
+            var b3Response = await b3Client.GetAccountMovement(account.CPF, startDate, yesterday, account.Id);
 #else
             var b3Response = AddCurrentMonthSet();
 #endif
