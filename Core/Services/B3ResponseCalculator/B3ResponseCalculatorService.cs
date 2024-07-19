@@ -109,7 +109,7 @@ namespace Core.Services.B3ResponseCalculator
 
                 foreach (var operation in movementDetails.AverageTradedPrices)
                 {
-                    logger.LogInformation($"Obteu preço médio: {operation.AverageTradedPrice}, {operation.TickerSymbol}");
+                    logger.LogInformation($"Obteu preço médio: {operation.AverageTradedPrice}, qtd: {operation.TradedQuantity}, Ticker: {operation.TickerSymbol}");
                 }
 
                 var stocks = monthMovements.Value.Where(x => x.ProductTypeName.Equals(B3ResponseConstants.Stocks));
