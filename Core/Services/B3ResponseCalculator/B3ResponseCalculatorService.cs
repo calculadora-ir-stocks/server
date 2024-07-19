@@ -107,6 +107,11 @@ namespace Core.Services.B3ResponseCalculator
             {
                 movementDetails.AverageTradedPrices.AddRange(await GetAverageTradedPricesIfAny(accountId, movementDetails.AverageTradedPrices));
 
+                foreach (var operation in movementDetails.AverageTradedPrices)
+                {
+                    logger.LogInformation($"Obteu preço médio: {operation.AverageTradedPrice}, {operation.TickerSymbol}");
+                }
+
                 var stocks = monthMovements.Value.Where(x => x.ProductTypeName.Equals(B3ResponseConstants.Stocks));
                 var etfs = monthMovements.Value.Where(x => x.ProductTypeName.Equals(B3ResponseConstants.ETFs));
                 var fiis = monthMovements.Value.Where(x => x.ProductTypeName.Equals(B3ResponseConstants.FIIs));
