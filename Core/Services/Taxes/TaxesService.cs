@@ -70,7 +70,21 @@ public class TaxesService : ITaxesService
             }
 
             string startDate = DateTime.Now.ToString("yyyy-MM-01");
-            string yesterday = DateTime.Now.AddDays(-1).ToString("yyyy-MM-dd");
+            string endDate = DateTime.Now.AddDays(-1).ToString("yyyy-MM-dd");
+
+            /**
+             * A API da B3 não retorna dados caso D-1 seja sábado ou domingo.
+             * Nesse caso, o D-1 da data final da consulta não pode ser sábado ou domingo, e sim sexta-feira.
+             */
+
+            if (DateTime.Now.DayOfWeek == DayOfWeek.Sunday)
+            {
+                endDate = DateTime.Now.AddDays(-2).ToString("yyyy-MM-dd");
+            }
+            if (DateTime.Now.DayOfWeek == DayOfWeek.Monday)
+            {
+                endDate = DateTime.Now.AddDays(-3).ToString("yyyy-MM-dd");
+            }
 
             var account = await accountRepository.GetById(accountId) ?? throw new NotFoundException("Investidor", accountId.ToString());
 
@@ -78,7 +92,7 @@ public class TaxesService : ITaxesService
                 throw new ForbiddenException("O plano do usuário está expirado.");
 
 #if !DEBUG
-            var b3Response = await b3Client.GetAccountMovement(account.CPF, startDate, yesterday, account.Id);
+            var b3Response = await b3Client.GetAccountMovement(account.CPF, startDate, endDate, account.Id);
 #else
             var b3Response = AddCurrentMonthSet();
 #endif
