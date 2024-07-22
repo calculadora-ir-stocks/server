@@ -15,6 +15,7 @@ using Infrastructure.Repositories.Taxes;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Configuration;
 using Microsoft.IdentityModel.Tokens;
+using Newtonsoft.Json;
 
 namespace Core.Services.Taxes;
 
@@ -112,7 +113,7 @@ public class TaxesService : ITaxesService
 
     private TaxesDetailsResponse ToTaxesDetailsResponse(List<AssetIncomeTaxes> assets)
     {
-        logger.LogInformation($"Chegou aqui com movimentações. {assets.Count}");
+        logger.LogInformation($"Chegou aqui com movimentações. {JsonConvert.SerializeObject(assets)}");
 
         TaxesDetailsResponse response = new(
             totalTaxes: assets.Select(x => x.Taxes).Sum(),
