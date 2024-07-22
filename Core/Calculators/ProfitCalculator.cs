@@ -28,7 +28,6 @@ namespace Core.Calculators
                 {
                     UpdateOrAddAveragePrice(movement, averagePrices, sellOperation: false);
                     response.OperationHistory.Add(CreateOperationDetails(movement));
-
                     continue;
                 }
                 if (movement.IsSell())
@@ -123,11 +122,11 @@ namespace Core.Calculators
             if (ticker is null)
             {
                 averageTradedPrices.Add(new AverageTradedPriceDetails(
-                        movement.TickerSymbol,
-                        averageTradedPrice: movement.OperationValue / movement.EquitiesQuantity,
-                        totalBought: movement.OperationValue,
-                        tradedQuantity: (int)movement.EquitiesQuantity
-                    ));
+                    movement.TickerSymbol,
+                    averageTradedPrice: movement.OperationValue / movement.EquitiesQuantity,
+                    totalBought: movement.OperationValue,
+                    tradedQuantity: (int)movement.EquitiesQuantity
+                ));
 
                 return;
             }

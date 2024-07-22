@@ -112,6 +112,8 @@ public class TaxesService : ITaxesService
 
     private TaxesDetailsResponse ToTaxesDetailsResponse(List<AssetIncomeTaxes> assets)
     {
+        logger.LogInformation($"Chegou aqui com movimentações. {assets.Count}");
+
         TaxesDetailsResponse response = new(
             totalTaxes: assets.Select(x => x.Taxes).Sum(),
             TaxesStatus.Pending,
@@ -144,8 +146,6 @@ public class TaxesService : ITaxesService
                     tradedAsset.Total,
                     tradedAsset.Quantity
                 ));
-
-                logger.LogInformation($"Movement type of {tradedAsset.TickerSymbol} is {tradedAsset.MovementType}");
             }
 
             movements.Add(new Movement(weekDay, details));
