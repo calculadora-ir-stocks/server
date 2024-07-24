@@ -16,6 +16,12 @@ namespace Core.Calculators.Assets
         {
             var profit = CalculateProfitAndAverageTradedPrice(movements, investorMovementDetails.AverageTradedPrices);
 
+            if (profit.TickersBoughtBeforeB3Range.Any())
+            {
+                // TODO estourar exceção?
+                return;
+            }
+
             var dayTradeProfit = profit.DayTradeOperations.Select(x => x.Profit).Sum();
             var swingTradeProfit = profit.SwingTradeOperations.Select(x => x.Profit).Sum();
 

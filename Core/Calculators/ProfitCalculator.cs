@@ -1,4 +1,5 @@
-﻿using common.Helpers;
+﻿using Azure;
+using common.Helpers;
 using Common.Helpers;
 using Core.Constants;
 using Core.Models;
@@ -32,8 +33,14 @@ namespace Core.Calculators
                 }
                 if (movement.IsSell())
                 {
-                    AddTickerIntoResponse(response, movement);
+                    AddTickerIntoHistoryList(response, movement);
                     UpdateProfitOrLoss(response, movement, movements, averagePrices);
+                    continue;
+                }
+
+                if (AssetBoughtBeforeB3MinimumDate(movement, averagePrices))
+                {
+                    response.TickersBoughtBeforeB3Range.Add(movement.TickerSymbol);
                     continue;
                 }
 
@@ -52,6 +59,12 @@ namespace Core.Calculators
             }
 
             return response;
+        }
+
+        private static bool AssetBoughtBeforeB3MinimumDate(Movement.EquitMovement movement, List<AverageTradedPriceDetails> averagePrices)
+        {
+            var ticker = averagePrices.Where(x => x.TickerSymbol.Equals(movement.TickerSymbol)).FirstOrDefault();
+            return ticker is null;
         }
 
         private static OperationDetails CreateOperationDetails(
@@ -80,7 +93,7 @@ namespace Core.Calculators
             );
         }
 
-        private static void AddTickerIntoResponse(
+        private static void AddTickerIntoHistoryList(
             CalculateProfitResponse investorMovements,
             Movement.EquitMovement movement
         )
