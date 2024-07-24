@@ -1,5 +1,4 @@
-﻿using Castle.Core.Logging;
-using Common.Exceptions;
+﻿using Common.Exceptions;
 using Core.Calculators;
 using Core.Constants;
 using Core.Models.B3;
@@ -9,7 +8,6 @@ using Infrastructure.Repositories.AverageTradedPrice;
 using Infrastructure.Repositories.BonusShare;
 using Microsoft.Extensions.Logging;
 using Moq;
-using System.Security.Policy;
 using static Core.Models.B3.Movement;
 using Data = Core.Models.B3.Movement.Data;
 

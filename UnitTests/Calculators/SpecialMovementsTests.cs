@@ -36,6 +36,44 @@ namespace stocks_unit_tests.Calculators
                 logger.Object);
         }
 
+        #region Ativos comprados antes de 01/11/2019
+        [Theory(DisplayName = "A API deve adicionar em uma lista todos os ativos que foram comprados antes de 01/11/2019.")]
+        [MemberData(nameof(AssetsBoughtBeforeB3MinimumRange))]
+        public void ShouldNotThrowUnexpectedExceptionIfInvestourBoughtAssetBeforeB3MinimumDateRange(List<Movement.EquitMovement> movements, int assetsBoughtBeforeB3MinimumRangeDate)
+        {
+            var response = CalculateProfitAndAverageTradedPrice(movements, new List<AverageTradedPriceDetails>());
+            Assert.Equal(assetsBoughtBeforeB3MinimumRangeDate, response.TickersBoughtBeforeB3Range.Count);
+        }
+
+        public static IEnumerable<object[]> AssetsBoughtBeforeB3MinimumRange()
+        {
+            // Lucro em operações de swing-trade e day-trade, mas < 20k foram vendidos. Nesse caso, apenas 20% devem ser aplicados nas operações
+            // de day-trade.
+            yield return new object[]
+            {
+                new List<Movement.EquitMovement>
+                {
+                    new("PETR4", "Petróleo Brasileiro S/A", "Ações", B3ResponseConstants.TransferenciaLiquidacao, B3ResponseConstants.BuyOperationType, 7653, 1, 7653, new DateTime(2023, 01, 03), true),
+                    new("PETR4", "Petróleo Brasileiro S/A", "Ações", B3ResponseConstants.TransferenciaLiquidacao, B3ResponseConstants.SellOperationType, 8653, 1, 8653, new DateTime(2023, 01, 03), true),
+                    new("MGLU3", "Magazine Luiza", "Ações", B3ResponseConstants.Split, string.Empty, 5467, 1, 5467, new DateTime(2019, 01, 01)),
+                    new("MGLU3", "Magazine Luiza", "Ações", B3ResponseConstants.TransferenciaLiquidacao, B3ResponseConstants.SellOperationType, 6587, 1, 6587, new DateTime(2023, 01, 02))
+                }, 1
+            };
+            yield return new object[]
+            {
+                new List<Movement.EquitMovement>
+                {
+                    new("TSLA34", "Tesla Inc.", B3ResponseConstants.BDRs, B3ResponseConstants.ReverseSplit, string.Empty, 5467, 1, 5467, new DateTime(2019, 01, 01)),
+                    new("AMER3", "Americanas Ltda", B3ResponseConstants.Stocks, B3ResponseConstants.BonusShare, string.Empty, 5467, 1, 5467, new DateTime(2020, 01, 01)),
+                    new("PETR4", "Petróleo Brasileiro S/A", "Ações", B3ResponseConstants.TransferenciaLiquidacao, B3ResponseConstants.BuyOperationType, 7653, 1, 7653, new DateTime(2023, 01, 03), true),
+                    new("PETR4", "Petróleo Brasileiro S/A", "Ações", B3ResponseConstants.TransferenciaLiquidacao, B3ResponseConstants.SellOperationType, 8653, 1, 8653, new DateTime(2023, 01, 03), true),
+                    new("MGLU3", "Magazine Luiza", "Ações", B3ResponseConstants.Split, string.Empty, 5467, 1, 5467, new DateTime(2019, 01, 01)),
+                    new("MGLU3", "Magazine Luiza", "Ações", B3ResponseConstants.TransferenciaLiquidacao, B3ResponseConstants.SellOperationType, 6587, 1, 6587, new DateTime(2023, 01, 02))
+                }, 3
+            };
+        }
+        #endregion
+
         #region Desdobramentos
 
         // É importante destacar que o 'split' nesse caso está representando o retorno da B3 que, conforme alinhado, retornará QUANTOS ativos
