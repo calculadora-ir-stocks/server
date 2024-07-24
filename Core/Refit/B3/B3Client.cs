@@ -81,7 +81,7 @@ namespace Core.Refit.B3
 
                 // A B3 retorna a URL completa como a próxima página. Não podemos usar ela porque o Refit
                 // não vai permitir passar uma URL com baseUrl no parâmetro. Por isso, a baseURL é removida.
-                int baseUrlSize = "https://investidor.b3.com.br:2443/api".Length;
+                int baseUrlSize = "https://investidor.b3.com.br:2443/api/".Length;
                 var url = root.Links.Next!.Remove(0, baseUrlSize);
 
                 var assets = await b3Client.GetAccountMovementsByPage(accessToken, url);
