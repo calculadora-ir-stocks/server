@@ -7,6 +7,7 @@ namespace Core.Refit.B3
     public interface IB3Refit
     {
         [Get("/acesso/healthcheck")]
+        [QueryUriFormat(UriFormat.Unescaped)]
         Task<ApiResponse<HttpStatusCode>> B3HealthCheck([Authorize] string token);
 
         /// <summary>
@@ -16,6 +17,7 @@ namespace Core.Refit.B3
         /// <param name="referenceStartDate">Formato YYYY-MM-DD</param>
         /// <param name="referenceEndDate">Formato YYYY-MM-DD</param>
         [Get("/movement/v2/equities/investors/{cpf}?referenceStartDate={referenceStartDate}&referenceEndDate={referenceEndDate}")]
+        [QueryUriFormat(UriFormat.Unescaped)]
         Task<ApiResponse<Movement.Root?>> GetAccountMovements([Authorize] string token, string cpf, [Query] string referenceStartDate, [Query]  string referenceEndDate);
 
         /// <summary>
@@ -23,6 +25,7 @@ namespace Core.Refit.B3
         /// </summary>
         /// <param name="url">A URL retornada na propriedade <c>next</c> do retorno do endpoint <c>GetAccountMovements</c></param>
         [Get("/{url}")]
+        [QueryUriFormat(UriFormat.Unescaped)]
         Task<Movement.Root?> GetAccountMovementsByPage([Authorize] string token, string url);
 
         /// <summary>
@@ -30,6 +33,7 @@ namespace Core.Refit.B3
         /// </summary>
         /// <param name="cpf">Não deve conter caracteres especiais</param>
         [Get("/authorizations/investors/{cpf}")]
+        [QueryUriFormat(UriFormat.Unescaped)]
         Task<OptIn> OptIn([Authorize] string token, string cpf);
 
         /// <summary>
@@ -37,6 +41,7 @@ namespace Core.Refit.B3
         /// </summary>
         /// <param name="cpf">Não deve conter caracteres especiais</param>
         [Get("/authorization-investor/v1/optout/investor/{cpf}")]
+        [QueryUriFormat(UriFormat.Unescaped)]
         Task<ApiResponse<object>> OptOut([Authorize] string token, string cpf);
     }
 }

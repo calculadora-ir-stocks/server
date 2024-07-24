@@ -65,7 +65,7 @@ namespace Core.Services.B3Syncing
                     .ToString("yyyy-MM-dd");
 
 #if !DEBUG
-            var b3Response = await b3Client.GetAccountMovement(account.CPF, startDate, lastMonth, accountId);
+                var b3Response = await b3Client.GetAccountMovement(account.CPF, startDate, lastMonth, accountId);
 #else
                 var b3Response = GetBigBangMockedDataBeforeB3Contract();
 #endif
