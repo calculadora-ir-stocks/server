@@ -113,8 +113,6 @@ public class TaxesService : ITaxesService
 
     private TaxesDetailsResponse ToTaxesDetailsResponse(List<AssetIncomeTaxes> assets)
     {
-        logger.LogInformation($"Chegou aqui com movimentações. {JsonConvert.SerializeObject(assets)}");
-
         TaxesDetailsResponse response = new(
             totalTaxes: assets.Select(x => x.Taxes).Sum(),
             TaxesStatus.Pending,
