@@ -74,6 +74,7 @@ public class TaxesService : ITaxesService
             string endDate = DateTime.Now.AddDays(-1).ToString("yyyy-MM-dd");
 
             logger.LogInformation($"Now: {DateTime.Now}");
+            logger.LogInformation($"UtcNow: {DateTime.UtcNow}");
             logger.LogInformation($"Yesterday: {endDate}");
 
             /**
