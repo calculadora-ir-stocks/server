@@ -73,6 +73,9 @@ public class TaxesService : ITaxesService
             string startDate = DateTime.Now.ToString("yyyy-MM-01");
             string endDate = DateTime.Now.AddDays(-1).ToString("yyyy-MM-dd");
 
+            logger.LogInformation($"Now: {DateTime.Now}");
+            logger.LogInformation($"Yesterday: {endDate}");
+
             /**
              * A API da B3 não retorna dados caso D-1 seja sábado ou domingo.
              * Nesse caso, o D-1 da data final da consulta não pode ser sábado ou domingo, e sim sexta-feira.
