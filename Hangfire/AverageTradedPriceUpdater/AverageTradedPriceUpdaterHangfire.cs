@@ -38,7 +38,7 @@ namespace Core.Services.Hangfire.AverageTradedPriceUpdater
         {
             try
             {
-                if (DateTime.UtcNow.Day != 1) return;
+                if (DateTime.UtcNow.AddHours(-3).Day != 1) return;
 
                 var accounts = await accountRepository.GetAll();
 

@@ -64,31 +64,27 @@ public class TaxesService : ITaxesService
         try
         {
             // Caso seja dia 1, não há como obter os dados do mês atual já que a B3 disponibiliza os dados em D-1.
-            if (DateTime.Now.Day == 1)
+            if (DateTime.UtcNow.AddHours(-3).Day == 1)
             {
                 // Porém, sendo dia 1, o Worker já salvou os dados do mês passado na base.
-                return await Details(DateTime.Now.AddDays(-1).ToString("MM/yyyy"), accountId);
+                return await Details(DateTime.UtcNow.AddHours(-3).AddDays(-1).ToString("MM/yyyy"), accountId);
             }
 
-            string startDate = DateTime.Now.ToString("yyyy-MM-01");
-            string endDate = DateTime.Now.AddDays(-1).ToString("yyyy-MM-dd");
-
-            logger.LogInformation($"Now: {DateTime.Now}");
-            logger.LogInformation($"UtcNow: {DateTime.UtcNow}");
-            logger.LogInformation($"Yesterday: {endDate}");
+            string startDate = DateTime.UtcNow.AddHours(-3).ToString("yyyy-MM-01");
+            string endDate = DateTime.UtcNow.AddHours(-3).AddDays(-1).ToString("yyyy-MM-dd");
 
             /**
              * A API da B3 não retorna dados caso D-1 seja sábado ou domingo.
              * Nesse caso, o D-1 da data final da consulta não pode ser sábado ou domingo, e sim sexta-feira.
              */
 
-            if (DateTime.Now.DayOfWeek == DayOfWeek.Sunday)
+            if (DateTime.UtcNow.AddHours(-3).DayOfWeek == DayOfWeek.Sunday)
             {
-                endDate = DateTime.Now.AddDays(-2).ToString("yyyy-MM-dd");
+                endDate = DateTime.UtcNow.AddHours(-3).AddDays(-2).ToString("yyyy-MM-dd");
             }
-            if (DateTime.Now.DayOfWeek == DayOfWeek.Monday)
+            if (DateTime.UtcNow.AddHours(-3).DayOfWeek == DayOfWeek.Monday)
             {
-                endDate = DateTime.Now.AddDays(-3).ToString("yyyy-MM-dd");
+                endDate = DateTime.UtcNow.AddHours(-3).AddDays(-3).ToString("yyyy-MM-dd");
             }
 
             var account = await accountRepository.GetById(accountId) ?? throw new NotFoundException("Investidor", accountId.ToString());

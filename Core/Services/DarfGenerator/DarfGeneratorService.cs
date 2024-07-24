@@ -45,7 +45,7 @@ namespace Core.Services.DarfGenerator
                 throw new NotFoundException("Nenhum imposto foi encontrado para esse mês, logo, a DARF não pode ser gerada.");
 
             string taxesReferenceDate = taxes.Select(x => x.Month).First();
-            string today = DateTime.Now.ToString("dd/MM/yyyy");
+            string today = DateTime.UtcNow.AddHours(-3).ToString("dd/MM/yyyy");
 
             var response = await infoSimplesClient.GenerateDARF(
                 new GenerateDARFRequest
