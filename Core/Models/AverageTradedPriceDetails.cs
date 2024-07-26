@@ -16,11 +16,16 @@
         public int TradedQuantity { get; protected set; }
 
 
-        public void Update(double totalBought, int tradedQuantity)
+        public void UpdateAllProperties(double totalBought, int tradedQuantity)
         {
             TotalBought = totalBought;
             TradedQuantity = tradedQuantity;
             AverageTradedPrice = totalBought / tradedQuantity;
+        }
+
+        public void UpdateQuantity(int tradedQuantity)
+        {
+            TradedQuantity = tradedQuantity;
         }
     }
 }

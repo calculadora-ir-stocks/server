@@ -173,10 +173,7 @@ namespace stocks_unit_tests.Calculators
             };
 
             CalculateProfitAndAverageTradedPrice(movement, averageTradedPrices);
-
-            var expectedPrice = (totalBought + bonusShareOperationValue) / (bonusShareQuantity + quantity);
-
-            Assert.Equal(expectedPrice, averageTradedPrices.First().AverageTradedPrice);
+            Assert.Equal(9.09, Convert.ToDouble(averageTradedPrices.First().AverageTradedPrice.ToString("00.00")));
         }
         #endregion
 
@@ -210,10 +207,10 @@ namespace stocks_unit_tests.Calculators
             var nvdc34 = averageTradedPrices.Where(x => x.TickerSymbol.Equals("NVDC34")).First();
             var blmo11 = averageTradedPrices.Where(x => x.TickerSymbol.Equals("BLMO11")).First();
 
-            Assert.Equal(2117.83, Convert.ToDouble(petr4.AverageTradedPrice.ToString("0000.00")));
+            Assert.Equal(2101.17, Convert.ToDouble(petr4.AverageTradedPrice.ToString("0000.00")));
             Assert.Equal(113.33, Convert.ToDouble(googl34.AverageTradedPrice.ToString("000.00")));
             Assert.Equal(104, nvdc34.AverageTradedPrice);
-            Assert.Equal(23.99, Convert.ToDouble(blmo11.AverageTradedPrice.ToString("00.00")));
+            Assert.Equal(18.57, Convert.ToDouble(blmo11.AverageTradedPrice.ToString("00.00")));
         }
         #endregion
 
@@ -249,10 +246,10 @@ namespace stocks_unit_tests.Calculators
             // sem arredondar.
 
             Assert.Equal(224, month1.Taxes);
-            Assert.Equal(11.86, month3TaxesFormatted);
+            Assert.Equal(15.33, month3TaxesFormatted);
         }
 
-        [Theory(DisplayName = "Deve calcular corretamente o imposto após operações de desdobramento, grupamentos e bonificações.")]
+        [Theory(DisplayName = "Deve calcular corretamente o imposto após operações de desdobramento, grupamentos e bonificações (pt. 2).")]
         [MemberData(nameof(Part2DataSet))]
         public async Task TestIncomeTaxesAfterSpecialMovementsPart2(List<Movement.EquitMovement> movements)
         {
@@ -282,12 +279,12 @@ namespace stocks_unit_tests.Calculators
 
             Assert.Equal(2, month01.Taxes);
             Assert.Equal(0, month02.Taxes);
-            Assert.Equal(4.05, month03.Taxes);
-            Assert.Equal(20, month04.Taxes);
+            Assert.Equal(22.275, month03.Taxes);
+            Assert.Equal(30, month04.Taxes);
             Assert.Equal(0, month05.Taxes);
-            Assert.Equal(7.5, month06.Taxes);
-            Assert.Equal(12.50, Convert.ToDouble(month07.Taxes.ToString("00.00")));
-            Assert.Equal(16.11, Convert.ToDouble(month08.Taxes.ToString("00.00")));
+            Assert.Equal(15, month06.Taxes);
+            Assert.Equal(0, month07.Taxes);
+            Assert.Equal(15, Convert.ToDouble(month08.Taxes.ToString("00.00")));
         }
 
         public static IEnumerable<object[]> Part2DataSet()
@@ -306,18 +303,18 @@ namespace stocks_unit_tests.Calculators
 
                     // Mês 02
                     // IR: 0, teve prejuízo
-                    // Preço médio GOOGL34: 136,5
+                    // Preço médio 75,75
                     new("GOOGL34", "Google LLC", B3ResponseConstants.BDRs, B3ResponseConstants.TransferenciaLiquidacao, B3ResponseConstants.BuyOperationType, 100, 2, 50, new DateTime(2023, 02, 01)),
                     new("GOOGL34", "Google LLC", B3ResponseConstants.BDRs, B3ResponseConstants.TransferenciaLiquidacao, B3ResponseConstants.BuyOperationType, 203, 2, 101.50, new DateTime(2023, 02, 01)),
                     new("GOOGL34", "Google LLC", B3ResponseConstants.BDRs, B3ResponseConstants.TransferenciaLiquidacao, B3ResponseConstants.SellOperationType, 30, 2, 15, new DateTime(2023, 02, 01), true),
 
                     // Mês 03
-                    // Lucro swing-trade: 27
-                    // IR: 4,05
+                    // Lucro swing-trade: 148,5
+                    // IR: 22,275
                     new("GOOGL34", "Google LLC", B3ResponseConstants.BDRs, B3ResponseConstants.TransferenciaLiquidacao, B3ResponseConstants.SellOperationType, 300, 2, 150, new DateTime(2023, 03, 01)),
 
                     // Mês 04
-                    // IR: 20, teve prejuízo de -50 em day-trade, porém teve lucro de 100 em swing-trade. 20% no swing-trade por ser FII
+                    // IR: 20, teve prejuízo de -50 em day-trade, porém teve lucro de 150 em swing-trade. 20% no swing-trade por ser FII
                     new("BLMO11", "BVI OFFICE FUND II FII", B3ResponseConstants.FIIs, B3ResponseConstants.TransferenciaLiquidacao, B3ResponseConstants.BuyOperationType, 400, 2, 200, new DateTime(2023, 04, 01)),
                     new("BLMO11", "BVI OFFICE FUND II FII", B3ResponseConstants.FIIs, B3ResponseConstants.TransferenciaLiquidacao, B3ResponseConstants.SellOperationType, 150, 1, 150, new DateTime(2023, 04, 01), true),
                     new("BLMO11", "BVI OFFICE FUND II FII", B3ResponseConstants.FIIs, B3ResponseConstants.TransferenciaLiquidacao, B3ResponseConstants.SellOperationType, 350, 1, 350, new DateTime(2023, 04, 03)),
@@ -328,18 +325,18 @@ namespace stocks_unit_tests.Calculators
                     new("BOVA11", "Ibovespa", B3ResponseConstants.ETFs, B3ResponseConstants.TransferenciaLiquidacao, B3ResponseConstants.SellOperationType, 100, 1, 100, new DateTime(2023, 05, 02)),
 
                     // Mês 06
-                    // Lucro swing-trade: 50
-                    // IR: 7,5
+                    // Lucro swing-trade: 100
+                    // IR: 15
                     new("BOVA11", "Ibovespa", B3ResponseConstants.ETFs, B3ResponseConstants.TransferenciaLiquidacao, B3ResponseConstants.SellOperationType, 300, 1, 300, new DateTime(2023, 06, 01)),
                     new("BOVA11", "Ibovespa", B3ResponseConstants.ETFs, B3ResponseConstants.Split, string.Empty, 0, 2, 0, new DateTime(2023, 06, 20)), // Split 1 pra 3.
 
                     // Mês 07
-                    // Lucro swing-trade: 83,34
-                    // IR: 12,50
+                    // Lucro swing-trade: -50
+                    // IR: 0
                     new("BOVA11", "Ibovespa", B3ResponseConstants.ETFs, B3ResponseConstants.TransferenciaLiquidacao, B3ResponseConstants.SellOperationType, 150, 1, 150, new DateTime(2023, 07, 20)),
 
                     // Mês 08
-                    // Lucro day-trade: 5,56
+                    // Lucro day-trade: 0 (ganhou 50 (150 - 100) e perdeu 50 (50-100)).
                     // Lucro swing-trade: 100
                     // IR: 16,11
                     new("IVVB11", "iShares S&P 500", B3ResponseConstants.ETFs, B3ResponseConstants.TransferenciaLiquidacao, B3ResponseConstants.BuyOperationType, 1000, 10, 100, new DateTime(2023, 08, 01)),
@@ -389,6 +386,7 @@ namespace stocks_unit_tests.Calculators
                     new("BLMO11", "BVI OFFICE FUND II FII", B3ResponseConstants.FIIs, B3ResponseConstants.TransferenciaLiquidacao, B3ResponseConstants.BuyOperationType, 190.92, 3, 63.64, new DateTime(2023, 03, 01)), // Comprou 3 ativos por 63.64. Quantidade: 3
                     new("BLMO11", "BVI OFFICE FUND II FII", B3ResponseConstants.FIIs, B3ResponseConstants.TransferenciaLiquidacao, B3ResponseConstants.SellOperationType, 87.43, 1, 87.43, new DateTime(2023, 03, 01), true), // Vendeu 1 ativo por 87.43. Quantidade: 2
                     new("BLMO11", "BVI OFFICE FUND II FII", B3ResponseConstants.FIIs, B3ResponseConstants.BonusShare, string.Empty, 0, 10, 0, new DateTime(2023, 03, 02)), // Foi bonificado com 10 ativos. Quantidade: 12.
+
                     // B3 vai retornar 10 porque é a quantidade de ativos que será adicionado na posição do investidor após a bonificação.
                     new("BLMO11", "BVI OFFICE FUND II FII", B3ResponseConstants.FIIs, B3ResponseConstants.TransferenciaLiquidacao, B3ResponseConstants.BuyOperationType, 50.43, 1, 50.43, new DateTime(2023, 03, 03)), // Comprou 1 ativo por 50.43. Quantidade: 13
                     new("BLMO11", "BVI OFFICE FUND II FII", B3ResponseConstants.FIIs, B3ResponseConstants.TransferenciaLiquidacao, B3ResponseConstants.SellOperationType, 90, 2, 45, new DateTime(2023, 03, 04)), // Vendeu 2 ativos por 45. Quantidade: 11

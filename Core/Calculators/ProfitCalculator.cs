@@ -114,11 +114,6 @@ namespace Core.Calculators
                 return swingTradeOperations.Any(x => x.TickerSymbol.Contains(movement.TickerSymbol));
         }
 
-        private static bool InvestorSoldAllTicker(AverageTradedPriceDetails ticker)
-        {
-            return ticker.TradedQuantity == 0;
-        }
-
         private static bool AssetBoughtAfterB3MinimumDate(Movement.EquitMovement movement, List<AverageTradedPriceDetails> averageTradedPrices)
         {
             return averageTradedPrices.Where(x => x.TickerSymbol == movement.TickerSymbol).FirstOrDefault() != null;
@@ -149,21 +144,21 @@ namespace Core.Calculators
 
             if (sellOperation)
             {
-                totalBought = ticker.TotalBought - movement.OperationValue;
                 quantity = ticker.TradedQuantity - movement.EquitiesQuantity;
+                ticker.UpdateQuantity((int)quantity);
+
+                // Vendeu todos os ativos
+                if (ticker.TradedQuantity == 0)
+                {
+                    averageTradedPrices.Remove(ticker);
+                }
             }
             else
             {
                 totalBought = ticker.TotalBought + movement.OperationValue;
                 quantity = ticker.TradedQuantity + movement.EquitiesQuantity;
-            }
-
-            ticker.Update(totalBought, (int)quantity);
-
-            if (InvestorSoldAllTicker(ticker))
-            {
-                averageTradedPrices.Remove(ticker);
-            }
+                ticker.UpdateAllProperties(totalBought, (int)quantity);
+            }            
         }
 
         private static void UpdateProfitOrLoss(
@@ -226,27 +221,28 @@ namespace Core.Calculators
         private static void CalculateSplitOperation(Movement.EquitMovement movement, AverageTradedPriceDetails ticker)
         {
             // Segundo a B3, o desdobramento retornará a quantidade de ativos que serão adicionados na conta de um investidor.
+            // O preço médio é alterado após um desdobramento. Para calculá-lo, multiplique o total gasto no ativo e divida pela nova quantidade de ativos.
             int quantityAddedIntoPortfolio = (int)movement.EquitiesQuantity;
             double newQuantity = quantityAddedIntoPortfolio + ticker.TradedQuantity;
 
-            ticker.Update(ticker.TotalBought, (int)newQuantity);
+            ticker.UpdateAllProperties(ticker.TotalBought, (int)newQuantity);
         }
 
         private static void CalculateReverseSplitOperation(Movement.EquitMovement movement, AverageTradedPriceDetails ticker)
         {
             // Segundo a B3, o grupamento retornará a nova quantidade de ativos que o investidor terá em sua posição.
-            ticker.Update(ticker.TotalBought, (int)movement.EquitiesQuantity);
+            // O preço médio é alterado após um grupamento. Para calculá-lo, multiplique o total gasto no ativo e divida pela nova quantidade de ativos.
+            ticker.UpdateAllProperties(ticker.TotalBought, (int)movement.EquitiesQuantity);
         }
 
         private static void CalculateBonusSharesOperation(Movement.EquitMovement movement, AverageTradedPriceDetails ticker)
         {
             // Segundo a B3, a bonificação retornará a quantidade de ativos que serão adicionados na conta de um investidor.
+            // O preço médio é alterado após uma bonificação. Para calculá-lo, multiplique o total gasto no ativo e divida pela nova quantidade de ativos.
             int quantityAddedIntoPortfolio = (int)movement.EquitiesQuantity;
-
             double newQuantity = quantityAddedIntoPortfolio + ticker.TradedQuantity;
-            double newTotalBought = ticker.TotalBought + movement.OperationValue;
 
-            ticker.Update(newTotalBought, (int)newQuantity);
+            ticker.UpdateAllProperties(ticker.TotalBought, (int)newQuantity);
         }
     }
 }

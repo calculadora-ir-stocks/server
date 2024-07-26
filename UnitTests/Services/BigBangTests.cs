@@ -86,10 +86,10 @@ namespace stocks_unit_tests.Services
             double mus3 = averagePrices.Where(x => x.TickerSymbol.Equals("MUS3")).Select(x => x.AverageTradedPrice).First();
             double teta4 = averagePrices.Where(x => x.TickerSymbol.Equals("TETA4")).Select(x => x.AverageTradedPrice).First();
 
-            Assert.Equal(15, petr4);
-            Assert.Equal(57.5, vale3);
-            Assert.Equal(15760.5, mus3);
-            Assert.Equal(54, teta4);
+            Assert.Equal(58.5, petr4);
+            Assert.Equal(73, vale3);
+            Assert.Equal(17653.33.ToString(), String.Format("{0:0.00}", mus3));
+            Assert.Equal(24.67.ToString(), String.Format("{0:0.00}", teta4));
         }
 
         public static IEnumerable<object[]> TaxesFromMovementsWithMoreThanOneAssetPerOperationData()
@@ -200,8 +200,8 @@ namespace stocks_unit_tests.Services
                                 new("MUS3", "Music S.A.", "Ações", B3ResponseConstants.TransferenciaLiquidacao, B3ResponseConstants.BuyOperationType, 34640, 2, 17320, new DateTime(2023, 01, 10)),
                                 new("MUS3", "Music S.A.", "Ações", B3ResponseConstants.TransferenciaLiquidacao, B3ResponseConstants.SellOperationType, 21439, 1, 21439, new DateTime(2023, 01, 11)),
 
-                                new("TETA4", "Tetris S.A.", "Ações", B3ResponseConstants.TransferenciaLiquidacao, B3ResponseConstants.BuyOperationType, 20, 1, 20, new DateTime(2023, 01, 17)),
-                                new("TETA4", "Tetris S.A.", "Ações", B3ResponseConstants.TransferenciaLiquidacao, B3ResponseConstants.SellOperationType, 20, 2, 10, new DateTime(2023, 01, 17), true),
+                                new("TETA4", "Tetris S.A.", B3ResponseConstants.BDRs, B3ResponseConstants.TransferenciaLiquidacao, B3ResponseConstants.BuyOperationType, 20, 1, 20, new DateTime(2023, 01, 17)),
+                                new("TETA4", "Tetris S.A.", B3ResponseConstants.BDRs, B3ResponseConstants.TransferenciaLiquidacao, B3ResponseConstants.SellOperationType, 20, 2, 10, new DateTime(2023, 01, 17), true),
                             }
                         }
                     }
