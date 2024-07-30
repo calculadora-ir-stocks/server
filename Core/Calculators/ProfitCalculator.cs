@@ -25,6 +25,12 @@ namespace Core.Calculators
 
             foreach (var movement in movements)
             {
+                if (movement.TickerSymbol.Contains("XPSF11"))
+                {
+                    Console.WriteLine("Movement above \n");
+                    Console.WriteLine(movement);
+                }
+
                 if (movement.IsBuy())
                 {
                     UpdateOrAddAveragePrice(movement, averagePrices, sellOperation: false);
