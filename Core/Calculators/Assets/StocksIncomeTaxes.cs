@@ -14,8 +14,7 @@ namespace Core.Calculators.Assets
             string month
         )
         {
-            var profit = CalculateProfitAndAverageTradedPrice(movements, investorMovementDetails.AverageTradedPrices);
-
+            var profit = CalculateProfitAndAverageTradedPrice(movements, investorMovementDetails.AverageTradedPrices, month);
             if (profit.TickersBoughtBeforeB3Range.Any())
             {
                 // TODO estourar exceção?

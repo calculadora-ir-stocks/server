@@ -263,6 +263,18 @@ namespace stocks_unit_tests.Business
             Assert.Equal(expectedTaxes, stocks.Taxes);
         }
 
+        [Theory(DisplayName = "Deve calcular corretamente o prejuízo (caso de debug).")]
+        [MemberData(nameof(LossMovements))]
+        public void ShouldCalculateLossCorrectly(List<Movement.EquitMovement> movements)
+        {
+            InvestorMovementDetails response = new();
+
+            stocksCalculator.Execute(response, movements, "08");
+
+            AssetIncomeTaxes stocks = response.Assets.Where(x => x.AssetTypeId == Asset.Stocks).Single();
+            Assert.Equal(-6.28, Convert.ToDouble(stocks.SwingTradeProfit.ToString("00.00")));
+        }
+
         public static IEnumerable<object[]> DayTradeAndSwingTradeProfitLessThan20k()
         {
             // Lucro em operações de swing-trade e day-trade, mas < 20k foram vendidos. Nesse caso, apenas 20% devem ser aplicados nas operações
@@ -291,6 +303,21 @@ namespace stocks_unit_tests.Business
                     new("PETR4", "Petróleo Brasileiro S/A", "Ações", B3ResponseConstants.TransferenciaLiquidacao, B3ResponseConstants.SellOperationType, 6587, 1, 6587, new DateTime(2023, 01, 02)),
                     new("PETR4", "Petróleo Brasileiro S/A", "Ações", B3ResponseConstants.TransferenciaLiquidacao, B3ResponseConstants.BuyOperationType, 7653, 1, 7653, new DateTime(2023, 01, 03), true),
                     new("PETR4", "Petróleo Brasileiro S/A", "Ações", B3ResponseConstants.TransferenciaLiquidacao, B3ResponseConstants.SellOperationType, 19654, 1, 19654, new DateTime(2023, 01, 03), true)
+                }
+            };
+        }
+
+        public static IEnumerable<object[]> LossMovements()
+        {
+            yield return new object[]
+            {
+                new List<Movement.EquitMovement>
+                {
+                    new("PETR4", "Petróleo Brasileiro S/A", "Ações", B3ResponseConstants.TransferenciaLiquidacao, B3ResponseConstants.BuyOperationType, 58.31, 7, 8.33, new DateTime(2023, 08, 03)),
+                    new("PETR4", "Petróleo Brasileiro S/A", "Ações", B3ResponseConstants.TransferenciaLiquidacao, B3ResponseConstants.BuyOperationType, 8.4, 1, 8.4, new DateTime(2023, 08, 04)),
+                    new("PETR4", "Petróleo Brasileiro S/A", "Ações", B3ResponseConstants.TransferenciaLiquidacao, B3ResponseConstants.BuyOperationType, 84.2, 10, 8.42, new DateTime(2023, 08, 07)),
+                    new("PETR4", "Petróleo Brasileiro S/A", "Ações", B3ResponseConstants.TransferenciaLiquidacao, B3ResponseConstants.BuyOperationType, 93.17, 11, 8.47, new DateTime(2023, 08, 09)),
+                    new("PETR4", "Petróleo Brasileiro S/A", "Ações", B3ResponseConstants.TransferenciaLiquidacao, B3ResponseConstants.SellOperationType, 237.8, 29, 8.2, new DateTime(2023, 08, 23)),
                 }
             };
         }
