@@ -4,6 +4,7 @@ using Common.Helpers;
 using Core.Constants;
 using Core.Models;
 using Core.Models.B3;
+using Newtonsoft.Json;
 using System.Data;
 
 namespace Core.Calculators
@@ -28,7 +29,7 @@ namespace Core.Calculators
                 if (movement.TickerSymbol.Contains("XPSF11"))
                 {
                     Console.WriteLine("Movement above \n");
-                    Console.WriteLine(movement);
+                    Console.WriteLine(JsonConvert.SerializeObject(movement));
                 }
 
                 if (movement.IsBuy())
