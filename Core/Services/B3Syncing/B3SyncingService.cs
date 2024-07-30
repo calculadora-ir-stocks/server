@@ -66,6 +66,7 @@ namespace Core.Services.B3Syncing
 
 #if !DEBUG
                 var b3Response = await b3Client.GetAccountMovement(account.CPF, startDate, lastMonth, accountId);
+                Console.WriteLine(JsonConvert.SerializeObject(b3Response));
 #else
                 var b3Response = GetBigBangMockedDataBeforeB3Contract();
 #endif
