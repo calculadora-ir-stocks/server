@@ -104,6 +104,7 @@ public class TaxesService : ITaxesService
 
             Console.WriteLine(response.AverageTradedPrices.Count());
             Console.WriteLine(response.Assets.Count());
+            Console.WriteLine(accountId.ToString());
 
             return ToTaxesDetailsResponse(response.Assets);
         }
