@@ -91,16 +91,19 @@ public class TaxesService : ITaxesService
 
             if (account.Status == EnumHelper.GetEnumDescription(AccountStatus.SubscriptionExpired))
                 throw new ForbiddenException("O plano do usuário está expirado.");
-
+             
 #if !DEBUG
-            var b3Response = await b3Client.GetAccountMovement(account.CPF, startDate, endDate, account.Id);
-#else
             var b3Response = AddCurrentMonthSet();
+#else
+            var b3Response = await b3Client.GetAccountMovement(account.CPF, startDate, endDate, account.Id);
 #endif
             var response = await b3CalculatorService.Calculate(b3Response, account.Id);
 
             if (response is null || response.Assets.IsNullOrEmpty())
                 throw new NotFoundException("Nenhuma movimentação foi feita no mês atual.");
+
+            Console.WriteLine(response.AverageTradedPrices.Count());
+            Console.WriteLine(response.Assets.Count());
 
             return ToTaxesDetailsResponse(response.Assets);
         }
