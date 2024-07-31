@@ -28,7 +28,6 @@ namespace Core.Calculators
             foreach (var movement in movements)
             {
                 var x = averagePrices.Where(x => x.TickerSymbol == movement.TickerSymbol).FirstOrDefault();
-
                 if (x is not null) Console.WriteLine($"Ticker {movement.TickerSymbol} tem o PM de {x.AverageTradedPrice}, t.: {x.TotalBought} e q.: {x.TradedQuantity} em {month}");
 
                 if (movement.TickerSymbol.Contains("XPSF11"))

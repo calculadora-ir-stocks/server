@@ -126,7 +126,7 @@ public class TaxesService : ITaxesService
             List<Details> details = new();
             List<Movement> movements = new();
 
-            var tradedAssetsOnThisDay = assets.SelectMany(x => x.TradedAssets.Where(x => x.Day == day));
+            var tradedAssetsOnThisDay = assets.SelectMany(x => x.TradedAssets.Where(x => x.Day == day)).OrderBy(x => x.Day);
             string weekDay = string.Empty;
 
             foreach (var tradedAsset in tradedAssetsOnThisDay)
