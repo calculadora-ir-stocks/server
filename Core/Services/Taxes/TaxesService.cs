@@ -93,9 +93,9 @@ public class TaxesService : ITaxesService
                 throw new ForbiddenException("O plano do usuário está expirado.");
              
 #if !DEBUG
-            var b3Response = AddCurrentMonthSet();
-#else
             var b3Response = await b3Client.GetAccountMovement(account.CPF, startDate, endDate, account.Id);
+#else
+            var b3Response = AddCurrentMonthSet();
 #endif
             var response = await b3CalculatorService.Calculate(b3Response, account.Id);
 
