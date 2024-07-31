@@ -123,23 +123,18 @@ public class TaxesService : ITaxesService
             UtilsHelper.GetMonthAndYearName(DateTime.Now.ToString("MM/yyyy"))
         );
 
-        var days = assets.SelectMany(x => x.TradedAssets.Select(x => x.Day).Distinct());
+        var days = assets.SelectMany(x => x.TradedAssets.Select(x => x.Day)).OrderBy(x => x).Distinct();
 
         foreach (var day in days)
         {
             List<Details> details = new();
-            List<Movement> movements = new();
 
-            var tradedAssetsOnThisDay = assets.SelectMany(x => x.TradedAssets.Where(x => x.Day == day)).OrderBy(x => x.Day);
+            var tradedAssetsOnThisDay = assets.SelectMany(x => x.TradedAssets.Where(x => x.Day == day)).OrderBy(x => x.Day).ToList();
             string weekDay = string.Empty;
 
-            foreach (var tradedAsset in tradedAssetsOnThisDay)
+            foreach (var tradedAsset in tradedAssetsOnThisDay.ToList())
             {
-                if (weekDay.IsNullOrEmpty())
-                {
-                    string dayOfTheWeek = tradedAsset.Day.ToString();
-                    weekDay = $"{tradedAsset.DayOfTheWeek}, dia {dayOfTheWeek}";
-                }
+                if (weekDay.IsNullOrEmpty()) weekDay = $"{tradedAsset.DayOfTheWeek}, dia {tradedAsset.Day}";
 
                 details.Add(new Details(
                     tradedAsset.AssetTypeId,
@@ -150,12 +145,7 @@ public class TaxesService : ITaxesService
                     tradedAsset.Quantity
                 ));
             }
-
-            movements.Add(new Movement(weekDay, details));
-
-            response.Movements.AddRange(
-                movements
-            );
+            response.Movements.Add(new Movement(weekDay, details));
         }
 
         return response;
