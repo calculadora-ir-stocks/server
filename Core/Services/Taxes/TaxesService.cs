@@ -295,10 +295,8 @@ public class TaxesService : ITaxesService
         foreach (var day in days)
         {
             List<Details> details = new();
-            List<Movement> movements = new();
 
-            var tradedAssetsOnThisDay = assets.SelectMany(x => x.SerializedTradedAssets.Where(x => x.Day == day));
-
+            var tradedAssetsOnThisDay = assets.SelectMany(x => x.SerializedTradedAssets.Where(x => x.Day == day)).OrderBy(x => x.Day).ToList();
             string weekDay = string.Empty;
 
             foreach (var tradedAsset in tradedAssetsOnThisDay)
@@ -318,12 +316,7 @@ public class TaxesService : ITaxesService
                     tradedAsset.Quantity
                 ));
             }
-
-            movements.Add(new Movement(weekDay, details));
-
-            response.Movements.AddRange(
-                movements
-            );
+            response.Movements.Add(new Movement(weekDay, details));
         }
 
         return response;
