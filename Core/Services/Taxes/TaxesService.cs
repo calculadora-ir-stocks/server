@@ -290,7 +290,7 @@ public class TaxesService : ITaxesService
             year: UtilsHelper.GetMonthAndYearName(assets.ElementAt(0).Month)
         );
 
-        var days = assets.SelectMany(x => x.SerializedTradedAssets.Select(x => x.Day).Distinct());
+        var days = assets.SelectMany(x => x.SerializedTradedAssets.Select(x => x.Day)).Distinct();
 
         foreach (var day in days)
         {
