@@ -24,6 +24,7 @@ using Core.Services.Hangfire.AverageTradedPriceUpdater;
 using Core.Services.Plan;
 using Core.Services.Taxes;
 using Hangfire;
+using Hangfire.IncomeTaxesAdder;
 using Hangfire.PostgreSql;
 using Infrastructure.Repositories;
 using Infrastructure.Repositories.Account;
@@ -85,8 +86,9 @@ namespace Api
             services.AddTransient<IIncomeTaxesCalculator, InvestmentsFundsIncomeTaxes>();
             services.AddTransient<IIncomeTaxesCalculator, StocksIncomeTaxes>();
 
-            services.AddScoped<IAverageTradedPriceUpdaterHangfire, AverageTradedPriceUpdaterHangfire>();
-            services.AddScoped<IPlanExpirerHangfire, PlanExpirerHangfire>();
+            services.AddTransient<IAverageTradedPriceUpdaterHangfire, AverageTradedPriceUpdaterHangfire>();
+            services.AddTransient<IPlanExpirerHangfire, PlanExpirerHangfire>();
+            services.AddTransient<IIncomeTaxesAdderHangfire, IncomeTaxesAdderHangfire>();
 
             services.AddMvc(options => options.Filters.Add<NotificationFilter>());
         }
@@ -141,14 +143,18 @@ namespace Api
             RecurringJob.AddOrUpdate<IAverageTradedPriceUpdaterHangfire>(
                     nameof(AverageTradedPriceUpdaterHangfire),
                     x => x.Execute(),
-                    Cron.Monthly
-                );
+                    Cron.Monthly(1));
+
+            RecurringJob.AddOrUpdate<IIncomeTaxesAdderHangfire>(
+                nameof(IncomeTaxesAdderHangfire),
+                x => x.Execute(),
+                Cron.Monthly(2));
 
             RecurringJob.AddOrUpdate<IPlanExpirerHangfire>(
                 nameof(PlanExpirerHangfire),
                 x => x.Execute(),
-                Cron.Daily
-            );
+                Cron.Daily);
+
         }
 
         public static void Add3rdPartiesClients(this IServiceCollection services, IConfiguration configuration)

@@ -102,10 +102,6 @@ public class TaxesService : ITaxesService
             if (response is null || response.Assets.IsNullOrEmpty())
                 throw new NotFoundException("Nenhuma movimentação foi feita no mês atual.");
 
-            Console.WriteLine(response.AverageTradedPrices.Count());
-            Console.WriteLine(response.Assets.Count());
-            Console.WriteLine(accountId.ToString());
-
             return ToTaxesDetailsResponse(response.Assets);
         }
         catch (Exception e)

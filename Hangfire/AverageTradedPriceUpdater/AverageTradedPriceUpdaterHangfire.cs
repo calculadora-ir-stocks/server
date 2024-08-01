@@ -19,6 +19,7 @@ namespace Core.Services.Hangfire.AverageTradedPriceUpdater
         private readonly IAccountRepository accountRepository;
         private readonly IB3Client client;
         private readonly ILogger<AverageTradedPriceUpdaterHangfire> logger;
+        private const int DayToRunThisJob = 1;
 
         public AverageTradedPriceUpdaterHangfire
         (
@@ -38,7 +39,7 @@ namespace Core.Services.Hangfire.AverageTradedPriceUpdater
         {
             try
             {
-                if (DateTime.UtcNow.AddHours(-3).Day != 1) return;
+                if (DateTime.UtcNow.AddHours(-3).Day != DayToRunThisJob) return;
 
                 var accounts = await accountRepository.GetAll();
 

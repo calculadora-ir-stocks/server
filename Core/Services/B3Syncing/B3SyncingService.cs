@@ -151,26 +151,18 @@ namespace Core.Services.B3Syncing
         {
             foreach (var asset in assets)
             {
-                if (MonthHadProfitOrLoss(asset))
-                {
-                    incomeTaxes.Add(new IncomeTaxes
-                    (
-                        asset.Month,
-                        asset.Taxes,
-                        asset.TotalSold,
-                        asset.SwingTradeProfit,
-                        asset.DayTradeProfit,
-                        JsonConvert.SerializeObject(asset.TradedAssets),
-                        account,
-                        (int)asset.AssetTypeId
-                    ));
-                }
+                incomeTaxes.Add(new IncomeTaxes
+                (
+                    asset.Month,
+                    asset.Taxes,
+                    asset.TotalSold,
+                    asset.SwingTradeProfit,
+                    asset.DayTradeProfit,
+                    JsonConvert.SerializeObject(asset.TradedAssets),
+                    account,
+                    (int)asset.AssetTypeId
+                ));
             }
-        }
-
-        private static bool MonthHadProfitOrLoss(AssetIncomeTaxes asset)
-        {
-            return asset.SwingTradeProfit != 0 || asset.DayTradeProfit != 0;
         }
 
         /// <summary>

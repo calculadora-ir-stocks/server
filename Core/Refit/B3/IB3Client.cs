@@ -7,6 +7,7 @@ namespace Core.Refit.B3
     public interface IB3Client
     {
         Task<HttpStatusCode> B3HealthCheck();
+
         /// <summary>
         /// Dados referentes a movimentação de ações, fundos imobiliários, ouro e ETF.
         /// </summary>
