@@ -136,7 +136,6 @@ namespace Infrastructure.Repositories.Taxes
                 FROM ""IncomeTaxes"" it
                 INNER JOIN ""Assets"" a ON it.""AssetId"" = a.""Id""
                 WHERE RIGHT(it.""Month"", 4) LIKE @Year 
-                AND CAST(PGP_SYM_DECRYPT(it.""Taxes""::bytea, @Key) as double precision) > 0
                 AND it.""AccountId"" = @AccountId;
             ";
 
