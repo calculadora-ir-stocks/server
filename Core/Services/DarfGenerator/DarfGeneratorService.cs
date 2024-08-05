@@ -63,7 +63,7 @@ namespace Core.Services.DarfGenerator
 
             string? observation = null;
 
-            if (response.Data[0].TotalTaxes.TotalWithFineAndInterests < 10)
+            if (response.Data[0].TotalWithFineAndInterests < 10)
             {
                 observation = "Valor total da DARF é inferior ao valor mínimo de R$10,00. \n" +
                     "Para pagá-la, adicione esse imposto em algum mês subsequente até que o valor total seja igual ou maior que R$10,00.";
@@ -73,9 +73,9 @@ namespace Core.Services.DarfGenerator
 
             return new DARFResponse(
                 response.Data[0].BarCode,
-                response.Data[0].TotalTaxes.TotalWithFineAndInterests,
-                double.Parse(response.Data[0].TotalTaxes.Fine),
-                double.Parse(response.Data[0].TotalTaxes.Interests),
+                response.Data[0].TotalWithFineAndInterests,
+                double.Parse(response.Data[0].Fine),
+                double.Parse(response.Data[0].Interests),
                 observation,
                 monthsToCompensate
             );

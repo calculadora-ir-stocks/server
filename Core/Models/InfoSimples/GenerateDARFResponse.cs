@@ -5,7 +5,7 @@ namespace Core.Models.InfoSimples
     public class GenerateDARFResponse
     {
         [JsonProperty("data")]
-        public List<Data> Data { get; init; } = new();
+        public List<Data> Data { get; set; } = new();
     }
 
     public class Data
@@ -13,19 +13,19 @@ namespace Core.Models.InfoSimples
         [JsonProperty("codigo_barras")]
         public string BarCode { get; set; }
 
-        [JsonProperty("totais")]
-        public Totais TotalTaxes { get; init; } = new();
+        [JsonProperty("normalizado_valor_multa")]
+        public string Fine { get; set; }
+
+        [JsonProperty("normalizado_valor_juros_encargos")]
+        public string Interests { get; set; }
+
+        [JsonProperty("normalizado_valor_total")]
+        public double TotalWithFineAndInterests { get; set; }
     }
 
     public class Totais
     {
-        [JsonProperty("multa")]
-        public string Fine { get; init; } = "5453";
-
-        [JsonProperty("juros")]
-        public string Interests { get; init; } = "4324";
-
-        [JsonProperty("normalizado_total")]
-        public double TotalWithFineAndInterests { get; init; } = 423423;
+        [JsonProperty("normalizado_valor_total")]
+        public double TotalWithFineAndInterests { get; set; }
     }
 }
