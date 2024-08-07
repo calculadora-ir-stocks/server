@@ -18,7 +18,6 @@ namespace Core.Calculators.Assets
             if (profit.TickersBoughtBeforeB3Range.Any())
             {
                 // TODO estourar exceção?
-                return;
             }
 
             var dayTradeProfit = profit.DayTradeOperations.Select(x => x.Profit).Sum();
