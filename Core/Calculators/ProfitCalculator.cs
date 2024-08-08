@@ -1,11 +1,9 @@
-﻿using Azure;
-using common.Helpers;
+﻿using common.Helpers;
 using Common.Helpers;
 using Core.Constants;
 using Core.Models;
 using Core.Models.B3;
 using Newtonsoft.Json;
-using Npgsql.EntityFrameworkCore.PostgreSQL.Storage.Internal.Mapping;
 using System.Data;
 
 namespace Core.Calculators
@@ -21,21 +19,12 @@ namespace Core.Calculators
         /// Além disso, atualiza a lista <c>averagePrices</c> com os novos preços médios e, caso algum ativo
         /// tenha sido totalmente vendido, o remove da lista.
         /// </summary>
-        public static CalculateProfitResponse CalculateProfitAndAverageTradedPrice(IEnumerable<Movement.EquitMovement> movements, List<AverageTradedPriceDetails> averagePrices, string? month = null)
+        public static CalculateProfitResponse CalculateProfitAndAverageTradedPrice(IEnumerable<Movement.EquitMovement> movements, List<AverageTradedPriceDetails> averagePrices)
         {
             CalculateProfitResponse response = new();
 
             foreach (var movement in movements)
             {
-                var x = averagePrices.Where(x => x.TickerSymbol == movement.TickerSymbol).FirstOrDefault();
-                if (x is not null) Console.WriteLine($"Ticker {movement.TickerSymbol} tem o PM de {x.AverageTradedPrice}, t.: {x.TotalBought} e q.: {x.TradedQuantity} em {month}");
-
-                if (movement.TickerSymbol.Contains("XPSF11"))
-                {
-                    Console.WriteLine("Movement above \n");
-                    Console.WriteLine(JsonConvert.SerializeObject(movement));
-                }
-
                 if (movement.IsBuy())
                 {
                     UpdateOrAddAveragePrice(movement, averagePrices, sellOperation: false);
