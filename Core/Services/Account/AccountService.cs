@@ -1,8 +1,11 @@
 ﻿using common.Helpers;
 using Common.Exceptions;
 using Common.Options;
+using Core.Models.Api.Requests.Account;
 using Core.Refit.B3;
+using Infrastructure.Models;
 using Infrastructure.Repositories.Account;
+using Infrastructure.Repositories.AverageTradedPrice;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -10,14 +13,17 @@ namespace Core.Services.Account
 {
     public class AccountService : IAccountService
     {
-        private readonly IAccountRepository repository;
+        private readonly IAccountRepository accountRepository;
+        private readonly IAverageTradedPriceRepostory averageTradedPriceRepository;
         private readonly IB3Client b3Client;
         private readonly IOptions<B3ApiOptions> b3Options;
         private readonly ILogger<AccountService> logger;
 
-        public AccountService(IAccountRepository repository, IB3Client b3Client, IOptions<B3ApiOptions> b3Options, ILogger<AccountService> logger)
+        public AccountService(IAccountRepository accountRepository, IAverageTradedPriceRepostory averageTradedPriceRepository, 
+            IB3Client b3Client, IOptions<B3ApiOptions> b3Options, ILogger<AccountService> logger)
         {
-            this.repository = repository;
+            this.accountRepository = accountRepository;
+            this.averageTradedPriceRepository = averageTradedPriceRepository;
             this.b3Client = b3Client;
             this.b3Options = b3Options;
             this.logger = logger;
@@ -27,8 +33,8 @@ namespace Core.Services.Account
         {
             try
             {
-                var account = await repository.GetById(accountId) ?? throw new NotFoundException("Investidor", accountId.ToString());
-                repository.Delete(account);
+                var account = await accountRepository.GetById(accountId) ?? throw new NotFoundException("Investidor", accountId.ToString());
+                accountRepository.Delete(account);
                 logger.LogInformation("O usuário de id {accountId} deletou a sua conta da plataforma.", accountId);
 
                 var response = await b3Client.OptOut(UtilsHelper.RemoveSpecialCharacters(account.CPF));
@@ -43,7 +49,7 @@ namespace Core.Services.Account
 
         public async Task<Guid> GetByAuth0Id(string auth0Id)
         {
-            return await repository.GetByAuth0IdAsNoTracking(auth0Id);
+            return await accountRepository.GetByAuth0IdAsNoTracking(auth0Id);
         }
 
         public string GetOptInLink()
@@ -56,8 +62,21 @@ namespace Core.Services.Account
 
         public async Task<bool> OptIn(Guid accountId)
         {
-            var account = await repository.GetById(accountId) ?? throw new NotFoundException("Investidor", accountId.ToString());
+            var account = await accountRepository.GetById(accountId) ?? throw new NotFoundException("Investidor", accountId.ToString());
             return await b3Client.OptIn(UtilsHelper.RemoveSpecialCharacters(account.CPF));
+        }
+
+        public async Task SetupAverageTradedPrices(SetupAverageTradedPriceRequest request, Guid accountId)
+        {
+            var account = await accountRepository.GetById(accountId);
+            if (account is null) throw new NotFoundException("Investidor", accountId.ToString());
+
+            // TODO bulk insert
+            foreach (var ticker in request.AverageTradedPrices)
+            {
+                AverageTradedPrice averageTradedPrice = new(ticker.Ticker, ticker.AveragePrice, ticker.TotalBought, ticker.Quantity, account, DateTime.Now);
+                await averageTradedPriceRepository.AddAsync(averageTradedPrice);
+            }
         }
     }
 }

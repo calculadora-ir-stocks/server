@@ -10,7 +10,7 @@
             IsTOSAccepted = isTOSAccepted;
         }
 
-        public string Auth0Id { get; init; }
+        public string Auth0Id { get; set; }
         public string CPF { get; init; }
         public string BirthDate { get; init; }
         public bool IsTOSAccepted { get; init; }

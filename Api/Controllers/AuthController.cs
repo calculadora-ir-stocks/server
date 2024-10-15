@@ -24,8 +24,12 @@ public class AuthController : BaseController
     [HttpPost("sign-up")]
     public async Task<IActionResult> SignUp([FromBody] SignUpRequest request)
     {
+        if (string.IsNullOrEmpty(request.Auth0Id)) 
+            request.Auth0Id = Guid.NewGuid().ToString();
+
         var account = await service.SignUp(request);
         if (account.IsInvalid) return BadRequest();
+
         return Ok(new { accountId = account.Id });
     }
 }

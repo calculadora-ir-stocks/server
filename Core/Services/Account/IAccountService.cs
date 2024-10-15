@@ -1,4 +1,6 @@
-﻿namespace Core.Services.Account
+﻿using Core.Models.Api.Requests.Account;
+
+namespace Core.Services.Account
 {
     public interface IAccountService
     {
@@ -17,5 +19,10 @@
 
         /// <returns>O link de opt-in da B3.</returns>
         string GetOptInLink();
+
+        /// <summary>
+        /// Configura o preço médio inicial (se algum) de uma conta cadastrada.
+        /// </summary>
+        Task SetupAverageTradedPrices(SetupAverageTradedPriceRequest request, Guid accountId);
     }
 }
