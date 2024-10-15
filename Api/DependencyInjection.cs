@@ -140,21 +140,38 @@ namespace Api
 
         public static void ConfigureHangfireServices(this WebApplication _)
         {
-            RecurringJob.AddOrUpdate<IAverageTradedPriceUpdaterHangfire>(
-                    nameof(AverageTradedPriceUpdaterHangfire),
-                    x => x.Execute(),
-                    Cron.Monthly(1));
+            /** O IncomeTaxesAdderHangfire precisa ser rodado antes do AverageTradedPriceUpdaterHangfire. Isso ocorre por conta da ordem dos eventos.
+             *  
+             *  O preço médio é calculado manualmente pois essa é uma informação que a B3 não nos retorna.
+             *  Ou seja, rodar o Big Bang é necessário principalmente para calcular o preço médio de cada ativo do investidor.
+             *  
+             *  Os impostos e preços médios salvos na base, no entanto, são referentes até o último dia do mês anterior.
+             *  
+             *  Suponhamos que hoje seja o mês de abril e nos registramos no app. O Big Bang vai salvar o preço médio até o último dia do mês anterior, ou seja, dia
+             *  31 de março.
+             *  
+             *  Supondo que hoje o mês virou e estamos em maio, o job IncomeTaxesAdderHangfire vai rodar as movimentações desde dia 
+             *  01 de abril e usará os preços médios salvos desde o dia 31 março - ou seja, a ordem cronológica das informações estará correta.
+             *  
+             *  Quando o job IncomeTaxesAdderHangfire rodar, ele vai calcular e salvar o imposto do mês anterior na base de dados.
+             *  Depois do imposto ter sido salvo, aí sim o job AverageTradedPriceUpdaterHangfire irá rodar. Nele, o preço médio das operações referentes à
+             *  maio e o mesmo processo se repetirá no mês de junho.
+             */
 
             RecurringJob.AddOrUpdate<IIncomeTaxesAdderHangfire>(
                 nameof(IncomeTaxesAdderHangfire),
                 x => x.Execute(),
-                Cron.Monthly(2));
+                "* * * * *"); // Às 4:00 da manhã do dia 01 de todo mês.
+
+            RecurringJob.AddOrUpdate<IAverageTradedPriceUpdaterHangfire>(
+                nameof(AverageTradedPriceUpdaterHangfire),
+                x => x.Execute(),
+                "0 6 1 * *"); // Às 6:00 da manhã do dia 01 a cada mês.
 
             RecurringJob.AddOrUpdate<IPlanExpirerHangfire>(
                 nameof(PlanExpirerHangfire),
                 x => x.Execute(),
                 Cron.Daily);
-
         }
 
         public static void Add3rdPartiesClients(this IServiceCollection services, IConfiguration configuration)

@@ -64,12 +64,8 @@ namespace Core.Services.B3Syncing
                     .AddDays(-1)
                     .ToString("yyyy-MM-dd");
 
-#if !DEBUG
                 var b3Response = await b3Client.GetAccountMovement(account.CPF, startDate, lastMonth, accountId);
                 Console.WriteLine(JsonConvert.SerializeObject(b3Response));
-#else
-                var b3Response = GetBigBangMockedDataBeforeB3Contract();
-#endif
 
                 var calculatedTaxesResponse = await b3CalculatorService.Calculate(b3Response, accountId);
 

@@ -43,8 +43,8 @@ namespace Core.Services.Hangfire.AverageTradedPriceUpdater
 
                 var accounts = await accountRepository.GetAll();
 
-                string lastMonthFirstDay = GetLastMonthFirstDay();
-                string lastMonthFinalDay = GetLastMonthFinalDay();
+                string lastMonthFirstDay = DateTime.Now.AddMonths(-1).ToString("yyyy-MM-01");
+                string lastMonthFinalDay = GetLastMonthLastDay();
 
                 // TODO background job? we dont need multithread
                 foreach (var account in accounts)
@@ -136,7 +136,7 @@ namespace Core.Services.Hangfire.AverageTradedPriceUpdater
                 .ToList();
         }
 
-        private static string GetLastMonthFinalDay()
+        private static string GetLastMonthLastDay()
         {
             int yearInTheLastMonth = DateTime.Now.AddMonths(-1).Year;
             string lastMonth = FormatLastMonth(DateTime.Now.AddMonths(-1).Month);
@@ -156,11 +156,6 @@ namespace Core.Services.Hangfire.AverageTradedPriceUpdater
                 return $"0{month}";
 
             return month.ToString();
-        }
-
-        private static string GetLastMonthFirstDay()
-        {
-            return DateTime.Now.AddMonths(-1).ToString("yyyy-MM-01");
         }
 
         private static Root GenerateMockMovements()
