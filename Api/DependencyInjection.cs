@@ -108,20 +108,10 @@ namespace Api
             {
                 options.Authority = builder.Configuration["Auth0:Domain"];
                 options.Audience = builder.Configuration["Auth0:Audience"];
-                options.TokenValidationParameters = new TokenValidationParameters
-                {
-                    NameClaimType = ClaimTypes.NameIdentifier
-                };
             });
 
             builder.Services.AddAuthorization(options =>
             {
-                options.AddPolicy(
-                    "read:taxes",
-                    policy => policy.Requirements.Add(
-                        new HasScopeRequirement("read:taxes", builder.Configuration["Auth0:Domain"])
-                    )
-                );
                 options.AddPolicy(
                     "read:own_information",
                     policy => policy.Requirements.Add(
@@ -129,6 +119,8 @@ namespace Api
                     )
                 );
             });
+
+            builder.Services.AddSingleton<IAuthorizationHandler, HasScopeHandler>();
         }
 
         public static void ConfigureHangfireDatabase(this IServiceCollection services, string connectionString)
