@@ -6,6 +6,7 @@ using Hangfire;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddAuth0Authentication(builder);
 builder.Services.AddControllers();
 
 builder.Services.AddEndpointsApiExplorer();
@@ -42,8 +43,6 @@ builder.Services.AddStripeServices(builder.Configuration);
 builder.Services.AddServices(builder);
 builder.Services.Add3rdPartiesClients(builder.Configuration);
 builder.Services.AddRepositories();
-
-builder.Services.AddAuth0Authentication(builder);
 
 builder.Services.AddRouting(options => options.LowercaseUrls = true);
 
