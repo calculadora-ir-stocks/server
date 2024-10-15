@@ -1,3 +1,4 @@
+using Core.Models.Api.Requests.Account;
 using Core.Services.Account;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -65,5 +66,16 @@ public class AccountController : BaseController
             message = $"A conta do usuário {accountId} foi deletada com sucesso, mas a B3 não autorizou o desvínculo.";
 
         return Ok(new { message, successOptOut = successfullOptOut });
+    }
+
+    /// <summary>
+    /// Configura o preço médio inicial de um investidor (se algum).
+    /// Esses preços serão usados posteriormente pelo Big Bang para o cálculo de imposto.
+    /// </summary>
+    [HttpPost("average-prices-setup/{accountId}")]
+    public async Task<IActionResult> SetupAverageTradedPrices(Guid accountId, [FromBody] SetupAverageTradedPriceRequest request)
+    {
+        await service.SetupAverageTradedPrices(request, accountId);
+        return Ok(new { message = "Os preços médios foram inseridos com sucesso." });
     }
 }
