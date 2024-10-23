@@ -9,6 +9,7 @@ using Infrastructure.Models;
 using Infrastructure.Repositories.Account;
 using Infrastructure.Repositories.AverageTradedPrice;
 using Microsoft.Extensions.Logging;
+using Microsoft.Identity.Client;
 using static Core.Models.B3.Movement;
 
 namespace Core.Services.Hangfire.AverageTradedPriceUpdater
@@ -37,8 +38,11 @@ namespace Core.Services.Hangfire.AverageTradedPriceUpdater
 
         public async Task Execute()
         {
+            Guid accountId = Guid.Empty;
+
             try
             {
+
                 if (DateTime.UtcNow.AddHours(-3).Day != DayToRunThisJob) return;
 
                 var accounts = await accountRepository.GetAll();
@@ -49,6 +53,8 @@ namespace Core.Services.Hangfire.AverageTradedPriceUpdater
                 // TODO background job? we dont need multithread
                 foreach (var account in accounts)
                 {
+                    accountId = account.Id;
+
                     Root? lastMonthMovements = null;
 #if DEBUG
                     lastMonthMovements = GenerateMockMovements();
@@ -85,7 +91,7 @@ namespace Core.Services.Hangfire.AverageTradedPriceUpdater
             }
             catch (Exception e)
             {
-                logger.LogError(e, "Ocorreu um erro ao rodar o job de atualização de preço médio de todos os investidores");
+                logger.LogError(e, $"Ocorreu um erro ao rodar o job de atualização de preço médio para o investidor de id {accountId}.");
                 throw;
             }
         }

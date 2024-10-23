@@ -6,6 +6,7 @@ using Infrastructure.Models;
 using Infrastructure.Repositories.Account;
 using Infrastructure.Repositories.Taxes;
 using Microsoft.Extensions.Logging;
+using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
 
 namespace Hangfire.IncomeTaxesAdder
@@ -48,7 +49,7 @@ namespace Hangfire.IncomeTaxesAdder
                     string lastMonth = new DateTime(year: DateTime.Now.Year, month: DateTime.Now.Month, day: 1).AddDays(-1).ToString("MM-yyyy");
                     var incomeTaxes = await incomeTaxesRepository.GetSpecifiedMonthTaxes(lastMonth, account.Id);
 
-                    if (incomeTaxes is null)
+                    if (incomeTaxes.IsNullOrEmpty())
                     {
                         string startDate = new DateTime(year: DateTime.Now.Year, month: DateTime.Now.Month, day: 1).AddDays(-1).ToString("yyyy-MM-01");
                         string endDate = new DateTime(year: DateTime.Now.Year, month: DateTime.Now.Month, day: 1).AddDays(-1).ToString("yyyy-MM-dd");

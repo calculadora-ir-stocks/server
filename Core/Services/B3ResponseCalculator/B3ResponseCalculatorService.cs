@@ -76,7 +76,7 @@ namespace Core.Services.B3ResponseCalculator
                     logger.LogError("A B3 informou que no dia {date} o ticker {ticker} foi bonificado. " +
                         "Porém, o mesmo não foi encontrado na base da Fintz.", bonusShare.ReferenceDate, bonusShare.TickerSymbol);
 
-                    throw new BadGatewayException("O evento de bonificação da B3 não foi encontrado na base da Fintz.");
+                    throw new BadRequestException("O evento de bonificação da B3 não foi encontrado na base da Fintz.");
                 }
 
                 bonusShare.UnitPrice = bonusShareInformation.Price;
