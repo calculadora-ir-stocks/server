@@ -54,7 +54,9 @@ namespace Api
         {
             // Scope handler
             builder.Services.AddSingleton<IAuthorizationHandler, HasScopeHandler>();
-            builder.Services.AddScoped<IAuthorizationHandler, CanAccessResourceHandler>();
+
+            // TODO enquanto eu que consumir os endpoints, não teremos esta porra, porque o token gerado por mim pelo Auth0 não põe o AccountId no subject do JWT.
+            //builder.Services.AddScoped<IAuthorizationHandler, CanAccessResourceHandler>();
 
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 
