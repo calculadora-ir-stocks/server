@@ -185,7 +185,7 @@ namespace stocks_unit_tests.Hangfire.Value
                             {
                                 new()
                                 {
-                                    ProductTypeName = "Ação",
+                                    ProductTypeName = "Ações",
                                     TickerSymbol = "PETR4",
                                     CorporationName = "Petrobras",
                                     MovementType = B3ResponseConstants.TransferenciaLiquidacao,
@@ -196,7 +196,7 @@ namespace stocks_unit_tests.Hangfire.Value
                                 },
                                 new()
                                 {
-                                    ProductTypeName = "Ação",
+                                    ProductTypeName = "Ações",
                                     TickerSymbol = "PETR4",
                                     CorporationName = "Petrobras",
                                     MovementType = B3ResponseConstants.TransferenciaLiquidacao,
@@ -218,7 +218,7 @@ namespace stocks_unit_tests.Hangfire.Value
                                 },
                                 new()
                                 {
-                                    ProductTypeName = "Ação",
+                                    ProductTypeName = "Ações",
                                     TickerSymbol = "VALE3",
                                     CorporationName = "Vale S.A.",
                                     MovementType = B3ResponseConstants.TransferenciaLiquidacao,
@@ -229,7 +229,7 @@ namespace stocks_unit_tests.Hangfire.Value
                                 },
                                 new()
                                 {
-                                    ProductTypeName = "Ação",
+                                    ProductTypeName = "Ações",
                                     TickerSymbol = "VALE3",
                                     CorporationName = "Vale S.A.",
                                     MovementType = B3ResponseConstants.TransferenciaLiquidacao,
@@ -240,7 +240,7 @@ namespace stocks_unit_tests.Hangfire.Value
                                 },
                                 new()
                                 {
-                                    ProductTypeName = "Ação",
+                                    ProductTypeName = "Ações",
                                     TickerSymbol = "MGLU3",
                                     CorporationName = "Magazine Luiza S.A.",
                                     MovementType = B3ResponseConstants.TransferenciaLiquidacao,
@@ -251,7 +251,7 @@ namespace stocks_unit_tests.Hangfire.Value
                                 },
                                 new()
                                 {
-                                    ProductTypeName = "Ação",
+                                    ProductTypeName = "Ações",
                                     TickerSymbol = "MGLU3",
                                     CorporationName = "Magazine Luiza S.A.",
                                     MovementType = B3ResponseConstants.TransferenciaLiquidacao,
@@ -259,7 +259,30 @@ namespace stocks_unit_tests.Hangfire.Value
                                     OperationValue = 4.50,
                                     EquitiesQuantity = 200,
                                     ReferenceDate = new DateTime(2022, 05, 05)
-                                }
+                                },
+                                new()
+                                {
+                                    ProductTypeName = "BDR - Brazilian Depositary Receipts",
+                                    TickerSymbol = "TSLA11",
+                                    CorporationName = "Tesla Inc.",
+                                    MovementType = B3ResponseConstants.TransferenciaLiquidacao,
+                                    OperationType = B3ResponseConstants.BuyOperationType,
+                                    OperationValue = 903.43,
+                                    EquitiesQuantity = 1,
+                                    ReferenceDate = new DateTime(2022, 06, 22)
+                                },
+                                new()
+                                {
+                                    ProductTypeName = "BDR - Brazilian Depositary Receipts",
+                                    TickerSymbol = "TSLA11",
+                                    CorporationName = "Tesla Inc.",
+                                    MovementType = B3ResponseConstants.TransferenciaLiquidacao,
+                                    OperationType = B3ResponseConstants.SellOperationType,
+                                    OperationValue = 3070.86,
+                                    UnitPrice = 1535.43,
+                                    EquitiesQuantity = 2,
+                                    ReferenceDate = new DateTime(2022, 06, 22)
+                                },
                             }
                         }
                     }
@@ -270,7 +293,7 @@ namespace stocks_unit_tests.Hangfire.Value
                 },
                 new List<Answer>()
                 {
-                    new("TSLA11", 1222.068, 6110.34, 3)
+                    new("TSLA11", 1356.486, 6782.43, 3)
                 }
             };
         }

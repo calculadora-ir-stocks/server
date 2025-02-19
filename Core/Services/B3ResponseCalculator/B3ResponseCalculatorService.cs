@@ -42,9 +42,6 @@ namespace Core.Services.B3ResponseCalculator
                 throw new NotFoundException("O usuário não possui nenhuma movimentação até então.");
 
             SetDayTradeMovementsAsDayTrade(movements);
-
-            // A B3 não retorna todas as informações de bonificações que precisamos. Por isso, uma base externa e manualmente gerenciada em nossa base - a Fintz - é
-            // utilizada.
             await SetBonusShareUnitPriceValue(movements);
 
             Dictionary<string, List<EquitMovement>> monthlyMovements = new();
@@ -62,6 +59,9 @@ namespace Core.Services.B3ResponseCalculator
 
         private async Task SetBonusShareUnitPriceValue(List<EquitMovement> movements)
         {
+            // A B3 não retorna todas as informações de bonificações que precisamos. Por isso, uma base externa e manualmente gerenciada em nossa base - a Fintz - é
+            // utilizada.
+
             var bonusShareMovements = movements.Where(x => x.MovementType.Equals(B3ResponseConstants.BonusShare));
             if (bonusShareMovements.IsNullOrEmpty()) return;
 
@@ -90,7 +90,9 @@ namespace Core.Services.B3ResponseCalculator
 
             var movements = response.Data.EquitiesPeriods.EquitiesMovements;
 
-            return movements.Where(x => x.IsBuy()|| x.IsSell() ||
+            return movements.Where(x => 
+                    x.IsBuy() ||
+                    x.IsSell() ||
                     x.MovementType.Equals(B3ResponseConstants.Split) ||
                     x.MovementType.Equals(B3ResponseConstants.ReverseSplit) ||
                     x.MovementType.Equals(B3ResponseConstants.BonusShare)).ToList();

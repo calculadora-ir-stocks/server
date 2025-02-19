@@ -15,9 +15,10 @@ namespace Core.Calculators.Assets
         )
         {
             var profit = CalculateProfitAndAverageTradedPrice(movements, investorMovementDetails.AverageTradedPrices);
+
             if (profit.TickersBoughtBeforeB3Range.Any())
             {
-                // TODO estourar exceção?
+                throw new Exception($"O Stocks IR identificou os seguintes ativos comprados antes de 01/11/2019: {profit.TickersBoughtBeforeB3Range.Select(x=> x)}");
             }
 
             var dayTradeProfit = profit.DayTradeOperations.Select(x => x.Profit).Sum();

@@ -1,5 +1,4 @@
-﻿using common.Helpers;
-using Core.Calculators;
+﻿using Core.Calculators;
 using Core.Constants;
 using Core.Models;
 using Core.Models.B3;
@@ -9,7 +8,6 @@ using Infrastructure.Models;
 using Infrastructure.Repositories.Account;
 using Infrastructure.Repositories.AverageTradedPrice;
 using Microsoft.Extensions.Logging;
-using Microsoft.Identity.Client;
 using static Core.Models.B3.Movement;
 
 namespace Core.Services.Hangfire.AverageTradedPriceUpdater

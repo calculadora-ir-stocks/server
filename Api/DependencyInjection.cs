@@ -52,7 +52,6 @@ namespace Api
     {
         public static void AddServices(this IServiceCollection services, WebApplicationBuilder builder)
         {
-            // Scope handler
             builder.Services.AddSingleton<IAuthorizationHandler, HasScopeHandler>();
 
             // TODO enquanto eu que consumir os endpoints, não teremos esta porra, porque o token gerado por mim pelo Auth0 não põe o AccountId no subject do JWT.
@@ -144,10 +143,12 @@ namespace Api
                 x => x.Execute(),
                 Cron.Monthly(2));
 
-            RecurringJob.AddOrUpdate<IPlanExpirerHangfire>(
-                nameof(PlanExpirerHangfire),
-                x => x.Execute(),
-                Cron.Daily);
+            // TODO Reativar em caso de B2C
+
+            //RecurringJob.AddOrUpdate<IPlanExpirerHangfire>(
+            //    nameof(PlanExpirerHangfire),
+            //    x => x.Execute(),
+            //    Cron.Daily);
 
         }
 
