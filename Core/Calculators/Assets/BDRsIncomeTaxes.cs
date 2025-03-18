@@ -43,6 +43,8 @@ namespace Core.Calculators.Assets
                 SwingTradeProfit = swingTradeProfit,
                 DayTradeProfit = dayTradeProfit
             });
+
+            investorMovementDetails.TickerStatusAtTheEndOfTheYear.AddRange(profit.TickerStatusAtTheEndOfTheYear);
         }
     }
 }

@@ -22,6 +22,7 @@ namespace Core.Calculators
         public static CalculateProfitResponse CalculateProfitAndAverageTradedPrice(IEnumerable<Movement.EquitMovement> movements, List<AverageTradedPriceDetails> averagePrices)
         {
             CalculateProfitResponse response = new();
+            int lastDayOperated = movements.Select(x => x.ReferenceDate).OrderByDescending(x => x.Day).FirstOrDefault().Day;
 
             foreach (var movement in movements)
             {
@@ -37,7 +38,6 @@ namespace Core.Calculators
                     UpdateProfitOrLoss(response, movement, movements, averagePrices);
                     continue;
                 }
-
                 if (AssetBoughtBeforeB3MinimumDate(movement, averagePrices))
                 {
                     response.TickersBoughtBeforeB3Range.Add(movement.TickerSymbol);
@@ -55,6 +55,16 @@ namespace Core.Calculators
                     case B3ResponseConstants.BonusShare:
                         CalculateBonusSharesOperation(movement, ticker: averagePrices.Where(x => x.TickerSymbol.Equals(movement.TickerSymbol)).First());
                         break;
+                }
+
+                // Isso aqui é usado para salvar todas as informações dos ativos em até 31/12. Isso ajuda os contadores a declarerem
+                // os trâmites no IRPF. Tô um pouco bêbado
+                if (movement.ReferenceDate.Month == 12 && movement.ReferenceDate.Day == lastDayOperated)
+                {
+                    foreach (var i in averagePrices)
+                    {
+                        response.TickerStatusAtTheEndOfTheYear.Add(new(i.TickerSymbol, i.AverageTradedPrice, i.TotalBought, i.TradedQuantity, movement.ReferenceDate.Year));
+                    }
                 }
             }
 

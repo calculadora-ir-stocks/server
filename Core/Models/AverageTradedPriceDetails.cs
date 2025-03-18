@@ -2,19 +2,20 @@
 {
     public class AverageTradedPriceDetails
     {
-        public AverageTradedPriceDetails(string tickerSymbol, double averageTradedPrice, double totalBought, int tradedQuantity)
+        public AverageTradedPriceDetails(string tickerSymbol, double averageTradedPrice, double totalBought, int tradedQuantity, int? referenceYear)
         {
             TickerSymbol = tickerSymbol;
             AverageTradedPrice = averageTradedPrice;
             TotalBought = totalBought;
             TradedQuantity = tradedQuantity;
+            ReferenceYear = referenceYear;
         }
 
         public string TickerSymbol { get; init; }
         public double AverageTradedPrice { get; protected set; }
         public double TotalBought { get; protected set; }
         public int TradedQuantity { get; protected set; }
-
+        public int? ReferenceYear { get; init; }
 
         public void UpdateAllProperties(double totalBought, int tradedQuantity)
         {

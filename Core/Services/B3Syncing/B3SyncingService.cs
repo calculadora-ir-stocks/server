@@ -8,6 +8,7 @@ using Core.Refit.B3;
 using Core.Requests.BigBang;
 using Core.Services.B3ResponseCalculator;
 using Infrastructure.Models;
+using Infrastructure.Repositories;
 using Infrastructure.Repositories.Account;
 using Infrastructure.Repositories.AverageTradedPrice;
 using Infrastructure.Repositories.Taxes;
@@ -21,6 +22,7 @@ namespace Core.Services.B3Syncing
         private readonly IAccountRepository accountRepository;
         private readonly IAverageTradedPriceRepostory averageTradedPriceRepository;
         private readonly IIncomeTaxesRepository taxesRepository;
+        private readonly IGenericRepository<TickerStatusAtTheEndOfTheYear> genericTickerStatusRepository;
 
         private readonly IB3ResponseCalculatorService b3CalculatorService;
         private readonly IB3Client b3Client;
@@ -31,6 +33,7 @@ namespace Core.Services.B3Syncing
             IAccountRepository accountRepository,
             IAverageTradedPriceRepostory averageTradedPriceRepository,
             IIncomeTaxesRepository taxesRepository,
+            IGenericRepository<TickerStatusAtTheEndOfTheYear> genericTickerStatusRepository,
             IB3ResponseCalculatorService b3CalculatorService,
             IB3Client b3Client,
             ILogger<B3SyncingService> logger
@@ -39,6 +42,7 @@ namespace Core.Services.B3Syncing
             this.accountRepository = accountRepository;
             this.averageTradedPriceRepository = averageTradedPriceRepository;
             this.taxesRepository = taxesRepository;
+            this.genericTickerStatusRepository = genericTickerStatusRepository;
             this.b3CalculatorService = b3CalculatorService;
             this.b3Client = b3Client;
             this.logger = logger;
@@ -71,9 +75,6 @@ namespace Core.Services.B3Syncing
 #endif
 
                 var calculatedTaxesResponse = await b3CalculatorService.Calculate(b3Response, accountId);
-
-                if (calculatedTaxesResponse is null) return;
-
                 await SaveB3Data(calculatedTaxesResponse, account);
 
                 account.Status = EnumHelper.GetEnumDescription(AccountStatus.SubscriptionValid);
@@ -118,6 +119,9 @@ namespace Core.Services.B3Syncing
             List<AverageTradedPrice> averageTradedPrices = new();
             CreateAverageTradedPrices(response.AverageTradedPrices, averageTradedPrices, account);
 
+            List<TickerStatusAtTheEndOfTheYear> tickerStatus = new();
+            CreateTickerStatusAtTheEndOfTheYear(response.TickerStatusAtTheEndOfTheYear, tickerStatus, account);
+
             // TODO unit of work and bulk insert. i swear to god i only did this because we're in a mvp
             foreach (var i in incomeTaxes)
             {
@@ -127,6 +131,27 @@ namespace Core.Services.B3Syncing
             foreach (var a in averageTradedPrices)
             {
                 await averageTradedPriceRepository.AddAsync(a);
+            }
+
+            foreach (var a in tickerStatus)
+            {
+                await genericTickerStatusRepository.AddAsync(a);
+            }
+        }
+
+        private void CreateTickerStatusAtTheEndOfTheYear(List<AverageTradedPriceDetails> tickerStatusAtTheEndOfTheYear, List<TickerStatusAtTheEndOfTheYear> tickerStatus, Infrastructure.Models.Account account)
+        {
+            foreach (var i in tickerStatusAtTheEndOfTheYear)
+            {
+                tickerStatus.Add(new
+                (
+                    (int)i.ReferenceYear!,
+                    i.TickerSymbol,
+                    i.AverageTradedPrice,
+                    i.TotalBought,
+                    i.TradedQuantity,
+                    account
+                ));
             }
         }
 

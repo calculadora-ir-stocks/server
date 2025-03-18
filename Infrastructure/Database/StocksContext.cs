@@ -15,6 +15,7 @@ namespace Api.Database
         public DbSet<Order> Orders { get; set; } = null!;
         public DbSet<Plan> Plans { get; set; } = null!;
         public DbSet<Infrastructure.Models.Audit> Audits { get; set; } = null!;
+        public DbSet<TickerStatusAtTheEndOfTheYear> TickerStatusAtTheEndOfTheYear { get; init; } = null!;
 
         private readonly ILogger<StocksContext> logger;
 
@@ -58,6 +59,10 @@ namespace Api.Database
                 .HasOne(ap => ap.Plan)
                 .WithOne(ap => ap.Account);
 
+            modelBuilder.Entity<Account>()
+                .HasMany(ap => ap.TickerStatusAtTheEndOfTheYear)
+                .WithOne(ap => ap.Account);
+
             modelBuilder.Entity<IncomeTaxes>()
                 .HasOne(ap => ap.Account)
                 .WithMany(ap => ap.IncomeTaxes);
@@ -65,6 +70,10 @@ namespace Api.Database
             modelBuilder.Entity<AverageTradedPrice>()
                 .HasOne(ap => ap.Account)
                 .WithMany(ap => ap.AverageTradedPrices);
+
+            modelBuilder.Entity<TickerStatusAtTheEndOfTheYear>()
+                .HasOne(ap => ap.Account)
+                .WithMany(ap => ap.TickerStatusAtTheEndOfTheYear);
 
             modelBuilder.Entity<Asset>().HasData
             (

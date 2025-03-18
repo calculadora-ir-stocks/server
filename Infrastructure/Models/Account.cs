@@ -68,6 +68,12 @@ namespace Infrastructure.Models
         public ICollection<IncomeTaxes>? IncomeTaxes { get; set; }
 
         /// <summary>
+        /// Um investidor possui diversas informações de ticker, onde cada uma representa informações do último dia operado daquele ano.
+        /// Ex.: informações de até 31/12/2024, 27/12/2025 e etc...
+        /// </summary>
+        public ICollection<TickerStatusAtTheEndOfTheYear>? TickerStatusAtTheEndOfTheYear { get; set; }
+
+        /// <summary>
         /// Um investidor possui um único plano ativo por vez.
         /// </summary>
         public Plan Plan { get; set; }

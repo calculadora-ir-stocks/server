@@ -2,7 +2,7 @@ using System.Text.RegularExpressions;
 
 namespace common.Helpers;
 
-public class UtilsHelper
+public static class UtilsHelper
 {
 
     private static readonly Dictionary<int, string> DayOfTheWeeks = new()

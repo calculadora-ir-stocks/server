@@ -34,7 +34,7 @@ namespace Core.Services.B3ResponseCalculator
             this.logger = logger;
         }
 
-        public async Task<InvestorMovementDetails?> Calculate(Root? b3Response, Guid accountId)
+        public async Task<InvestorMovementDetails> Calculate(Root? b3Response, Guid accountId)
         {
             var movements = GetOnlyNecessaryMovements(b3Response);
 
@@ -53,8 +53,8 @@ namespace Core.Services.B3ResponseCalculator
                 monthlyMovements.Add(month, monthMovements);
             }
 
-            InvestorMovementDetails? response = await CalculateTaxesAndAverageTradedPrices(monthlyMovements, accountId);
-            return response;
+            InvestorMovementDetails movementsDetails = await CalculateTaxesAndAverageTradedPrices(monthlyMovements, accountId);
+            return movementsDetails;
         }
 
         private async Task SetBonusShareUnitPriceValue(List<EquitMovement> movements)
@@ -98,7 +98,7 @@ namespace Core.Services.B3ResponseCalculator
                     x.MovementType.Equals(B3ResponseConstants.BonusShare)).ToList();
         }
 
-        private async Task<InvestorMovementDetails?> CalculateTaxesAndAverageTradedPrices(
+        private async Task<InvestorMovementDetails> CalculateTaxesAndAverageTradedPrices(
             Dictionary<string,
             List<EquitMovement>> monthlyMovements,
             Guid accountId)
