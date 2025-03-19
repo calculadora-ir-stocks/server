@@ -1,5 +1,4 @@
-﻿using Azure;
-using Common.Enums;
+﻿using Common.Enums;
 using Common.Exceptions;
 using Common.Helpers;
 using Core.Constants;
@@ -114,13 +113,13 @@ namespace Core.Services.B3Syncing
         private async Task SaveB3Data(InvestorMovementDetails response, Infrastructure.Models.Account account)
         {
             List<IncomeTaxes> incomeTaxes = new();
-            CreateIncomeTaxes(response.Assets, incomeTaxes, account);
+            CreateIncomeTaxesModel(response.Assets, incomeTaxes, account);
 
             List<AverageTradedPrice> averageTradedPrices = new();
-            CreateAverageTradedPrices(response.AverageTradedPrices, averageTradedPrices, account);
+            CreateAverageTradedPricesModel(response.AverageTradedPrices, averageTradedPrices, account);
 
             List<TickerStatusAtTheEndOfTheYear> tickerStatus = new();
-            CreateTickerStatusAtTheEndOfTheYear(response.TickerStatusAtTheEndOfTheYear, tickerStatus, account);
+            CreateTickerStatusAtTheEndOfTheYearModel(response.TickerStatusAtTheEndOfTheYear, tickerStatus, account);
 
             // TODO unit of work and bulk insert. i swear to god i only did this because we're in a mvp
             foreach (var i in incomeTaxes)
@@ -139,7 +138,7 @@ namespace Core.Services.B3Syncing
             }
         }
 
-        private void CreateTickerStatusAtTheEndOfTheYear(List<AverageTradedPriceDetails> tickerStatusAtTheEndOfTheYear, List<TickerStatusAtTheEndOfTheYear> tickerStatus, Infrastructure.Models.Account account)
+        private void CreateTickerStatusAtTheEndOfTheYearModel(List<AverageTradedPriceDetails> tickerStatusAtTheEndOfTheYear, List<TickerStatusAtTheEndOfTheYear> tickerStatus, Infrastructure.Models.Account account)
         {
             foreach (var i in tickerStatusAtTheEndOfTheYear)
             {
@@ -155,7 +154,7 @@ namespace Core.Services.B3Syncing
             }
         }
 
-        private static void CreateAverageTradedPrices(List<AverageTradedPriceDetails> response, List<AverageTradedPrice> averageTradedPrices, Infrastructure.Models.Account account)
+        private static void CreateAverageTradedPricesModel(List<AverageTradedPriceDetails> response, List<AverageTradedPrice> averageTradedPrices, Infrastructure.Models.Account account)
         {
             foreach (var averageTradedPrice in response)
             {
@@ -171,7 +170,7 @@ namespace Core.Services.B3Syncing
             }
         }
 
-        private static void CreateIncomeTaxes(List<AssetIncomeTaxes> assets, List<Infrastructure.Models.IncomeTaxes> incomeTaxes, Infrastructure.Models.Account account)
+        private static void CreateIncomeTaxesModel(List<AssetIncomeTaxes> assets, List<Infrastructure.Models.IncomeTaxes> incomeTaxes, Infrastructure.Models.Account account)
         {
             foreach (var asset in assets)
             {
