@@ -3,8 +3,13 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Infrastructure.Models
 {
+#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
     public class TickerStatusAtTheEndOfTheYear
     {
+        public TickerStatusAtTheEndOfTheYear()
+        {
+        }
+
         public TickerStatusAtTheEndOfTheYear(int year, string ticker, double averagePrice, double totalBought, int quantity, Account account)
         {
             Year = year;

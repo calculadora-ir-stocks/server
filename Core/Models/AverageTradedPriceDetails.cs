@@ -2,7 +2,7 @@
 {
     public class AverageTradedPriceDetails
     {
-        public AverageTradedPriceDetails(string tickerSymbol, double averageTradedPrice, double totalBought, int tradedQuantity, int? referenceYear)
+        public AverageTradedPriceDetails(string tickerSymbol, double averageTradedPrice, double totalBought, int tradedQuantity, int? referenceYear = null)
         {
             TickerSymbol = tickerSymbol;
             AverageTradedPrice = averageTradedPrice;

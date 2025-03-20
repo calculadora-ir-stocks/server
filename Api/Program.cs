@@ -3,6 +3,7 @@ using Api.Database;
 using Api.Middlewares;
 using Azure.Identity;
 using Hangfire;
+using Microsoft.Extensions.Hosting.Internal;
 
 var builder = WebApplication.CreateBuilder(args);
 
