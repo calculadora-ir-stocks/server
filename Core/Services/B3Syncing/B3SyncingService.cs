@@ -144,7 +144,7 @@ namespace Core.Services.B3Syncing
             {
                 tickerStatus.Add(new
                 (
-                    (int)i.ReferenceYear!,
+                    (int)i.ReferenceDate!,
                     i.TickerSymbol,
                     i.AverageTradedPrice,
                     i.TotalBought,
@@ -355,6 +355,71 @@ namespace Core.Services.B3Syncing
                 UnitPrice = 234.43,
                 EquitiesQuantity = 1,
                 ReferenceDate = new DateTime(2023, 02, 01)
+            });
+
+            // Teste para declaração anual
+
+            response.Data.EquitiesPeriods.EquitiesMovements.Add(new Models.B3.Movement.EquitMovement
+            {
+                ProductTypeName = "Ações",
+                TickerSymbol = "PITO3",
+                CorporationName = "Pitobras S/A",
+                MovementType = B3ResponseConstants.TransferenciaLiquidacao,
+                OperationType = B3ResponseConstants.BuyOperationType,
+                OperationValue = 234.43,
+                UnitPrice = 234.43,
+                EquitiesQuantity = 1,
+                ReferenceDate = new DateTime(2023, 12, 24)
+            });
+            response.Data.EquitiesPeriods.EquitiesMovements.Add(new Models.B3.Movement.EquitMovement
+            {
+                ProductTypeName = "Ações",
+                TickerSymbol = "PITO3",
+                CorporationName = "Pitobras S/A",
+                MovementType = B3ResponseConstants.TransferenciaLiquidacao,
+                OperationType = B3ResponseConstants.BuyOperationType,
+                OperationValue = 245.43,
+                UnitPrice = 245.43,
+                EquitiesQuantity = 1,
+                ReferenceDate = new DateTime(2023, 12, 27)
+            });
+            response.Data.EquitiesPeriods.EquitiesMovements.Add(new Models.B3.Movement.EquitMovement
+            {
+                ProductTypeName = "Ações",
+                TickerSymbol = "PITO3",
+                CorporationName = "Pitobras S/A",
+                MovementType = B3ResponseConstants.TransferenciaLiquidacao,
+                OperationType = B3ResponseConstants.SellOperationType,
+                OperationValue = 276.54,
+                UnitPrice = 276.54,
+                EquitiesQuantity = 1,
+                ReferenceDate = new DateTime(2023, 12, 28)
+            });
+
+            response.Data.EquitiesPeriods.EquitiesMovements.Add(new Models.B3.Movement.EquitMovement
+            {
+                ProductTypeName = B3ResponseConstants.ETFs,
+                TickerSymbol = "ITOVESPA",
+                CorporationName = "ITovepsa S/A",
+                MovementType = B3ResponseConstants.TransferenciaLiquidacao,
+                OperationType = B3ResponseConstants.BuyOperationType,
+                OperationValue = 143.54,
+                UnitPrice = 143.54,
+                EquitiesQuantity = 1,
+                ReferenceDate = new DateTime(2023, 12, 29)
+            });
+
+            response.Data.EquitiesPeriods.EquitiesMovements.Add(new Models.B3.Movement.EquitMovement
+            {
+                ProductTypeName = B3ResponseConstants.ETFs,
+                TickerSymbol = "ITOVESPA",
+                CorporationName = "ITovepsa S/A",
+                MovementType = B3ResponseConstants.TransferenciaLiquidacao,
+                OperationType = B3ResponseConstants.BuyOperationType,
+                OperationValue = 143.54,
+                UnitPrice = 143.54,
+                EquitiesQuantity = 1,
+                ReferenceDate = new DateTime(2023, 12, 30)
             });
 
             // response.Data.EquitiesPeriods.EquitiesMovements.Add(new Models.B3.Movement.EquitMovement

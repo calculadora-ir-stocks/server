@@ -160,18 +160,18 @@ namespace Api
                 throw new InvalidOperationException("Configure a variável de ambiente B3_CERT_LOCATION contendo a localização do arquivo de certificação" +
                     " da API da Área Logada da B3.");
 
-            services.AddRefitClient<IB3Refit>()
-                .ConfigureHttpClient(c => c.BaseAddress = new Uri("https://investidor.b3.com.br:2443/api"))
-                .ConfigurePrimaryHttpMessageHandler(() => new B3HttpClientHandler(b3CertLocation!, configuration["Certificates:B3:Password"]))
-                .AddTransientHttpErrorPolicy(policy => policy.WaitAndRetryAsync(5, _ => TimeSpan.FromSeconds(10)))
-                .AddTransientHttpErrorPolicy(policy => policy.CircuitBreakerAsync(5, TimeSpan.FromSeconds(10)));
+            //services.AddRefitClient<IB3Refit>()
+            //    .ConfigureHttpClient(c => c.BaseAddress = new Uri("https://investidor.b3.com.br:2443/api"))
+            //    .ConfigurePrimaryHttpMessageHandler(() => new B3HttpClientHandler(b3CertLocation!, configuration["Certificates:B3:Password"]))
+            //    .AddTransientHttpErrorPolicy(policy => policy.WaitAndRetryAsync(5, _ => TimeSpan.FromSeconds(10)))
+            //    .AddTransientHttpErrorPolicy(policy => policy.CircuitBreakerAsync(5, TimeSpan.FromSeconds(10)));
 
-            services.AddRefitClient<IMicrosoftRefit>()
-                .ConfigureHttpClient(c => c.BaseAddress = new Uri("https://login.microsoftonline.com/"))
-                .ConfigurePrimaryHttpMessageHandler(() => new B3HttpClientHandler(b3CertLocation!, configuration["Certificates:B3:Password"]))
-                .AddTransientHttpErrorPolicy(policy => policy.WaitAndRetryAsync(5, _ => TimeSpan.FromSeconds(10)))
-                .AddTransientHttpErrorPolicy(policy => policy.CircuitBreakerAsync(5, TimeSpan.FromSeconds(10)))
-                .SetHandlerLifetime(TimeSpan.FromMinutes(5));
+            //services.AddRefitClient<IMicrosoftRefit>()
+            //    .ConfigureHttpClient(c => c.BaseAddress = new Uri("https://login.microsoftonline.com/"))
+            //    .ConfigurePrimaryHttpMessageHandler(() => new B3HttpClientHandler(b3CertLocation!, configuration["Certificates:B3:Password"]))
+            //    .AddTransientHttpErrorPolicy(policy => policy.WaitAndRetryAsync(5, _ => TimeSpan.FromSeconds(10)))
+            //    .AddTransientHttpErrorPolicy(policy => policy.CircuitBreakerAsync(5, TimeSpan.FromSeconds(10)))
+            //    .SetHandlerLifetime(TimeSpan.FromMinutes(5));
 
             services.AddHttpClient("Infosimples", c =>
                 c.BaseAddress = new Uri("https://api.infosimples.com/api/v2/consultas/")).ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler())

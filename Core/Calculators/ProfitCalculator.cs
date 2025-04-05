@@ -22,7 +22,10 @@ namespace Core.Calculators
         public static CalculateProfitResponse CalculateProfitAndAverageTradedPrice(IEnumerable<Movement.EquitMovement> movements, List<AverageTradedPriceDetails> averagePrices)
         {
             CalculateProfitResponse response = new();
-            int lastDayOperated = movements.Select(x => x.ReferenceDate).OrderByDescending(x => x.Day).FirstOrDefault().Day;
+            
+            // Para armazenar os tickers em até 31/12. Isso é usado para a declaração anual.
+            Dictionary<string, DateTime> lastTimeOperatedTickers = new();
+            SetLastDayOperatedOfEachTicker(movements, lastTimeOperatedTickers);
 
             foreach (var movement in movements)
             {
@@ -56,19 +59,46 @@ namespace Core.Calculators
                         CalculateBonusSharesOperation(movement, ticker: averagePrices.Where(x => x.TickerSymbol.Equals(movement.TickerSymbol)).First());
                         break;
                 }
+            }
 
-                // Isso aqui é usado para salvar todas as informações dos ativos em até 31/12. Isso ajuda os contadores a declarerem
-                // os trâmites no IRPF. Tô um pouco bêbado
-                if (movement.ReferenceDate.Month == 12 && movement.ReferenceDate.Day == lastDayOperated)
+            // could reuse the foreach above but I'm too hurried to see if something's gonna break if I remove the
+            // continue statement
+            foreach (var movement in movements)
+            {
+                var tickerLastTimeOperated = lastTimeOperatedTickers
+                    .Where(x => x.Key.Equals(movement.TickerSymbol))
+                    .FirstOrDefault();
+
+                if (movement.ReferenceDate == tickerLastTimeOperated.Value)
                 {
-                    foreach (var i in averagePrices)
+                    var x = averagePrices.Where(x => x.TickerSymbol.Equals(movement.TickerSymbol)).FirstOrDefault();
+
+                    if (x is not null)
                     {
-                        response.TickerStatusAtTheEndOfTheYear.Add(new(i.TickerSymbol, i.AverageTradedPrice, i.TotalBought, i.TradedQuantity, movement.ReferenceDate.Year));
+                        response.TickerStatusAtTheEndOfTheYear.Add(new(x.TickerSymbol,
+                            x.AverageTradedPrice,
+                            x.TotalBought,
+                            x.TradedQuantity,
+                            movement.ReferenceDate));
                     }
                 }
             }
 
             return response;
+        }
+
+        private static void SetLastDayOperatedOfEachTicker(IEnumerable<Movement.EquitMovement> movements, Dictionary<string, DateTime> tickerAndLastDayOperated)
+        {
+            foreach (var movement in movements)
+            {
+                if (!tickerAndLastDayOperated.ContainsKey(movement.TickerSymbol))
+                {
+                    DateTime lastTimeOperated = movements.Where(x => x.TickerSymbol.Equals(movement.TickerSymbol))
+                        .Select(x => x.ReferenceDate).OrderByDescending(x => x).FirstOrDefault();
+
+                    tickerAndLastDayOperated.Add(movement.TickerSymbol, lastTimeOperated);
+                }
+            }
         }
 
         private static bool AssetBoughtBeforeB3MinimumDate(Movement.EquitMovement movement, List<AverageTradedPriceDetails> averagePrices)
