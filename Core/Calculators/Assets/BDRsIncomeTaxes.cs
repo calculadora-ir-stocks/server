@@ -44,7 +44,7 @@ namespace Core.Calculators.Assets
                 DayTradeProfit = dayTradeProfit
             });
 
-            investorMovementDetails.TickerStatusAtTheEndOfTheYear.AddRange(profit.TickerStatusAtTheEndOfTheYear);
+            investorMovementDetails.TickerStatusAtTheEndOfTheYear.AddRange(profit.LastTimeOperatedInTimeInterval);
         }
     }
 }

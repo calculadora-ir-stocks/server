@@ -33,18 +33,15 @@ namespace Core.Calculators
                 {
                     UpdateOrAddAveragePrice(movement, averagePrices, sellOperation: false);
                     response.OperationHistory.Add(CreateOperationDetails(movement));
-                    continue;
                 }
                 if (movement.IsSell())
                 {
                     AddTickerIntoHistoryList(response, movement);
                     UpdateProfitOrLoss(response, movement, movements, averagePrices);
-                    continue;
                 }
                 if (AssetBoughtBeforeB3MinimumDate(movement, averagePrices))
                 {
                     response.TickersBoughtBeforeB3Range.Add(movement.TickerSymbol);
-                    continue;
                 }
 
                 switch (movement.MovementType)
@@ -58,6 +55,24 @@ namespace Core.Calculators
                     case B3ResponseConstants.BonusShare:
                         CalculateBonusSharesOperation(movement, ticker: averagePrices.Where(x => x.TickerSymbol.Equals(movement.TickerSymbol)).First());
                         break;
+                }
+
+                DateTime lastTimeOperated = lastTimeOperatedTickers
+                    .Where(x => x.Key.Equals(movement.TickerSymbol)).Select(x => x.Value)
+                    .FirstOrDefault();
+
+                if (movement.ReferenceDate == lastTimeOperated)
+                {
+                    var x = averagePrices.Where(x => x.TickerSymbol.Equals(movement.TickerSymbol)).FirstOrDefault();
+
+                    if (x is not null)
+                    {
+                        response.LastTimeOperatedInTimeInterval.Add(new(x.TickerSymbol,
+                            x.AverageTradedPrice,
+                            x.TotalBought,
+                            x.TradedQuantity,
+                            movement.ReferenceDate));
+                    }
                 }
             }
 
@@ -75,7 +90,7 @@ namespace Core.Calculators
 
                     if (x is not null)
                     {
-                        response.TickerStatusAtTheEndOfTheYear.Add(new(x.TickerSymbol,
+                        response.LastTimeOperatedInTimeInterval.Add(new(x.TickerSymbol,
                             x.AverageTradedPrice,
                             x.TotalBought,
                             x.TradedQuantity,

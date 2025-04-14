@@ -140,17 +140,32 @@ namespace Core.Services.B3Syncing
 
         private void CreateTickerStatusAtTheEndOfTheYearModel(List<AverageTradedPriceDetails> tickerStatusAtTheEndOfTheYear, List<TickerStatusAtTheEndOfTheYear> tickerStatus, Infrastructure.Models.Account account)
         {
+            Dictionary<string, object> alreadyAddedTickers = new();
+
             foreach (var i in tickerStatusAtTheEndOfTheYear)
             {
-                tickerStatus.Add(new
-                (
-                    (int)i.ReferenceDate!,
-                    i.TickerSymbol,
-                    i.AverageTradedPrice,
-                    i.TotalBought,
-                    i.TradedQuantity,
-                    account
-                ));
+                if (!alreadyAddedTickers.ContainsKey(i.TickerSymbol))
+                {
+                    alreadyAddedTickers.Add(i.TickerSymbol, new object());
+
+                    var lastTimeOperatedStats = tickerStatusAtTheEndOfTheYear
+                        .Where(x => x.TickerSymbol.Equals(i.TickerSymbol))
+                        .OrderByDescending(x => x.ReferenceDate)
+                        .FirstOrDefault();
+
+                    if (lastTimeOperatedStats is not null)
+                    {
+                        tickerStatus.Add(new
+                        (
+                            lastTimeOperatedStats.ReferenceDate!.Value.Year,
+                            lastTimeOperatedStats.TickerSymbol,
+                            lastTimeOperatedStats.AverageTradedPrice,
+                            lastTimeOperatedStats.TotalBought,
+                            lastTimeOperatedStats.TradedQuantity,
+                            account
+                        ));
+                    }
+                }
             }
         }
 
